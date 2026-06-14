@@ -1,0 +1,59 @@
+xeoxo-web/
+│
+├─ README.md
+├─ .gitignore
+├─ .env.example
+├─ docker-compose.yml
+│
+├─ docs/
+│  ├─ database/
+│  ├─ diagrams/
+│  ├─ api/
+│  └─ ui/
+│
+├─ database/
+│  ├─ schemas/
+│  ├─ seeds/
+│  └─ migrations/
+│
+├─ frontend/
+│  ├─ package.json
+│  ├─ vite.config.ts
+│  ├─ tsconfig.json
+│  ├─ .env.example
+│  └─ src/
+│     ├─ app/
+│     ├─ assets/
+│     │     ├─ images/
+│     │     ├─ icons/
+│     │     ├─ fonts/
+│     ├─ components/
+│     │     ├─ ui/
+│     │     ├─ layout/
+│     ├─ pages/
+│     ├─ routes/
+│     ├─ services/
+│     ├─ hooks/
+│     ├─ store/
+│     ├─ types/
+│     ├─ utils/
+│     └─ styles/
+│     └─ mocks/
+│
+├─ backend/
+│  ├─ package.json
+│  ├─ tsconfig.json
+│  ├─ .env.example
+│  └─ src/
+│     ├─ server.ts
+│     ├─ app.ts
+│     ├─ config/
+│     ├─ modules/
+│     ├─ middlewares/
+│     ├─ shared/
+│     └─ utils/
+│
+└─ scripts/
+   ├─ setup-db.sh
+   ├─ reset-db.sh
+   └─ seed-db.sh
