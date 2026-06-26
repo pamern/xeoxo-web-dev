@@ -1,0 +1,1 @@
+export { CatalogHeroGrid } from "./CatalogHeroGrid";

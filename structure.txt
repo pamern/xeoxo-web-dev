@@ -1,59 +1,210 @@
 xeoxo-web/
 │
-├─ README.md
-├─ .gitignore
-├─ .env.example
-├─ docker-compose.yml
+├── README.md                    # Hướng dẫn cài đặt, chạy project, mô tả stack
+├── .gitignore                   # Khai báo file/folder không push lên Git
+├── .env.example                 # File mẫu biến môi trường, không chứa key thật
+├── package.json                 # Danh sách dependencies và scripts
+├── package-lock.json            # Khóa version dependencies
+├── tsconfig.json                # Cấu hình TypeScript
+├── next.config.ts               # Cấu hình Next.js
+├── tailwind.config.ts           # Cấu hình Tailwind CSS
+├── postcss.config.mjs           # Cấu hình PostCSS
+├── eslint.config.mjs            # Cấu hình ESLint
 │
-├─ docs/
-│  ├─ database/
-│  ├─ diagrams/
-│  ├─ api/
-│  └─ ui/
+├── docs/                        # Tài liệu phục vụ báo cáo và phát triển
+│   ├── api/                     # Mô tả API, request/response mẫu
+│   ├── database/                # ERD, mô tả bảng, quan hệ database
+│   ├── diagrams/                # Sitemap, use case, activity diagram, flow
+│   ├── report/                  # Báo cáo đồ án, tài liệu nộp
+│   └── ui/                      # Wireframe, mockup, prototype, hình giao diện
 │
-├─ database/
-│  ├─ schemas/
-│  ├─ seeds/
-│  └─ migrations/
+├── public/                      # Tài nguyên tĩnh truy cập trực tiếp bằng URL
+│   ├── images/                  # Hình ảnh sản phẩm, banner, blog
+│   ├── icons/                   # Icon SVG/PNG dùng trong UI
+│   ├── fonts/                   # Font local nếu có
+│   └── favicon.ico              # Icon tab trình duyệt
 │
-├─ frontend/
-│  ├─ package.json
-│  ├─ vite.config.ts
-│  ├─ tsconfig.json
-│  ├─ .env.example
-│  └─ src/
-│     ├─ app/
-│     ├─ assets/
-│     │     ├─ images/
-│     │     ├─ icons/
-│     │     ├─ fonts/
-│     ├─ components/
-│     │     ├─ ui/
-│     │     ├─ layout/
-│     ├─ pages/
-│     ├─ routes/
-│     ├─ services/
-│     ├─ hooks/
-│     ├─ store/
-│     ├─ types/
-│     ├─ utils/
-│     └─ styles/
-│     └─ mocks/
+├── supabase/                    # Cấu hình và quản lý database Supabase
+│   ├── migrations/              # File migration tạo/sửa bảng
+│   ├── seed.sql                 # Dữ liệu mẫu để import vào Supabase
+│   ├── functions/               # Supabase Edge Functions nếu cần
+│   └── config.toml              # Cấu hình Supabase CLI
 │
-├─ backend/
-│  ├─ package.json
-│  ├─ tsconfig.json
-│  ├─ .env.example
-│  └─ src/
-│     ├─ server.ts
-│     ├─ app.ts
-│     ├─ config/
-│     ├─ modules/
-│     ├─ middlewares/
-│     ├─ shared/
-│     └─ utils/
+├── scripts/                     # Script hỗ trợ setup project/database
+│   ├── setup-db.sh              # Script thiết lập database
+│   ├── reset-db.sh              # Script reset database
+│   └── seed-db.sh               # Script chạy seed data
 │
-└─ scripts/
-   ├─ setup-db.sh
-   ├─ reset-db.sh
-   └─ seed-db.sh
+└── src/
+    ├── app/                     # Next.js App Router: page, layout, API
+    │   ├── api/                 # BE: API routes chạy trên server
+    │   │   ├── auth/            # API đăng nhập, đăng ký, đăng xuất, lấy user
+    │   │   ├── users/           # API thông tin người dùng
+    │   │   ├── products/        # API sản phẩm
+    │   │   ├── categories/      # API danh mục sản phẩm
+    │   │   ├── cart/            # API giỏ hàng
+    │   │   ├── orders/          # API đơn hàng
+    │   │   ├── payment/         # API thanh toán
+    │   │   ├── reviews/         # API đánh giá sản phẩm
+    │   │   └── blog/            # API bài viết/blog
+    │   │
+    │   ├── (public)/            # FE: nhóm trang công khai, không cần đăng nhập
+    │   │   ├── page.tsx         # Trang chủ, URL là /
+    │   │   ├── about/           # Trang giới thiệu
+    │   │   │   └── page.tsx
+    │   │   ├── products/        # Trang danh sách sản phẩm
+    │   │   │   ├── page.tsx
+    │   │   │   └── [slug]/      # Trang chi tiết sản phẩm
+    │   │   │       └── page.tsx
+    │   │   ├── blog/            # Trang danh sách bài viết
+    │   │   │   ├── page.tsx
+    │   │   │   └── [slug]/      # Trang chi tiết bài viết
+    │   │   │       └── page.tsx
+    │   │   ├── search/          # Trang tìm kiếm
+    │   │   │   └── page.tsx
+    │   │   └── contact/         # Trang liên hệ
+    │   │       └── page.tsx
+    │   │
+    │   ├── (auth)/              # FE: nhóm trang xác thực
+    │   │   ├── login/           # Trang đăng nhập
+    │   │   │   └── page.tsx
+    │   │   ├── register/        # Trang đăng ký
+    │   │   │   └── page.tsx
+    │   │   ├── forgot-password/ # Trang quên mật khẩu
+    │   │   │   └── page.tsx
+    │   │   └── reset-password/  # Trang đặt lại mật khẩu
+    │   │       └── page.tsx
+    │   │
+    │   ├── (protected)/         # FE: nhóm trang cần đăng nhập
+    │   │   ├── profile/         # Trang thông tin cá nhân
+    │   │   │   └── page.tsx
+    │   │   ├── orders/          # Trang lịch sử đơn hàng
+    │   │   │   ├── page.tsx
+    │   │   │   └── [id]/        # Trang chi tiết đơn hàng
+    │   │   │       └── page.tsx
+    │   │   ├── wishlist/        # Trang sản phẩm yêu thích
+    │   │   │   └── page.tsx
+    │   │   ├── addresses/       # Trang quản lý địa chỉ giao hàng
+    │   │   │   └── page.tsx
+    │   │   ├── cart/            # Trang giỏ hàng
+    │   │   │   └── page.tsx
+    │   │   ├── checkout/        # Trang thanh toán
+    │   │   │   └── page.tsx
+    │   │   └── checkout-success/# Trang thanh toán thành công
+    │   │       └── page.tsx
+    │   │
+    │   ├── layout.tsx           # Layout gốc toàn website
+    │   ├── loading.tsx          # UI loading mặc định
+    │   ├── error.tsx            # UI lỗi mặc định
+    │   ├── not-found.tsx        # Trang 404
+    │   └── globals.css          # Global CSS, Tailwind, design tokens
+    │
+    ├── components/              # FE: Atomic Design components
+    │   ├── atoms/               # Component nhỏ nhất, tái sử dụng nhiều
+    │   │   ├── Button.tsx       # Nút bấm
+    │   │   ├── Input.tsx        # Ô nhập liệu
+    │   │   ├── Label.tsx        # Nhãn form
+    │   │   ├── Badge.tsx        # Nhãn trạng thái
+    │   │   ├── Icon.tsx         # Icon dùng chung
+    │   │   └── Spinner.tsx      # Loading nhỏ
+    │   │
+    │   ├── molecules/           # Ghép nhiều atoms thành khối nhỏ
+    │   │   ├── FormField.tsx    # Label + Input + Error message
+    │   │   ├── SearchBox.tsx    # Input + Button tìm kiếm
+    │   │   ├── ProductCard.tsx  # Card hiển thị sản phẩm
+    │   │   ├── BlogCard.tsx     # Card hiển thị bài viết
+    │   │   ├── CartItem.tsx     # Một dòng sản phẩm trong giỏ
+    │   │   └── EmptyState.tsx   # Trạng thái không có dữ liệu
+    │   │
+    │   ├── organisms/           # Khối giao diện lớn, có thể chứa logic UI
+    │   │   ├── Header.tsx       # Header website
+    │   │   ├── Navbar.tsx       # Thanh điều hướng
+    │   │   ├── Footer.tsx       # Footer website
+    │   │   ├── Newsletter.tsx   # Khối đăng ký nhận tin
+    │   │   ├── ProductGrid.tsx  # Lưới sản phẩm
+    │   │   ├── ProductFilter.tsx# Bộ lọc sản phẩm
+    │   │   ├── CartList.tsx     # Danh sách sản phẩm trong giỏ
+    │   │   ├── CheckoutForm.tsx # Form thanh toán
+    │   │   └── BlogList.tsx     # Danh sách bài viết
+    │   │
+    │   └── templates/           # Bố cục trang dùng lại
+    │       ├── MainLayout.tsx   # Layout chính có Header/Footer
+    │       ├── AuthLayout.tsx   # Layout cho login/register
+    │       ├── ProductLayout.tsx# Layout cho nhóm trang sản phẩm
+    │       ├── CheckoutLayout.tsx# Layout cho thanh toán
+    │       └── ProfileLayout.tsx# Layout cho trang tài khoản
+    │
+    ├── features/                # Logic nghiệp vụ theo từng module
+    │   ├── auth/                # Xử lý đăng nhập, đăng ký, session
+    │   ├── user/                # Logic thông tin người dùng
+    │   ├── product/             # Logic sản phẩm
+    │   ├── category/            # Logic danh mục
+    │   ├── cart/                # Logic giỏ hàng
+    │   ├── checkout/            # Logic thanh toán
+    │   ├── order/               # Logic đơn hàng
+    │   ├── payment/             # Logic phương thức thanh toán
+    │   ├── review/              # Logic đánh giá sản phẩm
+    │   └── blog/                # Logic bài viết
+    │
+    ├── lib/                     # Tiện ích và cấu hình dùng chung
+    │   ├── supabase/            # Kết nối Supabase
+    │   │   ├── client.ts        # Supabase client dùng phía browser
+    │   │   ├── server.ts        # Supabase client dùng phía server
+    │   │   ├── admin.ts         # Supabase admin client, chỉ dùng server
+    │   │   └── middleware.ts    # Helper Supabase cho middleware
+    │   ├── api-response.ts      # Chuẩn hóa response { success, data, message }
+    │   ├── env.ts              # Đọc và kiểm tra biến môi trường
+    │   └── utils.ts            # Helper chung, ví dụ cn() gộp class Tailwind
+    │
+    ├── services/                # FE gọi API hoặc Supabase qua service
+    │   ├── auth.service.ts      # Hàm login, register, logout, getUser
+    │   ├── user.service.ts      # Hàm lấy/cập nhật thông tin user
+    │   ├── product.service.ts   # Hàm lấy danh sách/chi tiết sản phẩm
+    │   ├── category.service.ts  # Hàm lấy danh mục
+    │   ├── cart.service.ts      # Hàm thêm/xóa/sửa giỏ hàng
+    │   ├── order.service.ts     # Hàm tạo đơn, lấy đơn hàng
+    │   ├── payment.service.ts   # Hàm xử lý thanh toán
+    │   └── blog.service.ts      # Hàm lấy bài viết
+    │
+    ├── hooks/                   # Custom React hooks
+    │   ├── useAuth.ts           # Hook lấy trạng thái đăng nhập
+    │   ├── useCart.ts           # Hook thao tác giỏ hàng
+    │   ├── useProducts.ts       # Hook lấy/lọc sản phẩm
+    │   └── useDebounce.ts       # Hook debounce khi search
+    │
+    ├── stores/                  # Global state bằng Zustand
+    │   ├── auth.store.ts        # State user/session
+    │   ├── cart.store.ts        # State giỏ hàng
+    │   └── ui.store.ts          # State UI như modal, sidebar
+    │
+    ├── validations/             # Zod schema dùng chung FE và BE
+    │   ├── auth.schema.ts       # Validate login/register
+    │   ├── product.schema.ts    # Validate dữ liệu sản phẩm
+    │   ├── checkout.schema.ts   # Validate form thanh toán
+    │   ├── order.schema.ts      # Validate đơn hàng
+    │   └── review.schema.ts     # Validate đánh giá
+    │
+    ├── types/                   # TypeScript types/interfaces
+    │   ├── auth.type.ts         # Type cho auth/user/session
+    │   ├── user.type.ts         # Type người dùng
+    │   ├── product.type.ts      # Type sản phẩm
+    │   ├── category.type.ts     # Type danh mục
+    │   ├── cart.type.ts         # Type giỏ hàng
+    │   ├── order.type.ts        # Type đơn hàng
+    │   ├── payment.type.ts      # Type thanh toán
+    │   └── blog.type.ts         # Type bài viết
+    │
+    ├── constants/               # Hằng số dùng toàn dự án
+    │   ├── routes.ts            # Gom đường dẫn route một chỗ
+    │   ├── site.ts              # Tên website, metadata, thông tin chung
+    │   ├── messages.ts          # Thông báo lỗi/thành công
+    │   ├── roles.ts             # Role người dùng nếu có
+    │   └── status.ts            # Trạng thái đơn hàng, thanh toán
+    │
+    ├── data/                    # Mock data dùng khi chưa nối Supabase
+    │   ├── products.ts          # Mock sản phẩm
+    │   ├── categories.ts        # Mock danh mục
+    │   ├── blogs.ts             # Mock bài viết
+    │   └── users.ts             # Mock user nếu cần test UI
+    │
+    └── middleware.ts            # Chặn route protected, xử lý session Supabase
