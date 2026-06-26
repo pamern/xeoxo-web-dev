@@ -41,7 +41,7 @@ export function SiteHeader() {
       {/* Utility bar — nền là lát trên của dải texture */}
       <div
         className="relative hidden bg-black bg-[length:100%_auto] bg-top text-white lg:block"
-        style={{ backgroundImage: "url(/brand/header-band.png)" }}
+        style={{ backgroundImage: "url(/images/brand/header-band.png)" }}
       >
         <div className="mx-auto flex h-10 max-w-site items-center justify-between px-6 text-base xl:px-[100px]">
           <UtilityGroup links={UTILITY_LEFT} />
@@ -71,7 +71,7 @@ export function SiteHeader() {
             </button>
             <Link href={ROUTES.HOME} aria-label="XÉO XỌ — Trang chủ" className="block">
               <Image
-                src="/brand/logo.png"
+                src="/images/brand/logo.png"
                 alt="XÉO XỌ"
                 width={206}
                 height={84}

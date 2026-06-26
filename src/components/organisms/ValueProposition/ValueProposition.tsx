@@ -8,7 +8,7 @@ export function ValueProposition({ values }: { values: string[] }) {
       {/* Dải ảnh nền mỏng phía trên (~1/3) */}
       <div className="absolute inset-x-0 top-0 h-1/3 overflow-hidden">
         <Image
-          src="/brand/bg.png"
+          src="/images/brand/bg.png"
           alt=""
           fill
           sizes="100vw"
@@ -21,7 +21,7 @@ export function ValueProposition({ values }: { values: string[] }) {
         {/* Cột ảnh */}
         <div className="relative h-[400px] w-full max-w-[788px] overflow-hidden rounded-md bg-secondary lg:h-[515px]">
           <Image
-            src="/products/subtract.png"
+            src="/images/products/subtract.png"
             alt="Định vị giá trị Xéo Xọ"
             fill
             sizes="(max-width: 1024px) 100vw, 788px"
@@ -32,7 +32,7 @@ export function ValueProposition({ values }: { values: string[] }) {
         {/* Cột nội dung */}
         <div className="flex w-full max-w-[640px] flex-col gap-5 drop-shadow-[0px_4px_2px_rgba(0,0,0,0.25)]">
           <Image
-            src="/brand/logovang.png"
+            src="/images/brand/logovang.png"
             alt="XÉO XỌ"
             width={307}
             height={128}

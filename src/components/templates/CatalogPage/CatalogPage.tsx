@@ -14,9 +14,20 @@ import { COLLECTIONS, MATERIALS, VALUE_PROPS } from "@/data/catalog";
 import { getCategoriesByGender, getProductsByCategory } from "@/data/queries";
 import type { Gender } from "@/types/product.types";
 
-const GENDER_CONTENT: Record<Gender, { heroLabel: string; productLabel: string; banner: string }> = {
-  nu: { heroLabel: "ĐỒ NỮ", productLabel: "DÀNH CHO NỮ", banner: "/banners/cat-dam-vay.png" },
-  nam: { heroLabel: "ĐỒ NAM", productLabel: "DÀNH CHO NAM", banner: "/banners/cat-ao-cuoi.png" },
+const GENDER_CONTENT: Record<
+  Gender,
+  { heroLabel: string; productLabel: string; banner: string }
+> = {
+  nu: {
+    heroLabel: "ĐỒ NỮ",
+    productLabel: "DÀNH CHO NỮ",
+    banner: "/images/banners/cat-dam-vay.png",
+  },
+  nam: {
+    heroLabel: "ĐỒ NAM",
+    productLabel: "DÀNH CHO NAM",
+    banner: "/images/banners/cat-ao-cuoi.png",
+  },
 };
 
 export function buildCatalogMetadata(gender: Gender): Metadata {

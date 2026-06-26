@@ -3,8 +3,16 @@ import Link from "next/link";
 import { ROUTES } from "@/constants/routes";
 
 const GENDERS = [
-  { label: "ĐỒ NỮ", image: "/banners/gender-nu.png", href: ROUTES.CATALOG_WOMEN },
-  { label: "ĐỒ NAM", image: "/banners/gender-nam.png", href: ROUTES.CATALOG_MEN },
+  {
+    label: "ĐỒ NỮ",
+    image: "/images/banners/gender-nu.png",
+    href: ROUTES.CATALOG_WOMEN,
+  },
+  {
+    label: "ĐỒ NAM",
+    image: "/images/banners/gender-nam.png",
+    href: ROUTES.CATALOG_MEN,
+  },
 ] as const;
 
 // Khối chọn giới tính ở trang chủ: 2 thẻ ảnh lớn dẫn tới catalog tương ứng.
