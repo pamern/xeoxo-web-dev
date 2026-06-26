@@ -5,7 +5,7 @@ import { SiteLayout } from "@/components/templates/SiteLayout";
 import { CATEGORIES } from "@/data/catalog";
 import { getProductsByCategory } from "@/data/queries";
 import type { Gender } from "@/types/product.types";
-
+//! TODO: Chỉnh sỬa lại router cho đúng theo sitemap, danh-muc thành categories. Không cần chi tiết ra từng department, nhưng để mock thì OK 
 type Params = { gender: string; category: string };
 
 function findCategory(gender: string, category: string) {
