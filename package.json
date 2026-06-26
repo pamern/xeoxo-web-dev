@@ -1,4 +1,6 @@
 {
+  "devDependencies": {
+    "supabase": "^2.106.0"
   "name": "base-nextjs",
   "version": "0.1.0",
   "private": true,

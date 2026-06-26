@@ -214,11 +214,8 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-# Streamlit
-.streamlit/secrets.toml
-node_modules
+node_modules/
 .next/
 out/
 tsconfig.tsbuildinfo
-.env.local
 .env.*.local
