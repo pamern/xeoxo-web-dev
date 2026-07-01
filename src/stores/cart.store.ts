@@ -17,6 +17,12 @@ type CartState = {
     color: string,
     quantity: number
   ) => void;
+  updateVariant: (
+    productId: string,
+    size: string,
+    color: string,
+    next: { size?: string; color?: string }
+  ) => void;
   clear: () => void;
   totalQuantity: () => number;
   subtotal: () => number;
@@ -59,6 +65,38 @@ export const useCartStore = create<CartState>()(
             )
             .filter((l) => l.quantity > 0),
         })),
+      updateVariant: (productId, size, color, next) =>
+        set((state) => {
+          const source = state.lines.find((l) => sameLine(l, productId, size, color));
+          if (!source) return state;
+
+          const nextSize = next.size ?? source.size;
+          const nextColor = next.color ?? source.color;
+          if (nextSize === size && nextColor === color) return state;
+
+          // Biến thể đích đã tồn tại -> gộp số lượng, bỏ dòng nguồn.
+          const duplicate = state.lines.find(
+            (l) => l !== source && sameLine(l, productId, nextSize, nextColor)
+          );
+          if (duplicate) {
+            return {
+              lines: state.lines
+                .filter((l) => l !== source)
+                .map((l) =>
+                  l === duplicate
+                    ? { ...l, quantity: l.quantity + source.quantity }
+                    : l
+                ),
+            };
+          }
+
+          // Chưa tồn tại -> đổi tại chỗ.
+          return {
+            lines: state.lines.map((l) =>
+              l === source ? { ...l, size: nextSize, color: nextColor } : l
+            ),
+          };
+        }),
       clear: () => set({ lines: [] }),
       totalQuantity: () => get().lines.reduce((sum, l) => sum + l.quantity, 0),
       subtotal: () => get().lines.reduce((sum, l) => sum + l.price * l.quantity, 0),

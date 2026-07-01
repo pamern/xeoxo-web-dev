@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { collectionRoute } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
 import type { Collection } from "@/types/product.types";
 
 // Hero carousel trang chủ: ảnh bộ sưu tập + tên + CTA, nút prev/next.
@@ -39,7 +39,7 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
           {current.name}
         </h1>
         <Link
-          href={collectionRoute(current.slug)}
+          href={ROUTES.COLLECTION(current.slug)}
           className="inline-flex w-fit items-center rounded-pill border border-white px-8 py-4 text-xl font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
         >
           Khám phá

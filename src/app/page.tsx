@@ -5,7 +5,7 @@ import { HeroCarousel } from "@/components/organisms/HeroCarousel";
 import { ProductRow } from "@/components/organisms/ProductRow";
 import { StarsBanner } from "@/components/organisms/StarsBanner";
 import { SiteLayout } from "@/components/templates/SiteLayout";
-import { categoryRoute } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
 import { COLLECTIONS } from "@/data/catalog";
 import { getProductsByCategory } from "@/data/queries";
 
@@ -15,21 +15,21 @@ const HOME_SECTIONS = [
     title: "ÁO ĐẦM - VÁY",
     categorySlug: "ao-dam-vay",
     gender: "nu" as const,
-    image: "/images/banners/cat-dam-vay.png",
+    image: "/images/cat-dam-vay.png",
     productTitle: "SẢN PHẨM ÁO ĐẦM - VÁY",
   },
   {
     title: "ÁO DÀI",
     categorySlug: "ao-dai-nu",
     gender: "nu" as const,
-    image: "/images/banners/cat-ao-dai.png",
+    image: "/images/cat-ao-dai.png",
     productTitle: "SẢN PHẨM ÁO DÀI",
   },
   {
     title: "ÁO DÀI ĐÔI - CƯỚI",
-    categorySlug: "ao-cuoi",
+    categorySlug: "ao-cuoi-nu",
     gender: "nu" as const,
-    image: "/images/banners/cat-ao-cuoi.png",
+    image: "/images/cat-ao-cuoi.png",
     productTitle: "SẢN PHẨM ÁO DÀI ĐÔI - CƯỚI",
   },
 ];
@@ -57,12 +57,13 @@ export default function HomePage() {
           <CategoryBanner
             title={section.title}
             image={section.image}
-            href={categoryRoute(section.gender, section.categorySlug)}
+            href={ROUTES.CATEGORY(section.categorySlug)}
           />
+
           <ProductRow
             title={section.productTitle}
             products={getProductsByCategory(section.categorySlug)}
-            actionHref={categoryRoute(section.gender, section.categorySlug)}
+            actionHref={ROUTES.CATEGORY(section.categorySlug)}
           />
         </div>
       ))}

@@ -5,12 +5,12 @@ import { ROUTES } from "@/constants/routes";
 const GENDERS = [
   {
     label: "ĐỒ NỮ",
-    image: "/images/banners/gender-nu.png",
+    image: "/images/gender-nu.png",
     href: ROUTES.CATALOG_WOMEN,
   },
   {
     label: "ĐỒ NAM",
-    image: "/images/banners/gender-nam.png",
+    image: "/images/gender-nam.png",
     href: ROUTES.CATALOG_MEN,
   },
 ] as const;
