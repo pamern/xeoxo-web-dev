@@ -9,41 +9,64 @@ import { StarsBanner } from "@/components/organisms/StarsBanner";
 import { ValueProposition } from "@/components/organisms/ValueProposition";
 import { CategoryBanner } from "@/components/molecules/CategoryBanner";
 import { SiteLayout } from "@/components/templates/SiteLayout";
-import { categoryRoute, collectionRoute } from "@/constants/routes";
-import { COLLECTIONS, MATERIALS, VALUE_PROPS } from "@/data/catalog";
+import { ROUTES } from "@/constants/routes";
+import { CATEGORIES, COLLECTIONS, MATERIALS, VALUE_PROPS } from "@/data/catalog";
 import { getCategoriesByGender, getProductsByCategory } from "@/data/queries";
-import type { Gender } from "@/types/product.types";
+import type { ProductCategory } from "@/types/product.types";
 
-const GENDER_CONTENT: Record<
-  Gender,
-  { heroLabel: string; productLabel: string; banner: string }
+export type CatalogSlug = "nu" | "nam" | "tre-em" | "ao-dai";
+
+const CATALOG_CONTENT: Record<
+  CatalogSlug,
+  {
+    heroLabel: string;
+    productLabel: string;
+    banner: string;
+    categories: () => ProductCategory[];
+  }
 > = {
   nu: {
     heroLabel: "ĐỒ NỮ",
     productLabel: "DÀNH CHO NỮ",
-    banner: "/images/banners/cat-dam-vay.png",
+    banner: "/images/cat-dam-vay.png",
+    categories: () => getCategoriesByGender("nu"),
   },
   nam: {
     heroLabel: "ĐỒ NAM",
     productLabel: "DÀNH CHO NAM",
-    banner: "/images/banners/cat-ao-cuoi.png",
+    banner: "/images/cat-ao-cuoi.png",
+    categories: () => getCategoriesByGender("nam"),
+  },
+  "tre-em": {
+    heroLabel: "ĐỒ TRẺ EM",
+    productLabel: "DÀNH CHO TRẺ EM",
+    banner: "/images/cat-ao-dai.png",
+    categories: () => getCategoriesByGender("tre-em"),
+  },
+  "ao-dai": {
+    heroLabel: "ÁO DÀI",
+    productLabel: "ÁO DÀI",
+    banner: "/images/cat-ao-dai.png",
+    categories: () => CATEGORIES.filter((category) => category.slug.includes("ao-dai")),
   },
 };
 
-export function buildCatalogMetadata(gender: Gender): Metadata {
-  const label = GENDER_CONTENT[gender].heroLabel;
+export const CATALOG_SLUGS = Object.keys(CATALOG_CONTENT) as CatalogSlug[];
+
+export function buildCatalogMetadata(slug: CatalogSlug): Metadata {
+  const label = CATALOG_CONTENT[slug].heroLabel;
   return {
     title: label,
     description: `Khám phá bộ sưu tập ${label.toLowerCase()} của XÉO XỌ — áo dài, đầm, váy và nhiều thiết kế Á Đông hiện đại.`,
   };
 }
 
-// Trang catalog dùng chung cho Nam & Nữ — khác nhau ở data theo gender.
-export function CatalogPage({ gender }: { gender: Gender }) {
-  const content = GENDER_CONTENT[gender];
+// Trang catalog/landing dùng chung cho các entry từ header.
+export function CatalogPage({ slug }: { slug: CatalogSlug }) {
+  const content = CATALOG_CONTENT[slug];
   if (!content) notFound();
 
-  const categories = getCategoriesByGender(gender);
+  const categories = content.categories();
   const firstCollection = COLLECTIONS[0];
 
   return (
@@ -52,7 +75,7 @@ export function CatalogPage({ gender }: { gender: Gender }) {
       <CatalogHero
         label={content.heroLabel}
         image={content.banner}
-        ctaHref={collectionRoute(firstCollection.slug)}
+        ctaHref={ROUTES.COLLECTION(firstCollection.slug)}
         collectionNote={`Khám phá ngay bộ sưu tập ${firstCollection.name}`}
       />
 
@@ -62,11 +85,11 @@ export function CatalogPage({ gender }: { gender: Gender }) {
       {/* Hàng nút lọc theo bộ sưu tập */}
       <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]">
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
-          <FilterPill href={categoryRoute(gender, categories[0]?.slug ?? "")} active>
+          <FilterPill href={ROUTES.CATEGORY(categories[0]?.slug ?? "")} active>
             Sản phẩm mới
           </FilterPill>
           {COLLECTIONS.map((collection) => (
-            <FilterPill key={collection.slug} href={collectionRoute(collection.slug)}>
+            <FilterPill key={collection.slug} href={ROUTES.COLLECTION(collection.slug)}>
               {collection.name}
             </FilterPill>
           ))}
@@ -80,7 +103,7 @@ export function CatalogPage({ gender }: { gender: Gender }) {
             <CategoryBanner
               title={`SẢN PHẨM ${category.name.toUpperCase()}`}
               image={content.banner}
-              href={categoryRoute(gender, category.slug)}
+              href={ROUTES.CATEGORY(category.slug)}
             />
           )}
           <ProductRow
@@ -90,7 +113,7 @@ export function CatalogPage({ gender }: { gender: Gender }) {
                 : `SẢN PHẨM ${category.name.toUpperCase()}`
             }
             products={getProductsByCategory(category.slug)}
-            actionHref={categoryRoute(gender, category.slug)}
+            actionHref={ROUTES.CATEGORY(category.slug)}
           />
         </div>
       ))}

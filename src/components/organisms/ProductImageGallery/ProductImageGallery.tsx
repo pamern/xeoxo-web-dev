@@ -1,0 +1,70 @@
+"use client";
+
+import { useState } from "react";
+import Image from "next/image";
+import { IconButton } from "@/components/atoms/IconButton";
+import { cn } from "@/lib/utils";
+
+export function ProductImageGallery({
+  images,
+  alt,
+}: {
+  images: string[];
+  alt: string;
+}) {
+  const [activeImage, setActiveImage] = useState(0);
+  const current = images[activeImage] ?? images[0];
+
+  return (
+    <div className="grid gap-3 lg:grid-cols-[65px_minmax(0,650px)]">
+      <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:max-h-[975px] lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0">
+        {images.map((image, index) => (
+          <button
+            key={`${image}-${index}`}
+            type="button"
+            onClick={() => setActiveImage(index)}
+            aria-label={`Anh san pham ${index + 1}`}
+            className={cn(
+              "relative h-[98px] w-[65px] shrink-0 overflow-hidden border bg-secondary transition-colors",
+              index === activeImage ? "border-primary" : "border-transparent hover:border-primary/60"
+            )}
+          >
+            <Image src={image} alt="" fill sizes="65px" className="object-cover" />
+          </button>
+        ))}
+      </div>
+
+      <div className="relative order-1 aspect-[2/3] w-full overflow-hidden bg-secondary lg:order-2 lg:max-w-[650px]">
+        {current && (
+          <Image
+            src={current}
+            alt={alt}
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 600px"
+            className="object-cover"
+          />
+        )}
+        <IconButton
+          type="button"
+          aria-label="Anh truoc"
+          onClick={() => setActiveImage((activeImage - 1 + images.length) % images.length)}
+          iconSrc="/icons/arrow-right.svg"
+          iconSize={16}
+          iconClassName="rotate-180"
+          variant="circleLight"
+          className="absolute bottom-[30px] right-[90px]"
+        />
+        <IconButton
+          type="button"
+          aria-label="Anh tiep theo"
+          onClick={() => setActiveImage((activeImage + 1) % images.length)}
+          iconSrc="/icons/arrow-right.svg"
+          iconSize={16}
+          variant="circleLight"
+          className="absolute bottom-[30px] right-[30px]"
+        />
+      </div>
+    </div>
+  );
+}

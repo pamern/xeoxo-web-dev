@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { collectionRoute } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
 import type { Collection } from "@/types/product.types";
 
 // Khối đầu trang catalog (Figma node 1:143): 3 ảnh bộ sưu tập nổi bật ở giữa,
@@ -17,7 +17,7 @@ export function CatalogHeroGrid({ collections }: { collections: Collection[] }) 
         {featured.map((collection) => (
           <Link
             key={collection.slug}
-            href={collectionRoute(collection.slug)}
+            href={ROUTES.COLLECTION(collection.slug)}
             className="group relative h-[450px] w-[330px] overflow-hidden rounded-md bg-[#d9d9d9]"
           >
             <Image
@@ -44,7 +44,7 @@ function Band({ className }: { className?: string }) {
   return (
     <div
       className={`h-[39px] w-full bg-[length:100%_auto] ${className ?? ""}`}
-      style={{ backgroundImage: "url(/brand/texture.png)" }}
+      style={{ backgroundImage: "url(/images/section-divider.png)" }}
       aria-hidden
     />
   );

@@ -1,25 +1,32 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn, formatPrice } from "@/lib/utils";
-import { productRoute } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
 import type { Product } from "@/types/product.types";
 
 // Card sản phẩm dùng trong mọi lưới/carousel. Ảnh tỉ lệ ~3:4 + tên + giá.
 export function ProductCard({
   product,
   className,
+  imageClassName,
 }: {
   product: Product;
   className?: string;
+  imageClassName?: string;
 }) {
   const onSale = typeof product.salePrice === "number";
 
   return (
     <Link
-      href={productRoute(product.slug)}
+      href={ROUTES.PRODUCT(product.slug)}
       className={cn("group flex flex-col gap-3", className)}
     >
-      <div className="relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-secondary">
+      <div
+        className={cn(
+          "relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-secondary",
+          imageClassName
+        )}
+      >
         <Image
           src={product.images[0]}
           alt={product.name}

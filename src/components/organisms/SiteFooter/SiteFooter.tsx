@@ -11,42 +11,42 @@ const LINK_COLUMNS: FooterColumn[] = [
   {
     title: "Xéo Hội",
     links: [
-      { label: "Đăng ký thành viên", href: ROUTES.SIGNUP },
-      { label: "Ưu đãi & đặc quyền", href: ROUTES.POLICY },
+      { label: "Đăng ký thành viên", href: ROUTES.REGISTER },
+      { label: "Ưu đãi & đặc quyền", href: ROUTES.BENEFITS },
     ],
   },
   {
     title: "Về Xéo Xọ",
     links: [
       { label: "Câu chuyện thương hiệu", href: ROUTES.ABOUT },
-      { label: "Chất liệu", href: ROUTES.ABOUT },
-      { label: "Blog", href: ROUTES.COLLECTIONS },
+      { label: "Chất liệu", href: `${ROUTES.ABOUT}#materials` },
+      { label: "Blog", href: ROUTES.BLOG },
     ],
   },
   {
     title: "Công ty",
     links: [
-      { label: "Tuyển dụng", href: ROUTES.POLICY },
-      { label: "Đăng ký bản quyền", href: ROUTES.POLICY },
+      { label: "Tuyển dụng", href: ROUTES.CAREERS },
+      { label: "Đăng ký bản quyền", href: ROUTES.COPYRIGHT },
     ],
   },
   {
     title: "Hỗ trợ",
     links: [
       { label: "Hướng dẫn chọn size", href: ROUTES.SIZE_GUIDE },
-      { label: "Hướng dẫn giặt là", href: ROUTES.POLICY },
-      { label: "Hỏi đáp - FAQs", href: ROUTES.POLICY },
+      { label: "Hướng dẫn giặt là", href: ROUTES.POLICY("care") },
+      { label: "Hỏi đáp - FAQs", href: ROUTES.FAQ },
     ],
   },
 ];
 
 const POLICY_LINKS = [
-  "Chính sách khách hàng",
-  "Chính sách đổi trả",
-  "Chính sách kiểm hàng",
-  "Chính sách vận chuyển",
-  "Chính sách thanh toán",
-  "Chính sách bảo mật",
+  { label: "Chính sách khách hàng", href: ROUTES.POLICY("customer") },
+  { label: "Chính sách đổi trả", href: ROUTES.POLICY("return") },
+  { label: "Chính sách kiểm hàng", href: ROUTES.POLICY("inspection") },
+  { label: "Chính sách vận chuyển", href: ROUTES.POLICY("shipping") },
+  { label: "Chính sách thanh toán", href: ROUTES.POLICY("payment") },
+  { label: "Chính sách bảo mật", href: ROUTES.POLICY("privacy") },
 ];
 
 const STORES = [
@@ -57,25 +57,23 @@ const STORES = [
 const SOCIAL_LINKS = [
   { label: "Facebook", icon: "/icons/facebook.svg", href: "https://www.facebook.com/" },
   { label: "TikTok", icon: "/icons/tiktok.svg", href: "https://www.tiktok.com/" },
-  { label: "Instagram", icon: "/icons/instagram.svg", href: "https://www.instagram.com/" }
+  { label: "Instagram", icon: "/icons/instagram.svg", href: "https://www.instagram.com/" },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="bg-black text-white">
-      {/* Top: newsletter (span 2) + contact — cùng lưới 3 cột để contact thẳng cột "Hệ thống cửa hàng" */}
       <div className="mx-auto grid max-w-site gap-10 px-6 py-[50px] lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
         <div className="flex flex-col gap-[25px] lg:col-span-2">
           <div className="flex flex-col gap-[10px]">
             <p className="text-2xl font-medium leading-tight md:text-[32px]">
-              <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á Đông trong từng
-              thiết kế
+              <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á Đông trong từng thiết kế
             </p>
             <p className="text-lg font-light text-white/80">
-              Theo dõi Xéo Xọ để cập nhật bộ sưu tập mới, câu chuyện thiết kế và ưu đãi dành riêng
-              cho khách hàng thân thiết.
+              Theo dõi Xéo Xọ để cập nhật bộ sưu tập mới, câu chuyện thiết kế và ưu đãi dành riêng cho khách hàng thân thiết.
             </p>
           </div>
+
           <Link
             href={ROUTES.COLLECTIONS}
             className="inline-flex w-fit items-center gap-[10px] rounded-pill border border-white px-6 py-3 text-[22px] font-medium transition-colors hover:bg-white hover:text-black"
@@ -90,6 +88,7 @@ export function SiteFooter() {
               className="brightness-0 invert"
             />
           </Link>
+
           <div className="flex items-center gap-4">
             {SOCIAL_LINKS.map((social) => (
               <a
@@ -120,7 +119,6 @@ export function SiteFooter() {
 
       <div className="mx-auto h-px max-w-site bg-white/20" />
 
-      {/* Middle: 3 columns — links (2x2) | policies | stores */}
       <div className="mx-auto grid max-w-site gap-10 px-6 py-5 lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
         <div className="grid gap-x-10 gap-y-8 sm:grid-cols-[auto_auto]">
           {LINK_COLUMNS.map((column) => (
@@ -130,13 +128,13 @@ export function SiteFooter() {
 
         <div className="flex flex-col gap-[10px]">
           <h3 className="text-[22px] font-bold">Chính sách</h3>
-          {POLICY_LINKS.map((label) => (
+          {POLICY_LINKS.map((policy) => (
             <Link
-              key={label}
-              href={ROUTES.POLICY}
+              key={policy.label}
+              href={policy.href}
               className="text-lg font-light text-white/80 transition-colors hover:text-white"
             >
-              {label}
+              {policy.label}
             </Link>
           ))}
         </div>
@@ -151,15 +149,14 @@ export function SiteFooter() {
         </div>
       </div>
 
-      {/* Bottom: legal — same grid; logo aligns under "Hệ thống cửa hàng" */}
       <div className="mx-auto grid max-w-site gap-10 px-6 py-5 lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
         <div className="flex flex-col gap-[10px] lg:col-span-2">
           <p className="text-lg font-extrabold">© CÔNG TY TNHH MAI AN KIM VIỆT NAM</p>
           <p className="max-w-2xl text-lg font-light text-white/70">
-            Mã số doanh nghiệp: 0110169383. Giấy chứng nhận đăng ký doanh nghiệp do Sở Kế hoạch
-            và Đầu tư TP Hà Nội cấp lần đầu 02/11/2022.
+            Mã số doanh nghiệp: 0110169383. Giấy chứng nhận đăng ký doanh nghiệp do Sở Kế hoạch và Đầu tư TP Hà Nội cấp lần đầu ngày 02/11/2022.
           </p>
         </div>
+
         <Image
           src="/icons/bocongthuong.png"
           alt="Đã thông báo Bộ Công Thương"

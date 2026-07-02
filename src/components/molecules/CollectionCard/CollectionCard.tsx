@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { collectionRoute } from "@/constants/routes";
+import { ROUTES } from "@/constants/routes";
 import type { Collection } from "@/types/product.types";
 
 // Thẻ bộ sưu tập: ảnh nền + tên, dùng ở trang chủ, trang BST và filter catalog.
@@ -14,7 +14,7 @@ export function CollectionCard({
 }) {
   return (
     <Link
-      href={collectionRoute(collection.slug)}
+      href={ROUTES.COLLECTION(collection.slug)}
       className={cn(
         "group relative block aspect-[16/9] overflow-hidden rounded-md",
         className

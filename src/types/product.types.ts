@@ -1,7 +1,7 @@
 // Domain types cho phần thương mại (sản phẩm, bộ sưu tập, giỏ hàng).
 // Tách khỏi user.types.ts vốn phục vụ auth.
 
-export type Gender = "nam" | "nu";
+export type Gender = "nam" | "nu" | "tre-em";
 
 export type ProductCategory = {
   slug: string;

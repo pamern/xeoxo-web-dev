@@ -16,10 +16,10 @@ const UTILITY_LEFT = [
 ];
 
 const UTILITY_RIGHT = [
-  { label: "Xéo Hội", href: ROUTES.SIGNUP, icon: "/icons/star.svg" },
+  { label: "Xéo Hội", href: ROUTES.REGISTER, icon: "/icons/star-club.svg" },
   { label: "Cửa hàng", href: ROUTES.COLLECTIONS },
   { label: "Blog", href: ROUTES.COLLECTIONS },
-  { label: "CSKH", href: ROUTES.POLICY },
+  { label: "CSKH", href: ROUTES.POLICIES },
   { label: "Đăng nhập", href: ROUTES.LOGIN },
 ];
 
@@ -27,7 +27,7 @@ const MAIN_NAV = [
   { label: "NỮ", href: ROUTES.CATALOG_WOMEN },
   { label: "NAM", href: ROUTES.CATALOG_MEN },
   { label: "TRẺ EM", href: ROUTES.CATALOG_KIDS },
-  { label: "ÁO DÀI", href: `${ROUTES.CATALOG_WOMEN}#ao-dai-nu` },
+  { label: "ÁO DÀI", href: ROUTES.CATALOG_AO_DAI },
   { label: "BỘ SƯU TẬP", href: ROUTES.COLLECTIONS },
 ];
 
@@ -41,7 +41,7 @@ export function SiteHeader() {
       {/* Utility bar — nền là lát trên của dải texture */}
       <div
         className="relative hidden bg-black bg-[length:100%_auto] bg-top text-white lg:block"
-        style={{ backgroundImage: "url(/images/brand/header-band.png)" }}
+        style={{ backgroundImage: "url(/images/header-line-up.png)" }}
       >
         <div className="mx-auto flex h-10 max-w-site items-center justify-between px-6 text-base xl:px-[100px]">
           <UtilityGroup links={UTILITY_LEFT} />
@@ -71,7 +71,7 @@ export function SiteHeader() {
             </button>
             <Link href={ROUTES.HOME} aria-label="XÉO XỌ — Trang chủ" className="block">
               <Image
-                src="/images/brand/logo.png"
+                src="/images/logohong.png"
                 alt="XÉO XỌ"
                 width={206}
                 height={84}

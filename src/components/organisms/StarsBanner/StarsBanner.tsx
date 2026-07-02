@@ -4,7 +4,7 @@ import Image from "next/image";
 export function StarsBanner() {
   return (
     <section className="relative mb-28 flex h-[420px] items-start justify-center overflow-hidden md:h-[560px]">
-      <Image src="/images/banners/stars.png" alt="" fill sizes="100vw" className="object-cover" />
+      <Image src="/images/stars-background.png" alt="" fill sizes="100vw" className="object-cover" />
       <h2 className="text-shadow relative mt-16 text-3xl font-extrabold text-white md:text-4xl">
         STARS in Xéo Xọ
       </h2>
