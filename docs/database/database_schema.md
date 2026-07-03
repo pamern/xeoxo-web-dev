@@ -9,6 +9,8 @@
 - customer_name (VARCHAR(255), NOT NULL): Tên khách hàng
 - email (VARCHAR(255), NOT NULL): Email
 - phone (VARCHAR(20), NOT NULL): Số điện thoại
+- gender (VARCHAR(20)/CHECK, NULL): Giới tính
+- birthday (DATE, NULL): Ngày sinh
 - customer_type (VARCHAR/CHECK, NOT NULL): Loại khách hàng 
 - tier_id (VARCHAR(20), FK, NULL): Mã hạng thành viên
 - total_spent (NUMBERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu
@@ -373,7 +375,7 @@
 
 - cart_id (BIGSERIAL, PK, NOT NULL): Mã giỏ hàng
 - customer_id (BIGINT, FK, NULL): Mã khách hàng
-- session_id (VARCHAR(255), NULL): Mã phiên khách vãng lai
+- session_id (UUID, NULL): Mã phiên khách vãng lai
 - cart_status (VARCHAR(20), NOT NULL): Trạng thái giỏ hàng
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
