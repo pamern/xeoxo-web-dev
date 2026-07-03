@@ -21,6 +21,7 @@
 
 **Ghi chú / Enum:**
 - customer_type = {MEMBER, GUEST}
+- gender = {MALE, FEMALE, OTHER}
 - email và phone trong CUSTOMER là thông tin liên hệ, không phải thông tin đăng nhập nên có thể không UNIQUE.
 
 ## LOYALTY_TIER
@@ -138,6 +139,7 @@
 
 - collection_id (SERIAL, PK, NOT NULL): Mã bộ sưu tập
 - collection_name (VARCHAR(255), NOT NULL): Tên bộ sưu tập
+- slug (VARCHAR(255), UNIQUE, NOT NULL): Slug URL của bộ sưu tập
 - description (TEXT, NULL): Mô tả bộ sưu tập
 - media_id (BIGINT, FK, NULL): Mã hình ảnh
 - content_json (JSONB, NULL): Nội dung dạng JSON
@@ -149,6 +151,7 @@
 
 **Ghi chú / Enum:**
 - season = {SPRING, SUMMER, AUTUMN, WINTER}
+- `slug` dùng cho URL thân thiện và nên được giữ ổn định sau khi public.
 
 ## PRODUCT_LINE
 
@@ -156,6 +159,7 @@
 - collection_id (INT, FK, NULL): Mã bộ sưu tập
 - color_id (INT, FK, NULL): Mã màu chính của sản phẩm
 - line_name (VARCHAR(255), NOT NULL): Tên dòng sản phẩm
+- slug (VARCHAR(255), UNIQUE, NOT NULL): Slug URL của dòng sản phẩm
 - description (TEXT, NULL): Mô tả dòng sản phẩm
 - material_id (INT, FK, NOT NULL): Mã chất liệu
 - design_style (VARCHAR(500), NULL): Kiểu dáng thiết kế
@@ -168,6 +172,7 @@
 
 **Ghi chú / Enum:**
 - status = {ACTIVE, INACTIVE}
+- `slug` dùng cho route/public URL của dòng sản phẩm và nên unique toàn hệ thống.
 
 ## LINE_CATEGORY
 

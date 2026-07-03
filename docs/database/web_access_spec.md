@@ -332,6 +332,8 @@ Shape dữ liệu:
 - `max_price`
 - `primary_category_id`
 - `primary_category_name`
+- `product_line_slug`
+- `collection_slug`
 
 Ý nghĩa:
 
