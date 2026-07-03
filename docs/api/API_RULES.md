@@ -1,102 +1,130 @@
-# XEOXO Web — API Documentation Standard
+# XEOXO Web - API Rules
 
 ## 1. Mục tiêu
 
-Tài liệu này chuẩn hoá cách team thiết kế, ghi chép và cập nhật API cho project XEOXO Web.
+File này là rule chung để frontend/backend đọc trước khi code API cho XEOXO Web.
 
-Mỗi API mới hoặc API được chỉnh sửa phải được cập nhật vào `docs/api/` theo cùng một format để frontend, backend và người viết báo cáo có thể đọc thống nhất.
+Nguồn đặc tả endpoint hiện tại nằm ở:
+
+```text
+docs/api/api_documentation.yaml
+```
+
+Khi code API, phải đọc `API_RULES.md` trước, sau đó đọc đúng endpoint trong `api_documentation.yaml`.
 
 ---
 
-## 2. Nguyên tắc thiết kế API
+## 2. Cách đọc `api_documentation.yaml`
 
-- API thiết kế theo **nghiệp vụ/module**, không thiết kế máy móc theo từng bảng database.
-- Endpoint dùng danh từ số nhiều, không dùng động từ.
-- Request/response phải thống nhất format.
-- API có body phải validate bằng Zod.
-- API liên quan dữ liệu cá nhân phải kiểm tra auth và quyền sở hữu dữ liệu.
-- Không nhận trực tiếp các field nhạy cảm từ frontend nếu có thể suy ra từ session.
-- Sau mỗi API mới hoặc thay đổi API, bắt buộc cập nhật tài liệu trong `docs/api/`.
+### `endpoints`
+
+Mỗi item trong `endpoints` là một API cần code hoặc cần FE gọi.
+
+Các field quan trọng:
+
+- `name`: tên nghiệp vụ của API.
+- `trigger`: màn hình hoặc thao tác UI gọi API.
+- `type`: `STANDARD` hoặc `CUSTOM`.
+- `resource`: nhóm tài nguyên chính.
+- `method`: HTTP method.
+- `endpoint`: path API chính thức.
+- `http_request`: ví dụ request đầy đủ có query/path param.
+- `authentication`: quyền gọi API.
+- `request.path_parameters`: path param cần validate.
+- `request.query_parameters`: query param cần validate.
+- `request.body`: body cần validate.
+- `response.body_fields`: field response bắt buộc trả về.
+- `response.success_example`: shape response thành công.
+- `response.error_examples`: lỗi cần handle.
+- `ui_display`: dữ liệu FE cần để render UI.
+- `business_rules`: luồng xử lý nghiệp vụ.
+- `validation_rules`: rule validate đầu vào.
+- `security`: rule bảo mật riêng của API.
+- `dev_notes`: ghi chú cần check trước khi code.
+
+### `not_separate_endpoints`
+
+Các nghiệp vụ ở đây không tạo API riêng.
+
+Ví dụ:
+
+- Mua lại đơn hàng: dùng lại API add-to-cart.
+- Thêm địa chỉ: dùng chung API address với checkout.
+
+### `status_only_sheet_rows`
+
+Các dòng trong sheet chỉ để ghi tình trạng, không tạo endpoint.
+
+Hiện tại:
+
+- Row 12: FE đưa ảnh hướng dẫn chọn size, không cần API.
+- Row 31: Quản lý sổ địa chỉ chưa làm/chưa chốt API riêng.
 
 ---
 
 ## 3. Chuẩn endpoint
 
-### 3.1. Base path
-
-```text
-/api/v1
-```
-
-Ví dụ:
-
-```text
-GET /api/v1/product-lines
-GET /api/v1/product-lines/{slug}
-POST /api/v1/cart/items
-PATCH /api/v1/cart/items/{cart_item_id}
-DELETE /api/v1/cart/items/{cart_item_id}
-```
-
-### 3.2. Quy tắc đặt tên
+- Base path luôn là `/api/v1`.
+- Endpoint dùng danh từ số nhiều, không dùng động từ.
+- Không tạo endpoint mới nếu YAML đã ghi dùng chung API khác.
+- Một endpoint có thể có nhiều use case qua query param, ví dụ `GET /product-lines` dùng cho department, category, search, filter. Khi code phải tách rõ logic theo query được truyền.
 
 Nên dùng:
 
 ```text
-/product-lines
-/categories
-/collections
-/cart/items
-/orders
-/addresses
-/rewards
-/personal-color/results
+/api/v1/product-lines
+/api/v1/collections
+/api/v1/orders
+/api/v1/customers/me
+/api/v1/measurement-appointments
 ```
 
 Không dùng:
 
 ```text
-/get-products
-/create-order
-/update-user
-/delete-cart-item
+/api/v1/get-products
+/api/v1/create-order
+/api/v1/update-user
 ```
 
 ---
 
 ## 4. Chuẩn HTTP method
 
-| Method | Mục đích |
+| Method | Khi dùng |
 |---|---|
-| GET | Lấy dữ liệu |
-| POST | Tạo mới hoặc thực hiện nghiệp vụ tạo dữ liệu |
-| PATCH | Cập nhật một phần |
-| PUT | Cập nhật toàn bộ, hạn chế dùng |
+| GET | Lấy dữ liệu, không đổi state |
+| POST | Tạo mới hoặc chạy nghiệp vụ tạo dữ liệu |
+| PUT | Cập nhật toàn bộ resource/body đã chốt |
+| PATCH | Cập nhật một phần hoặc action trạng thái |
 | DELETE | Xoá hoặc huỷ dữ liệu |
+
+Nếu `HTTP Method` trong sheet và `http_request` lệch nhau, xem `dev_notes` trước. Ví dụ API cập nhật size recommendation có note cột method phải là `PUT`.
 
 ---
 
 ## 5. Chuẩn Authentication
 
-| Giá trị | Ý nghĩa | Ví dụ |
-|---|---|---|
-| PUBLIC | Ai cũng gọi được, không cần token | Danh sách sản phẩm, danh mục |
-| GUEST_OR_CUSTOMER | Khách vãng lai hoặc khách đăng nhập đều gọi được | Cart, checkout guest |
-| CUSTOMER | Bắt buộc đăng nhập tài khoản khách hàng | Hồ sơ cá nhân, đơn hàng của tôi |
-| STAFF | API dành cho nhân viên, chỉ gọi qua server/backoffice | Xử lý đơn, tồn kho, hỗ trợ |
-| SERVICE_ONLY | Chỉ backend/service role được gọi | Thanh toán, cập nhật tồn kho, cấp reward |
+| Giá trị | Ý nghĩa |
+|---|---|
+| PUBLIC | Ai cũng gọi được, không cần token |
+| GUEST_OR_CUSTOMER | Guest hoặc customer đều gọi được |
+| CUSTOMER | Bắt buộc đăng nhập customer |
+| STAFF | Chỉ staff/backoffice |
+| SERVICE_ONLY | Chỉ server/service role |
 
-**Ghi chú:**
+Rule bắt buộc:
 
-- Frontend public chỉ dùng `anon` hoặc `authenticated` Supabase key.
-- Tuyệt đối không đưa `service_role` key vào frontend.
-- Không tạo PostgreSQL role riêng cho `CUSTOMER`, `STAFF`; đây là role nghiệp vụ trong bảng `account`.
+- Không đưa `service_role` key ra frontend.
+- API `CUSTOMER` phải lấy `customer_id` từ token/session, không nhận từ query/body.
+- API `PUBLIC` nhưng thao tác dữ liệu cá nhân phải xác thực bằng contact hoặc ownership rule trong YAML.
+- Guest order/appointment/review/return phải check contact khớp phone/email của `CUSTOMER` gắn với dữ liệu đó.
 
 ---
 
-## 6. Chuẩn response chung
+## 6. Chuẩn response
 
-### 6.1. Response thành công
+Response thành công:
 
 ```json
 {
@@ -106,7 +134,7 @@ Không dùng:
 }
 ```
 
-### 6.2. Response danh sách có phân trang
+Response danh sách:
 
 ```json
 {
@@ -116,22 +144,12 @@ Không dùng:
   "pagination": {
     "page": 1,
     "limit": 20,
-    "total": 100,
-    "total_pages": 5
+    "total": 100
   }
 }
 ```
 
-### 6.3. Response lỗi
-
-```json
-{
-  "code": 400,
-  "message": "Dữ liệu không hợp lệ"
-}
-```
-
-### 6.4. Response lỗi validate
+Response lỗi:
 
 ```json
 {
@@ -146,12 +164,12 @@ Không dùng:
 }
 ```
 
-**Quy tắc:**
+Rule bắt buộc:
 
 - `code` trong body phải khớp HTTP status thật.
 - `message` viết tiếng Việt, có thể hiển thị trực tiếp cho user.
-- `errors` chỉ dùng khi lỗi validate field.
-- Không trả stack trace hoặc lỗi database thô ra frontend.
+- Không trả stack trace hoặc lỗi database thô.
+- Không trả field ngoài `response.body_fields` nếu không cần cho UI.
 
 ---
 
@@ -159,240 +177,115 @@ Không dùng:
 
 | Status | Khi dùng |
 |---|---|
-| 200 | GET/PATCH/DELETE thành công |
+| 200 | GET/PUT/PATCH/DELETE thành công |
 | 201 | POST tạo mới thành công |
-| 400 | Request sai hoặc thiếu dữ liệu chung |
-| 401 | Chưa đăng nhập |
-| 403 | Không có quyền truy cập |
+| 400 | Request thiếu dữ liệu chung |
+| 401 | Chưa đăng nhập hoặc token sai |
+| 403 | Không có quyền thao tác dữ liệu |
 | 404 | Không tìm thấy dữ liệu |
-| 409 | Xung đột dữ liệu, ví dụ trùng SKU, trùng item |
+| 409 | Xung đột nghiệp vụ |
 | 422 | Lỗi validate field |
-| 500 | Lỗi server |
+| 500 | Lỗi hệ thống |
 
 ---
 
-## 8. Format chuẩn cho mỗi API trong docs
-
-Mỗi endpoint trong `docs/api/*.md` phải có đủ các mục sau:
-
-```markdown
-## GET /api/v1/product-lines
-
-### Mục đích
-
-Mô tả ngắn API này phục vụ nghiệp vụ nào.
-
-### Module
-
-Catalog / Cart / Order / Profile / Loyalty / Personal Color / ...
-
-### Authentication
-
-PUBLIC / GUEST_OR_CUSTOMER / CUSTOMER / STAFF / SERVICE_ONLY
-
-### Request
-
-#### Path parameters
-
-| Tên | Kiểu | Bắt buộc | Mô tả |
-|---|---|---|---|
-| slug | string | Yes | Slug sản phẩm |
-
-#### Query parameters
-
-| Tên | Kiểu | Bắt buộc | Mặc định | Mô tả |
-|---|---|---|---|---|
-| page | number | No | 1 | Trang hiện tại |
-| limit | number | No | 20 | Số item mỗi trang |
-
-#### Request body
-
-Không có.
-
-### Response thành công
-
-```json
-{
-  "code": 200,
-  "message": "Thành công",
-  "data": []
-}
-```
-
-### Response lỗi
-
-```json
-{
-  "code": 404,
-  "message": "Không tìm thấy dữ liệu"
-}
-```
-
-### Business rules
-
-- Rule 1.
-- Rule 2.
-
-### Validation rules
-
-- Rule validate 1.
-- Rule validate 2.
-
-### Database liên quan
-
-- catalog.product_line
-- catalog.product_variant
-- catalog.product_line_media
-
-### Security
-
-- Chỉ đọc dữ liệu public/active.
-- Không trả dữ liệu nhạy cảm.
-
-### Ghi chú cho dev
-
-- Ghi chú kỹ thuật nếu có.
-```
-
----
-
-
-## 9. Phân loại STANDARD và CUSTOM
+## 8. STANDARD và CUSTOM
 
 ### STANDARD
 
-Dùng cho API CRUD hoặc query đơn giản:
+Dùng cho API query hoặc CRUD đơn giản:
 
-- Lấy danh sách category.
-- Lấy danh sách collection.
-- Lấy product card từ view.
-- Thêm/xoá cart item đơn giản.
+- Lấy danh sách sản phẩm.
+- Lấy collection.
+- Xem profile.
+- Xem lịch hẹn.
 
 ### CUSTOM
 
-Dùng khi API có nghiệp vụ nhiều bước hoặc cần transaction:
+Dùng khi nghiệp vụ nhiều bước, cần transaction hoặc check ownership phức tạp:
 
-- Checkout.
-- Merge guest cart sau login.
-- Áp dụng reward/voucher.
-- Tính personal color và lưu danh sách màu đề xuất.
-- Tạo đơn hàng + order item + payment pending.
-- Cập nhật tồn kho.
+- Checkout/order.
+- Tạo yêu cầu đổi trả.
+- Review sản phẩm đã mua.
+- Customization/measurement profile.
+- Gợi ý size.
 
-**Quy tắc:**
+Rule triển khai:
 
-- `STANDARD`: route handler có thể gọi service query đơn giản.
-- `CUSTOM`: bắt buộc tách logic vào `src/features/<module>/`.
-
----
-
-## 11. Chuẩn query parameter phổ biến
-
-| Tên | Kiểu | Mặc định | Quy tắc |
-|---|---|---|---|
-| page | number | 1 | >= 1 |
-| limit | number | 20 | 1–100 |
-| sort | string | created_at_desc | Chỉ nhận giá trị whitelist |
-| search | string | null | Trim, giới hạn độ dài |
-| category | string | null | Dùng slug nếu có thể |
-| collection | string | null | Dùng slug nếu có thể |
-| department | string | null | WOMEN/MEN/KIDS hoặc giá trị đã chốt |
+- `STANDARD`: route handler có thể gọi service query rõ ràng.
+- `CUSTOM`: tách logic nghiệp vụ vào service/module riêng, không nhồi hết trong route handler.
 
 ---
 
-## 12. Quy tắc bảo mật API
+## 9. Validation bắt buộc
 
-Không cho frontend cập nhật trực tiếp các field sau:
+Tất cả API phải validate theo `validation_rules` trong YAML.
+
+Rule chung:
+
+- `page` là số nguyên dương, mặc định `1`.
+- `limit` là số nguyên dương, mặc định theo YAML, thường `20`.
+- Public list API không cho `limit` vượt quá `50` nếu YAML không ghi khác.
+- Search query phải trim, giới hạn độ dài, chống SQL injection.
+- Path id phải là số nguyên dương nếu là id numeric.
+- Slug phải trim và đúng format URL slug.
+- Body có nested array/object phải validate đủ item con.
+
+---
+
+## 10. Security bắt buộc
+
+Không cho frontend cập nhật trực tiếp:
 
 ```text
 order_status
 payment_status
 shipping_status
 refund_status
-reward.status
 inventory.quantity
 customer.total_spent
 customer.spent_in_year
 customer.tier_id
+customer.customer_type
 ```
 
-Các API protected phải:
+API protected phải:
 
-- Lấy user từ session/token.
+- Lấy user từ token/session.
 - Map ra `customer_id` phía server.
-- Không tin `customer_id` do frontend gửi lên.
-- Kiểm tra dữ liệu có thuộc customer hiện tại hay không.
+- Check dữ liệu thuộc đúng customer hiện tại.
+- Không nhận `customer_id`, `tier_id`, `total_spent` từ body.
+- Có rate limit cho search, lookup, review, return request nếu public.
 
 ---
 
-## 13. Quy trình tạo API mới
+## 11. Checklist trước khi code một API
 
 ```text
-1. Xác định nghiệp vụ cần API
-2. Chọn endpoint và method
-3. Ghi nháp request/response vào docs/api
-4. Tạo Zod validation schema nếu có body/query phức tạp
-5. Viết service xử lý nghiệp vụ
-6. Viết route handler
-7. Test API bằng Postman/Thunder Client
-8. Cập nhật docs/api chính thức
-9. Cập nhật frontend service trong src/services hoặc src/features
-10. Commit code và docs cùng nhau
-```
-
----
-
-## 14. Checklist hoàn thành API
-
-```text
-[ ] Endpoint đúng chuẩn REST
-[ ] Method đúng mục đích
-[ ] Có authentication đúng yêu cầu
-[ ] Có validate query/body
-[ ] Không nhận customer_id nhạy cảm từ frontend
-[ ] Không expose dữ liệu người khác
-[ ] Response đúng format chung
+[ ] Đã đọc endpoint tương ứng trong api_documentation.yaml
+[ ] Method và endpoint đúng YAML
+[ ] Authentication đúng YAML
+[ ] Query/path/body validate đúng validation_rules
+[ ] Business rules được code đủ theo thứ tự hợp lý
+[ ] Response chỉ trả field trong response.body_fields
 [ ] Error response có status code phù hợp
-[ ] Có business rules rõ ràng
-[ ] Có security note
-[ ] Đã test case thành công
-[ ] Đã test case lỗi
-[ ] Đã cập nhật docs/api
-[ ] Đã cập nhật frontend service nếu cần
+[ ] Không nhận customer_id nhạy cảm từ frontend
+[ ] Có ownership/contact check nếu dữ liệu cá nhân
+[ ] Không tạo API riêng cho item nằm trong not_separate_endpoints
+[ ] Không code status_only_sheet_rows thành endpoint
+[ ] Đã test happy path
+[ ] Đã test lỗi validate
+[ ] Đã test lỗi auth/ownership nếu có
 ```
 
 ---
 
-## 15. Đề xuất tổ chức file docs/api
+## 12. Khi nào cần hỏi lại trước khi code
 
-```text
-docs/api/
-├── API_RULES.md
-├── api-documentation-standard.md
-├── auth.md
-├── catalog.md
-├── cart.md
-├── orders.md
-├── profile.md
-├── loyalty.md
-├── personal-color.md
-├── customization.md
-└── reviews.md
-```
+Hỏi lại nếu gặp một trong các trường hợp:
 
----
-
-## 16. Thứ tự ưu tiên chuẩn hoá API hiện tại
-
-```text
-1. Catalog: product-lines, categories, collections
-2. Product detail: media, size chart, variants
-3. Cart: cart, cart items, merge guest cart
-4. Profile: customer, addresses
-5. Order: checkout, order history, order detail
-6. Loyalty: rewards, reward usage
-7. Personal color: result, result colors, recommended products
-8. Review
-9. Customization/measurement
-10. Support/chat
-```
+- YAML có `dev_notes` ghi "check lại", "hỏi lại", hoặc chưa chốt sort/status.
+- `method` và `http_request` mâu thuẫn.
+- Một màn hình có trigger nhưng nằm trong `status_only_sheet_rows`.
+- Cần thêm cột DB chưa có trong schema.
+- Response UI cần field chưa có trong `response.body_fields`.

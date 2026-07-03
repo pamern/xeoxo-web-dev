@@ -1,0 +1,2137 @@
+title: XEOXO Web API Documentation
+version: v1
+base_path: /api/v1
+conventions:
+  success_response: '{ code, message, data }'
+  paginated_response: '{ code, message, data, pagination }'
+  message_language: vi
+  code_rule: Body code phải khớp HTTP status thật.
+  security_rule: API có dữ liệu cá nhân phải lấy customer_id từ token/session hoặc xác thực bằng contact.
+sheet_coverage:
+  source_data_rows: 30
+  rows_with_endpoint_and_method: 25
+  rows_without_endpoint_or_method: 5
+  documented_endpoints: 25
+  documented_not_separate_endpoints: 3
+  status_only_rows: 2
+endpoints:
+- trigger: Menu, catalog -> Product list
+  screen: null
+  type: STANDARD
+  name: Danh sách sản phẩm theo department
+  description: "Lấy danh sách dòng sản phẩm theo giới tính/độ tuổi (Nữ/Nam/Trẻ Em)\n- Bấm ở menu \n- Bấm ở xem đầy đủ ở catalog\
+    \ thuộc department"
+  resource: product-lines
+  method: GET
+  endpoint: /api/v1/product-lines
+  http_request: GET /api/v1/product-lines?department={department}&page={page}&limit={limit}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - 'department (string, bắt buộc): Nữ, Nam, Trẻ Em'
+    - page (integer, mặc định = 1)
+    - limit (integer, mặc định = 20)
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (array<object>) — Payload chính của response
+    - data[].product_line_id (string) — Mã dòng sản phẩm
+    - data[].slug (string) — Định danh dùng cho URL
+    - data[].name (string) — Tên hiển thị
+    - data[].thumbnail (string) — URL ảnh đại diện
+    - data[].price (numeric) — Giá bán (VND)
+    - data[].currency (string) — Đơn vị tiền tệ
+    - pagination (object) — Thông tin phân trang
+    - pagination.page (integer) — Trang hiện tại (bắt đầu từ 1)
+    - pagination.limit (integer) — Số item mỗi trang
+    - pagination.total (integer) — Tổng số item (không phải số trang)
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - product_line_id: PL001
+        slug: ao-so-mi-nam
+        name: Áo sơ mi nam
+        thumbnail: https://cdn.xeoxo.vn/products/ao-so-minam.jpg
+        price: 750000
+        currency: VND
+      pagination:
+        page: 1
+        limit: 20
+        total: 120
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm cho department 'Nam'
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - danh sách sp
+  - thumbnail
+  - name
+  - price + currency
+  - filter (Cố định)
+  business_rules:
+  - '1. Đọc query params: department, page, limit.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query CATEGORY theo department.
+  - 4. Lấy các product_line_id thuộc department từ LINE_CATEGORY.
+  - 5. Query PRODUCT_LINE theo danh sách product_line_id.
+  - 6. Filter CATEGORY.is_active = true và PRODUCT_LINE.status = ACTIVE.
+  - 7. Lấy thumbnail từ PRODUCT_LINE_MEDIA và MEDIA.
+  - 8. Lấy price từ PRODUCT_VARIANT thông qua PRODUCT_COMPONENT.
+  - 9. Sort theo PRODUCT_LINE.created_at DESC Newest.
+  - 10. Apply pagination.
+  - 11. Trả về danh sách sản phẩm.
+  dev_notes:
+  - Cần sort theo giá thấp nhất ko, hiện tại là sản phẩm update mới nhất sẽ hiện lên
+  - check limit & page
+  validation_rules:
+  - department bắt buộc.
+  - 'department chỉ nhận: Nữ, Nam, Trẻ Em.'
+  - page phải là số nguyên dương, mặc định = 1 nếu không truyền.
+  - limit phải là số nguyên dương, mặc định = 20 nếu không truyền.
+  - limit không được vượt quá 50.
+  - hiển thị sản phẩm theo newest
+  security:
+  - Chỉ đọc, không có rủi ro ghi dữ liệu. Validate query param tránh SQL injection qua filter.
+- trigger: Menu, Category ở catelog -> product list
+  screen: null
+  type: STANDARD
+  name: Danh sách sản phẩm theo category
+  description: User bấm 1 category cụ thể trên menu để xem toàn bộ sản phẩm thuộc category đó hoặc bấm vào category ở trang
+    chủ, catalog
+  resource: product-lines
+  method: GET
+  endpoint: /api/v1/product-lines
+  http_request: GET /api/v1/product-lines?category_id={category_id}&page={page}&limit={limit}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - 'category (string, bắt buộc): tên category'
+    - page (integer, mặc định = 1)
+    - limit (integer, mặc định = 20)
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (array<object>) — Payload chính của response
+    - data[].product_line_id (string) — Mã dòng sản phẩm
+    - data[].slug (string) — Định danh dùng cho URL
+    - data[].name (string) — Tên hiển thị
+    - data[].thumbnail (string) — URL ảnh đại diện
+    - data[].price (numeric) — Giá bán (VND)
+    - data[].currency (string) — Đơn vị tiền tệ
+    - pagination (object) — Thông tin phân trang
+    - pagination.page (integer) — Trang hiện tại (bắt đầu từ 1)
+    - pagination.limit (integer) — Số item mỗi trang
+    - pagination.total (integer) — Tổng số item (không phải số trang)
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - product_line_id: PL010
+        slug: ao-dai-truyen-thong
+        name: Áo dài truyền thống
+        thumbnail: https://cdn.xeoxo.vn/products/ao-dai-truyen-thong.jpg
+        price: 1250000
+        currency: VND
+      pagination:
+        page: 1
+        limit: 20
+        total: 36
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm trong category 'Áo Dài'
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - danh sách sp
+  - thumbnail
+  - name
+  - price + currency
+  - filter (Cố định)
+  business_rules:
+  - '1. Đọc query params: category, page, limit.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query CATEGORY theo category_name.
+  - 4. Lấy các product_line_id thuộc category từ LINE_CATEGORY.
+  - 5. Query PRODUCT_LINE theo danh sách product_line_id.
+  - 6. Filter CATEGORY.is_active = true và PRODUCT_LINE.status = ACTIVE.
+  - 7. Lấy thumbnail từ PRODUCT_LINE_MEDIA và MEDIA.
+  - 8. Lấy price từ PRODUCT_VARIANT thông qua PRODUCT_COMPONENT.
+  - 9. Sort theo PRODUCT_LINE.created_at DESC Newest.
+  - 10. Apply pagination.
+  - 11. Trả về danh sách sản phẩm.
+  dev_notes:
+  - Cần sort theo giá thấp nhất ko, hiện tại là sản phẩm update mới nhất sẽ hiện lên
+  - check limit & page
+  validation_rules:
+  - category bắt buộc.
+  - page phải là số nguyên dương, mặc định = 1 nếu không truyền.
+  - limit phải là số nguyên dương, mặc định = 20 nếu không truyền.
+  - limit không được vượt quá 50
+  - hiển thị sản phẩm theo newest
+  security:
+  - Chỉ đọc, không có rủi ro ghi dữ liệu. Validate query param tránh SQL injection qua filter.
+- trigger: Trang chủ -> catalog
+  screen: null
+  type: CUSTOM
+  name: Landing catalog theo department
+  description: User bấm vào khám phá ở nam và nữ, hệ thống trả về landing page catalog theo category
+  resource: catalog-pages
+  method: GET
+  endpoint: /api/v1/catalog-pages/{department}
+  http_request: GET /api/v1/catalog-pages/{department}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - 'department (string, bắt buộc): WOMEN, MEN, KIDS'
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data.department
+    - data.hero.title
+    - data.hero.thumbnail
+    - data.hero.cta_label
+    - data.sections[].category_id
+    - data.sections[].category_name
+    - data.sections[].view_all_url
+    - data.sections[].products[].product_line_id
+    - data.sections[].products[].slug
+    - data.sections[].products[].name
+    - data.sections[].products[].thumbnail
+    - data.sections[].products[].price
+    - data.sections[].products[].currency
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        department: MEN
+        hero:
+          title: Đồ Nam
+          thumbnail: https://cdn.xeoxo.vn/catalog/nam.jpg
+          cta_label: Khám phá
+        sections:
+        - category_id: 3
+          category_name: Áo Nam
+          view_all_url: /product-lines?category_id=3
+          products:
+          - product_line_id: 1
+            slug: ao-nam-xanh
+            name: Áo Nam Xanh
+            thumbnail: https://cdn.xeoxo.vn/products/a.jpg
+            price: 980000
+            currency: VND
+    error_examples:
+    - code: 404
+      message: Không tìm thấy landing catalog
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Banner landing Nam/Nữ
+  - Các section theo category của department
+  - Mỗi section hiển thị 4 sản phẩm preview
+  - Nút “Xem đầy đủ” dẫn sang product list theo category_id
+  business_rules:
+  - '1. Đọc path param: department.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query CATEGORY theo department.
+  - 4. Mỗi category lấy tối đa 4 PRODUCT_LINE ACTIVE.
+  - 5. Join media lấy thumbnail.
+  - 6. Join variant lấy price.
+  - 7. Trả landing gồm hero và sections.
+  dev_notes:
+  - Nếu DB chưa có bảng cấu hình landing page thì có thể lấy section từ CATEGORY theo department trước.
+  - Mỗi section chỉ preview 4 sản phẩm.
+  - 'Nút “Xem đầy đủ” dùng category_id để gọi API product list: /api/v1/product-lines?category_id={category_id}&page=1&limit=20.)'
+  - Hỏi lại Phước thịnh bấm vào nút khám phá ở catalog có phải vào product list kh hay để tĩnh nha ?
+  - API này chỉ áp dụng cho landing phức hợp Nam/Nữ, không thay thế product list thường.
+  validation_rules:
+  - department bắt buộc.
+  - 'department chỉ nhận: nam, nu.'
+  - department không được rỗng sau khi trim.
+  security:
+  - Chỉ đọc; validate path param; sanitize input; chỉ trả dữ liệu FE cần hiển thị; không trả dữ liệu cấu hình nội bộ.
+- trigger: Menu -> product list
+  screen: null
+  type: STANDARD
+  name: Danh sách bộ sưu tập
+  description: Hiển thị toàn bộ bộ sưu tập (concept, mô tả) — KHÔNG kèm sản phẩm, chỉ metadata bộ sưu tập.
+  resource: collections
+  method: GET
+  endpoint: /api/v1/collections
+  http_request: GET /api/v1/collections?page={page}&limit={limit}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - page (integer, mặc định = 1)
+    - limit (integer, mặc định = 20)
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (array<object>) — Payload chính của response
+    - data[].collection_id (string) — Mã bộ sưu tập
+    - data[].slug (string) — Định danh dùng cho URL
+    - data[].name (string) — Tên hiển thị
+    - data[].description (string) — Mô tả bộ sưu tập
+    - data[].thumbnail (string) — URL ảnh đại diện bộ sưu tập
+    - data[].cultural_story (string) — Câu chuyện văn hóa/concept của bộ sưu tập
+    - data[].launch_date (string) — Ngày ra mắt (YYYY-MM-DD)
+    - data[].status (string) — Trạng thái hiện tại
+    - pagination (object) — Thông tin phân trang
+    - pagination.page (integer) — Trang hiện tại
+    - pagination.limit (integer) — Số item mỗi trang
+    - pagination.total (integer) — Tổng số item
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - collection_id: C001
+        slug: ha-khue
+        name: Hạ Khuê
+        description: Bộ sưu tập Hạ Khuê lấy cảm hứng từ mùa hè Việt Nam.
+        thumbnail: https://cdn.xeoxo.vn/collections/ha-khue.jpg
+        cultural_story: Câu chuyện về sự giao thoa giữa văn hóa truyền thống và hiện đại.
+        launch_date: '2026-04-01'
+      pagination:
+        page: 1
+        limit: 20
+        total: 24
+    error_examples:
+    - code: 404
+      message: Không tìm thấy bộ sưu tập nào
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - danh sách  collection
+  - thumbnail
+  - launch date
+  - cultural story
+  - description
+  business_rules:
+  - '1. Đọc query params: page, limit.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query COLLECTION.
+  - 4. Filter COLLECTION.status được phép hiển thị public.
+  - 5. Lấy thumbnail từ MEDIA theo COLLECTION.media_id.
+  - '6. Map dữ liệu response: collection_name thành name, content_json.cultural_story thành cultural_story.'
+  - 7. Sort theo COLLECTION.launch_date DESC Newest.
+  - 8. Apply pagination.
+  - 9. Trả về danh sách bộ sưu tập, không kèm product.
+  dev_notes:
+  - Check page & limit
+  - Check status (chỉ dùng cho status public có phải là tất cả bộ sưu tập từ trước đến giờ không) -> trên UI là status ẩn
+    nha
+  validation_rules:
+  - page phải là số nguyên dương, mặc định = 1 nếu không truyền.
+  - limit phải là số nguyên dương, mặc định = 20 nếu không truyền.
+  - limit không được vượt quá 50
+  - hiển thị bộ sưu tập theo timeline newest
+  security:
+  - Chỉ đọc, không có rủi ro ghi dữ liệu. Validate query param tránh SQL injection qua filter.
+- trigger: Collection -> collection detail
+  screen: null
+  type: CUSTOM
+  name: Chi tiết bộ sưu tập
+  description: Xem câu chuyện/concept của 1 bộ sưu tập, gộp luôn danh sách sản phẩm thuộc bộ sưu tập đó.
+  resource: collections
+  method: GET
+  endpoint: /api/v1/collections/{collection_id}
+  http_request: GET /api/v1/collections/{collection_id}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - collection_id bắt buộc
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (object) — Payload chính của response
+    - data.collection (object) — Thông tin bộ sưu tập
+    - data.collecct.slug
+    - data.collection.name (string) — Tên hiển thị
+    - data.collection.description (string) — Mô tả bộ sưu tập
+    - data.collection.thumbnail (string) — URL ảnh đại diện bộ sưu tập
+    - data.collection.cultural_story (string) — Câu chuyện văn hóa/concept của bộ sưu tập
+    - data.collection.launch_date (string) — Ngày ra mắt (YYYY-MM-DD)
+    - data.products (array<object>) — Danh sách sản phẩm thuộc bộ sưu tập
+    - data.products[].product_line_id (string) — Mã dòng sản phẩm
+    - data.products[].name (string) — Tên hiển thị
+    - data.products[].thumbnail (string) — URL ảnh đại diện sản phẩm
+    - data.products[].price (numeric) — Giá hiển thị
+    - data.products[].currency (string) — Đơn vị tiền tệ
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        collection:
+          collection_id: 1
+          slug: ha-khue
+          name: Hạ Khuê
+          description: BST lấy cảm hứng từ mùa hè Việt Nam.
+          thumbnail: https://cdn.xeoxo.vn/collections/ha-khue.jpg
+          cultural_story: Câu chuyện giao thoa giữa truyền thống và hiện đại.
+          launch_date: '2026-04-01'
+        products:
+        - product_line_id: 10
+          slug: ao-dai-ha-khue
+          name: Áo Dài Hạ Khuê
+          thumbnail: https://cdn.xeoxo.vn/products/a.jpg
+          price: 1350000
+          currency: VND
+    error_examples:
+    - code: 404
+      message: Không tìm thấy bộ sưu tập {slug}
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - collection.name
+  - collection. description
+  - thumbnail
+  - cultural story
+  - launch date
+  - products (array)
+  - product line id + name + thumbnail + price + currency
+  business_rules:
+  - '1. Đọc path param: slug.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query COLLECTION theo slug.
+  - 4. Nếu không tồn tại hoặc status không public → trả 404.
+  - 5. Lấy thumbnail bộ sưu tập từ MEDIA theo COLLECTION.media_id.
+  - 6. Query PRODUCT_LINE theo collection_id.
+  - 7. Filter PRODUCT_LINE.status = ACTIVE.
+  - 8. Lấy thumbnail sản phẩm từ PRODUCT_LINE_MEDIA và MEDIA.
+  - 9. Lấy price từ PRODUCT_VARIANT thông qua PRODUCT_COMPONENT.
+  - '10. Map dữ liệu response: collection_name thành name, content_json.cultural_story thành cultural_story.'
+  - 11. Trả về object {collection, products}.
+  dev_notes:
+  - Tự check
+  validation_rules:
+  - slug bắt buộc.
+  - slug không được rỗng sau khi trim.
+  - slug phải đúng định dạng URL slug.
+  security:
+  - Chỉ đọc, không có rủi ro ghi dữ liệu. Validate query param tránh SQL injection qua filter.
+- trigger: Menu -> Search
+  screen: null
+  type: CUSTOM
+  name: Gợi ý tìm kiếm sản phẩm trên thanh search
+  description: User nhập từ khóa trên thanh search, hệ thống trả về vài sản phẩm gợi ý nhanh.
+  resource: product-lines
+  method: GET
+  endpoint: /api/v1/product-lines/search-suggestions
+  http_request: GET /api/v1/product-lines/search-suggestions?q={q}&limit={limit}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - 'q (string, bắt buộc): từ khóa tìm kiếm'
+    - limit (integer, mặc định = 4)
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (array<object>) — Payload chính của response
+    - data[].product_line_id (string) — Mã dòng sản phẩm
+    - data[].slug (string) — Định danh dùng cho URL
+    - data[].name (string) — Tên hiển thị
+    - data[].thumbnail (string) — URL ảnh đại diện
+    - data[].price (numeric) — Giá hiển thị
+    - data[].currency (string) — Đơn vị tiền tệ
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - product_line_id: PL020
+        slug: ao-thun-trang
+        name: Áo thun trắng
+        thumbnail: https://cdn.xeoxo.vn/products/ao-thun-trang.jpg
+        price: 250000
+        currency: VND
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm với từ khóa '...'
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - list sp
+  - thumbnail
+  - name
+  - price + currency
+  business_rules:
+  - '1. Đọc query params: q, limit.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Search trên PRODUCT_LINE.line_name và PRODUCT_LINE.description.
+  - 4. Filter PRODUCT_LINE.status = ACTIVE.
+  - 5. Lấy thumbnail từ PRODUCT_LINE_MEDIA và MEDIA.
+  - 6. Lấy price từ PRODUCT_VARIANT thông qua PRODUCT_COMPONENT.
+  - 7. Sort theo relevance.
+  - 8. Limit số lượng kết quả trả về.
+  - 9. Trả về danh sách gợi ý sản phẩm.
+  dev_notes:
+  - FE nên debounce 300–500ms khi user nhập. API này chỉ phục vụ preview, không cần pagination. Nút “Xem tất cả” điều hướng
+    sang trang kết quả search.
+  - API ẩn
+  - check lại muốn sort theo gì nha (giá hay newest)
+  validation_rules:
+  - q bắt buộc.
+  - q không được rỗng sau khi trim.
+  - q tối thiểu 2 ký tự. (bắt buộc chữ cái)
+  - limit phải là số nguyên dương, mặc định = 4 nếu không truyền.
+  - limit không được vượt quá 10.
+  security:
+  - Chỉ đọc; sanitize q; tránh SQL injection vào search query; có thể rate limit để chống spam search.
+- trigger: Search -> Page result
+  screen: null
+  type: CUSTOM
+  name: Trang kết quả tìm kiếm sản phẩm
+  description: User bấm Enter hoặc “Xem tất cả”, hệ thống hiển thị toàn bộ kết quả tìm kiếm theo phân trang.
+  resource: product-lines
+  method: GET
+  endpoint: /api/v1/product-lines
+  http_request: GET /api/v1/product-lines?q={q}&page={page}&limit={limit}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - q={q}&page={page}&limit={limit}
+    - 'q (string, bắt buộc): từ khóa tìm kiếm'
+    - page (integer, mặc định = 1)
+    - limit (integer, mặc định = 20)
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (array<object>) — Payload chính của response
+    - data[].product_line_id (string) — Mã dòng sản phẩm
+    - data[].slug (string) — Định danh dùng cho URL
+    - data[].name (string) — Tên hiển thị
+    - data[].thumbnail (string) — URL ảnh đại diện
+    - data[].price (numeric) — Giá hiển thị
+    - data[].currency (string) — Đơn vị tiền tệ
+    - pagination (object) — Thông tin phân trang
+    - pagination.page (integer) — Trang hiện tại
+    - pagination.limit (integer) — Số item mỗi trang
+    - pagination.total (integer) — Tổng số item
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - product_line_id: PL020
+        slug: ao-thun-trang
+        name: Áo thun trắng
+        thumbnail: https://cdn.xeoxo.vn/products/ao-thun-trang.jpg
+        price: 250000
+        currency: VND
+      pagination:
+        page: 1
+        limit: 20
+        total: 48
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm với từ khóa '{q}'
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - danh sách sp
+  - thumbnail
+  - name
+  - price + currency
+  - pagination hoặc load more
+  business_rules:
+  - '1. Đọc query params: q, page, limit.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Search trên PRODUCT_LINE.line_name và PRODUCT_LINE.description.
+  - 4. Filter PRODUCT_LINE.status = ACTIVE.
+  - 5. Lấy thumbnail từ PRODUCT_LINE_MEDIA và MEDIA.
+  - 6. Lấy price từ PRODUCT_VARIANT thông qua PRODUCT_COMPONENT.
+  - 7. Sort theo relevance, sau đó PRODUCT_LINE.created_at DESC.
+  - 8. Apply pagination.
+  - 9. Trả về danh sách sản phẩm phù hợp.
+  dev_notes:
+  - Đang sort theo newest -> xem thử muốn sort theo giá hay newest hay best seller gì nha
+  validation_rules:
+  - q bắt buộc.
+  - q không được rỗng sau khi trim.
+  - page phải là số nguyên dương, mặc định = 1 nếu không truyền.
+  - limit phải là số nguyên dương, mặc định = 20 nếu không truyền.
+  - limit không được vượt quá 50.
+  security:
+  - Chỉ đọc; sanitize q; validate query param; tránh SQL injection; có thể rate limit nếu search bị spam.
+- trigger: Product list --> Product
+  screen: null
+  type: CUSTOM
+  name: Chi tiết sản phẩm (gộp review)
+  description: Lấy chi tiết 1 dòng sản phẩm, gồm thông tin sản phẩm, ảnh, màu, size, chất liệu, review summary và vài review
+    đầu tiên để render màn hình product detail.
+  resource: product-lines
+  method: GET
+  endpoint: /api/v1/product-lines/{product_line_id}
+  http_request: GET /api/v1/product-lines/{product_line_id}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - product_line_id bắt buộc
+    query_parameters:
+    - Không có (vì chỉ lấy chi tiết 1 sản phẩm).
+    body: không có (vì là GET).
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (object) — Payload chính của response
+    - data.product_line_id (string) — Mã dòng sản phẩm
+    - data.slug (string) — Định danh dùng cho URL
+    - data.name (string) — Tên hiển thị
+    - data.description (string) — Mô tả sản phẩm
+    - data.price (numeric) — Giá hiển thị
+    - data.currency (string) — Đơn vị tiền tệ
+    - data.media (array<object>) — Danh sách ảnh/video sản phẩm
+    - data.media[].url (string) — URL ảnh/video
+    - data.media[].media_type (string) — Loại media IMAGE/VIDEO
+    - data.media[].media_role (string) — Vai trò media MAIN/GALLERY/DETAIL/LOOKBOOK
+    - data.color (object) — Màu chính của sản phẩm
+    - data.color.color_name (string) — Tên màu
+    - data.color.color_code (string) — Mã màu HEX
+    - data.sizes (array<object>) — Danh sách size/variant có thể chọn
+    - data.sizes[].variant_id (string) — Mã biến thể, dùng khi thêm vào giỏ hàng
+    - data.sizes[].size_name (string) — Tên size
+    - data.sizes[].price (numeric) — Giá của variant
+    - data.sizes[].is_available (boolean) — Biến thể còn có thể mua hay không
+    - data.material (object) — Thông tin chất liệu
+    - data.material.material_name (string) — Tên chất liệu
+    - data.material.description (string) — Mô tả chất liệu
+    - data.material.care_instruction (string) — Hướng dẫn bảo quản
+    - data.reviews_summary (object) — Tổng hợp đánh giá
+    - data.reviews_summary.avg_rating (number) — Điểm đánh giá trung bình
+    - data.reviews_summary.total (integer) — Tổng số review hiển thị
+    - data.reviews_summary.preview_count (integer) — Số review đang trả trong preview
+    - data.reviews_summary.has_more (boolean) — Còn review để tải thêm hay không
+    - data.reviews_preview (array<object>) — Danh sách review xem trước
+    - data.reviews_preview[].review_id (string) — Mã đánh giá
+    - data.reviews_preview[].customer_name (string) — Tên khách hàng hiển thị trên review
+    - data.reviews_preview[].rating (integer) — Số sao đánh giá
+    - data.reviews_preview[].review_content (string) — Nội dung đánh giá
+    - data.reviews_preview[].created_at (string) — Thời gian tạo review
+    - data.reviews_preview[].media (array<object>) — Ảnh/video đính kèm review nếu có
+    - data.reviews_preview[].media[].url (string) — URL ảnh/video review
+    - data.reviews_preview[].media[].media_type (string) — Loại media IMAGE/VIDEO
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        product_line_id: PL001
+        slug: ao-luc-nhan
+        name: Áo Lục Nhân
+        description: Áo dài thiết kế từ chất liệu cao cấp.
+        price: 1250000
+        currency: VND
+        media:
+        - url: https://cdn.xeoxo.vn/products/ao-luc-nhan-main.jpg
+          media_type: IMAGE
+          media_role: MAIN
+        - url: https://cdn.xeoxo.vn/products/ao-luc-nhan-detail.jpg
+          media_type: IMAGE
+          media_role: DETAIL
+        color:
+          color_name: Xanh lục
+          color_code: '#2F5D3A'
+        sizes:
+        - variant_id: V001
+          size_name: M
+          price: 1250000
+          is_available: true
+        - variant_id: V002
+          size_name: L
+          price: 1250000
+          is_available: true
+        - variant_id: V003
+          size_name: XL
+          price: 1250000
+          is_available: false
+        material:
+          material_name: Lụa
+          description: Chất liệu mềm, nhẹ, có độ bóng nhẹ.
+          care_instruction: Giặt tay nhẹ, tránh phơi trực tiếp dưới nắng.
+        reviews_summary:
+          avg_rating: 4.5
+          total: 12
+          preview_count: 3
+          has_more: true
+        reviews_preview:
+        - review_id: R001
+          customer_name: Nguyễn A
+          rating: 5
+          review_content: Vải đẹp, form chuẩn.
+          created_at: '2026-06-01T10:00:00Z'
+          media:
+          - url: https://cdn.xeoxo.vn/reviews/r001-1.jpg
+            media_type: IMAGE
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Ảnh/video sản phẩm
+  - Tên sản phẩm
+  - Giá
+  - Màu sắc
+  - Size
+  - Mô tả sản phẩm
+  - Chất liệu, hướng dẫn bảo quản
+  - Rating trung bình
+  - Số lượng review
+  - 3 review đầu tiên
+  - Nút “Xem thêm” nếu has_more = true
+  business_rules:
+  - '1. Đọc path param: slug.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query PRODUCT_LINE theo slug.
+  - 4. Nếu không tồn tại hoặc PRODUCT_LINE.status != ACTIVE → trả 404.
+  - 5. Lấy media từ PRODUCT_LINE_MEDIA và MEDIA.
+  - 6. Lấy màu chính từ COLOR theo PRODUCT_LINE.color_id.
+  - 7. Lấy material từ MATERIAL theo PRODUCT_LINE.material_id.
+  - 8. Lấy components từ PRODUCT_COMPONENT.
+  - 9. Lấy variant từ PRODUCT_VARIANT theo component_id.
+  - 10. Lấy size từ SIZE_OPTION theo PRODUCT_VARIANT.size_option_id.
+  - 11. Lấy tồn kho từ INVENTORY theo variant_id để xác định is_available.
+  - 12. Query REVIEW có review_status = DISPLAY để tính reviews_summary.avg_rating và reviews_summary.total.
+  - 13. Lấy 3 review mới nhất làm reviews_preview.
+  - 14. Lấy media review từ REVIEW_MEDIA và MEDIA nếu có.
+  - 15. Tính reviews_summary.preview_count và reviews_summary.has_more.
+  - 16. Trả về object chi tiết sản phẩm.
+  dev_notes:
+  - DB cần có slug trong PRODUCT_LINE nếu endpoint dùng /product-lines/{slug}.
+  - Không trả customer_id, email, phone vì UI không dùng và không nên expose dữ liệu khách hàng.
+  - variant_id cần trả vì FE dùng để thêm sản phẩm vào giỏ hàng.
+  - is_available dùng để enable/disable size và nút thêm giỏ.
+  - Nếu sản phẩm chưa có review thì trả avg_rating = 0, total = 0, preview_count = 0, has_more = false, reviews_preview =
+    [].
+  - Nút “Xem thêm” không dùng endpoint riêng; FE gọi API review list với page/limit tăng dần, ví dụ /api/v1/product-lines/{slug}/reviews?page=2&limit=3.
+  validation_rules:
+  - slug bắt buộc.
+  - slug không được rỗng sau khi trim.
+  - slug phải đúng định dạng URL slug.
+  - 'Backend logic: đã chặn số lượng tối đa = tồn kho, user kh thể bấm hơn tồn kho, mặc định = 1, sản phẩm hết hàng sẽ tự
+    kh hiển thị'
+  security:
+  - Chỉ đọc; validate path param; sanitize input; dùng prepared statement/ORM để tránh SQL injection; không trả dữ liệu nội
+    bộ như customer_id, email, phone, internal_note, cost_price.
+- trigger: Product list + Filter -> product list
+  screen: null
+  type: CUSTOM
+  name: Danh sách sản phẩm có filter
+  description: User đang ở trang danh sách sản phẩm và dùng bộ lọc để lọc lại product list theo department, category, collection,
+    size, màu sắc, giá, chất liệu, usage context.
+  resource: product-lines
+  method: GET
+  endpoint: /api/v1/product-lines
+  http_request: GET /api/v1/product-lines?department={department}&category_id={category_id}&collection_id={collection_id}&color_id={color_id}&size_option_id={size_option_id}&material_id={material_id}&usage_context={usage_context}&price_lte={price_lte}&sort_price={sort_price}&page={page}&limit={limit}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - 'department optional: WOMEN, MEN, KIDS'
+    - category_id optional
+    - collection_id optional
+    - color_id optional
+    - size_option_id optional
+    - material_id optional
+    - usage_context optional
+    - price_lte optional
+    - 'sort_price optional: asc, desc'
+    - page, limit
+    body: Không có vì dùng GET.
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].product_line_id
+    - data[].slug
+    - data[].name
+    - data[].thumbnail
+    - data[].price
+    - data[].currency
+    - pagination.page
+    - pagination.limit
+    - pagination.total
+    - filter_meta.max_price_available
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - product_line_id: 90
+        slug: ao-dai-nu-party
+        name: Áo Dài Nữ Party
+        thumbnail: https://cdn.xeoxo.vn/products/a.jpg
+        price: 950000
+        currency: VND
+      pagination:
+        page: 1
+        limit: 20
+        total: 48
+      filter_meta:
+        max_price_available: 2500000
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - danh sách sản phẩm
+  - thumbnail
+  - name
+  - price + currency
+  - filter (Cố định)
+  business_rules:
+  - 1. Đọc query params.
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query PRODUCT_LINE theo scope hiện tại.
+  - 4. Nếu có department/category_id, join CATEGORY, LINE_CATEGORY.
+  - 5. Nếu có collection_id, filter PRODUCT_LINE.collection_id.
+  - 6. Nếu có color_id, filter PRODUCT_LINE.color_id.
+  - 7. Nếu có material_id, filter PRODUCT_LINE.material_id.
+  - 8. Nếu có usage_context, filter PRODUCT_LINE.usage_context.
+  - 9. Nếu có size_option_id, join PRODUCT_COMPONENT, PRODUCT_VARIANT để filter variant size.
+  - 10. Filter ACTIVE.
+  - 11. Lấy thumbnail, price.
+  - 12. Tính filter_meta.max_price_available theo scope.
+  - 13. Apply price_lte.
+  - 14. Apply sort_price nếu có.
+  - 15. Apply pagination.
+  dev_notes:
+  - Product list mặc định đã sort theo newest, nên không cần truyền sort=newest.
+  - Thanh giá không cần cột riêng trong DB.
+  - filter_meta.max_price_available là derived state do BE tính từ PRODUCT_VARIANT.price, không phải cột DB.
+  - price_lte là giá user chọn trên thanh giá; backend dùng để lọc sản phẩm có price <= price_lte.
+  - Nếu FE chưa kéo thanh giá thì không truyền price_lte.
+  - sort_price chỉ xử lý giá thấp đến cao hoặc cao đến thấp.
+  validation_rules:
+  - 'Ít nhất một scope chính nên được truyền: department, category_id hoặc collection_id.'
+  - 'department nếu truyền chỉ nhận: Nữ, Nam, Trẻ Em.'
+  - category_id nếu truyền phải là số nguyên dương và tồn tại trong CATEGORY.
+  - collection_id nếu truyền phải là số nguyên dương và tồn tại trong COLLECTION.
+  - price_lte nếu truyền phải >= 0.
+  - 'sort_price nếu truyền chỉ nhận: asc, desc.'
+  - page phải là số nguyên dương, mặc định = 1 nếu không truyền.
+  - limit phải là số nguyên dương, mặc định = 20 nếu không truyền.
+  - limit không được vượt quá 50.
+  security:
+  - Chỉ đọc; validate query param; sanitize input; dùng prepared statement/ORM để tránh SQL injection; không trả dữ liệu nội
+    bộ không dùng trên UI
+- trigger: Product detail + bảng kích cỡ --> size chart detail
+  screen: null
+  type: STANDARD
+  name: Bảng kích thước
+  description: Hiển thị bảng size (số đo theo từng size) của 1 dòng sản phẩm
+  resource: size-charts
+  method: GET
+  endpoint: /api/v1/product-lines/{product_line_id}/size-chart
+  http_request: GET /api/v1/product-lines/{product_line_id}/size-chart
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - product_line_id bắt buộc
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (object) — Payload chính của response
+    - data.chart_name (string) — Tên bảng kích thước
+    - data.description (string) — Ghi chú bảng kích thước nếu có
+    - data.columns (array<object>) — Danh sách cột thông số đo
+    - data.columns[].measurement_type_id (integer) — Mã loại thông số đo
+    - data.columns[].measurement_name (string) — Tên thông số đo hiển thị, ví dụ Chiều cao, Cân nặng, Ngực, Eo
+    - data.columns[].unit (string) — Đơn vị đo
+    - data.rows (array<object>) — Danh sách dòng size
+    - data.rows[].size_option_id (integer) — Mã size option
+    - data.rows[].size_name (string) — Tên size, ví dụ XS/S/M/L/XL
+    - data.rows[].values (array<object>) — Danh sách giá trị đo theo từng cột
+    - data.rows[].values[].measurement_type_id (integer) — Mã loại thông số đo, dùng để map với columns
+    - data.rows[].values[].value (string) — Giá trị hiển thị trên bảng size, ví dụ 94, 165 - 168, 55 - 60
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        chart_name: Size Chart Áo Dài
+        description: Thông số chỉ mang tính tham khảo.
+        columns:
+        - measurement_type_id: 1
+          measurement_name: Dài áo
+          unit: cm
+        - measurement_type_id: 2
+          measurement_name: Chiều cao
+          unit: cm
+        - measurement_type_id: 3
+          measurement_name: Cân nặng
+          unit: kg
+        - measurement_type_id: 4
+          measurement_name: Ngực
+          unit: cm
+        - measurement_type_id: 5
+          measurement_name: Eo
+          unit: cm
+        - measurement_type_id: 6
+          measurement_name: Vai
+          unit: cm
+        rows:
+        - size_option_id: 1
+          size_name: S
+          values:
+          - measurement_type_id: 1
+            value: '94'
+          - measurement_type_id: 2
+            value: 165 - 168
+          - measurement_type_id: 3
+            value: 55 - 60
+          - measurement_type_id: 4
+            value: 86 - 88
+          - measurement_type_id: 5
+            value: 70 - 72
+          - measurement_type_id: 6
+            value: 43 - 44
+        - size_option_id: 2
+          size_name: M
+          values:
+          - measurement_type_id: 1
+            value: '98'
+          - measurement_type_id: 2
+            value: 169 - 170
+          - measurement_type_id: 3
+            value: 61 - 65
+          - measurement_type_id: 4
+            value: 90 - 92
+          - measurement_type_id: 5
+            value: 74 - 76
+          - measurement_type_id: 6
+            value: '45'
+    error_examples:
+    - code: 404
+      message: Không tìm thấy sản phẩm
+    - code: 404
+      message: Không tìm thấy bảng kích thước
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Tên bảng size chart
+  - Header cột thông số đo
+  - Dòng size XS/S/M/L/XL
+  - Giá trị đo theo từng size
+  - Ghi chú bảng size nếu có
+  business_rules:
+  - '1. Đọc path param: slug.'
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Query PRODUCT_LINE theo slug.
+  - 4. Nếu không tồn tại hoặc PRODUCT_LINE.status != ACTIVE → trả 404.
+  - 5. Ưu tiên query SIZE_CHART theo PRODUCT_LINE.product_line_id nếu sản phẩm có bảng size riêng.
+  - 6. Nếu không có size chart riêng, lấy category chính từ LINE_CATEGORY.
+  - 7. Query SIZE_CHART_CATEGORY để tìm SIZE_CHART áp dụng cho category đó.
+  - 8. Filter SIZE_CHART.is_active = true.
+  - 9. Query SIZE_OPTION theo size_chart_id.
+  - 10. Query SIZE_MEASUREMENT theo size_option_id.
+  - 11. Query MEASUREMENT_TYPE theo measurement_type_id.
+  - 12. Transform dữ liệu thành columns từ MEASUREMENT_TYPE.
+  - 13. Transform dữ liệu thành rows từ SIZE_OPTION và SIZE_MEASUREMENT.
+  - 14. Convert measurement_value hoặc measurement_min/measurement_max thành value dạng string để FE render trực tiếp.
+  - 15. Trả về dữ liệu size chart để FE render tabl
+  dev_notes:
+  - API chỉ gọi khi user bấm mở popup “Bảng kích thước”, không cần load chung trong product detail nếu muốn tối ưu payload.
+  - Response thiết kế theo dạng table DTO gồm columns và rows, không trả raw DB.
+  - value là field FE hiển thị trực tiếp, được BE transform từ measurement_value, measurement_min, measurement_max.
+  - Nếu có measurement_value thì hiển thị một giá trị, ví dụ 94.
+  - Nếu có measurement_min và measurement_max thì hiển thị dạng khoảng, ví dụ 165 - 168.
+  - Nếu một sản phẩm thuộc nhiều category, ưu tiên category chính LINE_CATEGORY.is_primary = true.
+  - Nếu DB chưa có PRODUCT_LINE.slug thì đổi endpoint sang /api/v1/product-lines/{product_line_id}/size-chart hoặc thêm cột
+    slug vào DB.
+  - DB hiện có SIZE_MEASUREMENT.measurement_order để sort thứ tự cột/thông số đo; nếu muốn sort size XS/S/M/L/XL ổn định thì
+    nên quy ước theo SIZE_OPTION.size_name hoặc bổ sung display_order cho SIZE_OPTION.
+  validation_rules:
+  - slug bắt buộc.
+  - slug không được rỗng sau khi trim.
+  - slug phải đúng định dạng URL slug.
+  security:
+  - Chỉ đọc; validate path param; sanitize input; dùng prepared statement/ORM để tránh SQL injection; không trả dữ liệu nội
+    bộ không dùng trên UI.
+- trigger: Product detail + Custome--> Bảng nhập may (create)
+  screen: tương tự cái dưới
+  type: CUSTOM
+  name: Tạo hồ sơ số đo (may đo cá nhân)
+  description: User nhập số đo và bấm Lưu Biểu mẫu. Hệ thống tạo MEASUREMENT_PROFILE và CUSTOMIZATION_REQUEST.
+  resource: customization-requests
+  method: POST
+  endpoint: /api/v1/customization-requests
+  http_request: POST /api/v1/customization-requests
+  authentication: PUBLIC (Guest hoặc Customer)
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'product_line_id (integer, bắt buộc)
+
+      customer_note optional
+
+      measurements.height
+
+      measurements.weight
+
+      measurements.chest
+
+      measurements.waist
+
+      measurements.hip
+
+      measurements.shoulder
+
+      measurements.neck
+
+      measurements.arm_length
+
+      measurements.bicep'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.customization_id
+    - data.measurement_profile_id
+    - data.product_line_id
+    - data.unit_price
+    - data.surcharge_percent
+    - data.surcharge_amount
+    - data.custom_price
+    - data.customization_status
+    - data.measurements
+    - data.created_at
+    success_example:
+      code: 201
+      message: Tạo yêu cầu may đo thành công
+      data:
+        customization_id: 101
+        measurement_profile_id: 501
+        product_line_id: PL010
+        customization_status: REQUESTED
+        measurements:
+          height: 165
+          weight: 52
+          chest: 84
+          waist: 68
+          hip: 90
+          shoulder: 38
+          neck: 34
+          arm_length: 55
+          bicep: 26
+        created_at: '2026-07-03T10:00:00Z'
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 404
+      message: Không tìm thấy sản phẩm
+    - code: 422
+      message: Số đo không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Toast tạo yêu cầu thành công
+  - Số đo vừa nhập
+  - Giá custom nếu UI cần
+  - customization_id dùng cho bước sau
+  business_rules:
+  - 1. Đọc request body.
+  - 2. Validate dữ liệu đầu vào.
+  - 3. Nếu có token → lấy customer_id; nếu guest → customer_id = NULL.
+  - 4. Query PRODUCT_LINE theo product_line_id.
+  - 5. Nếu không tồn tại hoặc inactive → 404.
+  - 6. Insert MEASUREMENT_PROFILE với profile_type = CUSTOMER_MEASUREMENT.
+  - 7. Insert nhiều dòng MEASUREMENT_PROFILE_DETAIL.
+  - 8. Tính unit_price từ giá sản phẩm.
+  - 9. Tính surcharge_percent — nếu chưa có rule thì default 0.
+  - 10. Tính surcharge_amount = unit_price * surcharge_percent / 100.
+  - 11. Tính custom_price = unit_price + surcharge_amount.
+  - 12. Insert CUSTOMIZATION_REQUEST với customer_id, product_line_id, measurement_profile_id, unit_price, surcharge_percent,
+    surcharge_amount, custom_price, customization_status = REQUESTED, customer_note.
+  - 13. Trả về request vừa tạo.
+  dev_notes:
+  - 4 field unit_price, surcharge_percent, surcharge_amount, custom_price trong DB là NOT NULL nên không được ghi “nếu có”.
+    Phải luôn tính, có thể default phụ phí = 0.
+  validation_rules:
+  - product_line_id bắt buộc, tồn tại và ACTIVE.
+  - measurements bắt buộc.
+  - Tất cả số đo là số > 0.
+  - 'Range hợp lý: height 100–220, weight 20–200, vòng đo 20–200.'
+  - customer_note không vượt quá giới hạn ký tự.
+  security:
+  - PUBLIC — rate limit theo IP (chống spam tạo hồ sơ ảo). Không cho set customer_id qua body, luôn lấy từ token nếu có. Validate
+    kiểu số tránh injection.
+- trigger: Product Detail + Customize -> Bảng nhập may đo (chỉnh sửa)
+  screen: null
+  type: CUSTOM
+  name: Cập nhật hồ sơ số đo đã lưu
+  description: User sửa lại số đo của yêu cầu custom đã tạo. Hệ thống cập nhật hồ sơ số đo đang gắn với customization request.
+  resource: customization-requests
+  method: PUT
+  endpoint: /api/v1/customization-requests/{customization_id}/measurements
+  http_request: PUT /api/v1/customization-requests/{customization_id}/measurements
+  authentication: PUBLIC / GUEST_OR_CUSTOMER
+  request:
+    path_parameters:
+    - customization_id (integer, bắt buộc)
+    query_parameters:
+    - Không có
+    body: 'customer_note (string, optional)
+
+      measurements (object, bắt buộc): height, weight, chest, waist, hip, shoulder, neck, arm_length, bicep'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.customization_id
+    - data.measurement_profile_id
+    - data.product_line_id
+    - data.customization_status
+    - data.measurements
+    - data.updated_at
+    success_example:
+      code: 200
+      message: Cập nhật số đo thành công
+      data:
+        customization_id: 101
+        measurement_profile_id: 501
+        product_line_id: PL010
+        customization_status: REQUESTED
+        measurements:
+          height: 166
+          weight: 53
+          chest: 85
+          waist: 69
+          hip: 91
+          shoulder: 38
+          neck: 34
+          arm_length: 55
+          bicep: 26
+        updated_at: '2026-07-03T11:00:00Z'
+    error_examples:
+    - code: 404
+      message: Không tìm thấy yêu cầu may đo
+    - code: 403
+      message: Bạn không có quyền chỉnh sửa yêu cầu này
+    - code: 422
+      message: Số đo không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Form cập nhật số đo
+  - Toast cập nhật thành công
+  business_rules:
+  - 1. Đọc path param customization_id.
+  - 2. Query CUSTOMIZATION_REQUEST theo customization_id.
+  - 3. Nếu không tồn tại → trả 404.
+  - 4. Nếu request có customer_id thì token phải khớp customer đó.
+  - 5. Nếu request là guest customer_id = NULL thì cho sửa theo id.
+  - 6. Lấy measurement_profile_id từ CUSTOMIZATION_REQUEST.
+  - 7. Validate measurements.
+  - 8. Update MEASUREMENT_PROFILE_DETAIL theo measurement_type_id.
+  - 9. Update CUSTOMIZATION_REQUEST.customer_note nếu có.
+  - 10. Trả về dữ liệu mới nhất
+  dev_notes:
+  - Không update trực tiếp bằng measurement_profile_id, vì custom phải đi qua CUSTOMIZATION_REQUEST để biết sản phẩm nào.
+  - Guest sửa theo id có rủi ro; muốn chặt hơn thì thêm session_id - hỏi Mỹ thử có làm session id kh
+  validation_rules:
+  - customization_id phải là số nguyên dương.
+  - measurements bắt buộc.
+  - Tất cả số đo là số và > 0.
+  - 'Range hợp lý: height 100–220, weight 20–200, các vòng đo 20–200.'
+  - Nếu request có customer_id thì phải đúng chủ sở hữu.
+  security:
+  - PUBLIC; nếu có customer_id thì check ownership; validate body; tránh IDOR; dùng transaction khi update detail.
+- trigger: Product detail + Đặt lịch đo--> Form đặt lịch
+  screen: null
+  type: STANDARD
+  name: Đặt lịch may đo tại chi nhánh
+  description: User nhập thông tin liên hệ, chọn chi nhánh, ngày giờ và bấm Lưu Biểu mẫu để đặt lịch đo.
+  resource: measurement-appointments
+  method: POST
+  endpoint: /api/v1/measurement-appointments
+  http_request: POST /api/v1/measurement-appointments
+  authentication: PUBLIC (GUEST_OR_CUSTOMER)
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'product_line_id (string, bắt buộc)
+
+      full_name (string, bắt buộc)
+
+      phone (string, bắt buộc)
+
+      email (string, optional)
+
+      branch_id (integer, bắt buộc)
+
+      appointment_date (date, bắt buộc)
+
+      start_time (time, bắt buộc)
+
+      customer_note (string, optional)'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.appointment_id
+    - data.product_line_id
+    - data.branch_id
+    - data.appointment_date
+    - data.start_time
+    - data.end_time
+    - data.appointment_status
+    success_example:
+      code: 201
+      message: Đặt lịch thành công, nhân viên sẽ liên hệ xác nhận
+      data:
+        appointment_id: 88
+        product_line_id: PL010
+        branch_id: 2
+        appointment_date: '2026-07-10'
+        start_time: 08:00
+        end_time: 08:30
+        appointment_status: PENDING
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 404
+      message: Không tìm thấy chi nhánh
+    - code: 409
+      message: Khung giờ này đã có người đặt
+    - code: 422
+      message: Ngày hẹn không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Toast đặt lịch thành công
+  - Ngày hẹn
+  - Giờ hẹn
+  - Trạng thái lịch hẹn
+  business_rules:
+  - 1. Validate request trước khi insert.
+  - 2. Nếu có token → lấy customer_id.
+  - 3. Nếu guest → tìm/tạo CUSTOMER với customer_type = GUEST theo phone.
+  - 4. Query PRODUCT_LINE theo product_line_id.
+  - 5. Query BRANCH theo branch_id.
+  - 6. Check branch active.
+  - 7. Check slot chưa trùng lịch PENDING/CONFIRMED.
+  - 8. Tính end_time = start_time + 30 phút.
+  - 9. Insert MEASUREMENT_APPOINTMENT với status PENDING.
+  - 10. Trả về lịch hẹn.
+  dev_notes: []
+  validation_rules:
+  - product_line_id bắt buộc, tồn tại và ACTIVE.
+  - full_name, phone, branch_id, appointment_date, start_time bắt buộc.
+  - phone đúng định dạng VN.
+  - branch_id tồn tại và active.
+  - appointment_date không là ngày quá khứ.
+  - start_time đúng slot 30 phút.
+  - Slot không trùng lịch PENDING/CONFIRMED.
+  security:
+  - PUBLIC; rate limit theo IP/phone; không nhận customer_id từ body; validate input; check trùng lịch trước insert.
+- trigger: Product detail + chọn size nhanh --> Bảng nhập chọn size
+  screen: null
+  type: STANDARD
+  name: Tạo hồ sơ số đo + gợi ý size
+  description: User nhập số đo và bấm Gợi ý size. Hệ thống lưu hồ sơ số đo và trả size phù hợp nhất.
+  resource: measurement-profiles
+  method: POST
+  endpoint: /api/v1/measurement-profiles
+  http_request: POST /api/v1/measurement-profiles
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'profile_type (string, bắt buộc): SIZE_RECOMMENDATION
+
+      product_line_id (string, bắt buộc)
+
+      measurements (object, bắt buộc): height, weight, chest, waist, hip, shoulder, neck, arm_length, bicep'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.measurement_profile_id
+    - data.profile_type
+    - data.product_line_id
+    - data.measurements
+    - data.recommended_size.size_option_id
+    - data.recommended_size.size_name
+    - data.recommended_size.match_note
+    success_example:
+      code: 201
+      message: Gợi ý size thành công
+      data:
+        measurement_profile_id: 502
+        profile_type: SIZE_RECOMMENDATION
+        product_line_id: PL010
+        measurements:
+          height: 165
+          weight: 52
+          chest: 84
+          waist: 68
+          hip: 90
+          shoulder: 38
+          neck: 34
+          arm_length: 55
+          bicep: 26
+        recommended_size:
+          size_option_id: 7
+          size_name: M
+          match_note: Phù hợp với vòng ngực và vòng eo của bạn
+    error_examples:
+    - code: 404
+      message: Sản phẩm này chưa có bảng size để gợi ý
+    - code: 422
+      message: Số đo không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Size gợi ý
+  - Ghi chú lý do gợi ý
+  - Giữ lại số đo vừa nhập
+  business_rules:
+  - . Validate request.
+  - 2. Nếu có token → lấy customer_id; nếu guest → NULL.
+  - 3. Query PRODUCT_LINE theo product_line_id.
+  - 4. Insert MEASUREMENT_PROFILE với profile_type = SIZE_RECOMMENDATION.
+  - 5. Insert MEASUREMENT_PROFILE_DETAIL.
+  - 6. Tìm SIZE_CHART theo product_line; nếu không có thì fallback theo category chính.
+  - 7. Lấy SIZE_OPTION và SIZE_MEASUREMENT.
+  - 8. So khớp số đo với từng size.
+  - 9. Trả về size phù hợp nhất.
+  dev_notes:
+  - MEASUREMENT_PROFILE không lưu product_line_id, nên product_line_id chỉ dùng trong request để tìm size chart và trả lại
+    cho FE.
+  - check lại phần data ví size recommend kh có trong db -> mà cần phải tính derived state r quét xuồng data (maybe)
+  validation_rules:
+  - profile_type = SIZE_RECOMMENDATION.
+  - product_line_id tồn tại và ACTIVE.
+  - Sản phẩm map được size chart.
+  - Tất cả số đo bắt buộc, là số và > 0.
+  - Range hợp lý như case custom.
+  security:
+  - PUBLIC; rate limit theo IP; validate body; nếu có token thì gắn customer_id.
+- trigger: Product Detail + Chọn size nhanh -> Bảng nhập chọn size (chỉnh sửa số đo)
+  screen: null
+  type: STANDARD
+  name: Cập nhật số đo và gợi ý lại size
+  description: User sửa số đo trong hồ sơ gợi ý size đã lưu, hệ thống cập nhật số đo và tính lại size.
+  resource: measurement-profiles
+  method: POST
+  endpoint: /api/v1/measurement-profiles/{id}/size-recommendation
+  http_request: PUT /api/v1/measurement-profiles/{id}/size-recommendation
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - 'id (integer, bắt buộc): measurement_profile_id'
+    query_parameters:
+    - Không có
+    body: 'product_line_id (string, bắt buộc)
+
+      measurements (object, bắt buộc): height, weight, chest, waist, hip, shoulder, neck, arm_length, bicep'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.measurement_profile_id
+    - data.profile_type
+    - data.product_line_id
+    - data.measurements
+    - data.recommended_size.size_option_id
+    - data.recommended_size.size_name
+    - data.recommended_size.match_note
+    success_example:
+      code: 200
+      message: Cập nhật và gợi ý size thành công
+      data:
+        measurement_profile_id: 502
+        profile_type: SIZE_RECOMMENDATION
+        product_line_id: 10
+        measurements:
+          height: 166
+          weight: 53
+          chest: 85
+          waist: 69
+          hip: 91
+          shoulder: 38
+          neck: 34
+          arm_length: 55
+          bicep: 26
+        recommended_size:
+          size_option_id: 8
+          size_name: L
+          match_note: Phù hợp với vòng ngực và vòng eo của bạn
+    error_examples:
+    - code: 404
+      message: Không tìm thấy hồ sơ số đo
+    - code: 403
+      message: Bạn không có quyền chỉnh sửa hồ sơ này
+    - code: 422
+      message: Số đo không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Size gợi ý mới
+  - Số đo mới trên form
+  business_rules:
+  - 1. Query MEASUREMENT_PROFILE theo id.
+  - 2. Check profile_type = SIZE_RECOMMENDATION.
+  - 3. Nếu profile có customer_id → token phải đúng chủ hồ sơ.
+  - 4. Nếu guest profile → cho sửa theo id.
+  - 5. Validate product_line_id và measurements.
+  - 6. Update MEASUREMENT_PROFILE_DETAIL.
+  - 7. Dùng product_line_id trong body để tìm size chart.
+  - 8. Chạy lại thuật toán match size.
+  - 9. Trả về recommended_size mới.
+  dev_notes:
+  - Cột HTTP Method phải là PUT, không phải POST. recommended_size là derived state, không phải bảng DB.
+  validation_rules:
+  - id là số nguyên dương.
+  - Profile tồn tại và đúng type SIZE_RECOMMENDATION.
+  - product_line_id bắt buộc, tồn tại và ACTIVE.
+  - Các số đo bắt buộc, số > 0, đúng range.
+  - Nếu profile có customer_id thì phải đúng chủ sở hữu.
+  security:
+  - PUBLIC; ownership check nếu có customer_id; validate body; tránh IDOR; rate limit.
+- trigger: Account --> Hồ sơ thông tin (xem)
+  screen: null
+  type: STANDARD
+  name: Xem thông tin cá nhân
+  description: Tab mặc định khi mở Tài khoản, hiển thị thông tin cá nhân của member.
+  resource: customers
+  method: GET
+  endpoint: /api/v1/customers/me
+  http_request: GET /api/v1/customers/me
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data.customer_id
+    - data.customer_name
+    - data.email
+    - data.phone
+    - data.gender
+    - data.birthday
+    - data.customer_type
+    - data.tier_id
+    - data.total_spent
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        customer_id: 1
+        customer_name: Nguyễn Văn A
+        email: a@gmail.com
+        phone: 0901234567
+        gender: Nam
+        birthday: '2005-08-02'
+        customer_type: MEMBER
+        tier_id: SILVER
+        total_spent: 2500000
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 404
+      message: Không tìm thấy khách hàng
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Họ tên
+  - SĐT
+  - Giới tính
+  - Email
+  - Ngày sinh
+  - Hạng thành viên nếu UI có
+  - Tổng chi tiêu nếu UI có
+  business_rules:
+  - 1. Lấy customer_id từ access token.
+  - 2. Query CUSTOMER theo customer_id.
+  - 3. Nếu có tier_id thì có thể join LOYALTY_TIER để lấy tên hạng nếu UI cần.
+  - 4. Trả về thông tin cá nhâ
+  dev_notes: []
+  validation_rules:
+  - Token hợp lệ.
+  - Role phải là CUSTOMER.
+  - CUSTOMER phải tồn tại và account còn active
+  security:
+  - Không trả account_id, password hoặc dữ liệu account raw.
+- trigger: Account --> Hồ sơ thông tin (cập nhập thông tin)
+  screen: null
+  type: STANDARD
+  name: Cập nhật thông tin cá nhân
+  description: User bấm Cập nhật thông tin cá nhân để sửa thông tin trong hồ sơ.
+  resource: customers
+  method: PUT
+  endpoint: /api/v1/customers/me
+  http_request: PUT /api/v1/customers/me
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'customer_name (string, optional)
+
+      email (string, optional)
+
+      phone (string, optional)
+
+      gender (string, optional)
+
+      birthday (date, optional)'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.customer_id
+    - data.customer_name
+    - data.email
+    - data.phone
+    - data.gender
+    - data.birthday
+    - data.customer_type
+    success_example:
+      code: 200
+      message: Cập nhật thông tin thành công
+      data:
+        customer_id: 1
+        customer_name: Nguyễn Văn A
+        email: a@gmail.com
+        phone: 0901234567
+        gender: Nam
+        birthday: '2005-08-02'
+        customer_type: MEMBER
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 422
+      message: Email không đúng định dạng
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Data mới sau cập nhật
+  - Toast cập nhật thành công
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Validate request body.
+  - 3. Update CUSTOMER theo whitelist field.
+  - 4. Trả về data mới nhất.
+  dev_notes:
+  - Không cho update tier_id, total_spent, spent_in_year, customer_type từ API user vì đây là dữ liệu hệ thống.
+  validation_rules:
+  - Email đúng định dạng nếu truyền.
+  - Phone đúng định dạng VN nếu truyền.
+  - gender nếu truyền chỉ nhận giá trị hợp lệ.
+  - birthday đúng định dạng YYYY-MM-DD.
+  - Không cho sửa customer_id, account_id, customer_type, tier_id, total_spent
+  security:
+  - Whitelist field; tránh mass assignment; không nhận customer_id từ body.
+- trigger: Tra cứu đơn hàng
+  screen: null
+  type: STANDARD
+  name: Tra cứu đơn hàng guest/member
+  description: User nhập mã đơn hàng + SĐT/email để xem đơn hàng. Dùng cho khách vãng lai hoặc member không muốn đăng nhập.
+  resource: orders
+  method: GET
+  endpoint: /api/v1/orders/lookup
+  http_request: GET /api/v1/orders/lookup?order_code={order_code}&contact={phone_or_email}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - order_code bắt buộc
+    - 'contact bắt buộc: SĐT hoặc email'
+    body: null
+  response:
+    body_fields:
+    - code, message, data.order_id, data.order_code, data.order_status, data.payment_status, data.total_amount, data.items[]
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        order_id: 1
+        order_code: XX20260630
+        order_status: COMPLETED
+        payment_status: PAID
+        total_amount: 2450000
+        items: []
+    error_examples:
+    - code: 400
+      message: Vui lòng nhập mã đơn hàng và SĐT/email
+    - code: 404
+      message: Không tìm thấy đơn hàng
+  ui_display:
+  - Thông tin đơn hàng
+  - Trạng thái đơn
+  - Sản phẩm trong đơn
+  - Nút đổi trả / đánh giá nếu đủ điều kiện
+  business_rules:
+  - 1. Đọc order_code, contact.
+  - 2. Validate đủ 2 thông tin.
+  - 3. Query SALES_ORDER theo order_code.
+  - 4. Check SALES_ORDER.customer_id không NULL.
+  - 5. Join CUSTOMER qua SALES_ORDER.customer_id.
+  - 6. Check contact khớp CUSTOMER.phone hoặc CUSTOMER.email.
+  - 7. Join ORDER_ITEM trả sản phẩm.
+  dev_notes:
+  - 'Business rule toàn hệ thống: mọi order, kể cả guest, phải gắn với một CUSTOMER row customer_type = GUEST. Không để SALES_ORDER.customer_id
+    NULL trong thực tế, nếu không guest lookup/review/return sẽ vỡ.'
+  validation_rules:
+  - order_code không rỗng.
+  - contact không rỗng.
+  - Contact đúng format phone/email.
+  - Contact phải khớp đơn hàng.
+  security:
+  - Không trả đơn nếu contact không khớp.
+- trigger: Acccount -> Lịch sử mua hàng
+  screen: null
+  type: STANDARD
+  name: Danh sách đơn hàng đã mua
+  description: 'Member xem danh sách đơn hàng theo 5 tab: Tất cả, Vận chuyển, Hoàn thành, Đã hủy, Hoàn hàng.'
+  resource: orders
+  method: GET
+  endpoint: /api/v1/orders
+  http_request: GET /api/v1/orders?status_group={status_group}&page={page}&limit={limit}
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - 'status_group (optional): all, shipping, completed, cancelled, returned'
+    - page
+    - limit
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].order_id
+    - data[].order_code
+    - data[].order_date
+    - data[].order_status
+    - data[].payment_status
+    - data[].reward_discount_amount
+    - data[].shipping_fee
+    - data[].total_amount
+    - data[].items[].order_item_id
+    - data[].items[].item_type
+    - data[].items[].thumbnail
+    - data[].items[].product_name
+    - data[].items[].color
+    - data[].items[].size
+    - data[].items[].quantity
+    - data[].items[].unit_price
+    - data[].items[].line_total
+    - pagination
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - order_id: 1
+        order_code: XX20260630
+        order_status: COMPLETED
+        payment_status: PAID
+        reward_discount_amount: 0
+        shipping_fee: 30000
+        total_amount: 2450000
+        items:
+        - order_item_id: 11
+          item_type: STANDARD
+          thumbnail: https://cdn.xeoxo.vn/products/a.jpg
+          product_name: Áo Dài
+          color: Đỏ
+          size: M
+          quantity: 1
+          unit_price: 2450000
+          line_total: 2450000
+      pagination:
+        page: 1
+        limit: 10
+        total: 5
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - 5 tab trạng thái
+  - Mã đơn
+  - Badge trạng thái
+  - Ảnh, tên, màu, size, số lượng sản phẩm
+  - Tổng tiền
+  - Nút Mua lại / Liên hệ đổi trả / Đánh giá
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Query SALES_ORDER theo customer_id.
+  - 3. Map status_group sang ORDER_STATUS.
+  - 4. Join ORDER_ITEM.
+  - '5. Với item STANDARD: join PRODUCT_VARIANT → PRODUCT_COMPONENT → PRODUCT_LINE.'
+  - '6. Với item CUSTOMIZED: join CUSTOMIZATION_REQUEST → PRODUCT_LINE.'
+  - 7. Join PRODUCT_LINE_MEDIA + MEDIA để lấy thumbnail.
+  - 8. Apply pagination.
+  - 9. Trả danh sách đơn hàng.
+  dev_notes:
+  - DB mới dùng reward_dicount_amount trong schema, nên nên sửa chính tả thành reward_discount_amount trước khi code.
+  validation_rules:
+  - status_group chỉ nhận all, shipping, completed, cancelled, returned.
+  - page, limit là số nguyên dương.
+  - limit không vượt quá 50.
+  security:
+  - Không nhận customer_id từ query; luôn lấy từ token.
+- trigger: Acccount -> Lịch sử mua hàng
+  screen: null
+  type: CUSTOM
+  name: Tạo yêu cầu đổi trả
+  description: Member hoặc guest gửi yêu cầu đổi/trả cho đơn COMPLETED.
+  resource: return-requests
+  method: POST
+  endpoint: /api/v1/orders/{order_id}/return-requests
+  http_request: POST /api/v1/orders/{order_id}/return-requests
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - order_id (integer, bắt buộc)
+    query_parameters:
+    - Không có
+    body: 'contact bắt buộc nếu guest
+
+      return_reason bắt buộc
+
+      items[].order_item_id bắt buộc
+
+      items[].return_quantity bắt buộc'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.return_id
+    - data.order_id
+    - data.return_status
+    - data.requested_at
+    - data.items[].return_item_id
+    - data.items[].order_item_id
+    - data.items[].return_quantity
+    - data.items[].return_amount
+    success_example:
+      code: 201
+      message: Đã gửi yêu cầu đổi/trả
+      data:
+        return_id: 301
+        order_id: 1001
+        return_status: REQUESTED
+        requested_at: '2026-07-03T10:00:00Z'
+        items:
+        - return_item_id: 1
+          order_item_id: 11
+          return_quantity: 1
+          return_amount: 0
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 403
+      message: Không có quyền thao tác trên đơn hàng này
+    - code: 404
+      message: Không tìm thấy đơn hàng
+    - code: 409
+      message: Đơn hàng đã quá thời hạn đổi/trả
+    - code: 409
+      message: Sản phẩm không đủ điều kiện đổi/trả
+    - code: 422
+      message: OTP không hợp lệ hoặc đã hết hạn
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Toast gửi yêu cầu đổi/trả thành công
+  - Mã yêu cầu đổi/trả
+  - Trạng thái REQUESTED
+  business_rules:
+  - 1. Đọc order_id và body.
+  - 2. Query SALES_ORDER theo order_id.
+  - 3. Nếu token CUSTOMER → check order thuộc customer.
+  - 4. Nếu guest → bắt buộc contact, join CUSTOMER qua SALES_ORDER.customer_id, check contact khớp phone/email.
+  - 5. Check order COMPLETED.
+  - 6. Check còn hạn 78 giờ theo rule.
+  - 7. Validate item thuộc order.
+  - 8. Chặn item không đủ điều kiện.
+  - 9. Insert RETURN_REQUEST với return_status = REQUESTED.
+  - 10. Insert RETURN_ITEM cho từng item.
+  dev_notes:
+  - Nếu cần lưu đổi size/đổi mẫu thì DB hiện chưa có cột request_type, desired_size_option_id, desired_product_line_id; nên
+    bổ sung vào RETURN_ITEM. Tất cả guest order phải có SALES_ORDER.customer_id trỏ tới CUSTOMER GUEST.
+  validation_rules:
+  - Guest bắt buộc truyền contact.
+  - return_reason bắt buộc.
+  - items không rỗng.
+  - return_quantity <= số lượng đã mua.
+  - Đơn COMPLETED và còn hạn 78h.
+  - Item thuộc đúng orde
+  security:
+  - Check ownership/contact; rate limit theo IP/contact.
+- trigger: Acccount -> Lịch sử mua hàng
+  screen: null
+  type: STANDARD
+  name: Đánh giá đơn hàng
+  description: Member hoặc guest đánh giá sản phẩm đã mua. Guest phải xác thực contact và insert review bằng customer_id của
+    đơn.
+  resource: reviews
+  method: POST
+  endpoint: /api/v1/product-lines/{product_line_id}/reviews
+  http_request: POST /api/v1/product-lines/{product_line_id}/reviews
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - product_line_id bắt buộc
+    query_parameters:
+    - Không có
+    body: 'order_item_id bắt buộc
+
+      rating bắt buộc
+
+      review_content optional
+
+      media_ids optional
+
+      contact optional nếu guest'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.review_id
+    - data.rating
+    - data.review_status
+    - data.created_at
+    success_example:
+      code: 201
+      message: Gửi đánh giá thành công
+      data:
+        review_id: 99
+        rating: 5
+        review_status: DISPLAY
+        created_at: '2026-07-03T10:00:00Z'
+    error_examples:
+    - code: 403
+      message: Không có quyền đánh giá sản phẩm này
+    - code: 409
+      message: Sản phẩm này đã được đánh giá
+  ui_display:
+  - Toast gửi đánh giá thành công
+  business_rules:
+  - 1. Query PRODUCT_LINE theo product_line_id.
+  - 2. Query ORDER_ITEM theo order_item_id.
+  - 3. Join SALES_ORDER từ order item.
+  - 4. Nếu token CUSTOMER → check order thuộc customer, lấy customer_id từ token/order.
+  - 5. Nếu guest → contact bắt buộc; join CUSTOMER qua SALES_ORDER.customer_id; check contact khớp; sau đó lấy chính SALES_ORDER.customer_id
+    để insert REVIEW.
+  - 6. Check order COMPLETED.
+  - 7. Check chưa có review cho order_item_id.
+  - 8. Insert REVIEW.customer_id, order_item_id, rating, review_content, review_status.
+  - 9. Nếu có media thì insert REVIEW_MEDIA.
+  dev_notes:
+  - REVIEW.customer_id là NOT NULL, nên guest review vẫn phải lấy được customer_id từ đơn. Không được chỉ “check contact”
+    rồi insert review thiếu customer_id.
+  validation_rules:
+  - product_line_id tồn tại.
+  - order_item_id thuộc đơn đã COMPLETED.
+  - Guest bắt buộc truyền contact.
+  - Contact phải khớp customer của đơn.
+  - rating từ 1 đến 5.
+  - Mỗi order_item_id chỉ review 1 lần
+  security:
+  - Không cho review nếu không chứng minh đã mua; tránh fake review.
+- trigger: Account --> Quản lý lịch hẹn
+  screen: null
+  type: STANDARD
+  name: Tra cứu lịch hẹn
+  description: Guest nhập mã lịch hẹn + SĐT/email để xem lịch hẹn. Member có thể xem qua danh sách tài khoản.
+  resource: measurement-appointments
+  method: GET
+  endpoint: /api/v1/measurement-appointments/lookup
+  http_request: GET /api/v1/measurement-appointments/lookup?appointment_id={id}&contact={phone_or_email}
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - appointment_id bắt buộc
+    - contact bắt buộc
+    body: null
+  response:
+    body_fields:
+    - code, message, data.appointment_id, data.branch_name, data.address, data.appointment_date, data.start_time, data.end_time,
+      data.appointment_status
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        appointment_id: 88
+        branch_name: Chi nhánh Sài Gòn
+        appointment_date: '2026-07-10'
+        start_time: 08:00
+        end_time: 08:30
+        appointment_status: CONFIRMED
+    error_examples:
+    - code: 400
+      message: Vui lòng nhập mã lịch hẹn và SĐT/email
+    - code: 404
+      message: Không tìm thấy lịch hẹn
+  ui_display:
+  - Thông tin lịch hẹn
+  - Trạng thái lịch hẹn
+  - Nút hủy nếu còn được hủy
+  business_rules:
+  - 1. Query MEASUREMENT_APPOINTMENT theo id.
+  - 2. Join CUSTOMER để check contact.
+  - 3. Join BRANCH để lấy địa chỉ.
+  - 4. Trả lịch hẹn.
+  dev_notes:
+  - Guest bắt buộc nhập mã lịch hẹn + contact.
+  validation_rules:
+  - appointment_id là số nguyên dương.
+  - contact đúng format phone/email.
+  security:
+  - Không trả lịch nếu contact không khớp.
+- trigger: Account --> Quản lý lịch hẹn
+  screen: null
+  type: STANDARD
+  name: Xem các lịch hẹn
+  description: Member xem danh sách lịch hẹn gắn tài khoản. Guest không có danh sách, phải tra cứu từng lịch hẹn.
+  resource: measurement-appointments
+  method: GET
+  endpoint: /api/v1/measurement-appointments
+  http_request: GET /api/v1/measurement-appointments?status_group={status_group}&page={page}&limit={limit}
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - status_group, page, limit
+    body: null
+  response:
+    body_fields:
+    - code, message, data[], pagination
+    success_example:
+      code: 200
+      message: Thành công
+      data: []
+      pagination:
+        page: 1
+        limit: 10
+        total: 0
+    error_examples:
+      code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+  ui_display:
+  - Danh sách lịch hẹn của member
+  business_rules:
+  - 1. Lấy customer từ token.
+  - 2. Query MEASUREMENT_APPOINTMENT theo customer.
+  - 3. Join BRANCH, CUSTOMIZATION_REQUEST, PRODUCT_LINE.
+  dev_notes:
+  - Guest dùng /measurement-appointments/lookup.
+  validation_rules:
+  - Token hợp lệ.
+  - page/limit hợp lệ.
+  security:
+  - Không nhận customer_id từ query.
+- trigger: Account --> Quản lý lịch hẹn
+  screen: null
+  type: STANDARD
+  name: Hủy lịch hẹn
+  description: Member hoặc guest hủy lịch hẹn sắp diễn ra. Guest xác thực bằng contact.
+  resource: measurement-appointments
+  method: PATCH
+  endpoint: /api/v1/measurement-appointments/{id}/cancel
+  http_request: PATCH /api/v1/measurement-appointments/{id}/cancel
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - id bắt buộc
+    query_parameters:
+    - Không có
+    body: 'contact optional nếu guest
+
+      cancel_reason optional'
+  response:
+    body_fields:
+    - code, message, data.appointment_id, data.appointment_status
+    success_example:
+      code: 200
+      message: Huỷ lịch hẹn thành công
+      data:
+        appointment_id: 88
+        appointment_status: CANCELLED
+    error_examples:
+    - code: 403
+      message: Không có quyền huỷ lịch hẹn này
+    - code: 404
+      message: Không tìm thấy lịch hẹn
+    - code: 409
+      message: Lịch hẹn đã hoàn thành hoặc đã huỷ trước đó
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Toast hủy thành công
+  - Badge chuyển CANCELLED
+  business_rules:
+  - 1. Query appointment theo id.
+  - 2. Nếu token → check customer sở hữu.
+  - 3. Nếu guest → check contact khớp customer của appointment.
+  - 4. Chỉ cho hủy PENDING/CONFIRMED.
+  - 5. Update status CANCELLED.
+  dev_notes:
+  - Vì appointment có customer_id nullable, flow tạo lịch phải luôn gắn CUSTOMER guest/member để hủy/lookup được. Nếu không,
+    guest không xác thực được lịch.
+  validation_rules:
+  - id là số nguyên dương.
+  - Guest bắt buộc truyền contact.
+  - Chỉ hủy PENDING/CONFIRMED
+  security:
+  - Check ownership/contact; tránh IDOR.
+- trigger: Account --> Đánh giá khách hàng
+  screen: null
+  type: STANDARD
+  name: Danh sách đánh giá của tôi
+  description: User mở tab Đánh giá & phản hồi để xem các đánh giá đã gửi.
+  resource: reviews
+  method: GET
+  endpoint: /api/v1/reviews/me
+  http_request: GET /api/v1/reviews/me?page={page}&limit={limit}
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - page (integer, optional)
+    - limit (integer, optional)
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].review_id
+    - data[].order_item_id
+    - data[].product_line_id
+    - data[].product_name
+    - data[].thumbnail
+    - data[].rating
+    - data[].review_content
+    - data[].review_status
+    - data[].created_at
+    - pagination.page
+    - pagination.limit
+    - pagination.total
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - review_id: 99
+        order_item_id: 11
+        product_line_id: 10
+        product_name: Áo Dài Hạ Khuê
+        thumbnail: https://cdn.xeoxo.vn/products/ao-dai.jpg
+        rating: 5
+        review_content: Vải đẹp, form chuẩn
+        review_status: DISPLAY
+        created_at: '2026-07-03T10:00:00Z'
+      pagination:
+        page: 1
+        limit: 10
+        total: 1
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Ảnh sản phẩm
+  - Tên sản phẩm
+  - Số sao
+  - Nội dung đánh giá
+  - Ngày đánh giá
+  - Trạng thái hiển thị
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Query REVIEW theo customer_id.
+  - 3. Join ORDER_ITEM để lấy sản phẩm đã mua.
+  - 4. Nếu item STANDARD thì join PRODUCT_VARIANT → PRODUCT_COMPONENT → PRODUCT_LINE.
+  - 5. Join PRODUCT_LINE_MEDIA và MEDIA để lấy thumbnail.
+  - 6. Apply pagination.
+  - 7. Trả về danh sách review.
+  dev_notes:
+  - Chỉ dành cho member đã đăng nhập. Guest không có danh sách đánh giá vì không có tài khoản để gom lịch sử.
+  validation_rules:
+  - page phải là số nguyên dương.
+  - limit phải là số nguyên dương.
+  - limit không vượt quá 50.
+  security:
+  - CUSTOMER auth; không nhận customer_id từ query; chỉ trả review của user hiện tại.
+not_separate_endpoints:
+- trigger: Acccount -> Lịch sử mua hàng
+  screen: null
+  name: Mua lại đơn hàng
+  description: Ko làm vì cơ chế của nó là gọi API add-to-cart nên dùng kéo qua
+  resource: null
+  note: null
+- trigger: Account -> Chính sách khách hàng
+  screen: null
+  name: Xem chính sách khách hàng và FAQ
+  description: Không có DB nên kh làm
+  resource: null
+  note: null
+- trigger: Account -> Quản lý sổ địa chỉ
+  screen: null
+  name: Thêm địa chỉ
+  description: Dùng chung API với bên thêm địa chỉ ở bên thanh toán, vì cùng resource, cùng cơ chế và nơi gọi
+  resource: null
+  note: null
+status_only_sheet_rows:
+- sheet_row: 12
+  trigger: Product detail + Hướng dẫn chọn size --> Bảng hướng dẫn
+  status: Không cần API.
+  reason: FE đưa ảnh hướng dẫn chọn size lên màn hình, không cần gọi backend.
+- sheet_row: 31
+  trigger: Account -> Quản lý sổ địa chỉ
+  status: Chưa làm.
+  reason: Sheet chưa chốt API riêng cho màn hình quản lý sổ địa chỉ.
