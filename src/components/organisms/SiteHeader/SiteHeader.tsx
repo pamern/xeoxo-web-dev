@@ -467,7 +467,7 @@ function AccountSidebar({
     { label: "Hồ sơ thông tin", href: ROUTES.ACCOUNT_PROFILE },
     { label: "Lịch sử đơn hàng", href: ROUTES.ACCOUNT_ORDERS },
     { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
-    { label: "Sổ địa chỉ" },
+    { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
     { label: "Đánh giá và phản hồi" },
     { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
   ] as const;

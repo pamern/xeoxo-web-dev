@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import { AccountProfileEditor } from "@/components/organisms/AccountProfileEditor";
+import {
+  AccountNavigation,
+  type AccountNavItem,
+} from "@/components/organisms/AccountNavigation/AccountNavigation";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
@@ -19,18 +22,14 @@ export const metadata: Metadata = {
     "Quản lý thông tin hồ sơ, tài khoản và các chi tiết thành viên của bạn tại XÉO XỌ.",
 };
 
-type AccountNavItem = {
-  label: string;
-  href?: string;
-};
-
 const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Hồ sơ thông tin", href: ROUTES.ACCOUNT_PROFILE },
   { label: "Lịch sử mua hàng", href: ROUTES.ACCOUNT_ORDERS },
   { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
-  { label: "Sổ địa chỉ" },
+  { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
   { label: "Đánh giá và phản hồi" },
   { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
+  { label: "Đăng xuất", action: "logout" },
 ];
 
 function FloralDivider({ className }: { className?: string }) {
@@ -44,48 +43,6 @@ function FloralDivider({ className }: { className?: string }) {
       style={{ backgroundImage: "url(/images/header-line-up.png)" }}
     />
   );
-}
-
-function AccountNavCard({
-  item,
-  isActive,
-}: {
-  item: AccountNavItem;
-  isActive?: boolean;
-}) {
-  const className = cn(
-    "flex min-h-[58px] items-center justify-between rounded-[14px] border px-5 py-4 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition-transform",
-    isActive
-      ? "border-black bg-black text-white"
-      : "border-black bg-white text-foreground hover:scale-[0.995]",
-    !item.href && !isActive && "cursor-default",
-  );
-
-  const content = (
-    <>
-      <span className="text-base font-medium leading-tight md:text-[15px]">
-        {item.label}
-      </span>
-      <Image
-        src="/icons/arrow-right.svg"
-        alt=""
-        width={31}
-        height={18}
-        aria-hidden
-        className={cn("h-auto w-8 shrink-0", isActive && "brightness-0 invert")}
-      />
-    </>
-  );
-
-  if (item.href) {
-    return (
-      <Link href={item.href} className={className}>
-        {content}
-      </Link>
-    );
-  }
-
-  return <div className={className}>{content}</div>;
 }
 
 export default async function AccountProfileRoute() {
@@ -117,15 +74,10 @@ export default async function AccountProfileRoute() {
 
             <div className="mt-8 grid gap-8 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
               <aside className="xl:sticky xl:top-[180px]">
-                <nav className="flex flex-col gap-4" aria-label="Điều hướng tài khoản">
-                  {ACCOUNT_NAV_ITEMS.map((item) => (
-                    <AccountNavCard
-                      key={item.label}
-                      item={item}
-                      isActive={item.href === ROUTES.ACCOUNT_PROFILE}
-                    />
-                  ))}
-                </nav>
+                <AccountNavigation
+                  items={ACCOUNT_NAV_ITEMS}
+                  activeHref={ROUTES.ACCOUNT_PROFILE}
+                />
               </aside>
 
               <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">

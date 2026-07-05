@@ -30,10 +30,10 @@ export const ROUTES = {
 
   LOGIN: "/login",
   REGISTER: "/register",
-  LOGOUT: "/logout",
 
   ACCOUNT: "/account",
   ACCOUNT_PROFILE: "/account/profile",
+  ACCOUNT_ADDRESSES: "/account/addresses",
   ACCOUNT_ORDERS: "/account/orders",
   ACCOUNT_ORDER: (orderId: string) =>
     `/account/orders/${encodeURIComponent(orderId)}`,
