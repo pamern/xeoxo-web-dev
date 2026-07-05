@@ -6,33 +6,31 @@ export const ROUTES = {
   BLOG: "/blog",
 
   PRODUCTS: "/products",
-  PRODUCT: (slug: string) =>
-    `/products/${encodeURIComponent(slug)}`,
+  PRODUCT: (slug: string) => `/products/${encodeURIComponent(slug)}`,
 
   COLLECTIONS: "/collections",
-  COLLECTION: (slug: string) =>
-    `/collections/${encodeURIComponent(slug)}`,
+  COLLECTION: (slug: string) => `/collections/${encodeURIComponent(slug)}`,
 
   CATALOG_WOMEN: "/catalog/nu",
   CATALOG_MEN: "/catalog/nam",
   CATALOG_KIDS: "/catalog/tre-em",
   CATALOG_AO_DAI: "/catalog/ao-dai",
-  CATALOG: (slug: string) =>
-    `/catalog/${encodeURIComponent(slug)}`,
+  CATALOG: (slug: string) => `/catalog/${encodeURIComponent(slug)}`,
 
   CATEGORIES: "/categories",
   CATEGORY_MEN: "/categories/ao-nam",
   CATEGORY_WOMEN: "/categories/ao-dam-vay",
   CATEGORY_KIDS: "/categories/tre-em",
 
-  CATEGORY: (slug: string) =>
-    `/categories/${encodeURIComponent(slug)}`,
+  CATEGORY: (slug: string) => `/categories/${encodeURIComponent(slug)}`,
 
   CART: "/cart",
   CHECKOUT: "/checkout",
+  APPOINTMENT: "/appointment",
 
   LOGIN: "/login",
   REGISTER: "/register",
+  LOGOUT: "/logout",
 
   ACCOUNT: "/account",
   ACCOUNT_PROFILE: "/account/profile",
@@ -41,8 +39,7 @@ export const ROUTES = {
     `/account/orders/${encodeURIComponent(orderId)}`,
 
   ORDER_LOOKUP: "/orders/lookup",
-  ORDER: (orderId: string) =>
-    `/orders/${encodeURIComponent(orderId)}`,
+  ORDER: (orderId: string) => `/orders/${encodeURIComponent(orderId)}`,
 
   PERSONAL_COLOR: "/personal-color",
 
@@ -57,17 +54,15 @@ export const ROUTES = {
   COPYRIGHT: "/copyright",
 
   POLICIES: "/policy",
-  POLICY: (slug: string) =>
-    `/policy/${encodeURIComponent(slug)}`,
+  POLICY: (slug: string) => `/policy/${encodeURIComponent(slug)}`,
 
   DASHBOARD: "/dashboard",
 } as const;
 
 export const API = {
-  LOGIN: "/api/auth/login",
-  REGISTER: "/api/auth/register",
-  LOGOUT: "/api/auth/logout",
-  ME: "/api/auth/me",
+  AUTH_ME: "/api/v1/auth/me",
+  AUTH_CALLBACK: "/api/v1/auth/callback",
+  AUTH_SYNC_PROFILE: "/api/v1/auth/sync-profile",
 
   POSTS: "/api/posts",
 } as const;
