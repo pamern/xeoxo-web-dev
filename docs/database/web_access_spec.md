@@ -125,7 +125,7 @@ Function này được `GRANT EXECUTE` cho `authenticated`.
 
 ## 4.2 Schema usage và grant
 
-Đã cấp `USAGE` schema như sau:
+Đã cấp `USAGE` schema như sau cho web client:
 
 - `catalog`: `anon`, `authenticated`
 - `iam`: `authenticated`
@@ -133,11 +133,24 @@ Function này được `GRANT EXECUTE` cho `authenticated`.
 - `customization`: `authenticated`
 - `util`: `authenticated`
 
+Ngoài ra, backend nội bộ dùng `service_role` cần được cấp quyền trên `iam` để phục vụ flow auth server-side:
+
+- đọc `iam.customer` trong `/api/v1/auth/me`
+- ghi/đồng bộ `iam.account`, `iam.customer` trong `/api/v1/auth/sync-profile` và callback OAuth
+
+Nếu project expose schema `iam` qua Supabase Data API nhưng chưa grant cho `service_role`, API auth có thể gặp lỗi `permission denied for schema iam`.
+
 Đã cấp quyền bảng cho frontend đúng phạm vi:
 
 - `anon` + `authenticated`: `SELECT` trên nhóm catalog public
 - `authenticated`: quyền owner-based trên customer flow
 - các bảng nhạy cảm bị `REVOKE ALL` khỏi `anon`, `authenticated`
+
+Ghi chú triển khai:
+
+- Phần web access hiện tại chủ yếu mô tả grant cho frontend (`anon`, `authenticated`).
+- Với flow customer auth native của Supabase, backend còn cần grant bổ sung cho `service_role` trên schema `iam`, tối thiểu với `iam.account` và `iam.customer`.
+- Khi grant bổ sung, không thay đổi nguyên tắc RLS cho người dùng cuối; đây là quyền backend-only.
 
 ---
 

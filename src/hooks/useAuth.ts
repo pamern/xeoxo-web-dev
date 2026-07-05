@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { createClient } from "@/lib/supabase/client";
 import { authService } from "@/services/auth.service";
 import type {
@@ -120,8 +121,12 @@ export function useAuth() {
         return { ok: true };
       }
 
+      const identifier = parseAuthIdentifier(parsed.data.account);
+
       setNoticeMessage(
-        "Vui lòng kiểm tra email để xác nhận tài khoản trước khi đăng nhập.",
+        identifier?.type === "phone"
+          ? "Vui lòng kiểm tra tin nhắn SMS để xác nhận tài khoản trước khi đăng nhập."
+          : "Vui lòng kiểm tra email và bấm vào link xác nhận tài khoản trước khi đăng nhập.",
       );
       return { ok: true, requiresEmailConfirmation: true };
     } catch (error) {

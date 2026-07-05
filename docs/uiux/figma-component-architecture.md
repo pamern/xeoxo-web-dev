@@ -41,7 +41,8 @@ Note: the current Codex session does not expose a live Figma MCP tool, so this r
 | Thoi Trang Nu | `1:277-280` | Item-Materials | `Materials` + `MaterialCard` | Organism + Molecule | Yes | `src/components/organisms/Materials/Materials.tsx` | `materials` |
 | Ban Hang | `1:285` | Ban Hang | `ProductListingPage` | Template | Yes | `src/components/templates/ProductListingPage/ProductListingPage.tsx` | `products`, `filters`, `breadcrumbs` |
 | Ban Hang | `multiple` | Rectangle 34 | `ProductGrid` | Organism | Yes | `src/components/organisms/ProductGrid/ProductGrid.tsx` | `products`, `columns` |
-| Dang nhap / Dang ky | `1:827` | Dang nhap / Dang ky | `AuthShell` | Template | Yes | `src/components/templates/AuthShell/AuthShell.tsx` | `title`, `subtitle`, `mode`, `children` |
+| Dang nhap / Dang ky | `315:1521`, `316:1524` | Login/Register modal | `AuthModal` | Organism | Yes | `src/components/organisms/AuthModal/AuthModal.tsx` | `mode`, `onClose`, `onModeChange` |
+| Dang nhap / Dang ky | `1:827` | Dang nhap / Dang ky | `AuthShell` | Template | Yes | `src/components/templates/AuthShell/AuthShell.tsx` | `children`, `footer`, `onGoogleClick`, `onFacebookClick` |
 | Dang nhap / Dang ky | `1:830` | Dang nhap | `LoginForm` | Organism | Yes | `src/components/organisms/LoginForm/LoginForm.tsx` | `onSubmit`, `oauthProviders`, `redirectTo` |
 | Dang nhap / Dang ky | `1:909` | Dang ky | `RegisterForm` | Organism | Yes | `src/components/organisms/RegisterForm/RegisterForm.tsx` | `onSubmit`, `oauthProviders`, `benefits` |
 | Dang nhap / Dang ky | `1:839` | Benefit card border | `AuthBenefitCard` | Molecule | Yes | `src/components/molecules/AuthBenefitCard/AuthBenefitCard.tsx` | `icon`, `title`, `description` |
@@ -72,7 +73,7 @@ Note: the current Codex session does not expose a live Figma MCP tool, so this r
 | Gender cards | `1:100`, `I1:100;1:1069` | `GenderCard` inside `GenderSelect` |
 | Material cards | `1:200-203`, `1:277-280` | Extract `MaterialCard` from `Materials` organism |
 | Form fields | `1:741`, `1:744`, `1:747`, auth inputs | Shared `TextField`, `SelectField`, `DatePickerField` |
-| Modal/shell layouts | `1:827`, `1:707` | `ModalShell` + specialized forms |
+| Modal/shell layouts | `315:1521`, `316:1524`, `1:707` | `AuthModal`, `ModalShell` + specialized forms |
 | Product detail badges | `1:408`, `1:411` | `FreeShippingBadge`, `VipBanner` |
 
 ## 3. Page Component Trees
@@ -143,16 +144,17 @@ AboutPage / Ve Xeo Xo
 |   +-- ClosingCta
 |   +-- SiteFooter
 
-AuthPage
-+-- AuthShell
-|   +-- AuthBenefitGrid
-|   |   +-- AuthBenefitCard
-|   +-- LoginForm | RegisterForm
-|   |   +-- TextField
-|   |   +-- PasswordField
-|   |   +-- OAuthButton
-|   |   +-- Button
-|   +-- ModalCloseButton
+AuthModal
++-- AuthModal
+|   +-- AuthShell
+|   |   +-- AuthBenefitGrid
+|   |   |   +-- AuthBenefitCard
+|   |   +-- LoginForm | RegisterForm
+|   |   |   +-- TextField
+|   |   |   +-- PasswordField
+|   |   |   +-- OAuthButton
+|   |   |   +-- Button
+|   +-- CloseButton
 
 AppointmentPage
 +-- ModalShell
@@ -199,7 +201,8 @@ CheckoutPage / Gio Hang
 | `StarsBanner` | Shared star/floral marketing band | Home, Catalog | none | `{ title?: string; background?: string }` |
 | `ProductDetail` | PDP purchase panel | ProductDetailPage | `Button`, selectors | `{ product: Product }` |
 | `SizeGuide` | Size tables | ProductDetail/Auth future | tabs/table | `{ defaultGender?: Gender }` |
-| `AuthShell` | Auth modal/page shell | Auth pages | form children | `{ title: string; subtitle?: string; children: React.ReactNode }` |
+| `AuthShell` | Auth modal/page shell | Auth pages | form children | `{ children: React.ReactNode; footer: React.ReactNode; onGoogleClick?: () => void; onFacebookClick?: () => void }` |
+| `AuthModal` | Auth overlay + mode switch | `SiteHeader` | `AuthShell`, `LoginForm`, `RegisterForm` | `{ mode: 'login' \| 'register'; onClose: () => void; onModeChange: (mode) => void }` |
 
 ### Missing Components To Create
 
@@ -323,8 +326,8 @@ src/
 | `/products` or `/categories/[slug]` / Ban Hang | `SiteLayout`, `Breadcrumbs`, `FilterBar`, `ProductGrid`, `ProductCard`, `StarsBanner`, `SiteFooter` |
 | `/products/[slug]` | `SiteLayout`, `Breadcrumbs`, `ProductDetail`, `ProductImageGallery`, `FreeShippingBadge`, `VipBanner`, `VariantSelector`, `Button`, `ReviewSection`, `ProductRow`, `ProductCard`, `SiteFooter` |
 | `/about` | `SiteLayout`, `AboutHero`, `BrandManifesto`, `BrandStorySection`, `PrincipleGrid`, `ProcessSection`, `ClosingCta`, `SiteFooter` |
-| `/login` | `AuthShell`, `AuthBenefitCard`, `LoginForm`, `TextField`, `PasswordField`, `OAuthButton`, `Button` |
-| `/register` | `AuthShell`, `AuthBenefitCard`, `RegisterForm`, `TextField`, `PasswordField`, `OAuthButton`, `Button` |
+| `/login` | `AuthShell`, `LoginForm`, `Button` |
+| `/register` | `AuthShell`, `RegisterForm`, `Button` |
 | `/appointment` | `ModalShell`, `AppointmentForm`, `TextField`, `SelectField`, `DatePickerField`, `TimeSlotPicker`, `Button` |
 | `/cart` or `/checkout` | `SiteLayout`, `CheckoutForm`, `CartSummary`, `CartItem`, `TextField`, `SelectField`, `Button`, `SiteFooter` |
 

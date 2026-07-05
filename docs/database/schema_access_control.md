@@ -197,7 +197,7 @@ Phạm vi tài liệu bám theo các bảng hiện có trong đặc tả databas
 | Role | Quyền đề xuất |
 |---|---|
 | postgres | ALL |
-| service_role | ALL |
+| service_role | ALL; dùng cho backend auth/profile sync và các server-side flow nội bộ |
 | authenticated | SELECT/UPDATE dữ liệu customer, address của chính mình; SELECT reward của chính mình |
 | anon | Không truy cập trực tiếp |
 
@@ -206,6 +206,7 @@ Phạm vi tài liệu bám theo các bảng hiện có trong đặc tả databas
 - `authenticated` chỉ được đọc/cập nhật thông tin `customer`, `address` của chính mình.
 - `authenticated` được đọc `loyalty_reward`, `reward_usage` của chính mình.
 - `authenticated` được đọc `loyalty_tier` nếu cần hiển thị chính sách hạng thành viên.
+- `service_role` được phép truy cập server-side vào `iam.account` và `iam.customer` để đồng bộ hồ sơ sau đăng nhập/đăng ký, hoặc đọc profile customer từ API backend.
 - Không cho người dùng đọc danh sách customer, staff, account hoặc reward của người khác.
 - Không cho khách tự cập nhật `customer.total_spent`, `customer.spent_in_year`, `customer.tier_id`, `loyalty_reward.status`.
 
@@ -408,4 +409,3 @@ Các cột không nên cho frontend cập nhật trực tiếp:
 - `sales_order.reward_discount_amount`
 
 ---
-

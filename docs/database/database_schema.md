@@ -6,9 +6,9 @@
 
 - customer_id (BIGSERIAL, PK, NOT NULL): Mã khách hàng
 - account_id (UUID, FK, UNIQUE, NULL): Mã tài khoản
-- customer_name (VARCHAR(255), NOT NULL): Tên khách hàng
-- email (VARCHAR(255), NOT NULL): Email
-- phone (VARCHAR(20), NOT NULL): Số điện thoại
+- customer_name (VARCHAR(255), NULL): Tên khách hàng
+- email (VARCHAR(255), NULL): Email
+- phone (VARCHAR(20), NULL): Số điện thoại
 - gender (VARCHAR(20)/CHECK, NULL): Giới tính
 - birthday (DATE, NULL): Ngày sinh
 - customer_type (VARCHAR/CHECK, NOT NULL): Loại khách hàng 
@@ -23,6 +23,8 @@
 - customer_type = {MEMBER, GUEST}
 - gender = {MALE, FEMALE, OTHER}
 - email và phone trong CUSTOMER là thông tin liên hệ, không phải thông tin đăng nhập nên có thể không UNIQUE.
+- Với flow auth hiện tại, `email` và `phone` có thể tạm thời cùng `NULL` sau social login nếu provider không trả dữ liệu liên hệ; hệ thống sẽ yêu cầu bổ sung ở bước sau như checkout hoặc cập nhật hồ sơ.
+- customer_name và email có thể để NULL, phù hợp với một số flow guest hoặc dữ liệu chưa hoàn thiện.
 
 ## LOYALTY_TIER
 

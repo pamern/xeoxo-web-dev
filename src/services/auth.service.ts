@@ -6,6 +6,7 @@ import type {
   MeResponse,
   RegisterValues,
 } from "@/types/auth.types";
+import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { createClient } from "@/lib/supabase/client";
 
 function getSiteUrl() {
@@ -73,10 +74,18 @@ function logAuthServiceError(
 export const authService = {
   async login(values: LoginValues) {
     const supabase = createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: values.account.trim(),
-      password: values.password,
-    });
+    const identifier = parseAuthIdentifier(values.account);
+
+    if (!identifier) {
+      throw new Error("Email hoặc số điện thoại không hợp lệ.");
+    }
+
+    const credentials =
+      identifier.type === "email"
+        ? { email: identifier.value, password: values.password }
+        : { phone: identifier.value, password: values.password };
+
+    const { data, error } = await supabase.auth.signInWithPassword(credentials);
 
     if (error) {
       throw new Error(getErrorMessage(error, "Đăng nhập thất bại."));
@@ -87,20 +96,41 @@ export const authService = {
 
   async register(values: RegisterValues, nextPath?: string) {
     const supabase = createClient();
+    const identifier = parseAuthIdentifier(values.account);
+
+    if (!identifier) {
+      throw new Error("Email hoặc số điện thoại không hợp lệ.");
+    }
+
     const redirectTo = `${getSiteUrl()}/api/v1/auth/callback?next=${encodeURIComponent(
       normalizePath(nextPath),
     )}`;
 
-    const { data, error } = await supabase.auth.signUp({
-      email: values.account.trim(),
-      password: values.password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: {
-          full_name: values.fullName.trim(),
-        },
-      },
-    });
+    const authPayload =
+      identifier.type === "email"
+        ? {
+            email: identifier.value,
+            password: values.password,
+            options: {
+              emailRedirectTo: redirectTo,
+              data: {
+                full_name: values.fullName.trim(),
+              },
+            },
+          }
+        : {
+            phone: identifier.value,
+            password: values.password,
+            options: {
+              channel: "sms" as const,
+              data: {
+                full_name: values.fullName.trim(),
+                phone: identifier.value,
+              },
+            },
+          };
+
+    const { data, error } = await supabase.auth.signUp(authPayload);
 
     if (error) {
       throw new Error(getErrorMessage(error, "Đăng ký thất bại."));

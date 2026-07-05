@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { parseAuthIdentifier } from "@/lib/auth-identifier";
+import { getFirstPasswordError } from "@/lib/auth-password";
 
 export const registerSchema = z
   .object({
@@ -10,16 +12,25 @@ export const registerSchema = z
     account: z
       .string()
       .trim()
-      .min(1, "Vui lòng nhập email của bạn.")
-      .email("Email không hợp lệ."),
-    password: z
-      .string()
-      .min(6, "Mật khẩu phải có ít nhất 6 ký tự."),
-    confirmPassword: z
-      .string()
-      .min(1, "Vui lòng nhập lại mật khẩu."),
+      .min(1, "Vui lòng nhập email hoặc số điện thoại.")
+      .refine(
+        (value) => parseAuthIdentifier(value) !== null,
+        "Email hoặc số điện thoại không hợp lệ.",
+      ),
+    password: z.string().min(1, "Vui lòng nhập mật khẩu."),
+    confirmPassword: z.string().min(1, "Vui lòng nhập lại mật khẩu."),
   })
   .superRefine((values, ctx) => {
+    const passwordError = getFirstPasswordError(values.password);
+
+    if (passwordError) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["password"],
+        message: passwordError,
+      });
+    }
+
     if (values.password !== values.confirmPassword) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

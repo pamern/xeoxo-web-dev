@@ -4,9 +4,12 @@ import Image from "next/image";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
+import { registerSchema } from "@/validations/auth/register.schema";
 
 const inputClassName =
   "h-12 w-full rounded-pill border border-input bg-background px-6 text-base font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
+const passwordHintMessage =
+  "Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
 
 export type RegisterValues = {
   fullName: string;
@@ -14,6 +17,8 @@ export type RegisterValues = {
   password: string;
   confirmPassword: string;
 };
+
+type RegisterField = keyof RegisterValues;
 
 export function RegisterForm({
   onSubmit,
@@ -34,92 +39,195 @@ export function RegisterForm({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [error, setError] = useState<string>();
+  const [fieldErrors, setFieldErrors] = useState<
+    Partial<Record<RegisterField, string>>
+  >({});
+  const [touched, setTouched] = useState<Record<RegisterField, boolean>>({
+    fullName: false,
+    account: false,
+    password: false,
+    confirmPassword: false,
+  });
+
+  function getFieldErrors(nextValues: RegisterValues) {
+    const result = registerSchema.safeParse(nextValues);
+
+    if (result.success) {
+      return {};
+    }
+
+    return result.error.issues.reduce<Partial<Record<RegisterField, string>>>(
+      (acc, issue) => {
+        const field = issue.path[0];
+
+        if (
+          (field === "fullName" ||
+            field === "account" ||
+            field === "password" ||
+            field === "confirmPassword") &&
+          !acc[field]
+        ) {
+          acc[field] = issue.message;
+        }
+
+        return acc;
+      },
+      {},
+    );
+  }
 
   function update<K extends keyof RegisterValues>(
     key: K,
     value: RegisterValues[K],
   ) {
-    setValues((current) => ({ ...current, [key]: value }));
+    const nextValues = { ...values, [key]: value };
+    setValues(nextValues);
+
+    if (touched[key]) {
+      setFieldErrors(getFieldErrors(nextValues));
+    }
+  }
+
+  function handleBlur(field: RegisterField) {
+    const nextTouched = { ...touched, [field]: true };
+    setTouched(nextTouched);
+    setFieldErrors(getFieldErrors(values));
   }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (values.password !== values.confirmPassword) {
-      setError("Mật khẩu nhập lại không khớp.");
+
+    const nextTouched = {
+      fullName: true,
+      account: true,
+      password: true,
+      confirmPassword: true,
+    };
+    const nextErrors = getFieldErrors(values);
+
+    setTouched(nextTouched);
+    setFieldErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
       return;
     }
-    setError(undefined);
+
     onSubmit?.(values);
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
       <div className="grid gap-3 sm:grid-cols-2">
-        <input
-          name="fullName"
-          value={values.fullName}
-          onChange={(event) => update("fullName", event.target.value)}
-          placeholder="Họ và tên"
-          autoComplete="name"
-          required
-          disabled={isLoading}
-          className={inputClassName}
-        />
-        <input
-          name="account"
-          value={values.account}
-          onChange={(event) => update("account", event.target.value)}
-          placeholder="Email của bạn"
-          autoComplete="username"
-          required
-          disabled={isLoading}
-          className={inputClassName}
-        />
+        <div className="flex flex-col gap-2">
+          <input
+            name="fullName"
+            value={values.fullName}
+            onChange={(event) => update("fullName", event.target.value)}
+            onBlur={() => handleBlur("fullName")}
+            placeholder="Họ và tên"
+            autoComplete="name"
+            required
+            disabled={isLoading}
+            className={cn(
+              inputClassName,
+              touched.fullName && fieldErrors.fullName && "border-destructive",
+            )}
+          />
+          {touched.fullName && fieldErrors.fullName ? (
+            <p className="px-2 text-sm font-light text-destructive">
+              {fieldErrors.fullName}
+            </p>
+          ) : null}
+        </div>
+        <div className="flex flex-col gap-2">
+          <input
+            name="account"
+            value={values.account}
+            onChange={(event) => update("account", event.target.value)}
+            onBlur={() => handleBlur("account")}
+            placeholder="Email hoặc số điện thoại"
+            autoComplete="username"
+            required
+            disabled={isLoading}
+            className={cn(
+              inputClassName,
+              touched.account && fieldErrors.account && "border-destructive",
+            )}
+          />
+          {touched.account && fieldErrors.account ? (
+            <p className="px-2 text-sm font-light text-destructive">
+              {fieldErrors.account}
+            </p>
+          ) : null}
+        </div>
       </div>
 
-      <div className="relative">
-        <input
-          name="password"
-          type={showPassword ? "text" : "password"}
-          value={values.password}
-          onChange={(event) => update("password", event.target.value)}
-          placeholder="Mật khẩu"
-          autoComplete="new-password"
-          required
-          disabled={isLoading}
-          className={cn(inputClassName, "pr-14")}
-        />
-        <PasswordToggle
-          shown={showPassword}
-          onToggle={() => setShowPassword((current) => !current)}
-        />
+      <div className="flex flex-col gap-2">
+        <div className="relative">
+          <input
+            name="password"
+            type={showPassword ? "text" : "password"}
+            value={values.password}
+            onChange={(event) => update("password", event.target.value)}
+            onBlur={() => handleBlur("password")}
+            placeholder="Mật khẩu"
+            autoComplete="new-password"
+            required
+            disabled={isLoading}
+            className={cn(
+              inputClassName,
+              "pr-14",
+              touched.password && fieldErrors.password && "border-destructive",
+            )}
+          />
+          <PasswordToggle
+            shown={showPassword}
+            onToggle={() => setShowPassword((current) => !current)}
+          />
+        </div>
+        {fieldErrors.password ? (
+          <p className="px-2 text-sm font-light text-foreground/58">
+            {passwordHintMessage}
+          </p>
+        ) : null}
       </div>
 
-      <div className="relative">
-        <input
-          name="confirmPassword"
-          type={showConfirm ? "text" : "password"}
-          value={values.confirmPassword}
-          onChange={(event) => update("confirmPassword", event.target.value)}
-          placeholder="Nhập lại mật khẩu"
-          autoComplete="new-password"
-          required
-          disabled={isLoading}
-          className={cn(inputClassName, "pr-14")}
-        />
-        <PasswordToggle
-          shown={showConfirm}
-          onToggle={() => setShowConfirm((current) => !current)}
-        />
+      <div className="flex flex-col gap-2">
+        <div className="relative">
+          <input
+            name="confirmPassword"
+            type={showConfirm ? "text" : "password"}
+            value={values.confirmPassword}
+            onChange={(event) => update("confirmPassword", event.target.value)}
+            onBlur={() => handleBlur("confirmPassword")}
+            placeholder="Nhập lại mật khẩu"
+            autoComplete="new-password"
+            required
+            disabled={isLoading}
+            className={cn(
+              inputClassName,
+              "pr-14",
+              touched.confirmPassword &&
+                fieldErrors.confirmPassword &&
+                "border-destructive",
+            )}
+          />
+          <PasswordToggle
+            shown={showConfirm}
+            onToggle={() => setShowConfirm((current) => !current)}
+          />
+        </div>
+        {touched.confirmPassword && fieldErrors.confirmPassword ? (
+          <p className="px-2 text-sm font-light text-destructive">
+            {fieldErrors.confirmPassword}
+          </p>
+        ) : null}
       </div>
 
-      {(error || errorMessage) && (
-        <p className="text-sm font-light text-destructive">
-          {error ?? errorMessage}
-        </p>
+      {errorMessage && (
+        <p className="text-sm font-light text-destructive">{errorMessage}</p>
       )}
-      {noticeMessage && !(error || errorMessage) && (
+      {noticeMessage && !errorMessage && (
         <p className="text-sm font-light text-foreground/70">{noticeMessage}</p>
       )}
 
