@@ -63,6 +63,7 @@ export const API = {
   AUTH_ME: "/api/v1/auth/me",
   AUTH_CALLBACK: "/api/v1/auth/callback",
   AUTH_SYNC_PROFILE: "/api/v1/auth/sync-profile",
+  COLLECTIONS_LATEST: "/api/v1/collections/latest",
   CUSTOMERS_ME: "/api/v1/customers/me",
 
   PRODUCT_LINE: (slug: string) =>

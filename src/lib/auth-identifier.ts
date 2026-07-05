@@ -1,19 +1,37 @@
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_DIGIT_PATTERN = /^\d+$/;
+const VIETNAM_MOBILE_PREFIX_PATTERN = /^[35789]\d{8}$/;
 
 export type AuthIdentifier =
   | { type: "email"; value: string }
   | { type: "phone"; value: string };
 
 function normalizePhoneNumber(input: string) {
-  const sanitized = input.replace(/[\s().-]/g, "");
+  const trimmed = input.trim();
+  const sanitized = trimmed.startsWith("+")
+    ? `+${trimmed.slice(1).replace(/\D/g, "")}`
+    : trimmed.replace(/\D/g, "");
 
   if (!sanitized) {
     return null;
   }
 
-  if (sanitized.startsWith("+")) {
-    const digits = sanitized.slice(1);
+  let normalized = sanitized;
+
+  if (normalized.startsWith("00")) {
+    normalized = `+${normalized.slice(2)}`;
+  }
+
+  if (normalized.startsWith("+840")) {
+    normalized = `+84${normalized.slice(4)}`;
+  }
+
+  if (normalized.startsWith("840")) {
+    normalized = `+84${normalized.slice(3)}`;
+  }
+
+  if (normalized.startsWith("+")) {
+    const digits = normalized.slice(1);
 
     if (
       !PHONE_DIGIT_PATTERN.test(digits) ||
@@ -26,24 +44,28 @@ function normalizePhoneNumber(input: string) {
     return `+${digits}`;
   }
 
-  if (!PHONE_DIGIT_PATTERN.test(sanitized)) {
+  if (!PHONE_DIGIT_PATTERN.test(normalized)) {
     return null;
   }
 
   if (
-    sanitized.startsWith("0") &&
-    sanitized.length >= 9 &&
-    sanitized.length <= 11
+    normalized.startsWith("0") &&
+    normalized.length >= 9 &&
+    normalized.length <= 11
   ) {
-    return `+84${sanitized.slice(1)}`;
+    return `+84${normalized.slice(1)}`;
   }
 
   if (
-    sanitized.startsWith("84") &&
-    sanitized.length >= 10 &&
-    sanitized.length <= 12
+    normalized.startsWith("84") &&
+    normalized.length >= 10 &&
+    normalized.length <= 12
   ) {
-    return `+${sanitized}`;
+    return `+${normalized}`;
+  }
+
+  if (VIETNAM_MOBILE_PREFIX_PATTERN.test(normalized)) {
+    return `+84${normalized}`;
   }
 
   return null;

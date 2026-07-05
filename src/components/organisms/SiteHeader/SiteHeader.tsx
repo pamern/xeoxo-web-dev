@@ -10,6 +10,8 @@ import { ROUTES } from "@/constants/routes";
 import { AuthModal } from "@/components/organisms/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
+import { useLatestCollectionHighlight } from "@/hooks/useLatestCollectionHighlight";
+import type { LatestCollectionHighlight } from "@/types/collection-highlight.types";
 
 type AuthMode = "login" | "register";
 type AccountMenuAnchor = "utility" | "main" | null;
@@ -50,6 +52,7 @@ export function SiteHeader() {
   const { cart } = useCart();
   const cartCount = cart.total_quantity;
   const auth = useAuth();
+  const latestCollectionHighlight = useLatestCollectionHighlight();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] =
     useState<AccountMenuAnchor>(null);
@@ -140,6 +143,18 @@ export function SiteHeader() {
         { label: "CSKH", href: ROUTES.POLICIES },
       ]
     : UTILITY_RIGHT;
+
+  const latestCollectionHref = latestCollectionHighlight
+    ? ROUTES.COLLECTION(latestCollectionHighlight.slug)
+    : ROUTES.COLLECTIONS;
+  const latestCollectionImage =
+    latestCollectionHighlight?.collectionImage || "/images/story-main.jpg";
+  const latestCollectionImageAlt =
+    latestCollectionHighlight?.collectionImageAlt || "Bộ sưu tập mới nhất";
+  const latestProductImage =
+    latestCollectionHighlight?.productImage || "/images/story-2.jpg";
+  const latestProductImageAlt =
+    latestCollectionHighlight?.productImageAlt || "Sản phẩm trong bộ sưu tập mới nhất";
 
   const accountLabel =
     auth.customer?.customer_name?.trim() ||
@@ -393,6 +408,7 @@ export function SiteHeader() {
       {hasAccountMenu && accountSidebarOpen && (
         <AccountSidebar
           accountLabel={accountLabel}
+          latestCollectionHighlight={latestCollectionHighlight}
           onClose={() => setAccountSidebarOpen(false)}
         />
       )}
@@ -456,9 +472,11 @@ function UtilityGroup({
 
 function AccountSidebar({
   accountLabel,
+  latestCollectionHighlight,
   onClose,
 }: {
   accountLabel: string;
+  latestCollectionHighlight: LatestCollectionHighlight | null;
   onClose: () => void;
 }) {
   const sidebarLinks: Array<{ label: string; href?: string }> = [
@@ -469,6 +487,18 @@ function AccountSidebar({
     { label: "Đánh giá và phản hồi" },
     { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
   ] as const;
+  const latestCollectionHref = latestCollectionHighlight
+    ? ROUTES.COLLECTION(latestCollectionHighlight.slug)
+    : ROUTES.COLLECTIONS;
+  const latestCollectionImage =
+    latestCollectionHighlight?.collectionImage || "/images/story-main.jpg";
+  const latestCollectionImageAlt =
+    latestCollectionHighlight?.collectionImageAlt || "Bộ sưu tập mới nhất";
+  const latestProductImage =
+    latestCollectionHighlight?.productImage || "/images/story-2.jpg";
+  const latestProductImageAlt =
+    latestCollectionHighlight?.productImageAlt ||
+    "Sản phẩm trong bộ sưu tập mới nhất";
 
   return (
     <div className="fixed inset-0 z-[95]">
@@ -511,9 +541,10 @@ function AccountSidebar({
 
           <section className="mt-6">
             <SidebarPromoCard
-              href={ROUTES.COLLECTIONS}
-              imageSrc="/images/story-main.jpg"
-              imageAlt="Bộ sưu tập Thanh Xuân"
+              href={latestCollectionHref}
+              imageSrc={latestCollectionImage}
+              imageAlt={latestCollectionImageAlt}
+              imageClassName="object-cover [object-position:center_25%]"
               className="min-h-[168px]"
               overlayClassName="bg-[linear-gradient(90deg,rgba(0,0,0,0.58)_0%,rgba(0,0,0,0.18)_46%,rgba(0,0,0,0.16)_100%)]"
               contentClassName="px-5 pb-3 pt-6"
@@ -523,7 +554,7 @@ function AccountSidebar({
                     Bộ sưu tập
                   </span>
                   <span className="mt-2 block text-[28px] font-bold leading-none text-white">
-                    Thanh Xuân
+                    {latestCollectionHighlight?.name || "Thanh Xuân"}
                   </span>
                 </>
               }
@@ -533,8 +564,9 @@ function AccountSidebar({
             />
 
             <SidebarPromoCard
-              imageSrc="/images/story-2.jpg"
-              imageAlt="Tham gia Xéo Hội"
+              imageSrc={latestProductImage}
+              imageAlt={latestProductImageAlt}
+              imageClassName="object-cover [object-position:center_28%]"
               className="mt-5 min-h-[336px]"
               overlayClassName="bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.12)_42%,rgba(0,0,0,0.64)_100%)]"
               contentClassName="px-6 pb-10 pt-8"
@@ -603,6 +635,7 @@ function SidebarPromoCard({
   href,
   imageSrc,
   imageAlt,
+  imageClassName,
   title,
   actionLabel,
   footer,
@@ -615,6 +648,7 @@ function SidebarPromoCard({
   href?: string;
   imageSrc: string;
   imageAlt: string;
+  imageClassName?: string;
   title: ReactNode;
   actionLabel?: string;
   footer?: ReactNode;
@@ -626,7 +660,12 @@ function SidebarPromoCard({
 }) {
   const content = (
     <>
-      <Image src={imageSrc} alt={imageAlt} fill className="object-cover" />
+      <Image
+        src={imageSrc}
+        alt={imageAlt}
+        fill
+        className={cn("object-cover", imageClassName)}
+      />
       <div
         className={cn("absolute inset-0", overlayClassName)}
         aria-hidden="true"

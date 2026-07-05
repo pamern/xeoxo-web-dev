@@ -1,6 +1,10 @@
 import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+function pickExistingText(value: string | null | undefined) {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
 function deriveCustomerName(user: User) {
   const fullName =
     typeof user.user_metadata?.full_name === "string"
@@ -64,12 +68,26 @@ export async function syncCustomerProfile(user: User) {
 
   const email = deriveEmail(user);
   const phone = derivePhone(user);
+  const { data: existingCustomer, error: existingCustomerError } = await admin
+    .schema("iam")
+    .from("customer")
+    .select("customer_name, email, phone")
+    .eq("account_id", user.id)
+    .maybeSingle();
+
+  if (existingCustomerError) {
+    throw new Error(existingCustomerError.message);
+  }
+
+  const existingCustomerName = pickExistingText(existingCustomer?.customer_name);
+  const existingEmail = pickExistingText(existingCustomer?.email);
+  const existingPhone = pickExistingText(existingCustomer?.phone);
 
   const customerPayload = {
     account_id: user.id,
-    customer_name: deriveCustomerName(user),
-    email,
-    phone,
+    customer_name: existingCustomerName ?? deriveCustomerName(user),
+    email: email ?? existingEmail,
+    phone: phone ?? existingPhone,
     customer_type: "MEMBER",
     total_spent: 0,
     spent_in_year: 0,
