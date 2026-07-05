@@ -10,11 +10,17 @@ import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { createClient } from "@/lib/supabase/client";
 
 function getSiteUrl() {
+  const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+
+  if (configuredSiteUrl) {
+    return configuredSiteUrl.replace(/\/+$/, "");
+  }
+
   if (typeof window !== "undefined") {
     return window.location.origin;
   }
 
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  return "http://localhost:3002";
 }
 
 function normalizePath(path?: string) {
@@ -26,6 +32,24 @@ function normalizePath(path?: string) {
 }
 
 function getErrorMessage(error: unknown, fallback: string) {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    error.status === 429
+  ) {
+    return "Hệ thống đang giới hạn tần suất đăng ký hoặc gửi email xác nhận. Vui lòng đợi vài phút rồi thử lại.";
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "over_email_send_rate_limit"
+  ) {
+    return "Email xác nhận đang bị giới hạn tần suất gửi. Vui lòng đợi vài phút rồi thử lại.";
+  }
+
   if (error instanceof Error && error.message) {
     return error.message;
   }

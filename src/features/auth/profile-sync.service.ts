@@ -84,7 +84,7 @@ export async function syncCustomerProfile(user: User) {
       onConflict: "account_id",
     })
     .select(
-      "customer_id, account_id, customer_name, email, phone, customer_type, tier_id",
+      "customer_id, account_id, customer_name, email, phone, gender, birthday, customer_type, tier_id",
     )
     .single();
 

@@ -23,9 +23,11 @@ export type AuthUser = {
 export type AuthCustomer = {
   customer_id: number;
   account_id: string | null;
-  customer_name: string;
+  customer_name: string | null;
   email: string | null;
   phone: string | null;
+  gender: string | null;
+  birthday: string | null;
   customer_type: string;
   tier_id: string | null;
 };

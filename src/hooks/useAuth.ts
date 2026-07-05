@@ -65,6 +65,18 @@ export function useAuth() {
     };
   }, []);
 
+  useEffect(() => {
+    function handleProfileUpdated() {
+      void refresh();
+    }
+
+    window.addEventListener("xeoxo:profile-updated", handleProfileUpdated);
+
+    return () => {
+      window.removeEventListener("xeoxo:profile-updated", handleProfileUpdated);
+    };
+  }, []);
+
   async function login(values: LoginValues): Promise<SubmitResult> {
     const parsed = loginSchema.safeParse(values);
     if (!parsed.success) {

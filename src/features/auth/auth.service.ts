@@ -55,7 +55,7 @@ export async function getCustomerProfileByAccountId(accountId: string) {
       .schema("iam")
       .from("customer")
       .select(
-        "customer_id, account_id, customer_name, email, phone, customer_type, tier_id",
+        "customer_id, account_id, customer_name, email, phone, gender, birthday, customer_type, tier_id",
       )
       .eq("account_id", accountId)
       .maybeSingle();
