@@ -266,6 +266,72 @@ endpoints:
 - trigger: Menu -> product list
   screen: null
   type: STANDARD
+  name: Bộ sưu tập mới nhất cho menu tài khoản
+  description: Lấy bộ sưu tập ACTIVE mới nhất cùng ảnh đại diện của bộ sưu tập và 1 ảnh sản phẩm thuộc bộ sưu tập đó để render khối promo ở menu tài khoản.
+  resource: collections
+  method: GET
+  endpoint: /api/v1/collections/latest
+  http_request: GET /api/v1/collections/latest
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code (integer) — Mã HTTP status, khớp status code thật của response
+    - message (string) — Thông báo tiếng Việt, hiển thị trực tiếp được cho user
+    - data (object) — Payload chính của response
+    - data.collectionId (integer) — Mã bộ sưu tập
+    - data.slug (string) — Định danh dùng cho URL
+    - data.name (string) — Tên hiển thị
+    - data.description (string|null) — Mô tả bộ sưu tập
+    - data.launchDate (string|null) — Ngày ra mắt (YYYY-MM-DD)
+    - data.collectionImage (string|null) — URL ảnh đại diện bộ sưu tập
+    - data.collectionImageAlt (string|null) — Alt text ảnh đại diện bộ sưu tập
+    - data.productImage (string|null) — URL 1 ảnh sản phẩm thuộc bộ sưu tập
+    - data.productImageAlt (string|null) — Alt text ảnh sản phẩm
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        collectionId: 1
+        slug: ha-khue
+        name: Hạ Khuê
+        description: BST lấy cảm hứng từ mùa hè Việt Nam.
+        launchDate: '2026-04-01'
+        collectionImage: https://cdn.xeoxo.vn/collections/ha-khue.jpg
+        collectionImageAlt: Bộ sưu tập Hạ Khuê
+        productImage: https://cdn.xeoxo.vn/products/ha-khue-look-1.jpg
+        productImageAlt: Thiết kế thuộc bộ sưu tập Hạ Khuê
+    error_examples:
+    - code: 404
+      message: Không tìm thấy bộ sưu tập nào
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - ảnh đại diện bộ sưu tập mới nhất
+  - ảnh 1 sản phẩm trong bộ sưu tập mới nhất
+  - tên bộ sưu tập mới nhất
+  business_rules:
+  - 1. Query COLLECTION status ACTIVE.
+  - 2. Sort theo launch_date DESC, nếu trùng thì created_at DESC.
+  - 3. Lấy ảnh đại diện từ MEDIA theo COLLECTION.media_id.
+  - 4. Query PRODUCT_LINE ACTIVE mới nhất thuộc collection vừa chọn.
+  - 5. Lấy 1 ảnh sản phẩm ưu tiên media_role MAIN, fallback ảnh đầu tiên theo display_order.
+  - 6. Không trả danh sách sản phẩm đầy đủ, chỉ trả đúng 1 ảnh để render promo.
+  dev_notes:
+  - Dùng cho menu tài khoản/sidebar promo.
+  - Nếu collection chưa có ảnh sản phẩm thì productImage có thể null để FE fallback ảnh tĩnh.
+  validation_rules:
+  - Không có input cần validate ngoài method và endpoint cố định.
+  security:
+  - Chỉ đọc dữ liệu public từ catalog; không trả metadata nội bộ ngoài dữ liệu cần render UI.
+- trigger: Menu -> product list
+  screen: null
+  type: STANDARD
   name: Danh sách bộ sưu tập
   description: Hiển thị toàn bộ bộ sưu tập (concept, mô tả) — KHÔNG kèm sản phẩm, chỉ metadata bộ sưu tập.
   resource: collections
