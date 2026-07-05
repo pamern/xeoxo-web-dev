@@ -158,7 +158,6 @@ export function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-background">
-        {/* Utility bar — nền là lát trên của dải texture */}
         <div
           className="relative bg-black bg-[length:100%_auto] bg-top text-white"
           style={{ backgroundImage: "url(/images/header-line-up.png)" }}
@@ -208,7 +207,6 @@ export function SiteHeader() {
           </div>
         </div>
 
-        {/* Main bar */}
         <div>
           <div className="mx-auto flex max-w-site items-center justify-between gap-4 px-6 py-[10px] xl:px-[100px]">
             <div className="flex items-center gap-3">
@@ -326,7 +324,6 @@ export function SiteHeader() {
           </div>
         </div>
 
-        {/* Mobile nav */}
         {mobileOpen && (
           <nav
             aria-label="Danh mục di động"

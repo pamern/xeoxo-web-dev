@@ -21,12 +21,16 @@ function fallbackPaymentOptions() {
 }
 
 export function CartSummary() {
-  const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } = useCart();
+  const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } =
+    useCart();
   const { paymentMethods } = usePaymentMethods();
-  const { preview, previewCheckout, resetPreview, errorMessage } = useCheckout();
+  const { preview, previewCheckout, resetPreview, errorMessage } =
+    useCheckout();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const options = useMemo(() => {
-    const source = paymentMethods.length ? paymentMethods : fallbackPaymentOptions();
+    const source = paymentMethods.length
+      ? paymentMethods
+      : fallbackPaymentOptions();
 
     return [...source].sort((a, b) => {
       if (a.is_online !== b.is_online) {
@@ -36,7 +40,9 @@ export function CartSummary() {
       return a.method_id - b.method_id;
     });
   }, [paymentMethods]);
-  const [paymentMethodId, setPaymentMethodId] = useState<number>(options[0]?.method_id ?? 1);
+  const [paymentMethodId, setPaymentMethodId] = useState<number>(
+    options[0]?.method_id ?? 1,
+  );
   const [acceptedTerms, setAcceptedTerms] = useState(true);
   const [voucherCode, setVoucherCode] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState("");
@@ -46,19 +52,28 @@ export function CartSummary() {
     [cart.items],
   );
   const allSelected =
-    cartItemIds.length > 0 && cartItemIds.every((id) => selectedIds.includes(id));
-  const selectedItems = cart.items.filter((item) => selectedIds.includes(item.cart_item_id));
-  const subtotal = preview?.subtotal ?? selectedItems.reduce((sum, item) => sum + item.line_total, 0);
+    cartItemIds.length > 0 &&
+    cartItemIds.every((id) => selectedIds.includes(id));
+  const selectedItems = cart.items.filter((item) =>
+    selectedIds.includes(item.cart_item_id),
+  );
+  const subtotal =
+    preview?.subtotal ??
+    selectedItems.reduce((sum, item) => sum + item.line_total, 0);
   const shippingFee = preview?.shipping_fee ?? (subtotal > 0 ? 30000 : 0);
   const discount = preview?.discount_amount ?? 0;
-  const total = preview?.total_amount ?? Math.max(subtotal + shippingFee - discount, 0);
+  const total =
+    preview?.total_amount ?? Math.max(subtotal + shippingFee - discount, 0);
 
   useEffect(() => {
     setSelectedIds(cartItemIds);
   }, [cartItemIds]);
 
   useEffect(() => {
-    if (options.length && !options.some((option) => option.method_id === paymentMethodId)) {
+    if (
+      options.length &&
+      !options.some((option) => option.method_id === paymentMethodId)
+    ) {
       setPaymentMethodId(options[0].method_id);
     }
   }, [options, paymentMethodId]);
@@ -80,17 +95,36 @@ export function CartSummary() {
 
   function toggleLine(id: number, checked: boolean) {
     setSelectedIds((current) =>
-      checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id),
+      checked
+        ? Array.from(new Set([...current, id]))
+        : current.filter((item) => item !== id),
     );
   }
 
   return (
     <aside className="w-full text-black">
-      <h2 className="text-2xl font-bold uppercase md:text-[32px] md:leading-tight">Giỏ hàng</h2>
+      <h2 className="text-2xl font-bold uppercase md:text-heading-section md:leading-tight">
+        Giỏ hàng
+      </h2>
 
-      <input form="checkout-form" type="hidden" name="cart_item_ids" value={selectedIds.join(",")} />
-      <input form="checkout-form" type="hidden" name="payment_method_id" value={paymentMethodId} />
-      <input form="checkout-form" type="hidden" name="voucher_code" value={appliedVoucher} />
+      <input
+        form="checkout-form"
+        type="hidden"
+        name="cart_item_ids"
+        value={selectedIds.join(",")}
+      />
+      <input
+        form="checkout-form"
+        type="hidden"
+        name="payment_method_id"
+        value={paymentMethodId}
+      />
+      <input
+        form="checkout-form"
+        type="hidden"
+        name="voucher_code"
+        value={appliedVoucher}
+      />
 
       <div className="mt-4 flex items-center justify-between gap-4">
         <label className="inline-flex cursor-pointer items-center gap-4">
@@ -102,7 +136,13 @@ export function CartSummary() {
               aria-label="Chọn tất cả sản phẩm"
               className="sr-only"
             />
-            <span className={allSelected ? "h-[15px] w-[15px] rounded-[3px] bg-black" : "h-[15px] w-[15px] rounded-[3px] bg-white"} />
+            <span
+              className={
+                allSelected
+                  ? "h-[15px] w-[15px] rounded-[3px] bg-black"
+                  : "h-[15px] w-[15px] rounded-[3px] bg-white"
+              }
+            />
           </span>
           <span className="text-base font-medium">Tất cả sản phẩm</span>
         </label>
@@ -137,12 +177,16 @@ export function CartSummary() {
               key={item.cart_item_id}
               item={item}
               selected={selectedIds.includes(item.cart_item_id)}
-              onSelectedChange={(checked) => toggleLine(item.cart_item_id, checked)}
+              onSelectedChange={(checked) =>
+                toggleLine(item.cart_item_id, checked)
+              }
               onQuantityChange={(quantity) =>
                 void updateItem(item.cart_item_id, { quantity })
               }
               onVariantChange={(next) =>
-                void updateItem(item.cart_item_id, { variant_id: next.variant_id })
+                void updateItem(item.cart_item_id, {
+                  variant_id: next.variant_id,
+                })
               }
               onRemove={() => void removeItem(item.cart_item_id)}
             />
@@ -156,10 +200,15 @@ export function CartSummary() {
         aria-hidden
       />
 
-      <h3 className="mt-12 text-2xl font-bold uppercase md:text-[28px]">Chi tiết thanh toán</h3>
+      <h3 className="mt-12 text-2xl font-bold uppercase md:text-[28px]">
+        Chi tiết thanh toán
+      </h3>
 
       <div className="mt-6">
-        <label htmlFor="voucher-code" className="mb-3 block text-base font-bold">
+        <label
+          htmlFor="voucher-code"
+          className="mb-3 block text-base font-bold"
+        >
           Mã ưu đãi
         </label>
         <div className="flex gap-3">
@@ -167,7 +216,9 @@ export function CartSummary() {
             id="voucher-code"
             type="text"
             value={voucherCode}
-            onChange={(event) => setVoucherCode(event.target.value.toUpperCase())}
+            onChange={(event) =>
+              setVoucherCode(event.target.value.toUpperCase())
+            }
             placeholder="Nhập mã ưu đãi"
             className="h-12 min-w-0 flex-1 rounded-pill border border-black bg-white px-5 text-sm font-semibold uppercase outline-none transition placeholder:normal-case placeholder:text-black/40 focus:ring-2 focus:ring-black/15"
           />
@@ -200,7 +251,9 @@ export function CartSummary() {
         </div>
         <div className="flex items-center justify-between py-4">
           <span>Phí giao hàng</span>
-          <span className="font-semibold">{shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}</span>
+          <span className="font-semibold">
+            {shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}
+          </span>
         </div>
         <div className="flex items-center justify-between py-5 text-lg font-bold uppercase">
           <span>Thành tiền</span>
@@ -209,7 +262,9 @@ export function CartSummary() {
       </div>
 
       <fieldset className="mt-10 space-y-0">
-        <legend className="mb-4 text-lg font-bold uppercase">Phương thức thanh toán</legend>
+        <legend className="mb-4 text-lg font-bold uppercase">
+          Phương thức thanh toán
+        </legend>
         {options.map((option) => {
           const checked = paymentMethodId === option.method_id;
           return (
@@ -226,9 +281,17 @@ export function CartSummary() {
                   onChange={() => setPaymentMethodId(option.method_id)}
                   className="sr-only"
                 />
-                <span className={checked ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]" : "h-[15px] w-[15px] rounded-full bg-white"} />
+                <span
+                  className={
+                    checked
+                      ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]"
+                      : "h-[15px] w-[15px] rounded-full bg-white"
+                  }
+                />
               </span>
-              <span className="text-base font-medium">{option.method_name}</span>
+              <span className="text-base font-medium">
+                {option.method_name}
+              </span>
             </label>
           );
         })}
@@ -242,15 +305,23 @@ export function CartSummary() {
             onChange={(event) => setAcceptedTerms(event.target.checked)}
             className="sr-only"
           />
-          <span className={acceptedTerms ? "h-[15px] w-[15px] rounded-[3px] bg-black" : "h-[15px] w-[15px] rounded-[3px] bg-white"} />
+          <span
+            className={
+              acceptedTerms
+                ? "h-[15px] w-[15px] rounded-[3px] bg-black"
+                : "h-[15px] w-[15px] rounded-[3px] bg-white"
+            }
+          />
         </span>
-        <span className="text-sm leading-6 text-black/75">
+        <span className="text-body-sm leading-6 text-black/75">
           Tôi đã đọc và đồng ý với chính sách đổi trả.
         </span>
       </label>
 
       {errorMessage && (
-        <p className="mt-4 text-sm font-semibold text-red-600">{errorMessage}</p>
+        <p className="mt-4 text-sm font-semibold text-red-600">
+          {errorMessage}
+        </p>
       )}
 
       <Button

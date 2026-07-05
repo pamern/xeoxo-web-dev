@@ -11,7 +11,7 @@ export function FreeShippingBadge({
   return (
     <span
       className={cn(
-        "inline-flex w-fit items-center gap-2 rounded-pill bg-secondary px-3 py-1 text-sm font-medium",
+        "inline-flex w-fit items-center gap-2 rounded-pill bg-secondary px-3 py-1 text-body-sm font-medium",
         className
       )}
     >

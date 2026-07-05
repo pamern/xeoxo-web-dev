@@ -30,7 +30,7 @@ export const COLLECTIONS: Collection[] = [
     subtitle: "Bộ sưu tập",
     coverImage: "/images/canh-giang.png",
     description:
-      "Cảnh Giang lấy cảm hứng từ sông nước miền Bắc, mang đến những thiết kế nhẹ nhàng, phảng phất nét cổ điển mà vẫn tinh tế.",
+      "Quý Chi là lời thì thầm của mùa hè khi nắng chưa quá gay gắt, là cảm giác được mặc một điều gì đó thật mềm mại và dễ chịu cho chính mình. Xéo xọ muốn lưu lại vẻ đẹp nữ tính theo cách gần gũi nhất - những gam pastel dịu dàng, form dáng lỡ gọn gàng, và chất liệu ren thoáng mát. Hà Chi mang sắc vàng như ánh chiều tà, Hà Như là khoảng trắng trong trẻo, Phù Ân là sắc hồng của những buổi tiệc nhẹ nhàng, còn Chi Huỳnh - Chi Mạn lấp lánh với cườm đính nơi viền ngực. Tất cả đều để phụ nữ được thoải mái dạo phố, đi du lịch hay hẹn hò mà vẫn giữ được nét lịch sự, duyên dáng.",
   },
   {
     slug: "cat-dien",
@@ -38,7 +38,7 @@ export const COLLECTIONS: Collection[] = [
     subtitle: "Bộ sưu tập",
     coverImage: "/images/cat-dien.png",
     description:
-      "Cát Điền tôn vinh chất liệu thủ công và đường thêu tỉ mỉ, gửi gắm câu chuyện về sự bền bỉ và vẻ đẹp mộc mạc.",
+      "Quý Chi là lời thì thầm của mùa hè khi nắng chưa quá gay gắt, là cảm giác được mặc một điều gì đó thật mềm mại và dễ chịu cho chính mình. Xéo xọ muốn lưu lại vẻ đẹp nữ tính theo cách gần gũi nhất - những gam pastel dịu dàng, form dáng lỡ gọn gàng, và chất liệu ren thoáng mát. Hà Chi mang sắc vàng như ánh chiều tà, Hà Như là khoảng trắng trong trẻo, Phù Ân là sắc hồng của những buổi tiệc nhẹ nhàng, còn Chi Huỳnh - Chi Mạn lấp lánh với cườm đính nơi viền ngực. Tất cả đều để phụ nữ được thoải mái dạo phố, đi du lịch hay hẹn hò mà vẫn giữ được nét lịch sự, duyên dáng.",
   },
   {
     slug: "sac-ky-huong",
@@ -46,7 +46,7 @@ export const COLLECTIONS: Collection[] = [
     subtitle: "Bộ sưu tập",
     coverImage: "/images/sac-ky-huong.png",
     description:
-      "Sắc Kỳ Hương rực rỡ với bảng màu đậm chất phương Đông, dành cho những dịp trọng đại và khoảnh khắc đáng nhớ.",
+      "Quý Chi là lời thì thầm của mùa hè khi nắng chưa quá gay gắt, là cảm giác được mặc một điều gì đó thật mềm mại và dễ chịu cho chính mình. Xéo xọ muốn lưu lại vẻ đẹp nữ tính theo cách gần gũi nhất - những gam pastel dịu dàng, form dáng lỡ gọn gàng, và chất liệu ren thoáng mát. Hà Chi mang sắc vàng như ánh chiều tà, Hà Như là khoảng trắng trong trẻo, Phù Ân là sắc hồng của những buổi tiệc nhẹ nhàng, còn Chi Huỳnh - Chi Mạn lấp lánh với cườm đính nơi viền ngực. Tất cả đều để phụ nữ được thoải mái dạo phố, đi du lịch hay hẹn hò mà vẫn giữ được nét lịch sự, duyên dáng.",
   },
   {
     slug: "xuan-diem-khai-hoa",
@@ -54,7 +54,7 @@ export const COLLECTIONS: Collection[] = [
     subtitle: "Bộ sưu tập",
     coverImage: "/images/xuan-diem-khai-hoa.png",
     description:
-      "Xuân Diệm Khai Hoa khắc họa khoảnh khắc hoa xuân hé nở, biểu tượng cho khởi đầu mới và niềm hân hoan.",
+      "Quý Chi là lời thì thầm của mùa hè khi nắng chưa quá gay gắt, là cảm giác được mặc một điều gì đó thật mềm mại và dễ chịu cho chính mình. Xéo xọ muốn lưu lại vẻ đẹp nữ tính theo cách gần gũi nhất - những gam pastel dịu dàng, form dáng lỡ gọn gàng, và chất liệu ren thoáng mát. Hà Chi mang sắc vàng như ánh chiều tà, Hà Như là khoảng trắng trong trẻo, Phù Ân là sắc hồng của những buổi tiệc nhẹ nhàng, còn Chi Huỳnh - Chi Mạn lấp lánh với cườm đính nơi viền ngực. Tất cả đều để phụ nữ được thoải mái dạo phố, đi du lịch hay hẹn hò mà vẫn giữ được nét lịch sự, duyên dáng.",
   },
 ];
 

@@ -32,7 +32,7 @@ export function TimeSlotPicker({
             disabled={slot.disabled}
             onClick={() => onChange(slot.id)}
             className={cn(
-              "h-[39px] rounded-[19.5px] border border-black bg-white px-3 text-sm font-medium text-black transition-colors",
+              "h-[39px] rounded-[19.5px] border border-black bg-white px-3 text-body-sm font-medium text-black transition-colors",
               value === slot.id
                 ? "bg-black text-white"
                 : "hover:bg-black hover:text-white",

@@ -40,6 +40,7 @@ export function ProductListingPage({
 }) {
   const totalResults = resultCount ?? products.length;
   const displayedCount = visibleCount ?? Math.min(products.length, totalResults);
+  const hasMore = displayedCount < totalResults;
   const sidebarGroups =
     filterGroups.length > 0
       ? filterGroups
@@ -73,13 +74,15 @@ export function ProductListingPage({
 
             {products.length > 0 && (
               <div className="mt-12 flex flex-col items-center gap-4">
-                <button
-                  type="button"
-                  className="rounded-pill bg-primary px-9 py-2 text-sm font-bold uppercase text-primary-foreground transition-colors hover:bg-primary/85"
-                >
-                  Xem thêm →
-                </button>
-                <p className="text-base font-light text-muted-foreground">
+                {hasMore ? (
+                  <button
+                    type="button"
+                    className="rounded-pill bg-primary px-9 py-2 text-body-sm font-bold uppercase text-primary-foreground transition-colors hover:bg-primary/85"
+                  >
+                    Xem thêm →
+                  </button>
+                ) : null}
+                <p className="text-body-lg font-light text-muted-foreground">
                   Hiển thị {displayedCount} trên tổng số {totalResults} sản phẩm
                 </p>
               </div>

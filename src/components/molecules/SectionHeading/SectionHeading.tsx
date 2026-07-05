@@ -19,7 +19,7 @@ export function SectionHeading({
       {actionHref && (
         <Link
           href={actionHref}
-          className="shrink-0 text-sm underline underline-offset-4 transition-opacity hover:opacity-70"
+          className="shrink-0 text-body-sm underline underline-offset-4 transition-opacity hover:opacity-70"
         >
           {actionLabel}
         </Link>

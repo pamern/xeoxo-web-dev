@@ -56,28 +56,42 @@ const STORES = [
 ];
 
 const SOCIAL_LINKS = [
-  { label: "Facebook", icon: "/icons/facebook.svg", href: "https://www.facebook.com/" },
-  { label: "TikTok", icon: "/icons/tiktok.svg", href: "https://www.tiktok.com/" },
-  { label: "Instagram", icon: "/icons/instagram.svg", href: "https://www.instagram.com/" },
+  {
+    label: "Facebook",
+    icon: "/icons/facebook.svg",
+    href: "https://www.facebook.com/",
+  },
+  {
+    label: "TikTok",
+    icon: "/icons/tiktok.svg",
+    href: "https://www.tiktok.com/",
+  },
+  {
+    label: "Instagram",
+    icon: "/icons/instagram.svg",
+    href: "https://www.instagram.com/",
+  },
 ];
 
 export function SiteFooter() {
   return (
     <footer className="bg-black text-white">
-      <div className="mx-auto grid max-w-site gap-10 px-6 py-[50px] lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
-        <div className="flex flex-col gap-[25px] lg:col-span-2">
+      <div className="mx-auto grid max-w-site gap-10 px-6 py-[50px] lg:grid-cols-[minmax(0,1fr)_minmax(320px,430px)] xl:px-[100px]">
+        <div className="flex max-w-[1040px] flex-col gap-[25px]">
           <div className="flex flex-col gap-[10px]">
-            <p className="text-2xl font-medium leading-tight md:text-[32px]">
-              <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á Đông trong từng thiết kế
+            <p className="text-2xl font-medium leading-tight md:text-heading-section">
+              <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á
+              Đông trong từng thiết kế
             </p>
-            <p className="text-lg font-light text-white/80">
-              Theo dõi Xéo Xọ để cập nhật bộ sưu tập mới, câu chuyện thiết kế và ưu đãi dành riêng cho khách hàng thân thiết.
+            <p className="text-body-lg font-light text-white/80">
+              Theo dõi Xéo Xọ để cập nhật bộ sưu tập mới, câu chuyện thiết kế và
+              ưu đãi dành riêng cho khách hàng thân thiết.
             </p>
           </div>
 
           <Link
             href={ROUTES.COLLECTIONS}
-            className="inline-flex w-fit items-center gap-[10px] rounded-pill border border-white px-6 py-3 text-[22px] font-medium transition-colors hover:bg-white hover:text-black"
+            className="inline-flex w-fit items-center gap-[10px] rounded-pill border border-white px-6 py-3 text-button font-medium transition-colors hover:bg-white hover:text-black"
           >
             Khám phá bộ sưu tập
             <Image
@@ -112,9 +126,17 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-10">
-          <ContactRow icon="/icons/phone.svg" label="Hotline" value="039 412 6556" />
-          <ContactRow icon="/icons/email.svg" label="Email" value="info@xeoxo.com" />
+        <div className="flex w-full max-w-[430px] flex-col gap-10 lg:justify-self-end">
+          <ContactRow
+            icon="/icons/phone.svg"
+            label="Hotline"
+            value="039 412 6556"
+          />
+          <ContactRow
+            icon="/icons/email.svg"
+            label="Email"
+            value="info@xeoxo.com"
+          />
         </div>
       </div>
 
@@ -128,12 +150,12 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-[10px]">
-          <h3 className="text-[22px] font-bold">Chính sách</h3>
+          <h3 className="text-nav font-bold">Chính sách</h3>
           {POLICY_LINKS.map((policy) => (
             <Link
               key={policy.label}
               href={policy.href}
-              className="text-lg font-light text-white/80 transition-colors hover:text-white"
+              className="text-body-lg font-light text-white/80 transition-colors hover:text-white"
             >
               {policy.label}
             </Link>
@@ -141,9 +163,9 @@ export function SiteFooter() {
         </div>
 
         <div className="flex flex-col gap-[10px]">
-          <h3 className="text-[22px] font-bold">Hệ thống cửa hàng</h3>
+          <h3 className="text-nav font-bold">Hệ thống cửa hàng</h3>
           {STORES.map((address) => (
-            <p key={address} className="text-lg font-light text-white/80">
+            <p key={address} className="text-body-lg font-light text-white/80">
               {address}
             </p>
           ))}
@@ -152,9 +174,12 @@ export function SiteFooter() {
 
       <div className="mx-auto grid max-w-site gap-10 px-6 py-5 lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
         <div className="flex flex-col gap-[10px] lg:col-span-2">
-          <p className="text-lg font-extrabold">© CÔNG TY TNHH MAI AN KIM VIỆT NAM</p>
-          <p className="max-w-2xl text-lg font-light text-white/70">
-            Mã số doanh nghiệp: 0110169383. Giấy chứng nhận đăng ký doanh nghiệp do Sở Kế hoạch và Đầu tư TP Hà Nội cấp lần đầu ngày 02/11/2022.
+          <p className="text-body-lg font-extrabold">
+            © CÔNG TY TNHH MAI AN KIM VIỆT NAM
+          </p>
+          <p className="max-w-2xl text-body-lg font-light text-white/70">
+            Mã số doanh nghiệp: 0110169383. Giấy chứng nhận đăng ký doanh nghiệp
+            do Sở Kế hoạch và Đầu tư TP Hà Nội cấp lần đầu ngày 02/11/2022.
           </p>
         </div>
 
@@ -170,13 +195,30 @@ export function SiteFooter() {
   );
 }
 
-function ContactRow({ icon, label, value }: { icon: string; label: string; value: string }) {
+function ContactRow({
+  icon,
+  label,
+  value,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+}) {
   return (
     <div className="flex items-start gap-[25px]">
-      <Image src={icon} alt="" width={80} height={80} aria-hidden className="h-20 w-20 brightness-0 invert" />
+      <Image
+        src={icon}
+        alt=""
+        width={80}
+        height={80}
+        aria-hidden
+        className="h-20 w-20 brightness-0 invert"
+      />
       <div className="flex flex-col gap-[5px]">
-        <span className="text-lg font-medium text-white/80">{label}</span>
-        <span className="text-2xl font-medium md:text-[32px]">{value}</span>
+        <span className="text-body-lg font-medium text-white/80">{label}</span>
+        <span className="text-2xl font-medium md:text-heading-section">
+          {value}
+        </span>
       </div>
     </div>
   );
@@ -185,8 +227,8 @@ function ContactRow({ icon, label, value }: { icon: string; label: string; value
 function FooterLinkColumn({ column }: { column: FooterColumn }) {
   return (
     <div className="flex flex-col gap-[10px]">
-      <h3 className="text-[22px] font-bold">{column.title}</h3>
-      {column.links.map((link) => (
+      <h3 className="text-nav font-bold">{column.title}</h3>
+      {column.links.map((link) =>
         link.href === ROUTES.REGISTER ? (
           <AuthModalLink
             key={link.label}
@@ -203,8 +245,8 @@ function FooterLinkColumn({ column }: { column: FooterColumn }) {
           >
             {link.label}
           </Link>
-        )
-      ))}
+        ),
+      )}
     </div>
   );
 }

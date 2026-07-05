@@ -24,7 +24,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
           )}
           {...props}
         />
-        {error && <span className="text-sm font-light text-destructive">{error}</span>}
+        {error && <span className="text-body-sm font-light text-destructive">{error}</span>}
       </label>
     );
   }

@@ -35,23 +35,23 @@ export function ProductCard({
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
         {product.isNew && (
-          <span className="absolute left-3 top-3 rounded-pill bg-primary px-3 py-1 text-xs text-primary-foreground">
+          <span className="absolute left-3 top-3 rounded-pill bg-primary px-3 py-1 text-caption text-primary-foreground">
             NEW
           </span>
         )}
         {onSale && (
-          <span className="absolute right-3 top-3 rounded-pill bg-destructive px-3 py-1 text-xs text-destructive-foreground">
+          <span className="absolute right-3 top-3 rounded-pill bg-destructive px-3 py-1 text-caption text-destructive-foreground">
             SALE
           </span>
         )}
       </div>
-      <h3 className="text-lg font-light leading-snug">{product.name}</h3>
+      <h3 className="text-body-lg font-light leading-snug">{product.name}</h3>
       <div className="flex items-center gap-3">
-        <span className={cn("text-lg font-bold", onSale && "text-destructive")}>
+        <span className={cn("text-body-lg font-bold", onSale && "text-destructive")}>
           {formatPrice(onSale ? product.salePrice! : product.price)}
         </span>
         {onSale && (
-          <span className="text-sm font-light text-muted-foreground line-through">
+          <span className="text-body-sm font-light text-muted-foreground line-through">
             {formatPrice(product.price)}
           </span>
         )}

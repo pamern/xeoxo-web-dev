@@ -11,7 +11,7 @@ export const TextActionButton = forwardRef<HTMLButtonElement, TextActionButtonPr
       ref={ref}
       type="button"
       className={cn(
-        "inline-flex w-fit items-center justify-center text-sm font-bold underline underline-offset-4 transition-opacity hover:opacity-70",
+        "inline-flex w-fit items-center justify-center text-body-sm font-bold underline underline-offset-4 transition-opacity hover:opacity-70",
         tone === "link" && "text-[#3568ff]",
         className
       )}

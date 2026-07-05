@@ -6,38 +6,48 @@ type Params = { slug: string };
 
 const POLICIES: Record<string, { title: string; body: string[] }> = {
   customer: {
-    title: "Chinh sach khach hang",
+    title: "Chính sách khách hàng",
     body: [
-      "XEO XO tiep nhan va ho tro cac yeu cau cua khach hang trong qua trinh mua sam.",
-      "Thong tin chi tiet se duoc cap nhat theo chinh sach van hanh chinh thuc.",
+      "XÉO XỌ luôn sẵn sàng tiếp nhận và hỗ trợ mọi yêu cầu của khách hàng trong suốt quá trình mua sắm.",
+      "Thông tin chi tiết sẽ được cập nhật theo chính sách vận hành chính thức của thương hiệu.",
     ],
   },
   return: {
-    title: "Chinh sach doi tra",
+    title: "Chính sách đổi trả",
     body: [
-      "San pham duoc ho tro doi tra theo dieu kien va thoi gian quy dinh.",
-      "Vui long giu san pham con nguyen tinh trang ban dau de duoc ho tro tot nhat.",
+      "Sản phẩm được hỗ trợ đổi trả theo các điều kiện và thời gian quy định.",
+      "Vui lòng giữ sản phẩm còn nguyên tình trạng ban đầu để được hỗ trợ nhanh chóng và thuận tiện nhất.",
     ],
   },
   inspection: {
-    title: "Chinh sach kiem hang",
-    body: ["Khach hang co the kiem tra san pham khi nhan hang theo quy dinh cua don vi van chuyen."],
+    title: "Chính sách kiểm hàng",
+    body: [
+      "Khách hàng có thể kiểm tra sản phẩm khi nhận hàng theo quy định của đơn vị vận chuyển.",
+    ],
   },
   shipping: {
-    title: "Chinh sach van chuyen",
-    body: ["Don hang duoc giao den dia chi khach hang cung cap trong qua trinh dat hang."],
+    title: "Chính sách vận chuyển",
+    body: [
+      "Đơn hàng sẽ được giao đến địa chỉ khách hàng cung cấp trong quá trình đặt hàng.",
+    ],
   },
   payment: {
-    title: "Chinh sach thanh toan",
-    body: ["XEO XO ho tro cac phuong thuc thanh toan duoc hien thi tai buoc thanh toan."],
+    title: "Chính sách thanh toán",
+    body: [
+      "XÉO XỌ hỗ trợ các phương thức thanh toán được hiển thị tại bước thanh toán.",
+    ],
   },
   privacy: {
-    title: "Chinh sach bao mat",
-    body: ["Thong tin ca nhan cua khach hang duoc su dung cho muc dich xu ly don hang va cham soc khach hang."],
+    title: "Chính sách bảo mật",
+    body: [
+      "Thông tin cá nhân của khách hàng chỉ được sử dụng nhằm phục vụ quá trình xử lý đơn hàng và chăm sóc khách hàng theo quy định.",
+    ],
   },
   care: {
-    title: "Huong dan giat la",
-    body: ["Nen giat nhe, tranh chat tay manh va phoi noi thoang mat de giu chat lieu ben dep."],
+    title: "Hướng dẫn giặt là",
+    body: [
+      "Nên giặt nhẹ, tránh chà xát mạnh và phơi ở nơi thoáng mát để giữ chất liệu luôn bền đẹp.",
+    ],
   },
 };
 
@@ -52,20 +62,34 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params;
   const policy = POLICIES[slug];
-  if (!policy) return { title: "Khong tim thay chinh sach" };
+
+  if (!policy) {
+    return { title: "Không tìm thấy chính sách" };
+  }
+
   return { title: policy.title };
 }
 
-export default async function PolicyPage({ params }: { params: Promise<Params> }) {
+export default async function PolicyPage({
+  params,
+}: {
+  params: Promise<Params>;
+}) {
   const { slug } = await params;
   const policy = POLICIES[slug];
-  if (!policy) notFound();
+
+  if (!policy) {
+    notFound();
+  }
 
   return (
     <SiteLayout>
       <article className="mx-auto w-full max-w-3xl px-6 py-10">
-        <h1 className="mb-8 text-3xl font-medium uppercase md:text-4xl">{policy.title}</h1>
-        <div className="space-y-4 text-base font-light leading-relaxed text-foreground/80">
+        <h1 className="mb-8 text-3xl font-medium uppercase md:text-4xl">
+          {policy.title}
+        </h1>
+
+        <div className="space-y-4 text-body-lg font-light leading-relaxed text-foreground/80">
           {policy.body.map((paragraph) => (
             <p key={paragraph}>{paragraph}</p>
           ))}
