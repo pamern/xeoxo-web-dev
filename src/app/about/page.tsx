@@ -8,31 +8,31 @@ import { ROUTES } from "@/constants/routes";
 export const metadata: Metadata = {
   title: "Về XÉO XỌ",
   description:
-    "Câu chuyện thương hiệu XÉO XỌ — được thành lập bởi Hương và Hằng, bắt đầu từ tình yêu với chất liệu tự nhiên và những thiết kế gần gũi đời sống.",
+    "Câu chuyện thương hiệu XÉO XỌ, những nguyên tắc sáng tạo và hành trình phía sau mỗi thiết kế.",
 };
 
 const PRINCIPLES = [
   {
     number: "01",
-    title: "KHÔNG CHẠY THEO TRÀO LƯU",
+    title: "KHÔNG CHẠY\nTHEO TRÀO LƯU",
     description:
       "Chúng mình tin vào giá trị của thời gian và sự bền vững thay vì chạy theo xu hướng nhất thời.",
   },
   {
     number: "02",
-    title: "CHẤT LIỆU LÀ QUAN TRỌNG",
+    title: "CHẤT LIỆU LÀ\nQUAN TRỌNG",
     description:
       "Linen, lụa, tơ... những sợi tự nhiên luôn là linh hồn trong mỗi thiết kế của Xéo Xọ.",
   },
   {
     number: "03",
-    title: "TINH THẦN Á ĐÔNG",
+    title: "TINH THẦN\nÁ ĐÔNG",
     description:
       "Làm mới những giá trị truyền thống để phù hợp với người phụ nữ hiện đại.",
   },
   {
     number: "04",
-    title: "KHÔNG BỎ CUỘC",
+    title: "KHÔNG\nBỎ CUỘC",
     description:
       "Từ hai người tay ngang, Xéo Xọ lớn lên nhờ sự kiên trì và tình yêu mãnh liệt với cái đẹp.",
   },
@@ -42,157 +42,254 @@ const PROCESS = [
   {
     image: "/images/process-1.jpg",
     title: "Tìm cảm hứng",
-    description: "Quan sát nhịp sống, nghiên cứu di sản và các chất liệu tự nhiên.",
+    description:
+      "Quan sát nhịp sống, nghiên cứu di sản và các chất liệu tự nhiên.",
   },
   {
     image: "/images/story-2.jpg",
     title: "Phác thảo",
-    description: "Những nét đầu tiên hiện thực hoá cảm xúc thành hình dáng.",
+    description:
+      "Những nét đầu tiên hiện thực hoá cảm xúc thành hình dáng.",
   },
   {
     image: "/images/story-1.jpg",
     title: "May mẫu",
-    description: "Chỉnh sửa từng cm để đạt được độ rơi và phom dáng hoàn hảo nhất.",
+    description:
+      "Chỉnh sửa từng cm để đạt được độ rơi và phom dáng hoàn hảo nhất.",
   },
   {
     image: "/images/process-4.jpg",
     title: "Hoàn thiện",
-    description: "Kiểm tra tỉ mỉ trước khi đóng gói gửi cho bạn.",
+    description: "Kiểm tra tỉ mỉ trước khi đóng gói gửi tới bạn.",
   },
 ];
+
+function PatternSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      className="px-4 py-0 sm:px-6 xl:px-[100px]"
+      style={{ backgroundImage: "url('/images/story-section-background.png')" }}
+    >
+      <div className="mx-auto max-w-site py-8 sm:py-10">
+        <h2 className="text-center text-[32px] font-black uppercase leading-[0.94] tracking-[-0.02em] text-white sm:text-[54px]">
+          {title}
+        </h2>
+        {children}
+      </div>
+    </section>
+  );
+}
 
 export default function AboutPage() {
   return (
     <SiteLayout>
-      {/* Hero */}
-      <section className="relative flex h-[70vh] min-h-[460px] items-center justify-center overflow-hidden">
-        <Image src="/images/hero.png" alt="XÉO XỌ" fill priority sizes="100vw" className="object-cover" />
-        <div className="absolute inset-0 bg-black/45" aria-hidden />
-        <div className="relative flex flex-col items-center gap-4 px-6 text-center">
-          <h1 className="text-shadow text-6xl font-extrabold text-white md:text-8xl">XÉO XỌ</h1>
-          <p className="text-lg font-light text-white">
-            Lưu giữ vẻ đẹp Á Đông trong từng thiết kế.
-          </p>
-          <Link
-            href={ROUTES.COLLECTIONS}
-            className="mt-2 inline-flex items-center rounded-pill border border-white px-6 py-3 text-lg font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
-          >
-            Khám phá bộ sưu tập
-          </Link>
-        </div>
-      </section>
-
-      {/* Manifesto */}
-      <section className="mx-auto flex max-w-4xl flex-col items-center gap-6 px-6 py-16 text-center">
-        <p className="text-2xl font-medium leading-snug md:text-3xl">
-          “Chúng tôi chỉ đơn giản muốn làm ra những bộ quần áo đẹp để mặc”
-        </p>
-        <p className="text-base font-light leading-relaxed text-foreground/70">
-          Nhiều người hỏi “XÉO XỌ” có nghĩa là gì. Thật ra, nó không mang một ý nghĩa cụ thể nào cả.
-          Chúng tôi thích việc mỗi người sẽ tự giữ cho mình một cách hiểu riêng về XÉO XỌ — giống như cách quần áo
-          đôi khi cũng trở thành một phần rất riêng trong cuộc sống của mỗi người.
-        </p>
-      </section>
-
-      {/* Story */}
-      <section className="bg-secondary py-16" style={{
-    backgroundImage: "url('/images/story-section-background.png')",
-  }}>
-        <div className="mx-auto max-w-site px-6 xl:px-[100px]">
-          <h2 className="text-shadow mb-10 text-center text-3xl font-extrabold uppercase md:text-4xl text-white">
-            Câu chuyện Xéo Xọ
-          </h2>
-          <div className="grid gap-10 lg:grid-cols-2">
-            <div className="grid grid-cols-3 grid-rows-[2fr_1fr] gap-4">
-              <div className="relative col-span-3 overflow-hidden rounded-lg">
-                <Image
-                  src="/images/story-main.jpg"
-                  alt="Xưởng may XÉO XỌ"
-                  width={665}
-                  height={312}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              {["/images/story-1.jpg", "/images/story-2.jpg", "/images/story-3.jpg"].map((src) => (
-                <div key={src} className="relative aspect-square overflow-hidden rounded-lg">
-                  <Image src={src} alt="" fill sizes="200px" className="object-cover" />
-                </div>
-              ))}
-            </div>
-            <div className="flex flex-col justify-center gap-5 rounded-lg bg-background p-8">
-              <h3 className="text-2xl font-medium">Mọi thứ bắt đầu từ một căn phòng nhỏ...</h3>
-              <p className="text-base font-light leading-relaxed text-foreground/80">
-                Được thành lập bởi Hương và Hằng, XÉO XỌ bắt đầu từ tình yêu với chất liệu tự nhiên và
-                niềm yêu thích dành cho những thiết kế mềm mại và gần gũi với đời sống thường ngày.
+      <section className="bg-background px-4 pt-0 sm:px-6 xl:px-[100px]">
+        <div className="mx-auto max-w-site">
+          <div className="relative min-h-[290px] overflow-hidden bg-black sm:min-h-[420px]">
+            <Image
+              src="/images/hero.png"
+              alt="XÉO XỌ"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.12)_0%,rgba(0,0,0,0.18)_42%,rgba(0,0,0,0.48)_100%)]" />
+            <div className="relative z-[1] flex min-h-[290px] flex-col items-center justify-center px-6 text-center sm:min-h-[420px]">
+              <h1 className="text-[48px] font-black uppercase leading-[0.94] tracking-[-0.03em] text-white drop-shadow-[0_4px_10px_rgba(0,0,0,0.35)] sm:text-[78px]">
+                XÉO XỌ
+              </h1>
+              <p className="mt-2 text-sm font-light text-white/92 sm:text-lg">
+                Lưu giữ vẻ đẹp Á Đông trong từng thiết kế
               </p>
-              <p className="text-base font-light leading-relaxed text-foreground/80">
-                Những ngày đầu tiên, XÉO XỌ chỉ là một căn phòng nhỏ nằm sâu trong một con ngõ yên
-                tĩnh ở Hà Nội. Hai đứa mình — những người chưa từng học thời trang chuyên nghiệp — bắt
-                đầu mọi thứ từ sự tò mò, niềm yêu thích với vải vóc và cảm giác muốn tự tay làm ra
-                những bộ quần áo thật đẹp để mặc.
-              </p>
+              <Link
+                href={ROUTES.COLLECTIONS}
+                className="mt-5 inline-flex min-h-[46px] items-center justify-center rounded-full border border-white/80 bg-black/12 px-6 text-[16px] font-black text-white shadow-[0_8px_18px_rgba(0,0,0,0.2)] backdrop-blur-[10px] transition-colors hover:bg-white/16 sm:min-h-[58px] sm:px-9 sm:text-[22px]"
+              >
+                Khám phá bộ sưu tập
+                <span className="ml-2 text-[22px] leading-none sm:text-[28px]">
+                  →
+                </span>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Principles */}
-      <section className="mx-auto max-w-site px-6 py-16 xl:px-[100px]">
-        <h2 className="mb-12 text-center text-3xl font-medium uppercase md:text-4xl">
-          Những điều Xéo Xọ luôn giữ
-        </h2>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {PRINCIPLES.map((principle) => (
-            <article
-              key={principle.number}
-              className="flex flex-col items-center gap-4 rounded-lg bg-primary p-8 text-center text-primary-foreground"
-            >
-              <span className="text-5xl font-medium">{principle.number}</span>
-              <h3 className="text-lg font-bold">{principle.title}</h3>
-              <p className="text-sm font-light text-primary-foreground/80">
-                {principle.description}
-              </p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* Process */}
-      <section className="mx-auto max-w-site px-6 py-16 xl:px-[100px]">
-        <h2 className="mb-12 text-center text-3xl font-medium uppercase md:text-4xl">
-          Phía sau một thiết kế
-        </h2>
-        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {PROCESS.map((step) => (
-            <article key={step.title} className="flex flex-col gap-4">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-lg">
-                <Image src={step.image} alt={step.title} fill sizes="300px" className="object-cover" />
-              </div>
-              <h3 className="text-xl font-medium">{step.title}</h3>
-              <p className="text-base font-light text-foreground/70">{step.description}</p>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* Closing CTA */}
-      <section className="relative flex min-h-[400px] items-center justify-center overflow-hidden">
-        <Image src="/images/hero.png" alt="" fill sizes="100vw" className="object-cover" />
-        <div className="absolute inset-0 bg-black/55" aria-hidden />
-        <div className="relative flex max-w-3xl flex-col items-center gap-5 px-6 text-center">
-          <h2 className="text-shadow text-3xl font-extrabold text-white md:text-4xl">
-            XÉO XỌ vẫn đang tiếp tục lớn lên mỗi ngày.
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 xl:px-[100px]">
+        <div className="mx-auto max-w-site text-center">
+          <h2 className="mx-auto max-w-[1200px] text-[30px] font-black leading-[1.08] tracking-[-0.02em] text-foreground sm:text-[46px]">
+            “Chúng tôi đơn giản chỉ muốn làm ra
+            <br />
+            những bộ quần áo đẹp để mặc”
           </h2>
-          <p className="text-base font-light text-white/90">
-            Cảm ơn bạn đã là một phần trong câu chuyện của chúng mình. Hãy cùng Xéo Xọ viết tiếp những
-            chương mới rạng rỡ hơn.
-          </p>
-          <AuthModalLink
-            mode="register"
-            className="inline-flex items-center rounded-pill border border-white px-6 py-3 text-lg font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
-          >
-            Gia nhập Hội Xéo
-          </AuthModalLink>
+          <div className="mx-auto mt-5 max-w-[980px] space-y-2 text-sm font-light leading-relaxed text-foreground/76 sm:mt-7 sm:text-lg">
+            <p>
+              Nhiều người hỏi “XÉO XỌ” có nghĩa là gì. Thật ra, nó không mang
+              một ý nghĩa cụ thể nào cả.
+            </p>
+            <p>
+              Chúng tôi thích việc mỗi người sẽ tự giữ cho mình một cách hiểu
+              riêng về XÉO XỌ - giống như quần áo đôi khi cũng trở thành một
+              phần rất riêng trong cuộc sống của mỗi người.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <PatternSection title="CÂU CHUYỆN XÉO XỌ">
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.04fr_1fr] lg:items-start">
+          <div>
+            <div className="relative aspect-[1.47/1] overflow-hidden rounded-[12px] bg-white/15">
+              <Image
+                src="/images/story-main.jpg"
+                alt="Câu chuyện Xéo Xọ"
+                fill
+                sizes="(max-width: 1024px) 100vw, 48vw"
+                className="object-cover"
+              />
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-4">
+              {["/images/story-1.jpg", "/images/story-2.jpg", "/images/story-3.jpg"].map(
+                (src) => (
+                  <div
+                    key={src}
+                    className="relative aspect-square overflow-hidden rounded-[12px] bg-white/15"
+                  >
+                    <Image
+                      src={src}
+                      alt=""
+                      fill
+                      sizes="(max-width: 1024px) 30vw, 15vw"
+                      className="object-cover"
+                    />
+                  </div>
+                ),
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[12px] bg-white px-6 py-7 shadow-[0_14px_28px_rgba(0,0,0,0.08)] sm:px-8 sm:py-9">
+            <h3 className="text-[30px] font-black leading-[1.08] tracking-[-0.02em] text-foreground sm:text-[42px]">
+              Mọi thứ bắt đầu từ
+              <br />
+              một căn phòng nhỏ ...
+            </h3>
+            <div className="mt-5 space-y-5 text-sm font-light leading-relaxed text-foreground/82 text-justify sm:text-lg">
+              <p>
+                Được thành lập bởi Hương và Hằng, XÉO XỌ bắt đầu từ tình yêu với
+                chất liệu tự nhiên và niềm yêu thích dành cho những thiết kế mềm
+                mại và gần gũi với đời sống thường ngày.
+              </p>
+              <p>
+                Những ngày đầu tiên, XÉO XỌ chỉ là một căn phòng nhỏ nằm sâu
+                trong một con ngõ yên tĩnh ở Hà Nội. Hai đứa mình - những người
+                chưa từng học thời trang chuyên nghiệp - bắt đầu mọi thứ từ sự
+                tò mò, niềm yêu thích với vải vóc và cảm giác muốn tự tay làm ra
+                những bộ quần áo thật đẹp để mặc.
+              </p>
+            </div>
+          </div>
+        </div>
+      </PatternSection>
+
+      <section className="bg-white px-4 py-10 sm:px-6 sm:py-14 xl:px-[100px]">
+        <div className="mx-auto max-w-site">
+          <h2 className="text-center text-[34px] font-black uppercase leading-[0.94] tracking-[-0.02em] text-foreground sm:text-[56px]">
+            NHỮNG ĐIỀU XÉO XỌ LUÔN GIỮ
+          </h2>
+          <div className="mt-8 grid gap-8 sm:grid-cols-2 xl:grid-cols-4 xl:gap-10">
+            {PRINCIPLES.map((principle, index) => (
+              <article
+                key={principle.number}
+                className={`mx-auto flex min-h-[300px] w-full max-w-[190px] flex-col rounded-[28px] rounded-t-[82px] bg-[#f35f43] px-5 pb-7 pt-4 text-center text-white shadow-[0_10px_20px_rgba(0,0,0,0.18)] sm:min-h-[365px] sm:max-w-[205px] sm:px-6 sm:pb-8 ${
+                  index % 2 === 1 ? "xl:translate-y-10" : ""
+                }`}
+              >
+                <span className="text-[54px] font-black leading-[0.92] tracking-[-0.03em] sm:text-[68px]">
+                  {principle.number}
+                </span>
+                <h3 className="mt-3 whitespace-pre-line text-[18px] font-black uppercase leading-[1.05] sm:text-[22px]">
+                  {principle.title}
+                </h3>
+                <p className="mt-5 text-xs font-light leading-[1.35] text-white/94 sm:text-[15px]">
+                  {principle.description}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-0 sm:px-6 xl:px-[100px]">
+        <div className="mx-auto max-w-site overflow-hidden bg-white shadow-[0_14px_28px_rgba(0,0,0,0.08)]">
+          <div
+            className="h-5 bg-[length:auto_100%] bg-repeat-x"
+            style={{ backgroundImage: "url('/images/story-section-background.png')" }}
+          />
+          <div className="px-5 pb-8 pt-3 sm:px-8 sm:pb-10">
+            <h2 className="text-center text-[34px] font-black uppercase leading-[0.94] tracking-[-0.02em] text-foreground sm:text-[56px]">
+              PHÍA SAU MỘT THIẾT KẾ
+            </h2>
+            <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-8">
+              {PROCESS.map((step) => (
+                <article key={step.title}>
+                  <div className="relative aspect-[1.28/1] overflow-hidden rounded-[12px]">
+                    <Image
+                      src={step.image}
+                      alt={step.title}
+                      fill
+                      sizes="(max-width: 1280px) 48vw, 22vw"
+                      className="object-cover"
+                    />
+                  </div>
+                  <h3 className="mt-4 text-[22px] font-black leading-none text-foreground">
+                    {step.title}
+                  </h3>
+                  <p className="mt-3 text-sm font-light leading-relaxed text-foreground/80">
+                    {step.description}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-0 sm:px-6 xl:px-[100px]">
+        <div
+          className="relative mx-auto mt-0 max-w-site overflow-hidden px-6 py-10 text-center sm:px-10 sm:py-14"
+          style={{ backgroundImage: "url('/images/story-section-background.png')" }}
+        >
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(39,15,10,0.18)_0%,rgba(39,15,10,0.34)_44%,rgba(39,15,10,0.52)_100%)]" />
+          <div className="relative z-[1]">
+            <h2 className="mx-auto max-w-[860px] text-[34px] font-black leading-[1.08] tracking-[-0.02em] text-white sm:text-[64px]">
+              XÉO XỌ vẫn đang tiếp tục lớn lên
+              <br />
+              mỗi ngày.
+            </h2>
+            <p className="mx-auto mt-4 max-w-[760px] text-sm font-light leading-relaxed text-white/90 sm:text-lg">
+              Cảm ơn bạn đã là một phần trong câu chuyện của chúng mình.
+              <br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>
+              Hãy cùng Xéo Xọ viết tiếp những chương mới rạng rỡ hơn.
+            </p>
+            <AuthModalLink
+              mode="register"
+              className="mx-auto mt-6 inline-flex min-h-[48px] items-center justify-center rounded-full border border-white/80 bg-black/10 px-7 text-[16px] font-black text-white shadow-[0_10px_18px_rgba(0,0,0,0.16)] backdrop-blur-[10px] transition-colors hover:bg-white/16 sm:min-h-[56px] sm:px-9 sm:text-[22px]"
+            >
+              Gia nhập Hội Xéo
+              <span className="ml-2 text-[22px] leading-none sm:text-[28px]">
+                →
+              </span>
+            </AuthModalLink>
+          </div>
         </div>
       </section>
     </SiteLayout>
