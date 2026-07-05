@@ -12,10 +12,10 @@ export const FilterChipButton = forwardRef<HTMLButtonElement, FilterChipButtonPr
       type="button"
       aria-pressed={active}
       className={cn(
-        "inline-flex h-10 items-center justify-center rounded-[4px] border px-5 text-sm transition-colors",
+        "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-semibold transition-colors",
         active
           ? "border-primary bg-primary text-primary-foreground"
-          : "border-primary bg-background text-foreground hover:bg-muted",
+          : "border-[#8c8c8c] bg-background text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground",
         className
       )}
       {...props}

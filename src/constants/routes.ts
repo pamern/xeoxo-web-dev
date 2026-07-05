@@ -65,5 +65,22 @@ export const API = {
   AUTH_SYNC_PROFILE: "/api/v1/auth/sync-profile",
   CUSTOMERS_ME: "/api/v1/customers/me",
 
+  PRODUCT_LINE: (slug: string) =>
+    `/api/v1/product-lines/${encodeURIComponent(slug)}`,
+  PRODUCT_SIZE_CHART: (slug: string) =>
+    `/api/v1/product-lines/${encodeURIComponent(slug)}/size-chart`,
+  PRODUCT_REVIEWS: (slug: string) =>
+    `/api/v1/product-lines/${encodeURIComponent(slug)}/reviews`,
+
+  CART: "/api/v1/cart",
+  CART_ITEMS: "/api/v1/cart-items",
+  CART_ITEM: (cartItemId: number) => `/api/v1/cart-items/${cartItemId}`,
+  CHECKOUT_PREVIEW: "/api/v1/cart/checkout-preview",
+
+  ADDRESSES: "/api/v1/addresses",
+  PAYMENT_METHODS: "/api/v1/payment-methods",
+  ORDERS: "/api/v1/orders",
+  ORDER_PAYMENTS: (orderId: number) => `/api/v1/orders/${orderId}/payments`,
+
   POSTS: "/api/posts",
 } as const;

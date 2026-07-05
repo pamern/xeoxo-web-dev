@@ -10,7 +10,7 @@ Tài liệu này mô tả phần đã triển khai để phục vụ web client 
 
 Đây là tài liệu đặc tả trạng thái thực tế đã triển khai, không phải tài liệu kế hoạch.
 
-Tài liệu kế hoạch nằm ở [web_access_plan.md](/home/ngocmypzg/Projects/xeoxo_db/docs/web_access_plan.md).
+Tài liệu này là nguồn mô tả trạng thái web access hiện tại; kế hoạch cũ đã được loại bỏ sau khi triển khai.
 
 ---
 
@@ -437,6 +437,16 @@ Ghi chú:
 ---
 
 ## 6. Kết luận
+
+## Atomic checkout va loyalty (migration 20260705)
+
+- `sales.checkout_order(...)` la function `SECURITY DEFINER`, chi `service_role` duoc execute.
+- Function lock cart, cart item va inventory; tao order va tru inventory trong cung transaction.
+- `iam.loyalty_tier`, `iam.loyalty_reward`, `iam.reward_usage` luu quyen loi ca nhan theo member/tier.
+- Khong them bang voucher campaign; ma quyen loi duoc fake va consume tren `iam.loyalty_reward` dung schema goc.
+- `sales.payment.paid_at` van `NOT NULL` theo schema goc; payment `PENDING` tam luu thoi diem tao ban ghi.
+- Khong grant function checkout cho `anon`/`authenticated`; web bat buoc goi qua API server.
+
 
 Lớp dữ liệu phục vụ frontend hiện đã được triển khai theo hướng:
 

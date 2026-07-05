@@ -19,7 +19,8 @@ type Variant =
   | "primaryPill"
   | "secondaryPill"
   | "floralPill"
-  | "cart";
+  | "cart"
+  | "customPill";
 
 type Size =
   | "xs"
@@ -31,7 +32,8 @@ type Size =
   | "heroSm"
   | "pill"
   | "floral"
-  | "cart";
+  | "cart"
+  | "custom";
 
 const variantClasses: Record<Variant, string> = {
   solid: "bg-primary text-primary-foreground hover:bg-primary/85",
@@ -52,6 +54,8 @@ const variantClasses: Record<Variant, string> = {
   floralPill:
     "border-2 border-primary bg-primary bg-cover bg-center text-primary-foreground shadow-[0_3px_6px_rgba(0,0,0,0.18)] hover:brightness-95",
   cart: "border border-primary bg-primary text-primary-foreground hover:bg-primary/85",
+  customPill:
+    "border-[3px] border-input bg-white text-black hover:border-primary active:border-primary active:bg-primary active:text-primary-foreground",
 };
 
 const sizeClasses: Record<Size, string> = {
@@ -64,7 +68,8 @@ const sizeClasses: Record<Size, string> = {
   heroSm: "h-10 min-w-[235px] px-8 text-base font-bold uppercase",
   pill: "h-10 min-w-[235px] px-8 text-base font-bold",
   floral: "h-10 min-w-[252px] px-8 text-base font-bold",
-  cart: "h-[70px] min-w-[546px] px-10 text-xl font-bold uppercase",
+  cart: "h-[58px] min-w-[546px] px-8 text-lg font-bold uppercase",
+  custom: "h-[43px] min-w-[126px] px-3 text-sm font-bold",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {

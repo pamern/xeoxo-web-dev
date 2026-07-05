@@ -2107,6 +2107,824 @@ endpoints:
   - limit không vượt quá 50.
   security:
   - CUSTOMER auth; không nhận customer_id từ query; chỉ trả review của user hiện tại.
+- trigger: Giỏ hàng -> Mở trang giỏ hàng
+  screen: Giỏ hàng
+  type: STANDARD
+  name: Lấy giỏ hàng hiện tại
+  description: Lấy giỏ hàng ACTIVE của customer hoặc guest session, kèm toàn bộ item trong giỏ.
+  resource: cart
+  method: GET
+  endpoint: /api/v1/cart
+  http_request: GET /api/v1/cart
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data.cart_id
+    - data.cart_status
+    - data.items[].cart_item_id
+    - data.items[].variant_id
+    - data.items[].product_line_id
+    - data.items[].slug
+    - data.items[].name
+    - data.items[].thumbnail
+    - data.items[].color_name
+    - data.items[].color_code
+    - data.items[].size_name
+    - data.items[].quantity
+    - data.items[].unit_price
+    - data.items[].line_total
+    - data.items[].stock_quantity
+    - data.items[].is_available
+    - data.subtotal
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        cart_id: 1
+        cart_status: ACTIVE
+        items:
+        - cart_item_id: 10
+          variant_id: 5
+          product_line_id: 1
+          slug: ao-dai-ha-khue
+          name: Áo Dài Hạ Khuê
+          thumbnail: https://cdn.xeoxo.vn/products/a.jpg
+          color_name: Đỏ
+          color_code: '#FF0000'
+          size_name: M
+          quantity: 2
+          unit_price: 1250000
+          line_total: 2500000
+          stock_quantity: 8
+          is_available: true
+        subtotal: 2500000
+    error_examples:
+    - code: 404
+      message: Không tìm thấy giỏ hàng
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Danh sách sản phẩm trong giỏ
+  - Ảnh
+  - Tên
+  - Màu
+  - Size
+  - Số lượng
+  - Đơn giá
+  - Thành tiền từng dòng
+  - Tạm tính
+  business_rules:
+  - 1. Nếu có token CUSTOMER → lấy customer_id.
+  - 2. Nếu guest → lấy session_id từ cookie/header.
+  - 3. Query CART ACTIVE theo customer_id hoặc session_id.
+  - 4. Join CART_ITEM.
+  - 5. Join PRODUCT_VARIANT → PRODUCT_COMPONENT → PRODUCT_LINE.
+  - 6. Join COLOR, SIZE_OPTION, PRODUCT_LINE_MEDIA, MEDIA.
+  - 7. Join INVENTORY để lấy tồn kho.
+  - 8. Tính line_total = quantity * unit_price.
+  - 9. Tính subtotal.
+  - 10. Trả về giỏ hàng.
+  dev_notes:
+  - DB CART_ITEM hiện chỉ hỗ trợ variant_id, nên giỏ hàng chỉ hỗ trợ sản phẩm STANDARD. Nếu muốn custom vào giỏ cần thêm customization_id
+    nullable vào CART_ITEM.
+  validation_rules:
+  - Nếu không có cart ACTIVE thì có thể trả cart rỗng.
+  - quantity không vượt tồn kho.
+  - Chỉ hiển thị item có product/variant còn hợp lệ.
+  security:
+  - Không nhận customer_id từ client; cart theo token hoặc session.
+- trigger: Giỏ hàng -> Bấm thêm vào giỏ
+  screen: Product detail / Giỏ hàng
+  type: CUSTOM
+  name: Thêm sản phẩm vào giỏ
+  description: Thêm variant vào giỏ. Nếu đã có trong giỏ thì cộng dồn quantity.
+  resource: cart-items
+  method: POST
+  endpoint: /api/v1/cart-items
+  http_request: POST /api/v1/cart-items
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'variant_id (integer, bắt buộc)
+
+      quantity (integer, bắt buộc, mặc định 1 nếu FE không truyền)'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.cart_id
+    - data.cart_item_id
+    - data.variant_id
+    - data.quantity
+    - data.unit_price
+    - data.line_total
+    success_example:
+      code: 200
+      message: Đã thêm sản phẩm vào giỏ
+      data:
+        cart_id: 1
+        cart_item_id: 10
+        variant_id: 5
+        quantity: 2
+        unit_price: 1250000
+        line_total: 2500000
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 404
+      message: Không tìm thấy biến thể sản phẩm
+    - code: 409
+      message: Số lượng vượt quá tồn kho
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Toast thêm vào giỏ
+  - Số lượng item mới trong giỏ
+  business_rules:
+  - 1. Xác định cart ACTIVE theo customer/session.
+  - 2. Nếu chưa có cart thì tạo CART mới.
+  - 3. Query PRODUCT_VARIANT theo variant_id.
+  - 4. Check variant ACTIVE và tồn kho INVENTORY.
+  - 5. Nếu (cart_id, variant_id) đã tồn tại → cộng dồn quantity.
+  - 6. Nếu chưa có → insert CART_ITEM.
+  - 7. Lưu unit_price tại thời điểm thêm vào giỏ.
+  - 8. Trả về dòng giỏ hàng.
+  dev_notes:
+  - Dựa vào UNIQUE (cart_id, variant_id) để upsert. Không cho FE truyền unit_price; BE lấy từ PRODUCT_VARIANT.price.
+  validation_rules:
+  - variant_id bắt buộc, tồn tại, ACTIVE.
+  - quantity là số nguyên dương.
+  - Tổng quantity sau upsert không vượt tồn kho.
+  security:
+  - Không tin giá từ FE; validate tồn kho phía BE.
+- trigger: Giỏ hàng -> Đổi màu/size/số lượng
+  screen: Giỏ hàng
+  type: CUSTOM
+  name: Cập nhật dòng giỏ hàng
+  description: Cập nhật variant hoặc quantity của một dòng giỏ hàng. Dùng chung cho đổi màu, đổi size, đổi số lượng.
+  resource: cart-items
+  method: PATCH
+  endpoint: /api/v1/cart-items/{cart_item_id}
+  http_request: PATCH /api/v1/cart-items/{cart_item_id}
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - cart_item_id (integer, bắt buộc)
+    query_parameters:
+    - Không có
+    body: 'variant_id (integer, optional)
+
+      quantity (integer, optional)'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.cart_item_id
+    - data.variant_id
+    - data.quantity
+    - data.unit_price
+    - data.line_total
+    - data.stock_quantity
+    - data.is_available
+    success_example:
+      code: 200
+      message: Cập nhật giỏ hàng thành công
+      data:
+        cart_item_id: 10
+        variant_id: 6
+        quantity: 1
+        unit_price: 1250000
+        line_total: 1250000
+        stock_quantity: 5
+        is_available: true
+    error_examples:
+    - code: 403
+      message: Không có quyền thao tác trên dòng giỏ hàng này
+    - code: 404
+      message: Không tìm thấy dòng giỏ hàng
+    - code: 409
+      message: Số lượng vượt quá tồn kho
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Dòng giỏ hàng sau cập nhật
+  - Giá mới nếu đổi variant
+  - Trạng thái còn hàng
+  business_rules:
+  - 1. Query CART_ITEM theo cart_item_id.
+  - 2. Check cart item thuộc cart hiện tại của customer/session.
+  - 3. Nếu đổi variant_id → query variant mới.
+  - 4. Check variant mới ACTIVE, cùng product line nếu rule UI chỉ cho đổi màu/size trong cùng sản phẩm.
+  - 5. Check tồn kho.
+  - 6. Update variant_id, quantity, unit_price nếu variant đổi.
+  - 7. Nếu variant mới đã tồn tại trong cart → merge quantity và xóa dòng cũ.
+  - 8. Trả item mới nhất.
+  dev_notes:
+  - Một API dùng chung cho đổi màu, size, số lượng vì cùng resource cart-items.
+  validation_rules:
+  - cart_item_id là số nguyên dương.
+  - Ít nhất một trong variant_id, quantity phải được truyền.
+  - quantity > 0.
+  - Không vượt tồn kho.
+  - Item phải thuộc cart hiện tại.
+  security:
+  - Check ownership cart item; không cho sửa cart người khác.
+- trigger: Giỏ hàng -> Xóa 1 dòng
+  screen: Giỏ hàng
+  type: STANDARD
+  name: Xóa dòng giỏ hàng
+  description: Xóa một sản phẩm khỏi giỏ hàng.
+  resource: cart-items
+  method: DELETE
+  endpoint: /api/v1/cart-items/{cart_item_id}
+  http_request: DELETE /api/v1/cart-items/{cart_item_id}
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - cart_item_id (integer, bắt buộc)
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data.cart_item_id
+    success_example:
+      code: 200
+      message: Xóa sản phẩm khỏi giỏ hàng thành công
+      data:
+        cart_item_id: 10
+    error_examples:
+    - code: 403
+      message: Không có quyền thao tác trên dòng giỏ hàng này
+    - code: 404
+      message: Không tìm thấy dòng giỏ hàng
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Dòng sản phẩm biến mất khỏi giỏ
+  - Toast xóa thành công
+  business_rules:
+  - 1. Query CART_ITEM theo cart_item_id.
+  - 2. Check item thuộc cart hiện tại.
+  - 3. Delete CART_ITEM.
+  - 4. Trả kết quả.
+  dev_notes:
+  - Có thể hard delete cart item vì đây là dữ liệu tạm trong giỏ.
+  validation_rules:
+  - cart_item_id là số nguyên dương.
+  - Item phải thuộc cart hiện tại.
+  security:
+  - Check ownership cart item.
+- trigger: Giỏ hàng -> Xóa toàn bộ
+  screen: Giỏ hàng
+  type: STANDARD
+  name: Xóa toàn bộ giỏ hàng
+  description: Xóa toàn bộ item trong giỏ hàng hiện tại.
+  resource: cart
+  method: DELETE
+  endpoint: /api/v1/cart
+  http_request: DELETE /api/v1/cart
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data.cart_id
+    - data.deleted_items_count
+    success_example:
+      code: 200
+      message: Đã xóa toàn bộ giỏ hàng
+      data:
+        cart_id: 1
+        deleted_items_count: 3
+    error_examples:
+    - code: 404
+      message: Không tìm thấy giỏ hàng
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Giỏ hàng rỗng
+  - Toast xóa thành công
+  business_rules:
+  - 1. Xác định cart ACTIVE theo customer/session.
+  - 2. Delete toàn bộ CART_ITEM thuộc cart.
+  - 3. Giữ CART.cart_status = ACTIVE để user dùng tiếp.
+  - 4. Trả số item đã xóa.
+  dev_notes:
+  - Không cần xóa CART, chỉ xóa item để giữ session cart.
+  validation_rules:
+  - Cart phải thuộc customer/session hiện tại.
+  security:
+  - Chỉ xóa cart hiện tại, không nhận cart_id từ client.
+- trigger: Thanh toán -> Chọn tỉnh/thành
+  screen: Thanh toán
+  type: STANDARD
+  name: Danh sách tỉnh/thành phố
+  description: Đổ dropdown tỉnh/thành phố từ bảng PROVINCE.
+  resource: provinces
+  method: GET
+  endpoint: /api/v1/provinces
+  http_request: GET /api/v1/provinces
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].province_id
+    - data[].province_name
+    - data[].region
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - province_id: 79
+        province_name: TP.HCM
+        region: SOUTH
+    error_examples:
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Dropdown tỉnh/thành phố
+  business_rules:
+  - 1. Query PROVINCE.
+  - 2. Sort theo province_name hoặc thứ tự cấu hình.
+  - 3. Trả danh sách tỉnh/thành.
+  dev_notes:
+  - API này chỉ đọc master data.
+  validation_rules:
+  - Không có.
+  security:
+  - Chỉ đọc.
+- trigger: Thanh toán -> Chọn địa chỉ đã lưu
+  screen: Thanh toán
+  type: STANDARD
+  name: Danh sách địa chỉ đã lưu
+  description: Lấy địa chỉ active của member để chọn nhanh khi checkout. Guest không dùng API này.
+  resource: addresses
+  method: GET
+  endpoint: /api/v1/addresses
+  http_request: GET /api/v1/addresses
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].address_id
+    - data[].recipient_name
+    - data[].recipient_phone
+    - data[].province_id
+    - data[].province_name
+    - data[].district_name
+    - data[].address_detail
+    - data[].full_address
+    - data[].is_default
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - address_id: 1
+        recipient_name: Nguyễn A
+        recipient_phone: 0901234567
+        province_id: 79
+        province_name: TP.HCM
+        district_name: Quận 1
+        address_detail: 123 Lê Lợi
+        full_address: 123 Lê Lợi, Quận 1, TP.HCM
+        is_default: true
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Danh sách địa chỉ đã lưu
+  - Địa chỉ mặc định
+  - Người nhận/SĐT
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Query ADDRESS theo customer và is_active = true.
+  - 3. Join PROVINCE lấy province name.
+  - 4. Sort is_default = true lên đầu.
+  - 5. Build full_address cho FE render.
+  dev_notes:
+  - Guest form trống, tự nhập thông tin giao hàng từ đầu.
+  validation_rules:
+  - Token hợp lệ.
+  - Chỉ trả địa chỉ của customer hiện tại.
+  security:
+  - Không nhận customer_id từ query.
+- trigger: Thanh toán -> Tạo địa chỉ mới
+  screen: Thanh toán / Sổ địa chỉ
+  type: CUSTOM
+  name: Tạo địa chỉ mới
+  description: Tạo địa chỉ giao hàng mới khi checkout. Dùng chung API với Sổ địa chỉ.
+  resource: addresses
+  method: POST
+  endpoint: /api/v1/addresses
+  http_request: POST /api/v1/addresses
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'recipient_name bắt buộc
+
+      recipient_phone bắt buộc
+
+      province_id bắt buộc
+
+      district_name bắt buộc
+
+      address_detail bắt buộc
+
+      is_default optional'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.address_id
+    - data.recipient_name
+    - data.recipient_phone
+    - data.province_id
+    - data.province_name
+    - data.district_name
+    - data.address_detail
+    - data.full_address
+    - data.is_default
+    success_example:
+      code: 201
+      message: Thêm địa chỉ thành công
+      data:
+        address_id: 2
+        recipient_name: Nguyễn A
+        recipient_phone: 0901234567
+        province_id: 79
+        province_name: TP.HCM
+        district_name: Quận 1
+        address_detail: 123 Lê Lợi
+        full_address: 123 Lê Lợi, Quận 1, TP.HCM
+        is_default: true
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 404
+      message: Không tìm thấy tỉnh/thành phố
+    - code: 422
+      message: Số điện thoại không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Địa chỉ mới
+  - Tự chọn làm địa chỉ giao hàng nếu FE cần
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Validate body.
+  - 3. Query PROVINCE theo province_id.
+  - 4. Nếu là địa chỉ đầu tiên hoặc is_default=true → unset default cũ.
+  - 5. Insert ADDRESS với is_active=true.
+  - 6. Trả địa chỉ vừa tạo.
+  dev_notes:
+  - API này chỉ áp dụng member vì ADDRESS.customer_id NOT NULL. Guest checkout nhập address trực tiếp ở order request hoặc
+    backend tạo CUSTOMER GUEST + ADDRESS khi tạo đơn.
+  validation_rules:
+  - Các field bắt buộc không rỗng.
+  - Phone đúng định dạng.
+  - Province tồn tại.
+  - is_default là boolean nếu truyền.
+  security:
+  - Không nhận customer_id từ body.
+- trigger: Thanh toán -> Đổi địa chỉ / áp voucher
+  screen: Thanh toán
+  type: CUSTOM
+  name: Tính tiền checkout preview
+  description: 'BE tính lại toàn bộ tiền trước khi đặt hàng: subtotal, ship, voucher, reward, total.'
+  resource: cart
+  method: POST
+  endpoint: /api/v1/cart/checkout-preview
+  http_request: POST /api/v1/cart/checkout-preview
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'cart_item_ids (array, bắt buộc)
+
+      address_id optional nếu member chọn địa chỉ lưu
+
+      shipping_address object optional nếu guest hoặc nhập mới
+
+      voucher_code optional
+
+      use_free_shipping_reward_id optional'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.subtotal
+    - data.shipping_fee
+    - data.reward_discount_amount
+    - data.total_amount
+    - data.applied_reward.reward_id
+    - data.applied_reward.reward_type
+    - data.applied_reward.reward_value
+    - data.items[].cart_item_id
+    - data.items[].line_total
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+        subtotal: 2500000
+        shipping_fee: 30000
+        reward_discount_amount: 100000
+        total_amount: 2430000
+        applied_reward:
+          reward_id: 5
+          reward_type: TIER_VOUCHER
+          reward_value: 100000
+        items:
+        - cart_item_id: 10
+          line_total: 2500000
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 404
+      message: Không tìm thấy địa chỉ hoặc voucher
+    - code: 409
+      message: Voucher không khả dụng
+    - code: 409
+      message: Một số sản phẩm không còn đủ tồn kho
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Tạm tính
+  - Phí ship
+  - Voucher/quyền lợi được áp dụng
+  - Thành tiền cuối
+  business_rules:
+  - 1. Xác định cart hiện tại theo customer/session.
+  - 2. Validate cart_item_ids thuộc cart hiện tại.
+  - 3. Query CART_ITEM, PRODUCT_VARIANT, INVENTORY.
+  - 4. Tính subtotal từ giá hiện tại hoặc unit_price theo rule đã chốt.
+  - '5. Xác định địa chỉ: member dùng address_id, guest dùng shipping_address.'
+  - 6. Join PROVINCE để tính phí ship.
+  - 7. Nếu có voucher_code, query LOYALTY_REWARD AVAILABLE.
+  - 8. Nếu có free shipping reward, check reward AVAILABLE.
+  - 9. Tính reward_discount_amount, shipping_fee, total_amount.
+  - 10. Trả preview.
+  dev_notes:
+  - Đây chỉ là preview, không insert order/payment. Khi tạo order vẫn phải validate lại từ đầu, không tin preview cũ.
+  validation_rules:
+  - cart_item_ids không rỗng.
+  - Tất cả item thuộc cart hiện tại.
+  - Nếu member dùng address_id, address phải thuộc customer.
+  - Nếu guest, shipping_address phải đủ recipient/province/district/detail.
+  - Voucher nếu truyền phải AVAILABLE, chưa hết hạn, thuộc customer nếu là reward cá nhân.
+  security:
+  - Không tính tiền ở FE; BE là nguồn sự thật về giá/voucher/ship.
+- trigger: Thanh toán -> Chọn phương thức thanh toán
+  screen: Thanh toán
+  type: STANDARD
+  name: Danh sách phương thức thanh toán
+  description: Lấy phương thức thanh toán active từ DB.
+  resource: payment-methods
+  method: GET
+  endpoint: /api/v1/payment-methods
+  http_request: GET /api/v1/payment-methods
+  authentication: PUBLIC
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].method_id
+    - data[].method_name
+    - data[].method_code
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - method_id: 1
+        method_name: Thanh toán thẻ nội địa OnePay
+        method_code: ONEPAY_DOMESTIC
+      - method_id: 2
+        method_name: Thanh toán thẻ quốc tế OnePay
+        method_code: ONEPAY_INTERNATIONAL
+    error_examples:
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Danh sách phương thức thanh toán
+  - OnePay nội địa/quốc tế hoặc method đang active
+  business_rules:
+  - 1. Query PAYMENT_METHOD.
+  - 2. Filter is_active = true.
+  - 3. Trả danh sách method.
+  dev_notes:
+  - DB enum hiện có COD, MOMO, VNPAY, CARD, BANK_TRANSFER. Nếu UI muốn OnePay nội địa/quốc tế thì cần thêm method_code phù
+    hợp vào master data.
+  validation_rules:
+  - Chỉ trả method active.
+  security:
+  - Chỉ đọc.
+- trigger: Thanh toán -> Bấm Thanh toán ngay
+  screen: Thanh toán
+  type: CUSTOM
+  name: Tạo đơn hàng
+  description: Tạo order từ các cart item được chọn. Insert order, order item, shipping, payment, reward usage.
+  resource: orders
+  method: POST
+  endpoint: /api/v1/orders
+  http_request: POST /api/v1/orders
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: 'cart_item_ids bắt buộc
+
+      address_id optional nếu member chọn địa chỉ
+
+      shipping_address object optional nếu guest/nhập mới
+
+      method_id bắt buộc
+
+      voucher_code optional
+
+      use_free_shipping_reward_id optional
+
+      customer_note optional'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.order_id
+    - data.order_code
+    - data.order_status
+    - data.payment_status
+    - data.shipping_id
+    - data.payment_id
+    - data.total_amount
+    - data.payment_url optional
+    success_example:
+      code: 201
+      message: Tạo đơn hàng thành công
+      data:
+        order_id: 1001
+        order_code: XX202607050001
+        order_status: PENDING
+        payment_status: PENDING
+        shipping_id: 501
+        payment_id: 701
+        total_amount: 2430000
+        payment_url: https://payment-gateway.example/pay/abc
+    error_examples:
+    - code: 400
+      message: Thiếu thông tin bắt buộc
+    - code: 409
+      message: Một số sản phẩm không còn đủ tồn kho
+    - code: 409
+      message: Voucher không còn khả dụng
+    - code: 422
+      message: Địa chỉ giao hàng không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Mã đơn hàng
+  - Tổng tiền
+  - Link thanh toán nếu online
+  - Thông báo đặt hàng thành công/chờ thanh toán
+  business_rules:
+  - '1. Xác định customer: nếu token → customer_id; nếu guest → tạo/tìm CUSTOMER GUEST theo email/phone trong shipping_address.'
+  - 2. Xác định cart theo customer/session.
+  - 3. Validate cart_item_ids thuộc cart.
+  - 4. Re-query giá, tồn kho, voucher, shipping fee.
+  - 5. Tính subtotal, shipping_fee, reward_discount_amount, total_amount.
+  - 6. Nếu guest hoặc địa chỉ mới → tạo ADDRESS cho customer guest/member nếu cần.
+  - 7. Insert SALES_ORDER với order_status PENDING, payment_status PENDING.
+  - 8. Insert ORDER_ITEM từ cart items.
+  - 9. Insert SHIPPING theo address_id.
+  - 10. Insert PAYMENT với method_id, amount, payment_status PENDING, transaction_code tạm.
+  - 11. Nếu dùng reward → update LOYALTY_REWARD.status = USED, insert REWARD_USAGE.
+  - 12. Trừ/giữ tồn kho theo rule.
+  - 13. Delete các CART_ITEM đã checkout hoặc update cart status CHECKOUT nếu checkout toàn bộ.
+  - 14. Trả order info.
+  dev_notes:
+  - Bắt buộc validate lại, không dùng số tiền từ checkout-preview. SALES_ORDER.reward_dicount_amount trong DB đang typo, API
+    response nên dùng reward_discount_amount.
+  validation_rules:
+  - cart_item_ids không rỗng.
+  - method_id tồn tại và active.
+  - Item thuộc cart hiện tại.
+  - Tồn kho đủ.
+  - Address hợp lệ.
+  - Voucher/reward AVAILABLE.
+  - Email/phone bắt buộc với guest vì CUSTOMER email/phone NOT NULL.
+  security:
+  - Dùng transaction toàn bộ order/shipping/payment/reward/cart. Không tin dữ liệu giá từ FE.
+- trigger: Thanh toán -> Tạo/khởi tạo thanh toán
+  screen: Thanh toán / Payment redirect
+  type: CUSTOM
+  name: Tạo thanh toán cho đơn hàng
+  description: Tạo hoặc lấy link thanh toán cho order đã tạo, dùng khi cần tách bước payment khỏi create order.
+  resource: payments
+  method: POST
+  endpoint: /api/v1/orders/{order_id}/payments
+  http_request: POST /api/v1/orders/{order_id}/payments
+  authentication: PUBLIC / CUSTOMER
+  request:
+    path_parameters:
+    - order_id bắt buộc
+    query_parameters:
+    - Không có
+    body: method_id bắt buộc
+  response:
+    body_fields:
+    - code
+    - message
+    - data.payment_id
+    - data.order_id
+    - data.amount
+    - data.payment_status
+    - data.transaction_code
+    - data.payment_url optional
+    success_example:
+      code: 200
+      message: Tạo thanh toán thành công
+      data:
+        payment_id: 701
+        order_id: 1001
+        amount: 2430000
+        payment_status: PENDING
+        transaction_code: TXN1001
+        payment_url: https://payment-gateway.example/pay/abc
+    error_examples:
+    - code: 403
+      message: Không có quyền thanh toán đơn hàng này
+    - code: 404
+      message: Không tìm thấy đơn hàng
+    - code: 409
+      message: Đơn hàng đã được thanh toán
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Link chuyển sang cổng thanh toán
+  - Trạng thái thanh toán PENDING
+  business_rules:
+  - 1. Query SALES_ORDER theo order_id.
+  - 2. Check order thuộc customer/session hiện tại.
+  - 3. Check payment_status = PENDING.
+  - 4. Query PAYMENT_METHOD active.
+  - 5. Tạo hoặc update PAYMENT PENDING.
+  - 6. Gọi payment gateway nếu có.
+  - 7. Trả payment_url hoặc payment info.
+  dev_notes:
+  - Nếu POST /orders đã tạo payment luôn thì API này chỉ cần khi user retry thanh toán hoặc payment flow tách riêng.
+  validation_rules:
+  - order_id là số nguyên dương.
+  - Method active.
+  - Order chưa PAID/CANCELLED.
+  security:
+  - Check ownership order; không cho thanh toán đơn của người khác.
+
 not_separate_endpoints:
 - trigger: Acccount -> Lịch sử mua hàng
   screen: null
@@ -2135,3 +2953,4 @@ status_only_sheet_rows:
   trigger: Account -> Quản lý sổ địa chỉ
   status: Chưa làm.
   reason: Sheet chưa chốt API riêng cho màn hình quản lý sổ địa chỉ.
+- sheet_row: 32

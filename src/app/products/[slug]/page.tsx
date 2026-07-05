@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/atoms/Button";
-import { FilterChipButton } from "@/components/atoms/FilterChipButton";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { ProductDetail } from "@/components/organisms/ProductDetail";
@@ -10,13 +9,89 @@ import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 import { PRODUCTS } from "@/data/catalog";
 import { getProductBySlug, getRelatedProducts } from "@/data/queries";
-import { formatPrice } from "@/lib/utils";
+import type { ApiResponse } from "@/types/api.types";
+import type { ProductDetailDto } from "@/types/product-api.types";
 import type { Product } from "@/types/product.types";
+import { ReviewsSection } from "@/components/organisms/ReviewsSection/ReviewsSection";
 
 type Params = { slug: string };
 
-export function generateStaticParams() {
-  return PRODUCTS.map((product) => ({ slug: product.slug }));
+export const dynamic = "force-dynamic";
+
+async function getApiProduct(slug: string) {
+  const headerStore = await headers();
+  const host = headerStore.get("host");
+  const forwardedProtocol = headerStore.get("x-forwarded-proto")?.split(",")[0]?.trim();
+  const protocol =
+    forwardedProtocol ||
+    (process.env.NODE_ENV === "development" ||
+    host?.includes("localhost") ||
+    host?.startsWith("127.0.0.1")
+      ? "http"
+      : "https");
+
+  if (!host) {
+    console.error("[products/[slug]] Missing host header", { slug });
+    return null;
+  }
+
+  try {
+    const url = `${protocol}://${host}/api/v1/product-lines/${encodeURIComponent(slug)}`;
+    console.info("[products/[slug]] fetch product detail", { slug, url });
+    const response = await fetch(url, { cache: "no-store" });
+    const payload = (await response.json()) as ApiResponse<ProductDetailDto>;
+
+    if (!response.ok || !payload.success || !payload.data) {
+      console.error("[products/[slug]] product detail api failed", {
+        slug,
+        status: response.status,
+        message: payload.message,
+        error: payload.error,
+      });
+      return null;
+    }
+
+    return payload.data;
+  } catch (error) {
+    console.error("[products/[slug]] product detail fetch crashed", {
+      slug,
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    return null;
+  }
+}
+
+function safeImageSrc(src?: string | null) {
+  if (!src) {
+    return "/images/placeholder.png";
+  }
+
+  if (src.startsWith("http://") || src.startsWith("https://") || src.startsWith("/")) {
+    return src;
+  }
+
+  console.warn("[products/[slug]] unsafe image src from api", { src });
+  return "/images/placeholder.png";
+}
+
+function mapApiProduct(product: ProductDetailDto): Product {
+  return {
+    id: String(product.product_line_id),
+    slug: product.slug,
+    name: product.name,
+    price: product.price,
+    images: product.media.length
+      ? product.media.map((media) => safeImageSrc(media.url))
+      : ["/images/placeholder.png"],
+    categorySlug: "api",
+    gender: "nu",
+    description: product.description ?? "",
+    sizes: product.sizes.map((size) => size.size_name).filter(Boolean),
+    colors: product.color
+      ? [{ name: product.color.color_name, hex: product.color.color_code }]
+      : [{ name: "Mặc định", hex: "#111111" }],
+  };
 }
 
 export async function generateMetadata({
@@ -25,8 +100,9 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
-  if (!product) return { title: "Khong tim thay san pham" };
+  const apiProduct = await getApiProduct(slug);
+  const product = apiProduct ? mapApiProduct(apiProduct) : getProductBySlug(slug);
+  if (!product) return { title: "Không tìm thấy sản phẩm" };
 
   return {
     title: product.name,
@@ -36,8 +112,9 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
-  if (!product) notFound();
+  const apiProduct = await getApiProduct(slug);
+  if (!apiProduct) notFound();
+  const product = mapApiProduct(apiProduct);
   const relatedProducts = getRelatedProducts(product);
   const recommendedProducts = PRODUCTS.filter((item) => item.id !== product.id).slice(0, 4);
 
@@ -52,13 +129,13 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
           ]}
           className="mb-6"
         />
-        <ProductDetail product={product} relatedProducts={relatedProducts} />
+        <ProductDetail product={product} apiProduct={apiProduct} relatedProducts={relatedProducts} />
       </div>
       <StripDivider />
       <ProductDescription product={product} />
       <RecommendationSection products={recommendedProducts} />
       <StripDivider />
-      <ReviewsSection product={product} />
+      <ReviewsSection product={product} apiProduct={apiProduct} />
     </SiteLayout>
   );
 }
@@ -127,89 +204,5 @@ function RecommendationSection({ products }: { products: Product[] }) {
         ))}
       </div>
     </section>
-  );
-}
-
-function ReviewsSection({ product }: { product: Product }) {
-  const filters = [
-    "Tất cả bình luận",
-    "5 Sao (12)",
-    "4 Sao (3)",
-    "3 Sao (3)",
-    "2 Sao (1)",
-    "1 Sao (0)",
-    "Có Bình luận (10)",
-    "Có Hình ảnh / Video (2)",
-  ];
-
-  return (
-    <section className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
-      <div className="grid gap-6 lg:grid-cols-[420px_minmax(0,1fr)]">
-        <div>
-          <h2 className="text-[30px] font-bold uppercase">Đánh giá sản phẩm</h2>
-          <div className="mt-2 flex flex-wrap items-end gap-3">
-            <span className="text-[44px] font-bold leading-none">4.5</span>
-            <span className="pb-1 text-xl">trên 5</span>
-            <span className="pb-1 text-2xl">★★★★◐</span>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-3">
-          {filters.map((filter) => (
-            <FilterChipButton key={filter} active={filter === filters[0]}>
-              {filter}
-            </FilterChipButton>
-          ))}
-        </div>
-      </div>
-
-      <div className="mx-auto mt-8 flex max-w-[1387px] flex-col gap-5">
-        {[1, 2, 3].map((item) => (
-          <ReviewCard key={item} product={product} />
-        ))}
-      </div>
-      <div className="mt-8 text-center">
-        <Button type="button" variant="primaryPill" size="pill">
-          Xem thêm →
-        </Button>
-        <p className="mt-4 text-base font-light text-foreground/70">Hiển thị 3 trên tổng số 12 bình luận</p>
-      </div>
-    </section>
-  );
-}
-
-function ReviewCard({ product }: { product: Product }) {
-  return (
-    <article className="rounded-[20px] bg-[#f3f3f3] px-8 py-7">
-      <div className="flex gap-4">
-        <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full bg-secondary">
-          <Image src={product.images[0]} alt="" fill sizes="56px" className="object-cover" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-sm font-bold">Lê Phước Thịnh</h3>
-          <p className="text-sm">★★★★★</p>
-          <p className="mt-1 text-xs font-light text-foreground/70">
-            2022-09-16 11:48 | Phân loại hàng: Tây-Bắc
-          </p>
-          <p className="mt-2 text-sm">
-            Chất lượng sản phẩm: <strong>Sản phẩm tốt</strong>
-          </p>
-          <p className="mt-3 text-sm font-light leading-relaxed">
-            Đã mua lần thứ 2 và chất lượng vẫn quá ok. Sẽ còn ủng hộ nhiều.
-            Mẫu mới rất đẹp, shop chuẩn bị chỉn chu và còn tặng quà rất dễ thương.
-          </p>
-          <div className="mt-4 flex gap-3">
-            {product.images.slice(0, 3).map((image, index) => (
-              <div key={`${image}-${index}`} className="relative h-[72px] w-[72px] overflow-hidden bg-secondary">
-                <Image src={image} alt="" fill sizes="72px" className="object-cover" />
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 flex items-center gap-2 text-xs">
-            <span>👍</span>
-            <span>12</span>
-          </div>
-        </div>
-      </div>
-    </article>
   );
 }

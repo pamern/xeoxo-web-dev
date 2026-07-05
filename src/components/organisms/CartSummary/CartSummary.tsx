@@ -3,47 +3,94 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/atoms/Button";
 import { CartItem } from "@/components/molecules/CartItem";
+import { useCart } from "@/hooks/useCart";
+import { useCheckout } from "@/hooks/useCheckout";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { formatPrice } from "@/lib/utils";
-import { useCartStore } from "@/stores/cart.store";
 
-function lineKey(line: { productId: string; size: string; color: string }) {
-  return `${line.productId}-${line.size}-${line.color}`;
+function fallbackPaymentOptions() {
+  return [
+    {
+      method_id: 1,
+      method_name: "Chuyển khoản ngân hàng",
+      method_code: "BANK_TRANSFER",
+      provider: "BANK_TRANSFER",
+      is_online: true,
+    },
+  ];
 }
 
 export function CartSummary() {
-  const lines = useCartStore((state) => state.lines);
-  const subtotal = useCartStore((state) => state.subtotal());
-  const updateQuantity = useCartStore((state) => state.updateQuantity);
-  const updateVariant = useCartStore((state) => state.updateVariant);
-  const removeLine = useCartStore((state) => state.removeLine);
-  const clear = useCartStore((state) => state.clear);
-  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState("onepay-domestic");
-  const [acceptedTerms, setAcceptedTerms] = useState(true);
+  const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } = useCart();
+  const { paymentMethods } = usePaymentMethods();
+  const { preview, previewCheckout, resetPreview, errorMessage } = useCheckout();
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const options = useMemo(() => {
+    const source = paymentMethods.length ? paymentMethods : fallbackPaymentOptions();
 
-  const keys = useMemo(() => lines.map(lineKey), [lines]);
-  const allSelected = keys.length > 0 && keys.every((key) => selectedKeys.includes(key));
-  const shippingFee = subtotal > 0 ? 0 : 0;
-  const discount = 0;
-  const total = subtotal + shippingFee - discount;
+    return [...source].sort((a, b) => {
+      if (a.is_online !== b.is_online) {
+        return a.is_online ? -1 : 1;
+      }
+
+      return a.method_id - b.method_id;
+    });
+  }, [paymentMethods]);
+  const [paymentMethodId, setPaymentMethodId] = useState<number>(options[0]?.method_id ?? 1);
+  const [acceptedTerms, setAcceptedTerms] = useState(true);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState("");
+
+  const cartItemIds = useMemo(
+    () => cart.items.map((item) => item.cart_item_id),
+    [cart.items],
+  );
+  const allSelected =
+    cartItemIds.length > 0 && cartItemIds.every((id) => selectedIds.includes(id));
+  const selectedItems = cart.items.filter((item) => selectedIds.includes(item.cart_item_id));
+  const subtotal = preview?.subtotal ?? selectedItems.reduce((sum, item) => sum + item.line_total, 0);
+  const shippingFee = preview?.shipping_fee ?? (subtotal > 0 ? 30000 : 0);
+  const discount = preview?.discount_amount ?? 0;
+  const total = preview?.total_amount ?? Math.max(subtotal + shippingFee - discount, 0);
 
   useEffect(() => {
-    setSelectedKeys(keys);
-  }, [keys]);
+    setSelectedIds(cartItemIds);
+  }, [cartItemIds]);
+
+  useEffect(() => {
+    if (options.length && !options.some((option) => option.method_id === paymentMethodId)) {
+      setPaymentMethodId(options[0].method_id);
+    }
+  }, [options, paymentMethodId]);
+
+  useEffect(() => {
+    if (selectedIds.length) {
+      void previewCheckout({
+        cart_item_ids: selectedIds,
+        voucher_code: appliedVoucher || undefined,
+      });
+    } else {
+      resetPreview();
+    }
+  }, [selectedIds, appliedVoucher, previewCheckout, resetPreview]);
 
   function toggleAll(checked: boolean) {
-    setSelectedKeys(checked ? keys : []);
+    setSelectedIds(checked ? cartItemIds : []);
   }
 
-  function toggleLine(key: string, checked: boolean) {
-    setSelectedKeys((current) =>
-      checked ? Array.from(new Set([...current, key])) : current.filter((item) => item !== key)
+  function toggleLine(id: number, checked: boolean) {
+    setSelectedIds((current) =>
+      checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id),
     );
   }
 
   return (
     <aside className="w-full text-black">
       <h2 className="text-2xl font-bold uppercase md:text-[32px] md:leading-tight">Giỏ hàng</h2>
+
+      <input form="checkout-form" type="hidden" name="cart_item_ids" value={selectedIds.join(",")} />
+      <input form="checkout-form" type="hidden" name="payment_method_id" value={paymentMethodId} />
+      <input form="checkout-form" type="hidden" name="voucher_code" value={appliedVoucher} />
 
       <div className="mt-4 flex items-center justify-between gap-4">
         <label className="inline-flex cursor-pointer items-center gap-4">
@@ -61,11 +108,11 @@ export function CartSummary() {
         </label>
         <button
           type="button"
-          onClick={clear}
-          disabled={lines.length === 0}
+          onClick={() => void clearCart()}
+          disabled={cart.items.length === 0 || isMutating}
           className="text-sm font-medium text-black/60 underline underline-offset-4 transition hover:text-black disabled:opacity-40"
         >
-          Xóa tất cả
+          Xoá tất cả
         </button>
       </div>
 
@@ -75,30 +122,31 @@ export function CartSummary() {
         aria-hidden
       />
 
-      {lines.length === 0 ? (
+      {isLoading ? (
+        <div className="border-y border-black/50 py-12 text-center">
+          <p className="text-base font-medium">Đang tải giỏ hàng...</p>
+        </div>
+      ) : cart.items.length === 0 ? (
         <div className="border-y border-black/50 py-12 text-center">
           <p className="text-base font-medium">Giỏ hàng của bạn đang trống.</p>
         </div>
       ) : (
         <div className="flex flex-col">
-          {lines.map((line) => {
-            const key = lineKey(line);
-            return (
-              <CartItem
-                key={key}
-                item={line}
-                selected={selectedKeys.includes(key)}
-                onSelectedChange={(checked) => toggleLine(key, checked)}
-                onQuantityChange={(quantity) =>
-                  updateQuantity(line.productId, line.size, line.color, quantity)
-                }
-                onVariantChange={(next) =>
-                  updateVariant(line.productId, line.size, line.color, next)
-                }
-                onRemove={() => removeLine(line.productId, line.size, line.color)}
-              />
-            );
-          })}
+          {cart.items.map((item) => (
+            <CartItem
+              key={item.cart_item_id}
+              item={item}
+              selected={selectedIds.includes(item.cart_item_id)}
+              onSelectedChange={(checked) => toggleLine(item.cart_item_id, checked)}
+              onQuantityChange={(quantity) =>
+                void updateItem(item.cart_item_id, { quantity })
+              }
+              onVariantChange={(next) =>
+                void updateItem(item.cart_item_id, { variant_id: next.variant_id })
+              }
+              onRemove={() => void removeItem(item.cart_item_id)}
+            />
+          ))}
         </div>
       )}
 
@@ -108,28 +156,38 @@ export function CartSummary() {
         aria-hidden
       />
 
-      <div className="mt-12">
-        <label htmlFor="discountCode" className="mb-3 block text-base font-semibold">
-          Nhập mã ưu đãi
+      <h3 className="mt-12 text-2xl font-bold uppercase md:text-[28px]">Chi tiết thanh toán</h3>
+
+      <div className="mt-6">
+        <label htmlFor="voucher-code" className="mb-3 block text-base font-bold">
+          Mã ưu đãi
         </label>
-        <div className="flex h-[58px] overflow-hidden rounded-pill border border-black bg-white">
+        <div className="flex gap-3">
           <input
-            id="discountCode"
+            id="voucher-code"
             type="text"
-            name="discountCode"
-            placeholder="Nhập mã ưu đãi của bạn"
-            className="min-w-0 flex-1 bg-transparent px-6 text-base font-medium outline-none placeholder:text-black/45"
+            value={voucherCode}
+            onChange={(event) => setVoucherCode(event.target.value.toUpperCase())}
+            placeholder="Nhập mã ưu đãi"
+            className="h-12 min-w-0 flex-1 rounded-pill border border-black bg-white px-5 text-sm font-semibold uppercase outline-none transition placeholder:normal-case placeholder:text-black/40 focus:ring-2 focus:ring-black/15"
           />
-          <button
+          <Button
             type="button"
-            className="w-[156px] shrink-0 rounded-pill bg-black px-6 text-sm font-bold uppercase text-white transition hover:bg-black/85 sm:w-[199px]"
+            variant="secondaryPill"
+            size="pill"
+            disabled={!voucherCode.trim()}
+            onClick={() => setAppliedVoucher(voucherCode.trim())}
+            className="h-12 min-w-[120px] px-5 text-sm"
           >
             Áp dụng
-          </button>
+          </Button>
         </div>
+        {appliedVoucher && (
+          <p className="mt-2 text-sm font-semibold text-black/60">
+            Đã áp dụng mã: {appliedVoucher}
+          </p>
+        )}
       </div>
-
-      <h3 className="mt-12 text-2xl font-bold uppercase md:text-[28px]">Chi tiết thanh toán</h3>
 
       <div className="mt-6 divide-y divide-black/50 border-y border-black/50 text-base">
         <div className="flex items-center justify-between py-4">
@@ -152,30 +210,25 @@ export function CartSummary() {
 
       <fieldset className="mt-10 space-y-0">
         <legend className="mb-4 text-lg font-bold uppercase">Phương thức thanh toán</legend>
-        {[
-          { label: "Cổng thanh toán nội địa OnePay", value: "onepay-domestic" },
-          { label: "Cổng thanh toán quốc tế OnePay", value: "onepay-international" },
-          { label: "Thanh toán khi nhận hàng", value: "cod" },
-          { label: "Chuyển khoản ngân hàng", value: "bank-transfer" },
-        ].map((option) => {
-          const checked = paymentMethod === option.value;
+        {options.map((option) => {
+          const checked = paymentMethodId === option.method_id;
           return (
             <label
-              key={option.value}
+              key={option.method_id}
               className="flex cursor-pointer items-center gap-4 border-b border-black/50 py-4 first:border-t"
             >
               <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border-2 border-[#2E54FF] bg-white">
                 <input
                   type="radio"
-                  name="paymentMethod"
-                  value={option.value}
+                  name="paymentMethodPreview"
+                  value={option.method_id}
                   checked={checked}
-                  onChange={() => setPaymentMethod(option.value)}
+                  onChange={() => setPaymentMethodId(option.method_id)}
                   className="sr-only"
                 />
                 <span className={checked ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]" : "h-[15px] w-[15px] rounded-full bg-white"} />
               </span>
-              <span className="text-base font-medium">{option.label}</span>
+              <span className="text-base font-medium">{option.method_name}</span>
             </label>
           );
         })}
@@ -196,11 +249,16 @@ export function CartSummary() {
         </span>
       </label>
 
+      {errorMessage && (
+        <p className="mt-4 text-sm font-semibold text-red-600">{errorMessage}</p>
+      )}
+
       <Button
         type="submit"
         form="checkout-form"
         variant="primaryPill"
         size="pill"
+        disabled={!acceptedTerms || selectedIds.length === 0 || isMutating}
         className="mt-8 h-[58px] w-full min-w-0 text-base font-bold uppercase"
       >
         Thanh toán ngay

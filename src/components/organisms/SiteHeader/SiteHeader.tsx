@@ -7,9 +7,9 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
-import { useCartStore } from "@/stores/cart.store";
 import { AuthModal } from "@/components/organisms/AuthModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useCart } from "@/hooks/useCart";
 
 type AuthMode = "login" | "register";
 type AccountMenuAnchor = "utility" | "main" | null;
@@ -47,7 +47,8 @@ export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const cartCount = useCartStore((s) => s.totalQuantity());
+  const { cart } = useCart();
+  const cartCount = cart.total_quantity;
   const auth = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [accountMenuAnchor, setAccountMenuAnchor] =

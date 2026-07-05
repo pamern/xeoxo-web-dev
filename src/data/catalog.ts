@@ -76,18 +76,57 @@ const PRODUCT_NAMES = [
   "Áo Dài Nam Tùng",
 ];
 
+const REAL_PRODUCTS_BY_CATEGORY: Record<string, Array<{ slug: string; name: string }>> = {
+  "ao-dam-vay": [
+    { slug: "m-chi-hu-nh-94", name: "Đầm Chi Huỳnh" },
+    { slug: "m-chi-m-n-95", name: "Đầm Chi Mạn" },
+    { slug: "m-l-u-ch-u-96", name: "Đầm Lưu Châu" },
+    { slug: "m-l-u-qu-nh-97", name: "Đầm Lưu Quỳnh" },
+  ],
+  "ao-dai-nu": [
+    { slug: "o-d-i-b-ch-hi-n-125", name: "Áo dài Bách Hiên" },
+    { slug: "o-d-i-gia-h-126", name: "Áo dài Gia Hỷ" },
+    { slug: "o-d-i-l-c-nguy-n-127", name: "Áo dài Lục Nguyên" },
+    { slug: "o-d-i-l-c-nh-n-128", name: "Áo dài Lục Nhạn" },
+  ],
+  "ao-cuoi-nu": [
+    { slug: "o-d-i-m-c-nguy-129", name: "Áo dài Mạc Nguy" },
+    { slug: "o-d-i-m-c-tr-c-130", name: "Áo dài Mạc Trúc" },
+    { slug: "o-d-i-nguy-n-phong-131", name: "Áo dài Nguyên Phong" },
+    { slug: "o-d-i-ng-c-ch-m-132", name: "Áo dài Ngọc Chẩm" },
+  ],
+  "ao-nam": [
+    { slug: "o-m-ng-chi-109", name: "Áo Mộng Chi" },
+    { slug: "o-nh-t-th-110", name: "Áo Nhật Thư" },
+    { slug: "o-m-ng-chi-109", name: "Áo Mộng Chi" },
+    { slug: "o-nh-t-th-110", name: "Áo Nhật Thư" },
+  ],
+  "ao-dai-nam": [
+    { slug: "o-d-i-dao-vinh-120", name: "Áo Dài Dao Vinh" },
+    { slug: "o-d-i-minh-t-nh-121", name: "Áo Dài Minh Tịnh" },
+    { slug: "o-d-i-phong-t-ng-122", name: "Áo Dài Phong Tường" },
+    { slug: "o-d-i-dao-vinh-120", name: "Áo Dài Dao Vinh" },
+  ],
+  "ao-cuoi-nam": [
+    { slug: "o-d-i-v-l-ng-123", name: "Áo Dài Vũ Lăng" },
+    { slug: "o-d-i-y-n-l-ng-124", name: "Áo Dài Yên Lăng" },
+    { slug: "o-d-i-v-l-ng-123", name: "Áo Dài Vũ Lăng" },
+    { slug: "o-d-i-y-n-l-ng-124", name: "Áo Dài Yên Lăng" },
+  ],
+};
+
 function buildProducts(): Product[] {
   const products: Product[] = [];
   let counter = 1;
 
   for (const category of CATEGORIES) {
+    const realItems = REAL_PRODUCTS_BY_CATEGORY[category.slug] || [];
     for (let i = 0; i < 4; i += 1) {
-      const name = PRODUCT_NAMES[(counter + i) % PRODUCT_NAMES.length];
-      const slug = `${category.slug}-${i + 1}`;
+      const realItem = realItems[i % realItems.length] || { slug: `${category.slug}-${i + 1}`, name: PRODUCT_NAMES[0] };
       products.push({
         id: `p-${counter}`,
-        slug,
-        name,
+        slug: realItem.slug,
+        name: realItem.name,
         price: 950000 + ((counter * 50000) % 600000),
         images: [PRODUCT_IMAGE, PRODUCT_IMAGE, PRODUCT_IMAGE],
         categorySlug: category.slug,
