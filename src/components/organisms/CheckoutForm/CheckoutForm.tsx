@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState, type FormEvent, type InputHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { AuthModalLink } from "@/components/atoms/AuthModalLink";
 import { ROUTES } from "@/constants/routes";
 
 function PillInput({
@@ -91,9 +92,9 @@ export function CheckoutForm() {
           </div>
           <div className="min-w-0 text-sm leading-6 text-black/75">
             Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
-            <Link href={ROUTES.REGISTER} className="font-bold underline underline-offset-2">
+            <AuthModalLink mode="register" className="font-bold underline underline-offset-2">
               Tìm hiểu thêm
-            </Link>
+            </AuthModalLink>
           </div>
         </div>
       </div>
@@ -184,4 +185,3 @@ export function CheckoutForm() {
     </form>
   );
 }
-

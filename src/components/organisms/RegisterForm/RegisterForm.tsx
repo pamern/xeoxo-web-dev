@@ -17,8 +17,14 @@ export type RegisterValues = {
 
 export function RegisterForm({
   onSubmit,
+  isLoading,
+  errorMessage,
+  noticeMessage,
 }: {
   onSubmit?: (values: RegisterValues) => void;
+  isLoading?: boolean;
+  errorMessage?: string;
+  noticeMessage?: string;
 }) {
   const [values, setValues] = useState<RegisterValues>({
     fullName: "",
@@ -30,7 +36,10 @@ export function RegisterForm({
   const [showConfirm, setShowConfirm] = useState(false);
   const [error, setError] = useState<string>();
 
-  function update<K extends keyof RegisterValues>(key: K, value: RegisterValues[K]) {
+  function update<K extends keyof RegisterValues>(
+    key: K,
+    value: RegisterValues[K],
+  ) {
     setValues((current) => ({ ...current, [key]: value }));
   }
 
@@ -54,15 +63,17 @@ export function RegisterForm({
           placeholder="Họ và tên"
           autoComplete="name"
           required
+          disabled={isLoading}
           className={inputClassName}
         />
         <input
           name="account"
           value={values.account}
           onChange={(event) => update("account", event.target.value)}
-          placeholder="Email/SĐT của bạn"
+          placeholder="Email của bạn"
           autoComplete="username"
           required
+          disabled={isLoading}
           className={inputClassName}
         />
       </div>
@@ -76,6 +87,7 @@ export function RegisterForm({
           placeholder="Mật khẩu"
           autoComplete="new-password"
           required
+          disabled={isLoading}
           className={cn(inputClassName, "pr-14")}
         />
         <PasswordToggle
@@ -93,6 +105,7 @@ export function RegisterForm({
           placeholder="Nhập lại mật khẩu"
           autoComplete="new-password"
           required
+          disabled={isLoading}
           className={cn(inputClassName, "pr-14")}
         />
         <PasswordToggle
@@ -101,16 +114,34 @@ export function RegisterForm({
         />
       </div>
 
-      {error && <p className="text-sm font-light text-destructive">{error}</p>}
+      {(error || errorMessage) && (
+        <p className="text-sm font-light text-destructive">
+          {error ?? errorMessage}
+        </p>
+      )}
+      {noticeMessage && !(error || errorMessage) && (
+        <p className="text-sm font-light text-foreground/70">{noticeMessage}</p>
+      )}
 
-      <Button type="submit" size="lg" className="mt-1 h-12 w-full rounded-pill text-lg font-bold">
+      <Button
+        type="submit"
+        size="lg"
+        isLoading={isLoading}
+        className="mt-1 h-[54px] w-full rounded-pill border-2 border-white/50 text-lg font-bold"
+      >
         Đăng ký
       </Button>
     </form>
   );
 }
 
-function PasswordToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+function PasswordToggle({
+  shown,
+  onToggle,
+}: {
+  shown: boolean;
+  onToggle: () => void;
+}) {
   return (
     <button
       type="button"

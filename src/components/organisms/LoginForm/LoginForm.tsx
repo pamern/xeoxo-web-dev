@@ -10,8 +10,14 @@ const inputClassName =
 
 export function LoginForm({
   onSubmit,
+  isLoading,
+  errorMessage,
+  noticeMessage,
 }: {
   onSubmit?: (values: { account: string; password: string }) => void;
+  isLoading?: boolean;
+  errorMessage?: string;
+  noticeMessage?: string;
 }) {
   const [account, setAccount] = useState("");
   const [password, setPassword] = useState("");
@@ -28,9 +34,10 @@ export function LoginForm({
         name="account"
         value={account}
         onChange={(event) => setAccount(event.target.value)}
-        placeholder="Email/SĐT của bạn"
+        placeholder="Email của bạn"
         autoComplete="username"
         required
+        disabled={isLoading}
         className={inputClassName}
       />
 
@@ -43,6 +50,7 @@ export function LoginForm({
           placeholder="Mật khẩu"
           autoComplete="current-password"
           required
+          disabled={isLoading}
           className={cn(inputClassName, "pr-14")}
         />
         <PasswordToggle
@@ -51,14 +59,32 @@ export function LoginForm({
         />
       </div>
 
-      <Button type="submit" size="lg" className="mt-1 h-12 w-full rounded-pill text-lg font-bold">
+      {errorMessage && (
+        <p className="text-sm font-light text-destructive">{errorMessage}</p>
+      )}
+      {noticeMessage && !errorMessage && (
+        <p className="text-sm font-light text-foreground/70">{noticeMessage}</p>
+      )}
+
+      <Button
+        type="submit"
+        size="lg"
+        isLoading={isLoading}
+        className="mt-1 h-[54px] w-full rounded-pill border-2 border-white/50 text-lg font-bold"
+      >
         Đăng nhập
       </Button>
     </form>
   );
 }
 
-function PasswordToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+function PasswordToggle({
+  shown,
+  onToggle,
+}: {
+  shown: boolean;
+  onToggle: () => void;
+}) {
   return (
     <button
       type="button"

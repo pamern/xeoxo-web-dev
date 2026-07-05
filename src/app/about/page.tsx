@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { AuthModalLink } from "@/components/atoms/AuthModalLink";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 
@@ -186,12 +187,12 @@ export default function AboutPage() {
             Cảm ơn bạn đã là một phần trong câu chuyện của chúng mình. Hãy cùng Xéo Xọ viết tiếp những
             chương mới rạng rỡ hơn.
           </p>
-          <Link
-            href={ROUTES.REGISTER}
+          <AuthModalLink
+            mode="register"
             className="inline-flex items-center rounded-pill border border-white px-6 py-3 text-lg font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
           >
             Gia nhập Hội Xéo
-          </Link>
+          </AuthModalLink>
         </div>
       </section>
     </SiteLayout>

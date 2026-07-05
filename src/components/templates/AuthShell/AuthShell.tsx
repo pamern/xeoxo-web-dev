@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 
 const BENEFITS = [
@@ -14,74 +17,107 @@ const BENEFITS = [
 export function AuthShell({
   children,
   footer,
+  className,
+  onGoogleClick,
+  onFacebookClick,
 }: {
   children: ReactNode;
   footer: ReactNode;
+  className?: string;
+  onGoogleClick?: () => void;
+  onFacebookClick?: () => void;
 }) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-secondary p-4">
-      <div className="w-full max-w-[720px] rounded-lg bg-background px-6 py-5 shadow-sm sm:px-8 sm:py-6">
+    <div
+      className={cn(
+        "relative w-full overflow-hidden rounded-[32px] bg-background shadow-[0_20px_60px_rgba(0,0,0,0.18)]",
+        className
+      )}
+    >
+      <div className="px-5 pb-7 pt-9 sm:px-8 sm:pb-9 sm:pt-12 md:px-[56px] md:pb-11 md:pt-[54px]">
         <Link
           href={ROUTES.HOME}
           aria-label="XÉO XỌ — Trang chủ"
           className="inline-block"
         >
-          <Image src="/images/logohong.png" alt="XÉO XỌ" width={110} height={62} priority />
+          <Image src="/images/logohong.png" alt="XÉO XỌ" width={173} height={103} priority />
         </Link>
 
-        <h1 className="mt-1 text-2xl font-extrabold leading-tight sm:text-3xl">
+        <h1 className="mt-3 max-w-[760px] text-[34px] font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-[40px] md:text-[44px]">
           Vô số đặc quyền và quyền lợi mua sắm đang chờ bạn
         </h1>
-        <p className="mt-2 text-sm font-light text-foreground/70">
+        <p className="mt-5 text-sm font-light text-foreground sm:text-lg">
           Quyền lợi dành riêng cho bạn khi tham gia{" "}
           <span className="font-bold text-foreground">Xéo Hội</span>
         </p>
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
           {BENEFITS.map((benefit) => (
             <div
               key={benefit.line1}
-              className="flex items-center gap-2 rounded-md border-[3px] border-[#E8663C] bg-background p-2"
+              className="rounded-[4px] bg-cover bg-center p-[6px]"
+              style={{ backgroundImage: "url(/images/header-line-up.png)" }}
             >
-              <Image src={benefit.icon} alt="" width={32} height={32} aria-hidden />
-              <span className="text-sm font-bold leading-tight">
-                {benefit.line1}
-                <br />
-                {benefit.line2}
-              </span>
+              <div className="flex min-h-[88px] items-center gap-4 bg-background px-4 py-3">
+                <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[4px] bg-background/90">
+                  <Image src={benefit.icon} alt="" width={34} height={34} aria-hidden />
+                </div>
+                <span className="text-lg font-bold leading-tight text-foreground">
+                  {benefit.line1}
+                  <br />
+                  {benefit.line2}
+                </span>
+              </div>
             </div>
           ))}
         </div>
 
-        <p className="mt-4 text-base font-bold">Đăng nhập hoặc đăng ký (miễn phí)</p>
-        <div className="mt-2 flex gap-3">
-          <SocialButton icon="/icons/google-color.svg" label="Đăng nhập với Google" />
-          <SocialButton icon="/icons/facebook-color.svg" label="Đăng nhập với Facebook" />
+        <p className="mt-6 text-lg font-bold">Đăng nhập hoặc đăng ký (miễn phí)</p>
+        <div className="mt-3 flex gap-4">
+          <SocialButton
+            icon="/icons/google-color.svg"
+            label="Đăng nhập với Google"
+            onClick={onGoogleClick}
+          />
+          <SocialButton
+            icon="/icons/facebook-color.svg"
+            label="Đăng nhập với Facebook"
+            onClick={onFacebookClick}
+          />
         </div>
 
-        <div className="mt-4 flex items-center gap-4">
-          <span className="text-base font-medium text-foreground/70">Hoặc</span>
+        <div className="mt-6 flex items-center gap-4">
+          <span className="text-lg font-light text-foreground/70">Hoặc</span>
           <span className="h-px flex-1 bg-border" aria-hidden />
         </div>
 
         <div className="mt-4">{children}</div>
 
-        <div className="mt-4 flex items-center justify-between text-sm font-bold underline underline-offset-4">
+        <div className="mt-4 flex items-center justify-between gap-4 text-sm font-bold underline underline-offset-4 sm:text-lg">
           {footer}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
-function SocialButton({ icon, label }: { icon: string; label: string }) {
+function SocialButton({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: string;
+  label: string;
+  onClick?: () => void;
+}) {
   return (
     <button
       type="button"
       aria-label={label}
-      className="flex h-12 w-12 items-center justify-center rounded-md border border-border transition-colors hover:bg-muted"
+      onClick={onClick}
+      className="flex h-[64px] w-[64px] items-center justify-center rounded-[10px] border border-[#DB7A6A] bg-background transition-colors hover:bg-muted"
     >
-      <Image src={icon} alt="" width={26} height={26} aria-hidden />
+      <Image src={icon} alt="" width={48} height={48} aria-hidden />
     </button>
   );
 }

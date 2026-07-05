@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { AuthModalLink } from "@/components/atoms/AuthModalLink";
 import { ROUTES } from "@/constants/routes";
 
 type FooterColumn = {
@@ -186,13 +187,23 @@ function FooterLinkColumn({ column }: { column: FooterColumn }) {
     <div className="flex flex-col gap-[10px]">
       <h3 className="text-[22px] font-bold">{column.title}</h3>
       {column.links.map((link) => (
-        <Link
-          key={link.label}
-          href={link.href}
-          className="text-lg font-light text-white/80 transition-colors hover:text-white"
-        >
-          {link.label}
-        </Link>
+        link.href === ROUTES.REGISTER ? (
+          <AuthModalLink
+            key={link.label}
+            mode="register"
+            className="text-lg font-light text-white/80 transition-colors hover:text-white"
+          >
+            {link.label}
+          </AuthModalLink>
+        ) : (
+          <Link
+            key={link.label}
+            href={link.href}
+            className="text-lg font-light text-white/80 transition-colors hover:text-white"
+          >
+            {link.label}
+          </Link>
+        )
       ))}
     </div>
   );

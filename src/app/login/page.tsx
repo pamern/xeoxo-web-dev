@@ -1,8 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { AuthShell } from "@/components/templates/AuthShell";
-import { LoginForm } from "@/components/organisms/LoginForm";
-import { ROUTES } from "@/constants/routes";
+import { AuthExperience } from "@/components/organisms/AuthExperience";
 
 export const metadata: Metadata = {
   title: "Đăng nhập",
@@ -11,15 +8,8 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <AuthShell
-      footer={
-        <>
-          <Link href={ROUTES.REGISTER}>Đăng ký tài khoản</Link>
-          <Link href={ROUTES.HOME}>Quên mật khẩu</Link>
-        </>
-      }
-    >
-      <LoginForm />
-    </AuthShell>
+    <main className="flex min-h-screen items-center justify-center bg-secondary p-4">
+      <AuthExperience mode="login" className="max-w-[1068px]" pageFallback />
+    </main>
   );
 }
