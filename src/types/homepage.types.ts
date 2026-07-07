@@ -16,6 +16,7 @@ export type HomepageProductCardRow = {
 };
 
 export type HomepageProductSection = {
+  categoryId: number;
   categorySlug: string;
   categoryName: string;
   products: Product[];

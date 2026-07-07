@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -10,13 +10,40 @@ import type { Collection } from "@/types/product.types";
 // Hero carousel trang chủ: ảnh bộ sưu tập + tên + CTA, nút prev/next.
 export function HeroCarousel({ slides }: { slides: Collection[] }) {
   const [index, setIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
   const total = slides.length;
   const current = slides[index];
 
-  const go = (delta: number) => setIndex((i) => (i + delta + total) % total);
+  const go = (delta: number) => {
+    setDirection(delta > 0 ? 1 : -1);
+    setIndex((i) => (i + delta + total) % total);
+  };
+
+  const goTo = (target: number) => {
+    setDirection(target > index ? 1 : -1);
+    setIndex(target);
+  };
+
+  const isPausedRef = useRef(false);
+
+  useEffect(() => {
+    if (total <= 1) return;
+
+    const timer = setInterval(() => {
+      if (!isPausedRef.current) {
+        go(1);
+      }
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [index, total]);
 
   return (
-    <section className="relative h-[70vh] min-h-[480px] w-full overflow-hidden">
+    <section
+      className="relative h-[70vh] min-h-[480px] w-full overflow-hidden"
+      onMouseEnter={() => (isPausedRef.current = true)}
+      onMouseLeave={() => (isPausedRef.current = false)}
+    >
       {slides.map((slide, i) => (
         <Image
           key={slide.slug}
@@ -26,8 +53,13 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
           priority={i === 0}
           sizes="100vw"
           className={cn(
-            "object-cover transition-opacity duration-700",
-            i === index ? "opacity-100" : "opacity-0"
+            "object-cover transition-[opacity,transform] duration-[900ms] ease-out",
+            i === index
+              ? "translate-x-0 scale-100 opacity-100"
+              : cn(
+                  "opacity-0",
+                  direction === 1 ? "translate-x-6 scale-105" : "-translate-x-6 scale-105"
+                )
           )}
         />
       ))}
@@ -55,7 +87,7 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
             key={slide.slug}
             type="button"
             aria-label={`Tới slide ${i + 1}`}
-            onClick={() => setIndex(i)}
+            onClick={() => goTo(i)}
             className={cn(
               "h-2 rounded-full bg-white transition-all",
               i === index ? "w-8" : "w-2 opacity-60"

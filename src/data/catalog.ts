@@ -148,35 +148,67 @@ function buildProducts(): Product[] {
 
 export const PRODUCTS: Product[] = buildProducts();
 
-// "CÔNG NGHỆ VẢI NỔI BẬT" — 4 card chất liệu (ảnh placeholder, thay sau).
+// "CÔNG NGHỆ VẢI NỔI BẬT" — catalog Nam.
 export const MATERIALS: Material[] = [
   {
-    image: PRODUCT_IMAGE,
+    image: "/images/cong-nghe-vai/nam-catalog/Item-Materials-image.png",
     caption: "Gấm dệt cổ điển, khí chất quý ông.",
     name: "GẤM VẠN PHÚC",
     composition: "70% gấm dệt Vạn Phúc, 20% tơ ánh mềm, 10% sợi giữ phom",
     features: ["Mềm nhẹ, đứng dáng thanh lịch.", "Bề mặt ánh nhẹ sang trọng."],
   },
   {
-    image: PRODUCT_IMAGE,
+    image: "/images/cong-nghe-vai/nam-catalog/Item-Materials-image-1.png",
     caption: "Gấm dệt hiện đại, phom dáng sang trọng.",
     name: "GẤM BẢO LỘC",
     composition: "68% gấm dệt Bảo Lộc, 22% sợi tơ mềm, 10% sợi cấu trúc cao cấp",
     features: ["Thoáng nhẹ, dễ chuyển động.", "Giữ phom đẹp, nam tính hiện đại."],
   },
   {
-    image: PRODUCT_IMAGE,
+    image: "/images/cong-nghe-vai/nam-catalog/Item-Materials-image-2.png",
     caption: "Gấm dệt thủ công, đậm nét Á Đông.",
     name: "GẤM NAM CAO",
     composition: "72% gấm dệt Nam Cao, 18% sợi ánh cao cấp, 10% sợi giữ form",
     features: ["Chạm mềm, bề mặt dày vừa phải.", "Họa tiết nổi tạo chiều sâu thị giác."],
   },
   {
-    image: PRODUCT_IMAGE,
+    image: "/images/cong-nghe-vai/nam-catalog/Item-Materials-image-3.png",
     caption: "Gấm dệt ánh sắc, nam tính hiện đại.",
     name: "GẤM TÂN CHÂU",
     composition: "70% gấm dệt Tân Châu, 20% sợi tơ ánh, 10% sợi giữ phom",
     features: ["Mềm mát, thoải mái khi mặc.", "Ánh vải sâu màu, sang trọng."],
+  },
+];
+
+// "CÔNG NGHỆ VẢI NỔI BẬT" — catalog Nữ.
+export const MATERIALS_NU: Material[] = [
+  {
+    image: "/images/cong-nghe-vai/nu-catalog/Rectangle-59.png",
+    caption: "Tơ thêu mềm mại, vẻ đẹp thanh tao.",
+    name: "TƠ TẰM THÊU",
+    composition: "75% tơ thêu cao cấp, 15% sợi ánh mềm, 10% sợi giữ phom",
+    features: ["Nhẹ mềm, nữ tính thanh thoát.", "Bề mặt thêu tạo chiều sâu tinh tế."],
+  },
+  {
+    image: "/images/cong-nghe-vai/nu-catalog/Item-Materials-image.png",
+    caption: "Gấm dệt hiện đại, phom dáng sang trọng.",
+    name: "TƠ TẰM DỆT",
+    composition: "95% tơ tằm dệt, 10% sợi giữ phom",
+    features: ["Mát nhẹ, chạm da êm ái.", "Rủ tự nhiên, bay mềm thanh lịch."],
+  },
+  {
+    image: "/images/cong-nghe-vai/nu-catalog/Item-Materials-image-1.png",
+    caption: "Lụa tự nhiên, thanh lịch đầy tinh tế.",
+    name: "LỤA DỆT",
+    composition: "78% lụa thiên nhiên, 12% sợi ánh cao cấp, 10% sợi giữ form",
+    features: ["Thoáng mát, mềm nhẹ cơ thể.", "Bắt sáng nhẹ, nữ tính hiện đại."],
+  },
+  {
+    image: "/images/cong-nghe-vai/nu-catalog/Item-Materials-image-2.png",
+    caption: "Organza trong nhẹ, bay bổng thanh lịch.",
+    name: "ORGANZA",
+    composition: "70% organza cao cấp, 20% sợi ánh trong, 10% sợi giữ form",
+    features: ["Nhẹ thoáng, tạo độ bay tự nhiên.", "Form đứng nhẹ, bồng bềnh sang trọng."],
   },
 ];
 

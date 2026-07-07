@@ -19,7 +19,7 @@ export function CategoryBanner({
   return (
     <section
       className={cn(
-        "relative flex min-h-[280px] items-center overflow-hidden md:min-h-[410px]",
+        "group relative flex min-h-[280px] items-center overflow-hidden md:min-h-[410px]",
         className
       )}
     >
@@ -28,9 +28,12 @@ export function CategoryBanner({
         alt={title}
         fill
         sizes="100vw"
-        className="object-cover"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
       />
-      <div className="absolute inset-0 bg-black/25" aria-hidden />
+      <div
+        className="absolute inset-0 bg-black/25 transition-colors duration-700 group-hover:bg-black/35"
+        aria-hidden
+      />
       <div className="relative mx-auto flex w-full max-w-site flex-col items-start gap-5 px-6 xl:px-[100px]">
         <h2 className="max-w-2xl text-shadow text-3xl font-medium text-white md:text-4xl">
           {title}

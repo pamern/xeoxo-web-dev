@@ -7,19 +7,27 @@ export function CatalogHero({
   label,
   image,
   ctaHref,
-  collectionNote,
 }: {
   label: string;
   image: string;
   ctaHref: string;
-  collectionNote: string;
 }) {
   return (
-    <section className="relative flex min-h-[480px] items-end overflow-hidden md:h-[615px]">
-      <Image src={image} alt={label} fill priority sizes="100vw" className="object-cover" />
-      <div className="absolute inset-0 bg-black/20" aria-hidden />
+    <section className="group relative flex min-h-[480px] items-end overflow-hidden md:h-[615px]">
+      <Image
+        src={image}
+        alt={label}
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+      />
+      <div
+        className="absolute inset-0 bg-black/20 transition-colors duration-700 group-hover:bg-black/30"
+        aria-hidden
+      />
 
-      <div className="relative mx-auto flex w-full max-w-site flex-col gap-3 px-6 pb-[74px] md:flex-row md:items-end md:justify-between xl:px-[100px]">
+      <div className="relative mx-auto flex w-full max-w-site flex-col gap-3 px-6 pb-[74px] xl:px-[100px]">
         <div className="flex flex-col gap-[13px]">
           <h1 className="text-shadow text-5xl font-extrabold uppercase text-white md:text-[80px]">
             {label}
@@ -31,9 +39,6 @@ export function CatalogHero({
             Khám phá
           </Link>
         </div>
-        <p className="text-lg font-light text-white text-shadow-soft md:self-end md:text-eyebrow">
-          {collectionNote}
-        </p>
       </div>
     </section>
   );

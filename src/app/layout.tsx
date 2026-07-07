@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Crimson_Pro, Unbounded } from "next/font/google";
+import { CartDrawerProvider } from "@/components/providers/CartDrawerProvider";
+import { CartToastProvider } from "@/components/providers/CartToastProvider";
 import "./globals.css";
 
 const unbounded = Unbounded({
@@ -33,7 +35,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${unbounded.variable} ${crimson.variable}`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        <CartDrawerProvider>
+          <CartToastProvider>{children}</CartToastProvider>
+        </CartDrawerProvider>
+      </body>
     </html>
   );
 }

@@ -10,14 +10,13 @@ import { ValueProposition } from "@/components/organisms/ValueProposition";
 import { CategoryBanner } from "@/components/molecules/CategoryBanner";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
-import { CATEGORIES, COLLECTIONS, MATERIALS, VALUE_PROPS } from "@/data/catalog";
-import { getCategoriesByGender, getProductsByCategory } from "@/data/queries";
+import { COLLECTIONS, MATERIALS, MATERIALS_NU, VALUE_PROPS } from "@/data/catalog";
 import {
+  getCategoryProductSections,
   getHomepageCollections,
-  getNewestDepartmentProducts,
   type CatalogDepartment,
 } from "@/features/homepage/homepage.service";
-import type { ProductCategory } from "@/types/product.types";
+import type { HomepageProductSection } from "@/types/homepage.types";
 
 export type CatalogSlug = "nu" | "nam" | "tre-em" | "ao-dai";
 
@@ -25,39 +24,39 @@ const CATALOG_CONTENT: Record<
   CatalogSlug,
   {
     heroLabel: string;
-    productLabel: string;
     banner: string;
     department: CatalogDepartment | null;
-    categories: () => ProductCategory[];
+    emptyTitle: string;
+    emptyDescription: string;
   }
 > = {
   nu: {
-    heroLabel: "ĐỒ NỮ",
-    productLabel: "DÀNH CHO NỮ",
+    heroLabel: "Đồ Nữ",
     banner: "/images/cat-dam-vay.png",
     department: "WOMEN",
-    categories: () => getCategoriesByGender("nu"),
+    emptyTitle: "Chưa có sản phẩm nữ",
+    emptyDescription: "Các thiết kế dành cho nữ sẽ được cập nhật trong thời gian tới.",
   },
   nam: {
-    heroLabel: "ĐỒ NAM",
-    productLabel: "DÀNH CHO NAM",
+    heroLabel: "Đồ Nam",
     banner: "/images/cat-ao-cuoi.png",
     department: "MEN",
-    categories: () => getCategoriesByGender("nam"),
+    emptyTitle: "Chưa có sản phẩm nam",
+    emptyDescription: "Các thiết kế dành cho nam sẽ được cập nhật trong thời gian tới.",
   },
   "tre-em": {
-    heroLabel: "ĐỒ TRẺ EM",
-    productLabel: "DÀNH CHO TRẺ EM",
+    heroLabel: "Đồ Trẻ Em",
     banner: "/images/cat-ao-dai.png",
     department: "KIDS",
-    categories: () => getCategoriesByGender("tre-em"),
+    emptyTitle: "Hiện chưa có sản phẩm trẻ em",
+    emptyDescription: "",
   },
   "ao-dai": {
-    heroLabel: "ÁO DÀI",
-    productLabel: "ÁO DÀI",
+    heroLabel: "Áo Dài",
     banner: "/images/cat-ao-dai.png",
     department: null,
-    categories: () => CATEGORIES.filter((category) => category.slug.includes("ao-dai")),
+    emptyTitle: "Chưa có sản phẩm áo dài",
+    emptyDescription: "Các thiết kế áo dài sẽ được cập nhật trong thời gian tới.",
   },
 };
 
@@ -67,7 +66,7 @@ export function buildCatalogMetadata(slug: CatalogSlug): Metadata {
   const label = CATALOG_CONTENT[slug].heroLabel;
   return {
     title: label,
-    description: `Khám phá bộ sưu tập ${label.toLowerCase()} của XÉO XỌ — áo dài, đầm, váy và nhiều thiết kế Á Đông hiện đại.`,
+    description: `Khám phá bộ sưu tập ${label.toLowerCase()} của XÉO XỌ.`,
   };
 }
 
@@ -80,13 +79,19 @@ async function getCatalogHeroCollections() {
   }
 }
 
-async function getCatalogNewestProducts(department: CatalogDepartment | null) {
-  if (!department) return [];
+async function getCatalogProductSections(department: CatalogDepartment | null) {
   try {
-    return await getNewestDepartmentProducts({ department, limit: 4 });
+    return await getCategoryProductSections({
+      department: department ?? undefined,
+      limit: 4,
+    });
   } catch {
-    return [];
+    return [] satisfies HomepageProductSection[];
   }
+}
+
+function formatProductSectionTitle(categoryName: string) {
+  return `Sản phẩm ${categoryName}`;
 }
 
 // Trang catalog/landing dùng chung cho các entry từ header.
@@ -94,73 +99,87 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
   const content = CATALOG_CONTENT[slug];
   if (!content) notFound();
 
-  const categories = content.categories();
-  const [heroCollections, newestProducts] = await Promise.all([
+  const [heroCollections, productSections] = await Promise.all([
     getCatalogHeroCollections(),
-    getCatalogNewestProducts(content.department),
+    getCatalogProductSections(content.department),
   ]);
   const firstCollection = heroCollections[0];
 
   return (
     <SiteLayout>
-      {/* Hero đầu trang */}
       <CatalogHero
         label={content.heroLabel}
         image={content.banner}
         ctaHref={ROUTES.COLLECTION(firstCollection.slug)}
-        collectionNote={`Khám phá ngay bộ sưu tập ${firstCollection.name}`}
       />
 
-      {/* Khối 3 ảnh bộ sưu tập nổi bật + dải texture */}
       <CatalogHeroGrid collections={heroCollections} />
 
-      {/* Hàng nút lọc theo bộ sưu tập */}
       <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]">
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
-          <FilterPill href={ROUTES.CATEGORY(categories[0]?.slug ?? "")} active>
+          <FilterPill
+            href={productSections[0] ? ROUTES.CATEGORY(productSections[0].categorySlug) : "#"}
+            active
+          >
             Sản phẩm mới
           </FilterPill>
-          {COLLECTIONS.map((collection) => (
-            <FilterPill key={collection.slug} href={ROUTES.COLLECTION(collection.slug)}>
-              {collection.name}
+          {productSections.map((section) => (
+            <FilterPill key={section.categorySlug} href={ROUTES.CATEGORY(section.categorySlug)}>
+              {section.categoryName}
             </FilterPill>
           ))}
         </div>
       </section>
 
-      {/* Hàng sản phẩm xen kẽ banner danh mục */}
-      {categories.map((category, index) => (
-        <div key={category.slug}>
-          {index > 0 && (
+      {productSections.length > 0 ? (
+        productSections.map((section) => (
+          <div key={section.categorySlug}>
             <CategoryBanner
-              title={`SẢN PHẨM ${category.name.toUpperCase()}`}
+              title={section.categoryName}
               image={content.banner}
-              href={ROUTES.CATEGORY(category.slug)}
+              href={ROUTES.CATEGORY(section.categorySlug)}
             />
-          )}
-          <ProductRow
-            title={
-              index === 0
-                ? `SẢN PHẨM ${content.productLabel}`
-                : `SẢN PHẨM ${category.name.toUpperCase()}`
-            }
-            products={
-              index === 0 && newestProducts.length > 0
-                ? newestProducts
-                : getProductsByCategory(category.slug)
-            }
-            actionHref={ROUTES.CATEGORY(category.slug)}
-            quickAddOnHover
-          />
-        </div>
-      ))}
+            <ProductRow
+              title={formatProductSectionTitle(section.categoryName)}
+              products={section.products}
+              actionHref={ROUTES.CATEGORY(section.categorySlug)}
+              quickAddOnHover
+            />
+          </div>
+        ))
+      ) : (
+        <EmptyCatalogState
+          title={content.emptyTitle}
+          description={content.emptyDescription}
+        />
+      )}
 
-      {/* Định vị giá trị + công nghệ vải */}
       <ValueProposition values={VALUE_PROPS} />
-      <Materials materials={MATERIALS} />
+      <Materials materials={slug === "nu" ? MATERIALS_NU : MATERIALS} />
 
       <StarsBanner />
     </SiteLayout>
+  );
+}
+
+function EmptyCatalogState({
+  title,
+  description,
+}: {
+  title: string;
+  description: string;
+}) {
+  return (
+    <section className="mx-auto w-full max-w-site px-6 py-16 text-center xl:px-[100px]">
+      <h2 className="text-3xl font-extrabold uppercase text-black md:text-5xl">
+        {title}
+      </h2>
+      {description ? (
+        <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-black/65">
+          {description}
+        </p>
+      ) : null}
+    </section>
   );
 }
 

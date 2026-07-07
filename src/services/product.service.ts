@@ -1,10 +1,14 @@
 import { API } from "@/constants/routes";
+import { cachedFetch } from "@/lib/requestCache";
 import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
 import type {
   ProductDetailDto,
   ProductReviewDto,
   SizeChartDto,
 } from "@/types/product-api.types";
+
+const PRODUCT_DETAIL_TTL_MS = 30_000;
+const SIZE_CHART_TTL_MS = 5 * 60_000;
 
 async function readApi<T>(response: Response, fallback: string) {
   const payload = (await response.json()) as ApiResponse<T>;
@@ -18,22 +22,37 @@ async function readApi<T>(response: Response, fallback: string) {
 
 export const productService = {
   async getProductDetail(slug: string) {
-    const response = await fetch(API.PRODUCT_LINE(slug), {
-      credentials: "include",
-    });
+    return cachedFetch(
+      `product-detail:${slug}`,
+      async () => {
+        const response = await fetch(API.PRODUCT_LINE(slug), {
+          credentials: "include",
+        });
 
-    return readApi<ProductDetailDto>(
-      response,
-      "Khong the tai chi tiet san pham.",
+        return readApi<ProductDetailDto>(
+          response,
+          "Khong the tai chi tiet san pham.",
+        );
+      },
+      PRODUCT_DETAIL_TTL_MS,
     );
   },
 
   async getSizeChart(slug: string) {
-    const response = await fetch(API.PRODUCT_SIZE_CHART(slug), {
-      credentials: "include",
-    });
+    return cachedFetch(
+      `size-chart:${slug}`,
+      async () => {
+        const response = await fetch(API.PRODUCT_SIZE_CHART(slug), {
+          credentials: "include",
+        });
 
-    return readApi<SizeChartDto>(response, "Khong the tai bang kich thuoc.");
+        return readApi<SizeChartDto>(
+          response,
+          "Khong the tai bang kich thuoc.",
+        );
+      },
+      SIZE_CHART_TTL_MS,
+    );
   },
 
   async getReviews(slug: string, page = 1, limit = 3) {
