@@ -7,10 +7,14 @@ export function ProductRow({
   title,
   products,
   actionHref,
+  quickAddOnHover = false,
+  cardClassName,
 }: {
   title: string;
   products: Product[];
   actionHref?: string;
+  quickAddOnHover?: boolean;
+  cardClassName?: string;
 }) {
   if (products.length === 0) return null;
 
@@ -22,7 +26,10 @@ export function ProductRow({
           <ProductCard
             key={product.id}
             product={product}
-            className="w-[240px] shrink-0 md:w-[300px] xl:w-[351px]"
+            className={
+              cardClassName ?? "w-[240px] shrink-0 md:w-[300px] xl:w-[351px]"
+            }
+            quickAddOnHover={quickAddOnHover}
           />
         ))}
       </div>

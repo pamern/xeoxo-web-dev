@@ -1,0 +1,1 @@
+export { PersonalColorQuiz } from "./PersonalColorQuiz";

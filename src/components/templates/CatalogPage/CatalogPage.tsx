@@ -12,6 +12,11 @@ import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 import { CATEGORIES, COLLECTIONS, MATERIALS, VALUE_PROPS } from "@/data/catalog";
 import { getCategoriesByGender, getProductsByCategory } from "@/data/queries";
+import {
+  getHomepageCollections,
+  getNewestDepartmentProducts,
+  type CatalogDepartment,
+} from "@/features/homepage/homepage.service";
 import type { ProductCategory } from "@/types/product.types";
 
 export type CatalogSlug = "nu" | "nam" | "tre-em" | "ao-dai";
@@ -22,6 +27,7 @@ const CATALOG_CONTENT: Record<
     heroLabel: string;
     productLabel: string;
     banner: string;
+    department: CatalogDepartment | null;
     categories: () => ProductCategory[];
   }
 > = {
@@ -29,24 +35,28 @@ const CATALOG_CONTENT: Record<
     heroLabel: "ĐỒ NỮ",
     productLabel: "DÀNH CHO NỮ",
     banner: "/images/cat-dam-vay.png",
+    department: "WOMEN",
     categories: () => getCategoriesByGender("nu"),
   },
   nam: {
     heroLabel: "ĐỒ NAM",
     productLabel: "DÀNH CHO NAM",
     banner: "/images/cat-ao-cuoi.png",
+    department: "MEN",
     categories: () => getCategoriesByGender("nam"),
   },
   "tre-em": {
     heroLabel: "ĐỒ TRẺ EM",
     productLabel: "DÀNH CHO TRẺ EM",
     banner: "/images/cat-ao-dai.png",
+    department: "KIDS",
     categories: () => getCategoriesByGender("tre-em"),
   },
   "ao-dai": {
     heroLabel: "ÁO DÀI",
     productLabel: "ÁO DÀI",
     banner: "/images/cat-ao-dai.png",
+    department: null,
     categories: () => CATEGORIES.filter((category) => category.slug.includes("ao-dai")),
   },
 };
@@ -61,13 +71,35 @@ export function buildCatalogMetadata(slug: CatalogSlug): Metadata {
   };
 }
 
+async function getCatalogHeroCollections() {
+  try {
+    const collections = await getHomepageCollections({ limit: 5 });
+    return collections.length > 0 ? collections : COLLECTIONS;
+  } catch {
+    return COLLECTIONS;
+  }
+}
+
+async function getCatalogNewestProducts(department: CatalogDepartment | null) {
+  if (!department) return [];
+  try {
+    return await getNewestDepartmentProducts({ department, limit: 4 });
+  } catch {
+    return [];
+  }
+}
+
 // Trang catalog/landing dùng chung cho các entry từ header.
-export function CatalogPage({ slug }: { slug: CatalogSlug }) {
+export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
   const content = CATALOG_CONTENT[slug];
   if (!content) notFound();
 
   const categories = content.categories();
-  const firstCollection = COLLECTIONS[0];
+  const [heroCollections, newestProducts] = await Promise.all([
+    getCatalogHeroCollections(),
+    getCatalogNewestProducts(content.department),
+  ]);
+  const firstCollection = heroCollections[0];
 
   return (
     <SiteLayout>
@@ -80,7 +112,7 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
       />
 
       {/* Khối 3 ảnh bộ sưu tập nổi bật + dải texture */}
-      <CatalogHeroGrid collections={COLLECTIONS} />
+      <CatalogHeroGrid collections={heroCollections} />
 
       {/* Hàng nút lọc theo bộ sưu tập */}
       <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]">
@@ -112,8 +144,13 @@ export function CatalogPage({ slug }: { slug: CatalogSlug }) {
                 ? `SẢN PHẨM ${content.productLabel}`
                 : `SẢN PHẨM ${category.name.toUpperCase()}`
             }
-            products={getProductsByCategory(category.slug)}
+            products={
+              index === 0 && newestProducts.length > 0
+                ? newestProducts
+                : getProductsByCategory(category.slug)
+            }
             actionHref={ROUTES.CATEGORY(category.slug)}
+            quickAddOnHover
           />
         </div>
       ))}
