@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { AccountProfileEditor } from "@/components/organisms/AccountProfileEditor";
 import {
   AccountNavigation,
   type AccountNavItem,
 } from "@/components/organisms/AccountNavigation/AccountNavigation";
-import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
+import { PolicyClosingNote } from "@/components/organisms/PolicyClosingNote";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 import {
@@ -28,7 +29,7 @@ const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
   { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
   { label: "Đánh giá và phản hồi" },
-  { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
+  { label: "Câu hỏi thường gặp", href: ROUTES.FAQ_ACCOUNT },
   { label: "Đăng xuất", action: "logout" },
 ];
 
@@ -60,7 +61,7 @@ export default async function AccountProfileRoute() {
         <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
-              className="text-sm font-medium text-foreground/68"
+              variant="account"
               items={[
                 {
                   label: "",
@@ -77,6 +78,7 @@ export default async function AccountProfileRoute() {
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
                   activeHref={ROUTES.ACCOUNT_PROFILE}
+                  variant="account"
                 />
               </aside>
 
@@ -120,22 +122,7 @@ export default async function AccountProfileRoute() {
           </div>
         </section>
 
-        <section className="px-6 pb-16 xl:px-[100px] xl:pb-24">
-          <div className="mx-auto max-w-site">
-            <div className="max-w-[760px]">
-              <FloralDivider className="max-w-[360px]" />
-              <h2 className="mt-6 text-[34px] font-light leading-[1.05] text-foreground md:text-[62px]">
-                <span className="font-extrabold">Xéo xọ</span> luôn lắng nghe bạn
-              </h2>
-              <p className="mt-4 max-w-[720px] text-sm font-light text-foreground/80 md:text-lg">
-                Chúng tôi luôn trân trọng và mong đợi nhận được mọi ý kiến đóng
-                góp từ khách hàng để có thể nâng cấp trải nghiệm dịch vụ và sản
-                phẩm tốt hơn nữa.
-              </p>
-              <FloralDivider className="mt-6 max-w-[360px]" />
-            </div>
-          </div>
-        </section>
+        <PolicyClosingNote />
       </div>
     </SiteLayout>
   );

@@ -44,6 +44,7 @@ export const ROUTES = {
   PERSONAL_COLOR: "/personal-color",
 
   FAQ: "/faq",
+  FAQ_ACCOUNT: "/faq?view=account",
   SIZE_GUIDE: "/size-guide",
   WASHING_GUIDE: "/washing-guide",
 

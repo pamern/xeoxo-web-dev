@@ -4,7 +4,7 @@ import {
   AccountNavigation,
   type AccountNavItem,
 } from "@/components/organisms/AccountNavigation/AccountNavigation";
-import { AccountAddressBook } from "@/components/organisms/AccountAddressBook";
+import { AccountOrderHistory } from "@/components/organisms/AccountOrderHistory";
 import { PolicyClosingNote } from "@/components/organisms/PolicyClosingNote";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
@@ -12,14 +12,26 @@ import {
   getAuthenticatedUser,
   getCustomerProfileByAccountId,
 } from "@/features/auth/auth.service";
-import { getCustomerAddressesByCustomerId } from "@/features/customers/customer-address.service";
-import type { CustomerAddress } from "@/types/customer.types";
+import { getCustomerOrdersByCustomerId } from "@/features/order/account-order.service";
+import {
+  filterOrdersByStatus,
+  isOrderHistoryFilter,
+  type OrderHistoryFilter,
+} from "@/features/order/order-history";
+import type { AccountOrder } from "@/types/account-order.types";
 import { createClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Sổ địa chỉ",
-  description: "Quản lý địa chỉ giao hàng trong tài khoản Xéo Xọ của bạn.",
+  title: "Lịch sử đơn hàng",
+  description: "Theo dõi các đơn hàng đã đặt trong tài khoản Xéo Xọ của bạn.",
+};
+
+export const dynamic = "force-dynamic";
+
+type AccountOrdersPageProps = {
+  searchParams?: Promise<{
+    status?: string;
+  }>;
 };
 
 const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
@@ -32,32 +44,29 @@ const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Đăng xuất", action: "logout" },
 ];
 
-function FloralDivider({ className }: { className?: string }) {
-  return (
-    <div
-      aria-hidden="true"
-      className={cn(
-        "h-[5px] w-full bg-[length:100%_100%] bg-center bg-no-repeat",
-        className,
-      )}
-      style={{ backgroundImage: "url(/images/header-line-up.png)" }}
-    />
-  );
-}
+export default async function AccountOrdersRoute({
+  searchParams,
+}: AccountOrdersPageProps) {
+  const resolvedSearchParams = await searchParams;
+  const activeFilter: OrderHistoryFilter = isOrderHistoryFilter(
+    resolvedSearchParams?.status,
+  )
+    ? resolvedSearchParams.status
+    : "all";
 
-export default async function AccountAddressesRoute() {
   const supabase = await createClient();
   const authenticatedUser = await getAuthenticatedUser(supabase);
   const isAuthenticated = Boolean(authenticatedUser);
-  let initialAddresses: CustomerAddress[] | undefined;
+  let initialOrders: AccountOrder[] | undefined;
 
   if (authenticatedUser) {
     const customer = await getCustomerProfileByAccountId(authenticatedUser.id);
 
     if (customer?.customer_id) {
-      initialAddresses = await getCustomerAddressesByCustomerId(
+      const orders = await getCustomerOrdersByCustomerId(
         Number(customer.customer_id),
       );
+      initialOrders = filterOrdersByStatus(orders, activeFilter);
     }
   }
 
@@ -75,7 +84,7 @@ export default async function AccountAddressesRoute() {
                   iconSrc: "/icons/home.svg",
                   iconAlt: "Trang chủ",
                 },
-                { label: "Sổ địa chỉ" },
+                { label: "Lịch sử đơn hàng" },
               ]}
             />
 
@@ -83,29 +92,25 @@ export default async function AccountAddressesRoute() {
               <aside className="xl:sticky xl:top-[180px]">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
-                  activeHref={ROUTES.ACCOUNT_ADDRESSES}
+                  activeHref={ROUTES.ACCOUNT_ORDERS}
                   variant="account"
                 />
               </aside>
 
               <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-5">
                   <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
-                    Sổ địa chỉ
+                    Lịch sử đơn hàng
                   </h1>
-                  <p className="text-sm font-medium text-foreground/72 md:text-lg">
-                    Địa chỉ đã được cập nhật theo thông tin hành chính mới.
-                  </p>
+
+                  <div className="h-[5px] w-full bg-[url('/images/strip-title-underline.png')] bg-[length:100%_100%] bg-center bg-no-repeat" />
                 </div>
 
-                <FloralDivider className="mt-6" />
-
-                <AccountAddressBook
+                <AccountOrderHistory
                   isAuthenticated={isAuthenticated}
-                  initialAddresses={initialAddresses}
+                  initialOrders={initialOrders}
+                  statusGroup={activeFilter}
                 />
-
-                <FloralDivider className="mt-10" />
               </section>
             </div>
           </div>

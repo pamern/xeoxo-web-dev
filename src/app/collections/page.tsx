@@ -55,11 +55,11 @@ export default async function CollectionsPage() {
           <section className="pb-12 md:pb-20 xl:pb-[100px]">
             <div className="flex min-h-32 flex-col items-center justify-start px-4 py-6 md:h-36 md:px-0 xl:h-[146px] xl:pb-[25px] xl:pt-[25px]">
               <div className="relative flex w-full max-w-[376px] flex-col items-center">
-                <p className="mb-0 self-center font-serif text-body-sm font-normal italic leading-6 text-black sm:text-body-lg md:text-xl xl:text-eyebrow">
+                <p className="eyebrow-text mb-0 self-center sm:text-body-lg md:text-xl xl:text-eyebrow">
                   Khám phá
                 </p>
 
-                <h1 className="whitespace-nowrap text-center text-4xl font-bold uppercase leading-none text-black md:text-5xl xl:text-display-page">
+                <h1 className="page-heading whitespace-nowrap text-center">
                   BỘ SƯU TẬP
                 </h1>
               </div>
@@ -190,12 +190,12 @@ function IntroCopy({
 }) {
   return (
     <article className={`flex flex-col justify-center gap-4 overflow-hidden xl:gap-[15px] ${className ?? ""}`}>
-      <h2 className="text-base font-bold leading-snug text-black md:text-lg xl:text-body-lg xl:leading-[18px]">
+      <h2 className="content-heading">
         {title}
       </h2>
 
       <p
-        className={`font-serif text-base font-light italic leading-snug text-black md:text-lg xl:text-body-lg xl:leading-[1.35] ${
+        className={`eyebrow-text md:text-lg xl:text-body-lg ${
           bodyClassName ?? ""
         }`}
       >

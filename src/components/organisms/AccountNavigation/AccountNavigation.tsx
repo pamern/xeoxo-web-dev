@@ -14,26 +14,43 @@ export type AccountNavItem = {
   action?: "logout";
 };
 
+type AccountNavigationVariant = "default" | "account";
+
 function AccountNavCard({
   item,
   isActive,
   onLogout,
+  variant,
 }: {
   item: AccountNavItem;
   isActive?: boolean;
   onLogout: () => void;
+  variant: AccountNavigationVariant;
 }) {
   const className = cn(
-    "flex min-h-[58px] w-full items-center justify-between rounded-[14px] border px-5 py-4 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition-transform",
+    variant === "account"
+      ? "flex min-h-[65px] w-full items-center gap-4 rounded-md border-2 border-black px-5 py-4 text-left transition-colors"
+      : "flex min-h-[58px] w-full items-center justify-between rounded-[14px] border px-5 py-4 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition-transform",
     isActive
       ? "border-black bg-black text-white"
-      : "border-black bg-white text-foreground hover:scale-[0.995]",
+      : variant === "account"
+        ? "border-black bg-white text-foreground hover:bg-black/[0.02]"
+        : "border-black bg-white text-foreground hover:scale-[0.995]",
     !item.href && item.action !== "logout" && !isActive && "cursor-default",
   );
 
   const content = (
     <>
-      <span className="text-base font-medium leading-tight md:text-[15px]">
+      <span
+        className={cn(
+          "min-w-0 flex-1 whitespace-nowrap leading-tight",
+          variant === "account"
+            ? isActive
+              ? "text-[18px] font-bold md:text-[20px]"
+              : "text-[18px] font-normal md:text-[20px]"
+            : "text-base font-medium md:text-[15px]",
+        )}
+      >
         {item.label}
       </span>
       <Image
@@ -42,7 +59,11 @@ function AccountNavCard({
         width={31}
         height={18}
         aria-hidden
-        className={cn("h-auto w-8 shrink-0", isActive && "brightness-0 invert")}
+        className={cn(
+          "h-auto shrink-0",
+          variant === "account" ? "w-9 md:w-10" : "w-8",
+          isActive && "brightness-0 invert",
+        )}
       />
     </>
   );
@@ -69,9 +90,11 @@ function AccountNavCard({
 export function AccountNavigation({
   items,
   activeHref,
+  variant = "default",
 }: {
   items: AccountNavItem[];
   activeHref?: string;
+  variant?: AccountNavigationVariant;
 }) {
   const router = useRouter();
   const auth = useAuth();
@@ -88,13 +111,17 @@ export function AccountNavigation({
 
   return (
     <>
-      <nav className="flex flex-col gap-4" aria-label="Điều hướng tài khoản">
+      <nav
+        className={cn("flex flex-col", variant === "account" ? "gap-5" : "gap-4")}
+        aria-label="Điều hướng tài khoản"
+      >
         {items.map((item) => (
           <AccountNavCard
             key={item.label}
             item={item}
             isActive={item.href === activeHref}
             onLogout={() => setIsConfirmOpen(true)}
+            variant={variant}
           />
         ))}
       </nav>
