@@ -10,6 +10,9 @@ export function VariantSelector({
   selectedSize,
   onColorChange,
   onSizeChange,
+  onOpenSizeGuide,
+  onOpenSizeRecommendation,
+  onOpenCustomize,
 }: {
   colors: ProductColor[];
   sizes: ProductSizeOptionDto[];
@@ -17,6 +20,9 @@ export function VariantSelector({
   selectedSize: string;
   onColorChange: (color: ProductColor) => void;
   onSizeChange: (size: string) => void;
+  onOpenSizeGuide: () => void;
+  onOpenSizeRecommendation: () => void;
+  onOpenCustomize: () => void;
 }) {
   const regularSizes = sizes.filter(
     (size) => size.size_name.trim().toUpperCase() !== "CUSTOM",
@@ -67,8 +73,12 @@ export function VariantSelector({
         <div className="flex w-full items-center justify-between gap-3 text-sm">
           <span className="font-bold">Kích thước: {selectedSize}</span>
           <span className="flex gap-3 text-caption font-bold text-[#3568ff] underline underline-offset-4">
-            <button type="button">Bảng kích thước</button>
-            <button type="button">Hướng dẫn chọn size</button>
+            <button type="button" onClick={onOpenSizeGuide}>
+              Hướng dẫn cách đo
+            </button>
+            <button type="button" onClick={onOpenSizeRecommendation}>
+              Hướng dẫn chọn size
+            </button>
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -94,7 +104,7 @@ export function VariantSelector({
           ))}
           <Button
             type="button"
-            onClick={() => onSizeChange("Custom")}
+            onClick={onOpenCustomize}
             variant="customPill"
             size="custom"
             iconSrc="/icons/custom.svg"

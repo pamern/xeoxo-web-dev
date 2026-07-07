@@ -41,7 +41,7 @@ export async function GET(
 
   const productLineId = productLine.product_line_id;
 
-  const [mediaResult, componentsResult, collectionResult] = await Promise.all([
+  const [mediaResult, componentsResult, collectionResult, lineCategoryResult] = await Promise.all([
     supabase
       .schema("catalog")
       .from("product_line_media")
@@ -60,11 +60,25 @@ export async function GET(
       .select("collection_id,collection_name,slug")
       .eq("collection_id", productLine.collection_id)
       .maybeSingle(),
+    supabase
+      .schema("catalog")
+      .from("line_category")
+      .select("category_id,is_primary")
+      .eq("product_line_id", productLineId)
+      .order("is_primary", { ascending: false })
+      .limit(1)
+      .maybeSingle<{ category_id: number; is_primary: boolean }>(),
   ]);
 
-  if (mediaResult.error || componentsResult.error || collectionResult.error) {
+  if (
+    mediaResult.error ||
+    componentsResult.error ||
+    collectionResult.error
+  ) {
     const currentError =
-      mediaResult.error ?? componentsResult.error ?? collectionResult.error;
+      mediaResult.error ??
+      componentsResult.error ??
+      collectionResult.error;
 
     return NextResponse.json(
       {
@@ -77,6 +91,20 @@ export async function GET(
       },
       { status: 500 },
     );
+  }
+
+  let productGender: "nam" | "nu" = "nu";
+  if (!lineCategoryResult.error && lineCategoryResult.data?.category_id) {
+    const { data: category, error: categoryError } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("department")
+      .eq("category_id", lineCategoryResult.data.category_id)
+      .maybeSingle<{ department: string | null }>();
+
+    if (!categoryError) {
+      productGender = category?.department?.toUpperCase() === "MEN" ? "nam" : "nu";
+    }
   }
 
   let variants: SupabaseProductVariantRow[] = [];
@@ -202,7 +230,7 @@ export async function GET(
     ok: true,
     data: {
       productLine: attachProductLineRelations({
-        productLines: [productLine],
+        productLines: [{ ...productLine, gender: productGender }],
         media: mediaResult.data,
         components: componentsResult.data,
         variants,
