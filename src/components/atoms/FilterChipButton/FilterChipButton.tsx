@@ -5,24 +5,25 @@ export interface FilterChipButtonProps extends ButtonHTMLAttributes<HTMLButtonEl
   active?: boolean;
 }
 
-export const FilterChipButton = forwardRef<HTMLButtonElement, FilterChipButtonProps>(
-  ({ active, className, children, ...props }, ref) => (
-    <button
-      ref={ref}
-      type="button"
-      aria-pressed={active}
-      className={cn(
-        "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-semibold transition-colors",
-        active
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-[#8c8c8c] bg-background text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground",
-        className
-      )}
-      {...props}
-    >
-      {children}
-    </button>
-  )
-);
+export const FilterChipButton = forwardRef<
+  HTMLButtonElement,
+  FilterChipButtonProps
+>(({ active, className, children, ...props }, ref) => (
+  <button
+    ref={ref}
+    type="button"
+    aria-pressed={active}
+    className={cn(
+      "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-semibold transition-colors",
+      active
+        ? "border-primary bg-primary text-primary-foreground"
+        : "border-[#8c8c8c] bg-background text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground",
+      className,
+    )}
+    {...props}
+  >
+    {children}
+  </button>
+));
 
 FilterChipButton.displayName = "FilterChipButton";

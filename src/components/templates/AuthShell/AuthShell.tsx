@@ -31,7 +31,7 @@ export function AuthShell({
     <div
       className={cn(
         "relative w-full overflow-hidden rounded-[32px] bg-background shadow-[0_20px_60px_rgba(0,0,0,0.18)]",
-        className
+        className,
       )}
     >
       <div className="px-5 pb-7 pt-9 sm:px-8 sm:pb-9 sm:pt-12 md:px-[56px] md:pb-11 md:pt-[54px]">
@@ -40,7 +40,13 @@ export function AuthShell({
           aria-label="XÉO XỌ — Trang chủ"
           className="inline-block"
         >
-          <Image src="/images/logohong.png" alt="XÉO XỌ" width={173} height={103} priority />
+          <Image
+            src="/images/logohong.png"
+            alt="XÉO XỌ"
+            width={173}
+            height={103}
+            priority
+          />
         </Link>
 
         <h1 className="mt-3 max-w-[760px] text-[34px] font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-[40px] md:text-[44px]">
@@ -60,7 +66,13 @@ export function AuthShell({
             >
               <div className="flex min-h-[88px] items-center gap-4 bg-background px-4 py-3">
                 <div className="flex h-[52px] w-[52px] items-center justify-center rounded-[4px] bg-background/90">
-                  <Image src={benefit.icon} alt="" width={34} height={34} aria-hidden />
+                  <Image
+                    src={benefit.icon}
+                    alt=""
+                    width={34}
+                    height={34}
+                    aria-hidden
+                  />
                 </div>
                 <span className="text-lg font-bold leading-tight text-foreground">
                   {benefit.line1}
@@ -72,7 +84,9 @@ export function AuthShell({
           ))}
         </div>
 
-        <p className="mt-6 text-lg font-bold">Đăng nhập hoặc đăng ký (miễn phí)</p>
+        <p className="mt-6 text-lg font-bold">
+          Đăng nhập hoặc đăng ký (miễn phí)
+        </p>
         <div className="mt-3 flex gap-4">
           <SocialButton
             icon="/icons/google-color.svg"

@@ -19,7 +19,7 @@ export function Breadcrumbs({
   return (
     <nav
       aria-label="Breadcrumb"
-      className={cn("text-sm font-light text-muted-foreground", className)}
+      className={cn("text-body-sm font-light text-muted-foreground", className)}
     >
       <ol className="flex flex-wrap items-center gap-2">
         {items.map((item, index) => {

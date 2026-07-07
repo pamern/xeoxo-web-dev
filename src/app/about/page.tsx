@@ -70,7 +70,7 @@ export default function AboutPage() {
         <div className="absolute inset-0 bg-black/45" aria-hidden />
         <div className="relative flex flex-col items-center gap-4 px-6 text-center">
           <h1 className="text-shadow text-6xl font-extrabold text-white md:text-8xl">XÉO XỌ</h1>
-          <p className="text-lg font-light text-white">
+          <p className="text-body-lg font-light text-white">
             Lưu giữ vẻ đẹp Á Đông trong từng thiết kế.
           </p>
           <Link
@@ -87,7 +87,7 @@ export default function AboutPage() {
         <p className="text-2xl font-medium leading-snug md:text-3xl">
           “Chúng tôi chỉ đơn giản muốn làm ra những bộ quần áo đẹp để mặc”
         </p>
-        <p className="text-base font-light leading-relaxed text-foreground/70">
+        <p className="text-body-lg font-light leading-relaxed text-foreground/70">
           Nhiều người hỏi “XÉO XỌ” có nghĩa là gì. Thật ra, nó không mang một ý nghĩa cụ thể nào cả.
           Chúng tôi thích việc mỗi người sẽ tự giữ cho mình một cách hiểu riêng về XÉO XỌ — giống như cách quần áo
           đôi khi cũng trở thành một phần rất riêng trong cuộc sống của mỗi người.
@@ -121,11 +121,11 @@ export default function AboutPage() {
             </div>
             <div className="flex flex-col justify-center gap-5 rounded-lg bg-background p-8">
               <h3 className="text-2xl font-medium">Mọi thứ bắt đầu từ một căn phòng nhỏ...</h3>
-              <p className="text-base font-light leading-relaxed text-foreground/80">
+              <p className="text-body-lg font-light leading-relaxed text-foreground/80">
                 Được thành lập bởi Hương và Hằng, XÉO XỌ bắt đầu từ tình yêu với chất liệu tự nhiên và
                 niềm yêu thích dành cho những thiết kế mềm mại và gần gũi với đời sống thường ngày.
               </p>
-              <p className="text-base font-light leading-relaxed text-foreground/80">
+              <p className="text-body-lg font-light leading-relaxed text-foreground/80">
                 Những ngày đầu tiên, XÉO XỌ chỉ là một căn phòng nhỏ nằm sâu trong một con ngõ yên
                 tĩnh ở Hà Nội. Hai đứa mình — những người chưa từng học thời trang chuyên nghiệp — bắt
                 đầu mọi thứ từ sự tò mò, niềm yêu thích với vải vóc và cảm giác muốn tự tay làm ra
@@ -149,7 +149,7 @@ export default function AboutPage() {
             >
               <span className="text-5xl font-medium">{principle.number}</span>
               <h3 className="text-lg font-bold">{principle.title}</h3>
-              <p className="text-sm font-light text-primary-foreground/80">
+              <p className="text-body-sm font-light text-primary-foreground/80">
                 {principle.description}
               </p>
             </article>
@@ -169,7 +169,7 @@ export default function AboutPage() {
                 <Image src={step.image} alt={step.title} fill sizes="300px" className="object-cover" />
               </div>
               <h3 className="text-xl font-medium">{step.title}</h3>
-              <p className="text-base font-light text-foreground/70">{step.description}</p>
+              <p className="text-body-lg font-light text-foreground/70">{step.description}</p>
             </article>
           ))}
         </div>
@@ -183,7 +183,7 @@ export default function AboutPage() {
           <h2 className="text-shadow text-3xl font-extrabold text-white md:text-4xl">
             XÉO XỌ vẫn đang tiếp tục lớn lên mỗi ngày.
           </h2>
-          <p className="text-base font-light text-white/90">
+          <p className="text-body-lg font-light text-white/90">
             Cảm ơn bạn đã là một phần trong câu chuyện của chúng mình. Hãy cùng Xéo Xọ viết tiếp những
             chương mới rạng rỡ hơn.
           </p>

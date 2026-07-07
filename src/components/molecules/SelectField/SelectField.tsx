@@ -46,7 +46,7 @@ export function SelectField({
           className="pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-current"
         />
       </span>
-      {error && <span className="text-sm font-light text-destructive">{error}</span>}
+      {error && <span className="text-body-sm font-light text-destructive">{error}</span>}
     </label>
   );
 }

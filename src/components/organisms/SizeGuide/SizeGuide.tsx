@@ -78,7 +78,7 @@ export function SizeGuide() {
             ))}
           </tbody>
         </table>
-        <p className="mt-3 text-sm text-muted-foreground">Đơn vị: cm</p>
+        <p className="mt-3 text-body-sm text-muted-foreground">Đơn vị: cm</p>
       </div>
 
       <div>
@@ -90,7 +90,7 @@ export function SizeGuide() {
                 {String(index + 1).padStart(2, "0")}
               </span>
               <h3 className="text-lg font-medium">{step.title}</h3>
-              <p className="text-sm font-light text-foreground/70">{step.description}</p>
+              <p className="text-body-sm font-light text-foreground/70">{step.description}</p>
             </div>
           ))}
         </div>

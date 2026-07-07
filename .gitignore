@@ -219,3 +219,6 @@ node_modules/
 out/
 tsconfig.tsbuildinfo
 .env.*.local
+.codex-screens/
+.codex-screens-mobile/
+.codex-screens-mobile-after/

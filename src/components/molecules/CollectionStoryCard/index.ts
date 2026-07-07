@@ -1,0 +1,1 @@
+export { CollectionStoryCard } from "./CollectionStoryCard";

@@ -31,10 +31,10 @@ const DEFAULT_VALUES: AppointmentValues = {
 };
 
 const fieldClassName =
-  "h-11 w-full rounded-[22px] border border-black bg-white px-5 text-[15px] font-light text-black outline-none transition-colors placeholder:text-black/45 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-11 w-full rounded-[22px] border border-black bg-white px-5 text-body font-light text-black outline-none transition-colors placeholder:text-black/45 focus:border-black focus:ring-2 focus:ring-black/10";
 
 const compactFieldClassName =
-  "h-11 w-full rounded-[22px] border border-black bg-white px-5 text-[15px] font-light text-black outline-none transition-colors placeholder:text-black/45 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-11 w-full rounded-[22px] border border-black bg-white px-5 text-body font-light text-black outline-none transition-colors placeholder:text-black/45 focus:border-black focus:ring-2 focus:ring-black/10";
 
 export function AppointmentForm({
   branches,
@@ -169,7 +169,7 @@ export function AppointmentForm({
         style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
       >
         {submitted && (
-          <p className="text-sm font-medium text-white drop-shadow">
+          <p className="text-body-sm font-medium text-white drop-shadow">
             Đã ghi nhận thông tin đặt lịch.
           </p>
         )}
@@ -189,7 +189,7 @@ export function AppointmentForm({
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid gap-2.5 md:grid-cols-[185px_minmax(0,1fr)] md:items-center">
-      <span className="whitespace-nowrap text-[18px] font-bold leading-tight text-black md:pl-1 md:text-[20px]">
+      <span className="whitespace-nowrap text-body-lg font-bold leading-tight text-black md:pl-1 md:text-[20px]">
         {label}
       </span>
       {children}
@@ -212,7 +212,7 @@ function GenderPill({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "h-11 rounded-[22px] border border-black bg-white px-6 text-[20px] font-bold leading-none text-black transition-colors md:text-[22px]",
+        "h-11 rounded-[22px] border border-black bg-white px-6 text-[20px] font-bold leading-none text-black transition-colors md:text-button",
         active && "bg-black text-white"
       )}
     >

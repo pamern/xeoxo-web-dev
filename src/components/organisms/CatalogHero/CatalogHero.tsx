@@ -26,12 +26,12 @@ export function CatalogHero({
           </h1>
           <Link
             href={ctaHref}
-            className="inline-flex w-fit items-center justify-center rounded-[30px] border border-white px-8 py-3 text-xl font-medium text-white shadow-[0px_4px_4px_0px_rgba(0,0,0,1)] text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] md:text-[32px]"
+            className="inline-flex w-fit items-center justify-center rounded-[30px] border border-white px-8 py-3 text-xl font-medium text-white shadow-[0px_4px_4px_0px_rgba(0,0,0,1)] text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] md:text-heading-section"
           >
             Khám phá
           </Link>
         </div>
-        <p className="text-lg font-light text-white text-shadow-soft md:self-end md:text-[22px]">
+        <p className="text-lg font-light text-white text-shadow-soft md:self-end md:text-eyebrow">
           {collectionNote}
         </p>
       </div>

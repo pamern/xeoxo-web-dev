@@ -38,7 +38,7 @@ export function ValueProposition({ values }: { values: string[] }) {
             height={128}
             className="h-auto w-[240px] object-contain"
           />
-          <h2 className="text-3xl font-semibold md:text-[44px]">ĐỊNH VỊ GIÁ TRỊ</h2>
+          <h2 className="text-3xl font-semibold md:text-display-section">ĐỊNH VỊ GIÁ TRỊ</h2>
           <ul className="flex flex-col gap-[15px] px-5">
             {values.map((value) => (
               <li key={value} className="text-xl font-light md:text-[28px]">

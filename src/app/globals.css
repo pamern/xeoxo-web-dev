@@ -1,57 +1,40 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/*
- * ============================================================
- * DESIGN TOKENS — XÉO XỌ
- * ============================================================
- * Toàn bộ màu sắc, bo góc, shadow... định nghĩa ở đây dưới dạng
- * CSS variables. Component dùng class Tailwind đã map tới biến này,
- * không hardcode giá trị.
- *
- * Thương hiệu thời trang: bảng màu đen / trắng tối giản, chữ
- * dùng font Unbounded.
- * ============================================================
- */
 
 :root {
-  /* --- Nền & chữ --- */
   --color-background: 0 0% 100%;
   --color-foreground: 0 0% 0%;
 
-  /* --- Màu chính (đen) --- */
   --color-primary: 0 0% 0%;
   --color-primary-foreground: 0 0% 100%;
 
-  /* --- Màu phụ --- */
   --color-secondary: 0 0% 96%;
   --color-secondary-foreground: 0 0% 0%;
 
-  /* --- Màu mờ (text phụ, placeholder, viền nhạt) --- */
   --color-muted: 0 0% 96%;
   --color-muted-foreground: 0 0% 56%;
 
-  /* --- Cảnh báo / xóa --- */
   --color-destructive: 0 72% 51%;
   --color-destructive-foreground: 0 0% 100%;
 
-  /* --- Viền & input --- */
   --color-border: 0 0% 89%;
   --color-input: 0 0% 56%;
   --color-ring: 0 0% 0%;
 
-  /* --- Card --- */
   --color-card: 0 0% 100%;
   --color-card-foreground: 0 0% 0%;
 
-  /* --- Bo góc --- */
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
   --radius-lg: 1.25rem;
-  --radius-pill: 1.875rem;
+  --radius-pill: 9999px;
 
-  /* --- Font --- */
+  --font-display: var(--font-unbounded), system-ui, sans-serif;
   --font-sans: var(--font-unbounded), system-ui, sans-serif;
+  --font-serif: var(--font-crimson), Georgia, serif;
+
+  --site-max-width: 1728px;
 }
 
 * {
@@ -67,19 +50,46 @@ body {
   color: hsl(var(--color-foreground));
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Ẩn thanh cuộn ngang cho carousel nhưng vẫn cuộn được */
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
 @layer components {
-  /* Input/select/textarea dùng chung cho các form (đặt lịch, đăng nhập...) */
+  .site-container {
+    @apply mx-auto w-full max-w-site px-6 xl:px-[100px];
+  }
+
+  .page-heading {
+    @apply text-[34px] font-bold uppercase leading-[1.2] text-black sm:text-[40px] md:text-display-page;
+  }
+
+  .eyebrow-text {
+    @apply font-serif text-body-lg font-normal italic leading-none text-black md:text-eyebrow;
+  }
+
   .form-control {
     @apply w-full rounded-md border border-input bg-background px-4 py-3 text-base text-foreground outline-none transition-colors;
     @apply placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-1;

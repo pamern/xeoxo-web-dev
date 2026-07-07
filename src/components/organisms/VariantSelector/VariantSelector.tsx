@@ -45,13 +45,15 @@ export function VariantSelector({
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border hover:border-primary",
                 !hasAvailableVariant &&
-                  "cursor-not-allowed border-black/20 bg-black/5 text-black/35 line-through"
+                  "cursor-not-allowed border-black/20 bg-black/5 text-black/35 line-through",
               )}
             >
               <span
                 className={cn(
                   "h-5 w-5 rounded-full border",
-                  option.name === selectedColor.name ? "border-white/40" : "border-border"
+                  option.name === selectedColor.name
+                    ? "border-white/40"
+                    : "border-border",
                 )}
                 style={{ backgroundColor: option.hex }}
               />
@@ -64,7 +66,7 @@ export function VariantSelector({
       <div className="flex flex-col gap-3">
         <div className="flex w-full items-center justify-between gap-3 text-sm">
           <span className="font-bold">Kích thước: {selectedSize}</span>
-          <span className="flex gap-3 text-xs font-bold text-[#3568ff] underline underline-offset-4">
+          <span className="flex gap-3 text-caption font-bold text-[#3568ff] underline underline-offset-4">
             <button type="button">Bảng kích thước</button>
             <button type="button">Hướng dẫn chọn size</button>
           </span>
@@ -84,7 +86,7 @@ export function VariantSelector({
                   "cursor-not-allowed border-black/20 bg-black/5 text-black/35 line-through",
                 option.size_name === selectedSize && option.is_available
                   ? "border-primary bg-primary text-primary-foreground"
-                  : option.is_available && "border-input hover:border-primary"
+                  : option.is_available && "border-input hover:border-primary",
               )}
             >
               {option.size_name}
@@ -99,13 +101,14 @@ export function VariantSelector({
             iconSize={38}
             iconClassName={cn(
               "h-8 w-9 object-contain transition group-active:invert",
-              customSelected && "invert"
+              customSelected && "invert",
             )}
             aria-label="Custom size"
             aria-pressed={customSelected}
             className={cn(
               "group gap-1.5",
-              customSelected && "border-primary bg-primary text-primary-foreground"
+              customSelected &&
+                "border-primary bg-primary text-primary-foreground",
             )}
           >
             Custom

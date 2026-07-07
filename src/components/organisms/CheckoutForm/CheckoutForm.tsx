@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type InputHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import {
+  useEffect,
+  useState,
+  type FormEvent,
+  type InputHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { AuthModalLink } from "@/components/atoms/AuthModalLink";
@@ -17,17 +23,27 @@ function PillInput({
   className = "",
   error,
   ...props
-}: InputHTMLAttributes<HTMLInputElement> & { label: string; className?: string; error?: string }) {
+}: InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  className?: string;
+  error?: string;
+}) {
   return (
     <label className={`flex w-full flex-col gap-3 ${className}`}>
       <span className="text-base font-semibold text-black">{label}</span>
       <input
         className={`h-[61px] w-full rounded-pill border bg-white px-6 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
-          error ? "border-[#ff593d] focus:ring-red-500/15" : "border-black focus:ring-black/15"
+          error
+            ? "border-[#ff593d] focus:ring-red-500/15"
+            : "border-black focus:ring-black/15"
         }`}
         {...props}
       />
-      {error && <span className="text-sm font-semibold text-[#ff593d] px-2">{error}</span>}
+      {error && (
+        <span className="text-sm font-semibold text-[#ff593d] px-2">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -37,17 +53,27 @@ function PillTextarea({
   error,
   className = "",
   ...props
-}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string; error?: string; className?: string }) {
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & {
+  label: string;
+  error?: string;
+  className?: string;
+}) {
   return (
     <label className={`flex w-full flex-col gap-3 ${className}`}>
       <span className="text-base font-semibold text-black">{label}</span>
       <textarea
         className={`min-h-[166px] w-full resize-none rounded-[20px] border bg-white px-6 py-5 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
-          error ? "border-[#ff593d] focus:ring-red-500/15" : "border-black focus:ring-black/15"
+          error
+            ? "border-[#ff593d] focus:ring-red-500/15"
+            : "border-black focus:ring-black/15"
         }`}
         {...props}
       />
-      {error && <span className="text-sm font-semibold text-[#ff593d] px-2">{error}</span>}
+      {error && (
+        <span className="text-sm font-semibold text-[#ff593d] px-2">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -70,7 +96,9 @@ function PillSelect({
       <div className="relative w-full">
         <select
           className={`h-[61px] w-full appearance-none rounded-pill border bg-white px-6 text-base font-medium text-black outline-none transition focus:ring-2 ${
-            error ? "border-[#ff593d] focus:ring-red-500/15" : "border-black focus:ring-black/15"
+            error
+              ? "border-[#ff593d] focus:ring-red-500/15"
+              : "border-black focus:ring-black/15"
           }`}
           {...props}
         >
@@ -85,7 +113,11 @@ function PillSelect({
           className="pointer-events-none absolute right-6 top-1/2 h-2.5 w-2.5 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-black"
         />
       </div>
-      {error && <span className="text-sm font-semibold text-[#ff593d] px-2">{error}</span>}
+      {error && (
+        <span className="text-sm font-semibold text-[#ff593d] px-2">
+          {error}
+        </span>
+      )}
     </label>
   );
 }
@@ -108,9 +140,15 @@ function SquareCheckbox({
           onChange={(event) => onChange(event.target.checked)}
           className="sr-only"
         />
-        <span className={checked ? "h-[15px] w-[15px] rounded-[3px] bg-black" : "h-[15px] w-[15px] rounded-[3px] bg-white"} />
+        <span
+          className={
+            checked
+              ? "h-[15px] w-[15px] rounded-[3px] bg-black"
+              : "h-[15px] w-[15px] rounded-[3px] bg-white"
+          }
+        />
       </span>
-      <span className="text-sm leading-6 text-black/75">{children}</span>
+      <span className="text-body-sm leading-6 text-black/75">{children}</span>
     </label>
   );
 }
@@ -139,9 +177,14 @@ export function CheckoutForm() {
     createAddress,
   } = useAddresses(isMember);
 
-  const { createOrder, createdOrder, errorMessage, isSubmitting } = useCheckout();
-  const activeAddresses = addresses.filter((address) => address.is_active !== false);
-  const [selectedAddressId, setSelectedAddressId] = useState<number | undefined>();
+  const { createOrder, createdOrder, errorMessage, isSubmitting } =
+    useCheckout();
+  const activeAddresses = addresses.filter(
+    (address) => address.is_active !== false,
+  );
+  const [selectedAddressId, setSelectedAddressId] = useState<
+    number | undefined
+  >();
   const [useNewAddress, setUseNewAddress] = useState(false);
   const [addressBookOpen, setAddressBookOpen] = useState(false);
   const [setAsDefault, setSetAsDefault] = useState(true);
@@ -152,11 +195,13 @@ export function CheckoutForm() {
   const [policiesOpen, setPoliciesOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const [dbProvinces, setDbProvinces] = useState<Array<{
-    province_id: number;
-    province_name: string;
-    ward: string[] | null;
-  }>>([]);
+  const [dbProvinces, setDbProvinces] = useState<
+    Array<{
+      province_id: number;
+      province_name: string;
+      ward: string[] | null;
+    }>
+  >([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number>(79);
 
   const selectedAddress = activeAddresses.find(
@@ -173,7 +218,11 @@ export function CheckoutForm() {
         if (json.success && Array.isArray(json.data)) {
           setDbProvinces(json.data);
           // Default to TP HCM if present, otherwise first item
-          const hcm = json.data.find((p: any) => p.province_name.toLowerCase().includes("hồ chí minh") || p.province_id === 79);
+          const hcm = json.data.find(
+            (p: any) =>
+              p.province_name.toLowerCase().includes("hồ chí minh") ||
+              p.province_id === 79,
+          );
           if (hcm) {
             setSelectedProvinceId(hcm.province_id);
           } else if (json.data.length > 0) {
@@ -190,7 +239,8 @@ export function CheckoutForm() {
   useEffect(() => {
     if (!selectedAddressId && activeAddresses.length) {
       const defaultAddress =
-        activeAddresses.find((address) => address.is_default) ?? activeAddresses[0];
+        activeAddresses.find((address) => address.is_default) ??
+        activeAddresses[0];
       setSelectedAddressId(defaultAddress.address_id);
     }
   }, [activeAddresses, selectedAddressId]);
@@ -199,7 +249,6 @@ export function CheckoutForm() {
     dbProvinces
       .find((province) => province.province_id === selectedProvinceId)
       ?.ward?.map((ward) => ({ id: ward, name: ward })) ?? [];
-
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -213,22 +262,27 @@ export function CheckoutForm() {
     const formData = new FormData(event.currentTarget);
 
     if (shouldShowAddressForm) {
-      const errors = validateFields({
-        fullName: String(formData.get("fullName") ?? ""),
-        phone: String(formData.get("phone") ?? ""),
-        email: String(formData.get("email") ?? ""),
-        address: String(formData.get("address") ?? ""),
-        otherReceiver,
-        receiverName: String(formData.get("receiverName") ?? ""),
-        receiverPhone: String(formData.get("receiverPhone") ?? ""),
-      }, isMember);
+      const errors = validateFields(
+        {
+          fullName: String(formData.get("fullName") ?? ""),
+          phone: String(formData.get("phone") ?? ""),
+          email: String(formData.get("email") ?? ""),
+          address: String(formData.get("address") ?? ""),
+          otherReceiver,
+          receiverName: String(formData.get("receiverName") ?? ""),
+          receiverPhone: String(formData.get("receiverPhone") ?? ""),
+        },
+        isMember,
+      );
 
       if (Object.keys(errors).length > 0) {
         setFieldErrors(errors);
 
         // Auto scroll to first error
         const firstKey = Object.keys(errors)[0];
-        const inputEl = event.currentTarget.querySelector(`[name="${firstKey}"]`);
+        const inputEl = event.currentTarget.querySelector(
+          `[name="${firstKey}"]`,
+        );
         if (inputEl) {
           inputEl.scrollIntoView({ behavior: "smooth", block: "center" });
           (inputEl as HTMLElement).focus();
@@ -278,7 +332,9 @@ export function CheckoutForm() {
         province_id: provinceId,
         district_name: String(formData.get("ward") ?? "").trim(),
         address_detail: String(formData.get("address") ?? "").trim(),
-        email: formData.get("email") ? String(formData.get("email")).trim() : undefined,
+        email: formData.get("email")
+          ? String(formData.get("email")).trim()
+          : undefined,
       };
 
       if (isMember) {
@@ -315,7 +371,12 @@ export function CheckoutForm() {
   }
 
   return (
-    <form id="checkout-form" onSubmit={handleSubmit} noValidate className="w-full text-black">
+    <form
+      id="checkout-form"
+      onSubmit={handleSubmit}
+      noValidate
+      className="w-full text-black"
+    >
       {!isMember ? (
         <div className="rounded-[10px] bg-[#D9D9D9]/30 p-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -327,7 +388,10 @@ export function CheckoutForm() {
             </div>
             <div className="min-w-0 text-sm leading-6 text-black/75">
               Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
-              <AuthModalLink mode="register" className="font-bold underline underline-offset-2">
+              <AuthModalLink
+                mode="register"
+                className="font-bold underline underline-offset-2"
+              >
                 Tìm hiểu thêm
               </AuthModalLink>
             </div>
@@ -335,15 +399,18 @@ export function CheckoutForm() {
         </div>
       ) : null}
 
-      <h2 className="mt-10 text-2xl font-bold uppercase md:text-[32px] md:leading-tight">
+      <h2 className="mt-10 text-2xl font-bold uppercase md:text-heading-section md:leading-tight">
         Thông tin vận chuyển
       </h2>
 
       <div className="mt-4">
         <SquareCheckbox checked={acceptedPolicy} onChange={setAcceptedPolicy}>
-          Bằng việc ấn nút đặt hàng, bạn xác nhận đã đọc và hiểu về chính sách bảo mật dữ liệu cá
-          nhân của Xéo Xọ.{" "}
-          <Link href={ROUTES.POLICIES} className="font-bold underline underline-offset-2">
+          Bằng việc ấn nút đặt hàng, bạn xác nhận đã đọc và hiểu về chính sách
+          bảo mật dữ liệu cá nhân của Xéo Xọ.{" "}
+          <Link
+            href={ROUTES.POLICIES}
+            className="font-bold underline underline-offset-2"
+          >
             Tại đây
           </Link>
         </SquareCheckbox>
@@ -351,7 +418,9 @@ export function CheckoutForm() {
 
       {isMember && isLoadingAddresses && (
         <section className="mt-5 rounded-[10px] border border-black/30 bg-white px-5 py-4">
-          <p className="text-sm font-semibold text-black/70">Đang tải sổ địa chỉ...</p>
+          <p className="text-sm font-semibold text-black/70">
+            Đang tải sổ địa chỉ...
+          </p>
         </section>
       )}
 
@@ -365,12 +434,12 @@ export function CheckoutForm() {
           <div className="px-5 py-4">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-              <span className="text-base font-bold uppercase">Giao đến</span>
-              {selectedAddress.is_default && (
-                <span className="rounded-[3px] border border-[#ff593d] px-3 py-1 text-xs font-semibold text-[#ff593d]">
-                  Mặc định
-                </span>
-              )}
+                <span className="text-base font-bold uppercase">Giao đến</span>
+                {selectedAddress.is_default && (
+                  <span className="rounded-[3px] border border-[#ff593d] px-3 py-1 text-xs font-semibold text-[#ff593d]">
+                    Mặc định
+                  </span>
+                )}
               </div>
               <button
                 type="button"
@@ -407,30 +476,39 @@ export function CheckoutForm() {
                           setAddressBookOpen(false);
                         }}
                         className={`rounded-[10px] border p-4 text-left transition ${
-                          isSelected ? "border-black bg-black/[0.04]" : "border-black/15 hover:border-black/50"
+                          isSelected
+                            ? "border-black bg-black/[0.04]"
+                            : "border-black/15 hover:border-black/50"
                         }`}
                       >
                         <span className="flex items-start gap-3">
-                          <span className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 ${isSelected ? "border-[5px] border-black" : "border-black/35"}`} />
+                          <span
+                            className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 ${isSelected ? "border-[5px] border-black" : "border-black/35"}`}
+                          />
                           <span>
-                            <span className="block font-bold">{address.recipient_name} · {address.recipient_phone}</span>
-                            <span className="mt-1 block text-sm leading-5 text-black/65">{formatAddress(address)}</span>
+                            <span className="block font-bold">
+                              {address.recipient_name} ·{" "}
+                              {address.recipient_phone}
+                            </span>
+                            <span className="mt-1 block text-sm leading-5 text-black/65">
+                              {formatAddress(address)}
+                            </span>
                           </span>
                         </span>
                       </button>
                     );
                   })}
                 </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setUseNewAddress(true);
-                  setAddressBookOpen(false);
-                }}
-                className="mt-3 h-10 rounded-pill bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
-              >
-                + Thêm địa chỉ mới
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseNewAddress(true);
+                    setAddressBookOpen(false);
+                  }}
+                  className="mt-3 h-10 rounded-pill bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
+                >
+                  + Thêm địa chỉ mới
+                </button>
               </div>
             )}
           </div>
@@ -459,7 +537,8 @@ export function CheckoutForm() {
 
           {isMember && !hasSavedAddress && (
             <p className="rounded-[10px] border border-black/20 bg-white px-5 py-4 text-sm font-semibold text-black/70">
-              Bạn chưa có địa chỉ mặc định. Nhập địa chỉ giao hàng bên dưới để dùng cho đơn này.
+              Bạn chưa có địa chỉ mặc định. Nhập địa chỉ giao hàng bên dưới để
+              dùng cho đơn này.
             </p>
           )}
 
@@ -492,7 +571,10 @@ export function CheckoutForm() {
             <PillSelect
               label="Tỉnh / Thành phố"
               name="province_id"
-              options={dbProvinces.map(p => ({ id: p.province_id, name: p.province_name }))}
+              options={dbProvinces.map((p) => ({
+                id: p.province_id,
+                name: p.province_name,
+              }))}
               value={selectedProvinceId}
               onChange={(e) => setSelectedProvinceId(Number(e.target.value))}
               error={fieldErrors.province_id}
@@ -525,7 +607,11 @@ export function CheckoutForm() {
       )}
 
       <div className="mt-8">
-        <input type="hidden" name="is_other_receiver" value={String(otherReceiver)} />
+        <input
+          type="hidden"
+          name="is_other_receiver"
+          value={String(otherReceiver)}
+        />
         <SquareCheckbox checked={otherReceiver} onChange={setOtherReceiver}>
           <span className="text-base font-semibold text-black">
             Gọi người khác nhận hàng (nếu có)
@@ -573,15 +659,22 @@ export function CheckoutForm() {
             width={18}
             height={18}
             aria-hidden
-            className={policiesOpen ? "rotate-180 transition-transform" : "transition-transform"}
+            className={
+              policiesOpen
+                ? "rotate-180 transition-transform"
+                : "transition-transform"
+            }
           />
           Các chính sách mua hàng
         </button>
         {policiesOpen && (
-          <ul className="mt-4 flex flex-col gap-2 pl-7 text-sm text-black/75">
+          <ul className="mt-4 flex flex-col gap-2 pl-7 text-body-sm text-black/75">
             {POLICIES.map((policy) => (
               <li key={policy}>
-                <Link href={ROUTES.POLICIES} className="underline underline-offset-2 hover:text-black">
+                <Link
+                  href={ROUTES.POLICIES}
+                  className="underline underline-offset-2 hover:text-black"
+                >
                   {policy}
                 </Link>
               </li>
@@ -598,7 +691,8 @@ export function CheckoutForm() {
 
       {submitted && createdOrder && (
         <p className="mt-5 text-sm font-semibold text-black">
-          Đã tạo đơn {createdOrder.order_code}. Order ID: {createdOrder.order_id}.
+          Đã tạo đơn {createdOrder.order_code}. Order ID:{" "}
+          {createdOrder.order_id}.
         </p>
       )}
 

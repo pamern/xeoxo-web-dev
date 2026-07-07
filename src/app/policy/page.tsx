@@ -4,24 +4,27 @@ import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 
 const POLICIES = [
-  { slug: "customer", title: "Chinh sach khach hang" },
-  { slug: "return", title: "Chinh sach doi tra" },
-  { slug: "inspection", title: "Chinh sach kiem hang" },
-  { slug: "shipping", title: "Chinh sach van chuyen" },
-  { slug: "payment", title: "Chinh sach thanh toan" },
-  { slug: "privacy", title: "Chinh sach bao mat" },
-  { slug: "care", title: "Huong dan giat la" },
+  { slug: "customer", title: "Chính sách khách hàng" },
+  { slug: "return", title: "Chính sách đổi trả" },
+  { slug: "inspection", title: "Chính sách kiểm hàng" },
+  { slug: "shipping", title: "Chính sách vận chuyển" },
+  { slug: "payment", title: "Chính sách thanh toán" },
+  { slug: "privacy", title: "Chính sách bảo mật" },
+  { slug: "care", title: "Hướng dẫn giặt là" },
 ];
 
 export const metadata: Metadata = {
-  title: "Chinh sach",
+  title: "Chính sách",
 };
 
 export default function PolicyIndexPage() {
   return (
     <SiteLayout>
       <div className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
-        <h1 className="mb-8 text-3xl font-medium uppercase md:text-4xl">Chinh sach</h1>
+        <h1 className="mb-8 text-3xl font-medium uppercase md:text-4xl">
+          Chính sách
+        </h1>
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {POLICIES.map((policy) => (
             <Link

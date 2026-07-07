@@ -27,7 +27,8 @@ export function ProductDetail({
 }) {
   const resolvedApiProduct = apiProduct;
   const initialSize =
-    resolvedApiProduct?.sizes.find((option) => option.is_available)?.size_name ?? "";
+    resolvedApiProduct?.sizes.find((option) => option.is_available)
+      ?.size_name ?? "";
   const [size, setSize] = useState(initialSize);
   const [color, setColor] = useState(product.colors[0]);
   const [quantity, setQuantity] = useState(1);
@@ -36,13 +37,21 @@ export function ProductDetail({
   const [errorMessage, setErrorMessage] = useState<string>();
   const [isAdding, setIsAdding] = useState(false);
 
-  const selectedVariant = resolvedApiProduct?.sizes.find((option) => option.size_name === size);
-  const price = selectedVariant?.price ?? resolvedApiProduct?.price ?? product.salePrice ?? product.price;
+  const selectedVariant = resolvedApiProduct?.sizes.find(
+    (option) => option.size_name === size,
+  );
+  const price =
+    selectedVariant?.price ??
+    resolvedApiProduct?.price ??
+    product.salePrice ??
+    product.price;
   const stockQuantity = selectedVariant?.stock_quantity ?? 0;
   const maxQuantity = Math.max(1, stockQuantity);
 
   useEffect(() => {
-    setQuantity((current) => Math.min(Math.max(1, current), Math.max(1, maxQuantity)));
+    setQuantity((current) =>
+      Math.min(Math.max(1, current), Math.max(1, maxQuantity)),
+    );
   }, [maxQuantity, size]);
 
   useEffect(() => {
@@ -52,7 +61,8 @@ export function ProductDetail({
     );
     if (!current) {
       setSize(
-        resolvedApiProduct.sizes.find((option) => option.is_available)?.size_name ?? "",
+        resolvedApiProduct.sizes.find((option) => option.is_available)
+          ?.size_name ?? "",
       );
     }
     if (resolvedApiProduct.color) {
@@ -74,18 +84,23 @@ export function ProductDetail({
           quantity,
         });
         setAddedItem(
-          cart.items.find((item) => item.variant_id === selectedVariant.variant_id) ??
-            null,
+          cart.items.find(
+            (item) => item.variant_id === selectedVariant.variant_id,
+          ) ?? null,
         );
         window.dispatchEvent(new Event("xeoxo-cart-updated"));
       } else {
-        throw new Error("Vui lòng chọn size có sẵn trước khi thêm vào giỏ hàng.");
+        throw new Error(
+          "Vui lòng chọn size có sẵn trước khi thêm vào giỏ hàng.",
+        );
       }
       setAdded(true);
       window.setTimeout(() => setAdded(false), 2000);
     } catch (error) {
       setErrorMessage(
-        error instanceof Error ? error.message : "Không thể thêm sản phẩm vào giỏ.",
+        error instanceof Error
+          ? error.message
+          : "Không thể thêm sản phẩm vào giỏ.",
       );
     } finally {
       setIsAdding(false);
@@ -114,7 +129,7 @@ export function ProductDetail({
 
         <div className="py-5">
           <div className="flex flex-wrap items-end gap-3">
-            <span className="text-[32px] font-bold leading-none md:text-[36px]">
+            <span className="text-heading-section font-bold leading-none md:text-[36px]">
               {formatPrice(price)}
             </span>
             {product.salePrice && (
@@ -124,7 +139,13 @@ export function ProductDetail({
             )}
           </div>
           <div className="mt-3 flex items-center gap-2 text-base font-medium">
-            <Image src="/icons/freeship.svg" alt="" width={26} height={18} aria-hidden />
+            <Image
+              src="/icons/freeship.svg"
+              alt=""
+              width={26}
+              height={18}
+              aria-hidden
+            />
             Freeship
           </div>
         </div>
@@ -169,23 +190,29 @@ export function ProductDetail({
             onClick={handleAdd}
             variant="cart"
             size="cart"
-            disabled={
-              isAdding ||
-              !selectedVariant?.is_available
-            }
+            disabled={isAdding || !selectedVariant?.is_available}
             className="min-w-0"
           >
-            <Image src="/icons/cart.svg" alt="" width={28} height={28} aria-hidden className="invert" />
+            <Image
+              src="/icons/cart.svg"
+              alt=""
+              width={28}
+              height={28}
+              aria-hidden
+              className="invert"
+            />
             {added ? "Đã thêm vào giỏ" : "Thêm vào giỏ hàng"}
           </Button>
         </div>
 
         {selectedVariant && (
-          <p className={`mt-3 rounded-[8px] px-4 py-2 text-sm font-semibold ${
-            stockQuantity > 0
-              ? "bg-emerald-50 text-emerald-800"
-              : "bg-red-50 text-red-600"
-          }`}>
+          <p
+            className={`mt-3 rounded-[8px] px-4 py-2 text-sm font-semibold ${
+              stockQuantity > 0
+                ? "bg-emerald-50 text-emerald-800"
+                : "bg-red-50 text-red-600"
+            }`}
+          >
             {stockQuantity > 0
               ? `Còn ${stockQuantity} sản phẩm trong kho`
               : "Sản phẩm đã hết hàng"}
@@ -193,30 +220,48 @@ export function ProductDetail({
         )}
 
         {errorMessage && (
-          <p role="alert" className="mt-3 rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+          <p
+            role="alert"
+            className="mt-3 rounded-[8px] border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700"
+          >
             {errorMessage}
           </p>
         )}
 
-        <TextActionButton
-          type="button"
-          className="mx-auto mt-5 text-base"
-        >
+        <TextActionButton type="button" className="mx-auto mt-5 text-base">
           Mô tả sản phẩm
         </TextActionButton>
 
         <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
           <div className="grid gap-x-10 gap-y-3 rounded-[10px] bg-[#ededed] px-7 py-4 sm:grid-cols-2">
-            <ProductService icon="/icons/freeship.svg" title="Freeship" text="Cho đơn từ 300k" />
-            <ProductService icon="/icons/72h.svg" title="Hỗ trợ 72h" text="Đổi size hoặc đổi mẫu" />
-            <ProductService icon="/icons/phone-sound.svg" title="Hotline" text="039.412.6656 hỗ trợ 24/7" />
-            <ProductService icon="/icons/tailor.svg" title="Hỗ trợ may đo" text="Theo số đo cá nhân" />
+            <ProductService
+              icon="/icons/freeship.svg"
+              title="Freeship"
+              text="Cho đơn từ 300k"
+            />
+            <ProductService
+              icon="/icons/72h.svg"
+              title="Hỗ trợ 72h"
+              text="Đổi size hoặc đổi mẫu"
+            />
+            <ProductService
+              icon="/icons/phone-sound.svg"
+              title="Hotline"
+              text="039.412.6656 hỗ trợ 24/7"
+            />
+            <ProductService
+              icon="/icons/tailor.svg"
+              title="Hỗ trợ may đo"
+              text="Theo số đo cá nhân"
+            />
           </div>
         </div>
 
         {relatedProducts.length > 0 && (
           <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
-            <h2 className="mb-3 text-lg font-bold uppercase">Có thể phù hợp với bạn</h2>
+            <h2 className="mb-3 text-lg font-bold uppercase">
+              Có thể phù hợp với bạn
+            </h2>
             <div className="grid grid-cols-3 gap-4">
               {relatedProducts.slice(0, 3).map((item) => (
                 <CompactProduct key={item.id} product={item} />
@@ -236,9 +281,15 @@ function ProductNotice({ icon, title }: { icon: string; title: string }) {
         <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d]">
           <Image src={icon} alt="" width={22} height={22} aria-hidden />
         </span>
-        <span className="text-sm font-medium">{title}</span>
+        <span className="text-body-sm font-medium">{title}</span>
       </span>
-      <Image src="/icons/chevron-down.svg" alt="" width={14} height={8} aria-hidden />
+      <Image
+        src="/icons/chevron-down.svg"
+        alt=""
+        width={14}
+        height={8}
+        aria-hidden
+      />
     </div>
   );
 }
@@ -309,7 +360,11 @@ function QuantityPill({
 }) {
   return (
     <div className="flex h-[54px] items-center justify-between px-1 text-lg">
-      <button type="button" aria-label="Giảm số lượng" onClick={() => onChange(Math.max(1, value - 1))}>
+      <button
+        type="button"
+        aria-label="Giảm số lượng"
+        onClick={() => onChange(Math.max(1, value - 1))}
+      >
         −
       </button>
       <span className="font-medium">{value}</span>
@@ -338,11 +393,20 @@ function ProductService({
   return (
     <div className="grid grid-cols-[72px_minmax(0,1fr)] items-center gap-4">
       <span className="flex h-[47px] w-[72px] items-center justify-center rounded-[9px] border-[3px] border-black bg-white">
-        <Image src={icon} alt="" width={36} height={32} aria-hidden className="max-h-8 w-auto" />
+        <Image
+          src={icon}
+          alt=""
+          width={36}
+          height={32}
+          aria-hidden
+          className="max-h-8 w-auto"
+        />
       </span>
       <span className="flex flex-col gap-1">
-        <span className="text-xs font-bold">{title}</span>
-        <span className="text-[11px] font-light leading-relaxed text-foreground/80">{text}</span>
+        <span className="text-caption font-bold">{title}</span>
+        <span className="text-[11px] font-light leading-relaxed text-foreground/80">
+          {text}
+        </span>
       </span>
     </div>
   );
@@ -353,8 +417,12 @@ function CompactProduct({ product }: { product: Product }) {
     <div className="flex flex-col gap-2">
       <MiniProductImage image={product.images[0]} alt={product.name} />
       <div>
-        <h3 className="line-clamp-2 text-sm font-light leading-snug">{product.name}</h3>
-        <p className="text-sm font-bold">{formatPrice(product.salePrice ?? product.price)}</p>
+        <h3 className="line-clamp-2 text-body-sm font-light leading-snug">
+          {product.name}
+        </h3>
+        <p className="text-body-sm font-bold">
+          {formatPrice(product.salePrice ?? product.price)}
+        </p>
       </div>
     </div>
   );
@@ -363,7 +431,13 @@ function CompactProduct({ product }: { product: Product }) {
 function MiniProductImage({ image, alt }: { image: string; alt: string }) {
   return (
     <div className="group relative aspect-[175/236] overflow-hidden bg-secondary">
-      <Image src={image} alt={alt} fill sizes="175px" className="object-cover" />
+      <Image
+        src={image}
+        alt={alt}
+        fill
+        sizes="175px"
+        className="object-cover"
+      />
       <IconButton
         iconSrc="/icons/add-cart.svg"
         iconSize={17}

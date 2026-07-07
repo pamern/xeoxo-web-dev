@@ -25,8 +25,8 @@ export function VipBanner({
       <span className="flex items-center gap-3">
         <Image src="/icons/vip.svg" alt="" width={20} height={20} aria-hidden />
         <span className="flex flex-col">
-          <span className="text-base font-medium">{title}</span>
-          {description && <span className="text-sm font-light text-foreground/70">{description}</span>}
+          <span className="text-body-sm font-medium">{title}</span>
+          {description && <span className="text-body-sm font-light text-foreground/70">{description}</span>}
         </span>
       </span>
       <Image src="/icons/chevron-down.svg" alt="" width={14} height={8} aria-hidden />

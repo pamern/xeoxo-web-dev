@@ -27,7 +27,7 @@ function VariantSelect({
         aria-label={ariaLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[38px] appearance-none rounded-pill border border-black bg-white pl-4 pr-9 text-sm font-medium text-black outline-none transition focus:ring-2 focus:ring-black/15"
+        className="h-[38px] appearance-none rounded-pill border border-black bg-white pl-4 pr-9 text-body-sm font-medium text-black outline-none transition focus:ring-2 focus:ring-black/15"
       >
         {list.map((option) => (
           <option key={option} value={option}>
@@ -137,7 +137,7 @@ export function CartItem({
         <button
           type="button"
           onClick={onRemove}
-          className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-black/60 transition hover:text-black"
+          className="inline-flex items-center gap-1.5 self-start text-body-sm font-medium text-black/60 transition hover:text-black"
         >
           <Image src="/icons/xoa.svg" alt="" width={16} height={16} aria-hidden />
           Xóa
