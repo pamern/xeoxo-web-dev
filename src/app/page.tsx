@@ -8,65 +8,17 @@ import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 import { COLLECTIONS } from "@/data/catalog";
 import {
+  getCategoryProductSections,
   getHomepageCollections,
-  getHomepageProductSections,
 } from "@/features/homepage/homepage.service";
 import type { HomepageProductSection } from "@/types/homepage.types";
 import type { Collection } from "@/types/product.types";
 import Image from "next/image";
 import Link from "next/link";
 
-// Cấu hình các khối danh mục trên trang chủ — banner + hàng sản phẩm.
-const HOME_SECTIONS = [
-  {
-    title: "ÁO ĐẦM - VÁY",
-    categorySlug: "ao-dam-vay",
-    productCategorySlugs: [
-      "dam-dai",
-      "dam-2-day",
-      "dam-da-hoi",
-      "dam-dao-pho",
-      "chan-vay",
-    ],
-    gender: "nu" as const,
-    image: "/images/cat-dam-vay.png",
-    productTitle: "SẢN PHẨM ÁO ĐẦM - VÁY",
-  },
-  {
-    title: "ÁO DÀI",
-    categorySlug: "ao-dai-nu",
-    productCategorySlugs: ["ao-dai"],
-    gender: "nu" as const,
-    image: "/images/cat-ao-dai.png",
-    productTitle: "SẢN PHẨM ÁO DÀI",
-  },
-  {
-    title: "ÁO DÀI ĐÔI - CƯỚI",
-    categorySlug: "ao-cuoi-nu",
-    productCategorySlugs: [
-      "ao-dai-4-ta",
-      "ao-dai-cuc-lech",
-      "ao-dai-ngan-cuc-lenh",
-      "ao-dai-ngan-cuc-thang",
-      "ao-dai-suong-tay-loe-dai",
-      "ao-dai-vat-cheo",
-    ],
-    gender: "nu" as const,
-    image: "/images/cat-ao-cuoi.png",
-    productTitle: "SẢN PHẨM ÁO DÀI ĐÔI - CƯỚI",
-  },
-];
-
 async function getHomePageProductSections() {
   try {
-    return await getHomepageProductSections({
-      categorySlugs: [
-        ...new Set(
-          HOME_SECTIONS.flatMap((section) => section.productCategorySlugs),
-        ),
-      ],
-      limit: 4,
-    });
+    return await getCategoryProductSections({ limit: 4 });
   } catch {
     return [] satisfies HomepageProductSection[];
   }
@@ -81,27 +33,45 @@ async function getHomePageCollections() {
   }
 }
 
+function getHomepageCategoryBannerImage(section: HomepageProductSection) {
+  const normalized = `${section.categorySlug} ${section.categoryName}`.toLowerCase();
+
+  if (
+    normalized.includes("đầm") ||
+    normalized.includes("dam") ||
+    normalized.includes("váy") ||
+    normalized.includes("vay")
+  ) {
+    return "/images/cat-dam-vay.png";
+  }
+
+  if (
+    normalized.includes("cưới") ||
+    normalized.includes("cuoi") ||
+    normalized.includes("đôi") ||
+    normalized.includes("doi")
+  ) {
+    return "/images/cat-ao-cuoi.png";
+  }
+
+  return "/images/cat-ao-dai.png";
+}
+
+function formatProductSectionTitle(categoryName: string) {
+  return `Sản phẩm ${categoryName}`;
+}
+
 export default async function HomePage() {
   const [productSections, collections] = await Promise.all([
     getHomePageProductSections(),
     getHomePageCollections(),
   ]);
-  const productSectionsBySlug = new Map(
-    productSections.map((section) => [section.categorySlug, section]),
-  );
-  const getSectionProducts = (section: (typeof HOME_SECTIONS)[number]) =>
-    section.productCategorySlugs
-      .flatMap(
-        (categorySlug) =>
-          productSectionsBySlug.get(categorySlug)?.products ?? [],
-      )
-      .slice(0, 4);
+  const homepageCollections = collections.length > 0 ? collections : COLLECTIONS;
 
   return (
     <SiteLayout>
-      <HeroCarousel slides={COLLECTIONS} />
+      <HeroCarousel slides={homepageCollections} />
 
-      {/* Dải bộ sưu tập nổi bật */}
       <section className="relative w-full overflow-hidden py-8">
         <Image
           src="/images/bg-gia-nhap-btn.png"
@@ -112,7 +82,7 @@ export default async function HomePage() {
           aria-hidden
         />
         <div className="no-scrollbar relative mx-auto flex w-full max-w-site gap-5 overflow-x-auto px-6 py-10 xl:px-[100px]">
-          {collections.map((collection) => (
+          {homepageCollections.map((collection) => (
             <CollectionCard
               key={collection.slug}
               collection={collection}
@@ -155,17 +125,17 @@ export default async function HomePage() {
         </Link>
       </section>
 
-      {HOME_SECTIONS.map((section) => (
+      {productSections.map((section) => (
         <div key={section.categorySlug}>
           <CategoryBanner
-            title={section.title}
-            image={section.image}
+            title={section.categoryName}
+            image={getHomepageCategoryBannerImage(section)}
             href={ROUTES.CATEGORY(section.categorySlug)}
           />
 
           <ProductRow
-            title={section.productTitle}
-            products={getSectionProducts(section)}
+            title={formatProductSectionTitle(section.categoryName)}
+            products={section.products}
             actionHref={ROUTES.CATEGORY(section.categorySlug)}
             quickAddOnHover
           />

@@ -8,6 +8,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 import { AuthModal } from "@/components/organisms/AuthModal";
+import { useCartDrawer } from "@/components/providers/CartDrawerProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useLatestCollectionHighlight } from "@/hooks/useLatestCollectionHighlight";
@@ -57,6 +58,7 @@ export function SiteHeader() {
   const [accountMenuAnchor, setAccountMenuAnchor] =
     useState<AccountMenuAnchor>(null);
   const [accountSidebarOpen, setAccountSidebarOpen] = useState(false);
+  const { openDrawer: openCartDrawer } = useCartDrawer();
   const utilityAccountMenuRef = useRef<HTMLDivElement>(null);
   const mainAccountMenuRef = useRef<HTMLDivElement>(null);
   const authMode = searchParams.get("auth");
@@ -317,8 +319,9 @@ export function SiteHeader() {
                   </div>
                 )}
               </div>
-              <Link
-                href={ROUTES.CART}
+              <button
+                type="button"
+                onClick={openCartDrawer}
                 aria-label="Giỏ hàng"
                 className="relative"
               >
@@ -334,7 +337,7 @@ export function SiteHeader() {
                     {cartCount}
                   </span>
                 )}
-              </Link>
+              </button>
             </div>
           </div>
         </div>
