@@ -1705,7 +1705,7 @@ endpoints:
   screen: null
   type: STANDARD
   name: Danh sách đơn hàng đã mua
-  description: 'Member xem danh sách đơn hàng theo 5 tab: Tất cả, Vận chuyển, Hoàn thành, Đã hủy, Hoàn hàng.'
+  description: 'Member xem danh sách đơn hàng theo 5 tab: Tất cả, Vận chuyển, Hoàn thành, Đã hủy, Đã hoàn trả.'
   resource: orders
   method: GET
   endpoint: /api/v1/orders

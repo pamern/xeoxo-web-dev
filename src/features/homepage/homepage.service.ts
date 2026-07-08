@@ -20,6 +20,7 @@ const DEFAULT_PRODUCT_SIZES = ["S", "M", "L", "XL"];
 const COLLECTION_STORAGE_PREFIX = "collections/";
 const COLLECTION_COVER_NGANG_PATTERN = /cover_ngang/i;
 const PRODUCT_CARD_VIEW_NAME = "v_product_line_card";
+const COLLECTION_VERTICAL_COVER_FILE = "cover.webp";
 
 const EMPTY_PRODUCT_COLORS = [] as Product["colors"];
 
@@ -178,6 +179,128 @@ export async function getHomepageProductSections({
   )();
 }
 
+async function getProductLinesStockStatus(
+  supabase: ReturnType<typeof createAdminClient>,
+  productLineIds: number[],
+): Promise<Map<number, boolean>> {
+  const stockStatusMap = new Map<number, boolean>();
+  if (productLineIds.length === 0) return stockStatusMap;
+
+  // Set default to false for all input IDs
+  productLineIds.forEach((id) => stockStatusMap.set(id, false));
+
+  // 1. Get components for these product lines
+  const { data: components, error: compError } = await supabase
+    .schema("catalog")
+    .from("product_component")
+    .select("component_id, product_line_id")
+    .in("product_line_id", productLineIds);
+
+  if (compError || !components || components.length === 0) {
+    return stockStatusMap;
+  }
+
+  const componentIds = components.map((c) => Number(c.component_id));
+
+  // 2. Get active variants for these components
+  const { data: variants, error: varError } = await supabase
+    .schema("catalog")
+    .from("product_variant")
+    .select("variant_id, component_id, size_option_id")
+    .eq("status", "ACTIVE")
+    .in("component_id", componentIds);
+
+  if (varError || !variants || variants.length === 0) {
+    return stockStatusMap;
+  }
+
+  const variantIds = variants.map((v) => Number(v.variant_id));
+
+  // 3. Get total inventory quantity per variant (sum across branches)
+  const { data: inventory, error: invError } = await supabase
+    .schema("inventory")
+    .from("inventory")
+    .select("variant_id, quantity")
+    .in("variant_id", variantIds);
+
+  if (invError || !inventory) {
+    return stockStatusMap;
+  }
+
+  // Map variant_id to total quantity
+  const variantQuantities = new Map<number, number>();
+  for (const item of inventory) {
+    const vId = Number(item.variant_id);
+    variantQuantities.set(vId, (variantQuantities.get(vId) ?? 0) + Number(item.quantity));
+  }
+
+  // Map component_id to product_line_id
+  const compToLine = new Map<number, number>();
+  for (const c of components) {
+    compToLine.set(Number(c.component_id), Number(c.product_line_id));
+  }
+
+  // List of required components for each product line
+  const lineComponents = new Map<number, Set<number>>();
+  for (const c of components) {
+    const pId = Number(c.product_line_id);
+    if (!lineComponents.has(pId)) {
+      lineComponents.set(pId, new Set());
+    }
+    lineComponents.get(pId)!.add(Number(c.component_id));
+  }
+
+  // Group variants by product line and size_option_id
+  const lineSizeStock = new Map<number, Map<number, Set<number>>>();
+
+  for (const v of variants) {
+    const compId = Number(v.component_id);
+    const pId = compToLine.get(compId);
+    if (pId === undefined) continue;
+
+    const sizeOptId = v.size_option_id ? Number(v.size_option_id) : 0;
+    const qty = variantQuantities.get(Number(v.variant_id)) ?? 0;
+
+    if (qty > 0) {
+      if (!lineSizeStock.has(pId)) {
+        lineSizeStock.set(pId, new Map());
+      }
+      const sizeMap = lineSizeStock.get(pId)!;
+      if (!sizeMap.has(sizeOptId)) {
+        sizeMap.set(sizeOptId, new Set());
+      }
+      sizeMap.get(sizeOptId)!.add(compId);
+    }
+  }
+
+  // Check if at least one size has ALL required components in stock
+  for (const pId of productLineIds) {
+    const requiredComps = lineComponents.get(pId) ?? new Set<number>();
+    const sizeMap = lineSizeStock.get(pId);
+    let inStock = false;
+
+    if (sizeMap && requiredComps.size > 0) {
+      for (const stockedComps of sizeMap.values()) {
+        let allRequiredStocked = true;
+        for (const reqCompId of requiredComps) {
+          if (!stockedComps.has(reqCompId)) {
+            allRequiredStocked = false;
+            break;
+          }
+        }
+        if (allRequiredStocked) {
+          inStock = true;
+          break;
+        }
+      }
+    }
+
+    stockStatusMap.set(pId, inStock);
+  }
+
+  return stockStatusMap;
+}
+
 async function fetchHomepageProductSections(
   categorySlugs: string[],
   limit: number,
@@ -210,9 +333,17 @@ async function fetchHomepageProductSections(
     supabase,
     categoryRows.map((category) => category.category_id),
   );
+  const productLineIds = [...new Set(rows.map((row) => Number(row.product_line_id)))];
+  const stockStatusMap = await getProductLinesStockStatus(supabase, productLineIds);
+
+  const sortedRows = [...rows].sort((a, b) => {
+    const aStock = stockStatusMap.get(Number(a.product_line_id)) ? 1 : 0;
+    const bStock = stockStatusMap.get(Number(b.product_line_id)) ? 1 : 0;
+    return bStock - aStock;
+  });
   const rowsByCategory = new Map<string, HomepageProductCardRow[]>();
 
-  rows.forEach((row) => {
+  sortedRows.forEach((row) => {
     const currentRows = rowsByCategory.get(row.category_slug) ?? [];
     if (currentRows.length < limit) {
       currentRows.push(row);
@@ -331,9 +462,17 @@ async function fetchCategoryProductSections(
     supabase,
     categoryRows?.map((category) => category.category_id),
   );
+  const productLineIds = [...new Set(rows.map((row) => Number(row.product_line_id)))];
+  const stockStatusMap = await getProductLinesStockStatus(supabase, productLineIds);
+
+  const sortedRows = [...rows].sort((a, b) => {
+    const aStock = stockStatusMap.get(Number(a.product_line_id)) ? 1 : 0;
+    const bStock = stockStatusMap.get(Number(b.product_line_id)) ? 1 : 0;
+    return bStock - aStock;
+  });
   const rowsByCategory = new Map<number, HomepageProductCardRow[]>();
 
-  rows.forEach((row) => {
+  sortedRows.forEach((row) => {
     const currentRows = rowsByCategory.get(row.category_id) ?? [];
     if (currentRows.length < limit) {
       currentRows.push(row);
@@ -517,15 +656,22 @@ async function fetchNewestDepartmentProducts(
 
 export async function getHomepageCollections({
   limit = 5,
-}: { limit?: number } = {}): Promise<Collection[]> {
+  coverVariant = "horizontal",
+}: {
+  limit?: number;
+  coverVariant?: "horizontal" | "vertical";
+} = {}): Promise<Collection[]> {
   return unstable_cache(
-    () => fetchHomepageCollections(limit),
-    ["homepage-collections", String(limit)],
+    () => fetchHomepageCollections(limit, coverVariant),
+    ["homepage-collections", String(limit), coverVariant],
     { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
   )();
 }
 
-async function fetchHomepageCollections(limit: number): Promise<Collection[]> {
+async function fetchHomepageCollections(
+  limit: number,
+  coverVariant: "horizontal" | "vertical",
+): Promise<Collection[]> {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .schema("catalog")
@@ -551,7 +697,9 @@ async function fetchHomepageCollections(limit: number): Promise<Collection[]> {
 
   const coverStorageKeys = await Promise.all(
     rows.map((row) =>
-      findCollectionCoverNgangStorageKey(supabase, row.media?.storage_key),
+      coverVariant === "vertical"
+        ? findCollectionVerticalCoverStorageKey(supabase, row.media?.storage_key)
+        : findCollectionCoverNgangStorageKey(supabase, row.media?.storage_key),
     ),
   );
 
@@ -567,13 +715,13 @@ async function fetchHomepageCollections(limit: number): Promise<Collection[]> {
         ) ?? "/images/placeholder.png",
       description: row.description ?? "",
     },
-    hasCoverNgang: Boolean(coverStorageKeys[index]),
+    hasPreferredCover: Boolean(coverStorageKeys[index]),
   }));
 
-  const prioritizedCollections = collections.some((item) => item.hasCoverNgang)
+  const prioritizedCollections = collections.some((item) => item.hasPreferredCover)
     ? [
-        ...collections.filter((item) => item.hasCoverNgang),
-        ...collections.filter((item) => !item.hasCoverNgang),
+        ...collections.filter((item) => item.hasPreferredCover),
+        ...collections.filter((item) => !item.hasPreferredCover),
       ]
     : collections;
 
@@ -587,6 +735,31 @@ function getCollectionStorageFolder(storageKey: string | null | undefined) {
 
   const [, folder] = storageKey.split("/");
   return folder ? `${COLLECTION_STORAGE_PREFIX}${folder}` : null;
+}
+
+async function findCollectionVerticalCoverStorageKey(
+  supabase: ReturnType<typeof createAdminClient>,
+  storageKey: string | null | undefined,
+) {
+  const folder = getCollectionStorageFolder(storageKey);
+
+  if (!folder) {
+    return null;
+  }
+
+  const { data, error } = await supabase.storage
+    .from(PRODUCT_MEDIA_BUCKET)
+    .list(folder, { limit: 20 });
+
+  if (error) {
+    return null;
+  }
+
+  const verticalCoverFile = data?.find(
+    (file) => file.name.toLowerCase() === COLLECTION_VERTICAL_COVER_FILE,
+  );
+
+  return verticalCoverFile ? `${folder}/${verticalCoverFile.name}` : null;
 }
 
 async function findCollectionCoverNgangStorageKey(
