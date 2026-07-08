@@ -8,6 +8,10 @@ import { IconButton } from "@/components/atoms/IconButton";
 import { TextActionButton } from "@/components/atoms/TextActionButton";
 import { StarRating } from "@/components/atoms/StarRating";
 import { ProductImageGallery } from "@/components/organisms/ProductImageGallery";
+import { AppointmentModal } from "@/components/organisms/AppointmentModal";
+import { CustomizeModal } from "@/components/organisms/CustomizeModal";
+import { SizeGuideModal } from "@/components/organisms/SizeGuideModal";
+import { SizeRecommendationModal } from "@/components/organisms/SizeRecommendationModal";
 import { VariantSelector } from "@/components/organisms/VariantSelector";
 import { ROUTES } from "@/constants/routes";
 import { formatPrice } from "@/lib/utils";
@@ -15,6 +19,19 @@ import { cartService } from "@/services/cart.service";
 import type { CartItemDto } from "@/types/cart.types";
 import type { ProductDetailDto } from "@/types/product-api.types";
 import type { Product } from "@/types/product.types";
+
+const APPOINTMENT_BRANCHES = [
+  { label: "XEO XO Hà Nội", value: "ha-noi" },
+  { label: "XEO XO Sài Gòn", value: "sai-gon" },
+];
+
+const APPOINTMENT_TIME_SLOTS = [
+  { id: "09:00", label: "09:00" },
+  { id: "10:30", label: "10:30" },
+  { id: "14:00", label: "14:00" },
+  { id: "15:30", label: "15:30" },
+  { id: "17:00", label: "17:00" },
+];
 
 export function ProductDetail({
   product,
@@ -36,6 +53,10 @@ export function ProductDetail({
   const [addedItem, setAddedItem] = useState<CartItemDto | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [isAdding, setIsAdding] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [isSizeRecommendationOpen, setIsSizeRecommendationOpen] = useState(false);
+  const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
 
   const selectedVariant = resolvedApiProduct?.sizes.find(
     (option) => option.size_name === size,
@@ -112,6 +133,51 @@ export function ProductDetail({
       {added && addedItem && (
         <AddToCartPopup item={addedItem} onClose={() => setAdded(false)} />
       )}
+      {isSizeGuideOpen && (
+        <SizeGuideModal
+          gender={product.gender}
+          onClose={() => setIsSizeGuideOpen(false)}
+        />
+      )}
+      {isSizeRecommendationOpen && (
+        <SizeRecommendationModal
+          gender={product.gender}
+          sizes={resolvedApiProduct.sizes}
+          onOpenAppointment={() => {
+            setIsSizeRecommendationOpen(false);
+            setIsAppointmentOpen(true);
+          }}
+          onOpenCustomize={() => {
+            setIsSizeRecommendationOpen(false);
+            setIsCustomizeOpen(true);
+          }}
+          onClose={() => setIsSizeRecommendationOpen(false)}
+        />
+      )}
+      {isAppointmentOpen && (
+        <div
+          className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto bg-black/50 p-3 backdrop-blur-[1px] sm:p-5"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsAppointmentOpen(false);
+          }}
+        >
+          <div className="w-full max-w-[1240px]">
+            <AppointmentModal
+              branches={APPOINTMENT_BRANCHES}
+              timeSlots={APPOINTMENT_TIME_SLOTS}
+              onClose={() => setIsAppointmentOpen(false)}
+              className="max-w-[1240px]"
+            />
+          </div>
+        </div>
+      )}
+      {isCustomizeOpen && (
+        <CustomizeModal
+          gender={product.gender}
+          basePrice={price}
+          onClose={() => setIsCustomizeOpen(false)}
+        />
+      )}
 
       <ProductImageGallery images={product.images} alt={product.name} />
 
@@ -163,21 +229,10 @@ export function ProductDetail({
             selectedSize={size}
             onColorChange={setColor}
             onSizeChange={setSize}
+            onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
+            onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
+            onOpenCustomize={() => setIsCustomizeOpen(true)}
           />
-        </div>
-
-        <div className="mt-5 flex flex-wrap items-center gap-4">
-          <Button
-            type="button"
-            variant="floralPill"
-            size="floral"
-            backgroundImage="/images/bg-gia-nhap-btn.png"
-          >
-            Đặt lịch may đo
-          </Button>
-          <Button type="button" variant="secondaryPill" size="pill">
-            Chọn size nhanh
-          </Button>
         </div>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-[95px_minmax(0,1fr)]">

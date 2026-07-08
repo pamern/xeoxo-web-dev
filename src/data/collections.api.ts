@@ -161,6 +161,10 @@ export function mapApiProductLinesToProducts(productLines: ApiProductLine[] = []
       readLowestVariantPrice(components) ??
       0;
 
+    const genderValue = readString(productLine, ["gender", "department"])
+      ?.trim()
+      .toLowerCase();
+
     return {
       id: String(productLineId),
       slug:
@@ -170,7 +174,9 @@ export function mapApiProductLinesToProducts(productLines: ApiProductLine[] = []
       price,
       images: [image],
       categorySlug: readString(productLine, ["category_slug"]) ?? "ao-dam-vay",
-      gender: readString(productLine, ["gender"]) === "nam" ? "nam" : "nu",
+      gender: ["nam", "men", "male"].includes(genderValue ?? "")
+        ? "nam"
+        : "nu",
       collectionSlug: readString(productLine, ["collection_slug"]) ?? "",
       description: readString(productLine, ["description"]) ?? "",
       sizes: [],

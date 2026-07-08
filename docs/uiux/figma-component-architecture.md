@@ -201,6 +201,8 @@ CheckoutPage / Gio Hang
 | `StarsBanner` | Shared star/floral marketing band | Home, Catalog | none | `{ title?: string; background?: string }` |
 | `ProductDetail` | PDP purchase panel | ProductDetailPage | `Button`, selectors | `{ product: Product }` |
 | `SizeGuide` | Size tables | ProductDetail/Auth future | tabs/table | `{ defaultGender?: Gender }` |
+| `SizeGuideModal` | Product-specific male/female size guide overlay | ProductDetail | responsive guide image, close button | `{ gender: Gender; onClose: () => void }` |
+| `SizeRecommendationModal` | Measurement form, client-side size recommendation, size table and tailoring CTA | ProductDetail | measurement fields, recommendation result, size chart | `{ gender; sizes; onSelectSize; onClose }` |
 | `AuthShell` | Auth modal/page shell | Auth pages | form children | `{ children: React.ReactNode; footer: React.ReactNode; onGoogleClick?: () => void; onFacebookClick?: () => void }` |
 | `AuthModal` | Auth overlay + mode switch | `SiteHeader` | `AuthShell`, `LoginForm`, `RegisterForm` | `{ mode: 'login' \| 'register'; onClose: () => void; onModeChange: (mode) => void }` |
 
@@ -219,7 +221,7 @@ CheckoutPage / Gio Hang
 | `PasswordField` | Password input with eye toggle | Auth | `TextField`, icon | `{ label: string; name: string; value?: string; error?: string }` |
 | `OAuthButton` | Google/Facebook auth button | Auth forms | logo + text | `{ provider: 'google' \| 'facebook'; onClick?: () => void }` |
 | `AuthBenefitCard` | Auth benefits | AuthShell | icon/text | `{ icon: string; title: string; description: string }` |
-| `AppointmentForm` | Booking flow | AppointmentPage | fields/pickers | `{ branches: Branch[]; timeSlots: TimeSlot[]; onSubmit: (values: AppointmentValues) => void }` |
+| `AppointmentForm` | Booking flow with customizable native date picker (past dates disabled) | AppointmentPage, product size recommendation modal | fields/pickers | `{ branches: Branch[]; timeSlots: TimeSlot[]; onSubmit: (values: AppointmentValues) => void }` |
 | `SelectField` | Dropdown field | Appointment/Checkout | label/options | `{ label: string; options: Option[]; value?: string; onChange: (value: string) => void }` |
 | `DatePickerField` | Date selection | Appointment | label/calendar | `{ label: string; value?: Date; minDate?: Date; onChange: (date: Date) => void }` |
 | `TimeSlotPicker` | Time slot selection | Appointment | option chips | `{ slots: TimeSlot[]; value?: string; onChange: (id: string) => void }` |
