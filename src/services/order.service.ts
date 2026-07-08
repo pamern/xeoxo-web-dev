@@ -1,5 +1,7 @@
 import { API } from "@/constants/routes";
 import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
+import type { AccountOrder } from "@/types/account-order.types";
+import type { OrderHistoryFilter } from "@/features/order/order-history";
 import type {
   CheckoutPreviewDto,
   CheckoutPreviewValues,
@@ -18,6 +20,21 @@ async function readApi<T>(response: Response, fallback: string) {
 }
 
 export const orderService = {
+  async getOrders(statusGroup: OrderHistoryFilter) {
+    const query =
+      statusGroup === "all"
+        ? API.ORDERS
+        : `${API.ORDERS}?status_group=${encodeURIComponent(statusGroup)}`;
+    const response = await fetch(query, {
+      credentials: "include",
+    });
+
+    return readApi<AccountOrder[]>(
+      response,
+      "Không thể tải lịch sử đơn hàng.",
+    );
+  },
+
   async previewCheckout(values: CheckoutPreviewValues) {
     const response = await fetch(API.CHECKOUT_PREVIEW, {
       method: "POST",

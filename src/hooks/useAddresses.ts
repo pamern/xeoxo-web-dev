@@ -7,9 +7,14 @@ import {
 } from "@/services/address.service";
 import type { CustomerAddress } from "@/types/customer.types";
 
-export function useAddresses(enabled = true) {
-  const [addresses, setAddresses] = useState<CustomerAddress[]>([]);
-  const [isLoading, setIsLoading] = useState(enabled);
+export function useAddresses(
+  enabled = true,
+  initialAddresses?: CustomerAddress[],
+) {
+  const [addresses, setAddresses] = useState<CustomerAddress[]>(
+    initialAddresses ?? [],
+  );
+  const [isLoading, setIsLoading] = useState(enabled && !initialAddresses);
   const [isMutating, setIsMutating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
 
@@ -39,8 +44,27 @@ export function useAddresses(enabled = true) {
   }, [enabled]);
 
   useEffect(() => {
+    if (!enabled) {
+      setAddresses([]);
+      setIsLoading(false);
+      setErrorMessage(undefined);
+      return;
+    }
+
+    if (initialAddresses) {
+      setAddresses(initialAddresses);
+      setIsLoading(false);
+      setErrorMessage(undefined);
+    }
+  }, [enabled, initialAddresses]);
+
+  useEffect(() => {
+    if (!enabled || initialAddresses) {
+      return;
+    }
+
     void refetch();
-  }, [refetch]);
+  }, [enabled, initialAddresses, refetch]);
 
   async function createAddress(values: CreateAddressValues) {
     setIsMutating(true);

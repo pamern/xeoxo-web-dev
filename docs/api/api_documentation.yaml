@@ -1721,6 +1721,10 @@ endpoints:
     - data[].reward_discount_amount
     - data[].shipping_fee
     - data[].total_amount
+    - data[].tracking_code
+    - data[].shipping_provider
+    - data[].shipping_status
+    - data[].refund_status
     - data[].items[].order_item_id
     - data[].items[].item_type
     - data[].items[].thumbnail
@@ -1730,6 +1734,7 @@ endpoints:
     - data[].items[].quantity
     - data[].items[].unit_price
     - data[].items[].line_total
+    - data[].items[].has_review
     - pagination
     success_example:
       code: 200
@@ -1737,11 +1742,16 @@ endpoints:
       data:
       - order_id: 1
         order_code: XX20260630
+        order_date: '2026-06-30T08:00:00Z'
         order_status: COMPLETED
         payment_status: PAID
         reward_discount_amount: 0
         shipping_fee: 30000
         total_amount: 2450000
+        tracking_code: GHN123456789
+        shipping_provider: GHN
+        shipping_status: DELIVERED
+        refund_status: null
         items:
         - order_item_id: 11
           item_type: STANDARD
@@ -1752,6 +1762,7 @@ endpoints:
           quantity: 1
           unit_price: 2450000
           line_total: 2450000
+          has_review: false
       pagination:
         page: 1
         limit: 10
@@ -1883,8 +1894,8 @@ endpoints:
     đơn.
   resource: reviews
   method: POST
-  endpoint: /api/v1/product-lines/{product_line_id}/reviews
-  http_request: POST /api/v1/product-lines/{product_line_id}/reviews
+  endpoint: /api/v1/order-items/{order_item_id}/reviews
+  http_request: POST /api/v1/order-items/{order_item_id}/reviews
   authentication: PUBLIC
   request:
     path_parameters:

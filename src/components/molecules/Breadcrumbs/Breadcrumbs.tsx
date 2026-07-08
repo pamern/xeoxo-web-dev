@@ -9,17 +9,26 @@ export type BreadcrumbItem = {
   iconAlt?: string;
 };
 
+type BreadcrumbsVariant = "default" | "account";
+
 export function Breadcrumbs({
   items,
   className,
+  variant = "default",
 }: {
   items: BreadcrumbItem[];
   className?: string;
+  variant?: BreadcrumbsVariant;
 }) {
+  const variantClassName =
+    variant === "account"
+      ? "text-sm font-medium text-foreground/68"
+      : "text-body-sm font-light text-muted-foreground";
+
   return (
     <nav
       aria-label="Breadcrumb"
-      className={cn("text-body-sm font-light text-muted-foreground", className)}
+      className={cn(variantClassName, className)}
     >
       <ol className="flex flex-wrap items-center gap-2">
         {items.map((item, index) => {

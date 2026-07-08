@@ -87,7 +87,17 @@ select {
   }
 
   .eyebrow-text {
-    @apply font-serif text-body-lg font-normal italic leading-none text-black md:text-eyebrow;
+    @apply font-serif text-body-lg font-normal italic text-black md:text-eyebrow;
+  }
+
+  /* Dung cho heading noi dung 1-2 dong trong policy, collection, editorial block. */
+  .content-heading {
+    @apply text-heading-content-sm font-bold text-black md:text-heading-content;
+  }
+
+  /* Dung cho doan noi dung dai can nhip doc de, thuong di kem content-heading. */
+  .content-body {
+    @apply text-body-lg font-light leading-relaxed text-black;
   }
 
   .form-control {

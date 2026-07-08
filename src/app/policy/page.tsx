@@ -21,7 +21,7 @@ export default function PolicyIndexPage() {
   return (
     <SiteLayout>
       <div className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
-        <h1 className="mb-8 text-3xl font-medium uppercase md:text-4xl">
+        <h1 className="page-heading mb-8">
           Chính sách
         </h1>
 

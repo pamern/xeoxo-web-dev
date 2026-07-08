@@ -173,12 +173,12 @@ function JsonTextBlock({
   return (
     <article className="mx-auto flex w-full max-w-[1479px] flex-col gap-3 text-black">
       {heading && (
-        <h2 className="text-body-lg font-bold leading-relaxed md:text-button">
+        <h2 className="content-heading">
           {heading}
         </h2>
       )}
       {body && (
-        <p className="text-justify text-body-lg font-light leading-relaxed">
+        <p className="content-body text-justify">
           {body}
         </p>
       )}

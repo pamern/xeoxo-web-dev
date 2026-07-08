@@ -1,10 +1,17 @@
 import Image from "next/image";
-import { forwardRef, type ButtonHTMLAttributes } from "react";
+import Link from "next/link";
+import {
+  forwardRef,
+  type ButtonHTMLAttributes,
+  type ComponentPropsWithoutRef,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
 /**
  * Button atom.
- * Keeps the legacy variants/sizes while adding Figma CTA styles as reusable tokens.
+ * Renders a native button for actions and a Next.js Link for navigation.
  */
 
 type Variant =
@@ -72,72 +79,159 @@ const sizeClasses: Record<Size, string> = {
   custom: "h-[43px] min-w-[126px] px-3 text-sm font-bold",
 };
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: Variant;
-  size?: Size;
-  isLoading?: boolean;
-  iconSrc?: string;
-  iconAlt?: string;
-  iconSize?: number;
-  iconClassName?: string;
+type BaseButtonProps = {
   backgroundImage?: string;
+  children?: ReactNode;
+  className?: string;
+  iconAlt?: string;
+  iconClassName?: string;
+  iconSize?: number;
+  iconSrc?: string;
+  isLoading?: boolean;
+  size?: Size;
+  style?: CSSProperties;
+  variant?: Variant;
+};
+
+type ButtonAsButtonProps = BaseButtonProps &
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    href?: undefined;
+  };
+
+type ButtonAsLinkProps = BaseButtonProps &
+  Omit<ComponentPropsWithoutRef<typeof Link>, "href"> & {
+    disabled?: boolean;
+    href: ComponentPropsWithoutRef<typeof Link>["href"];
+    type?: never;
+  };
+
+export type ButtonProps = ButtonAsButtonProps | ButtonAsLinkProps;
+
+function buildSharedClassName(
+  variant: Variant,
+  size: Size,
+  className?: string,
+  disabled?: boolean,
+) {
+  return cn(
+    "inline-flex items-center justify-center gap-2 rounded-pill font-medium transition-colors",
+    "whitespace-nowrap",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+    disabled && "pointer-events-none opacity-50",
+    variantClasses[variant],
+    sizeClasses[size],
+    className,
+  );
 }
 
-export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+function ButtonInner({
+  children,
+  iconSrc,
+  iconAlt = "",
+  iconSize = 20,
+  iconClassName,
+  isLoading,
+}: Pick<
+  BaseButtonProps,
+  "children" | "iconAlt" | "iconClassName" | "iconSize" | "iconSrc" | "isLoading"
+>) {
+  return (
+    <>
+      {isLoading && (
+        <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+      )}
+      {iconSrc && !isLoading && (
+        <Image
+          src={iconSrc}
+          alt={iconAlt}
+          width={iconSize}
+          height={iconSize}
+          aria-hidden={iconAlt === ""}
+          className={iconClassName}
+        />
+      )}
+      {children}
+    </>
+  );
+}
+
+export const Button = forwardRef<HTMLButtonElement | HTMLAnchorElement, ButtonProps>(
   (
     {
-      className,
-      variant = "solid",
-      size = "md",
-      isLoading,
-      disabled,
-      children,
-      iconSrc,
-      iconAlt = "",
-      iconSize = 20,
-      iconClassName,
       backgroundImage,
+      children,
+      className,
+      disabled,
+      iconAlt,
+      iconClassName,
+      iconSize,
+      iconSrc,
+      isLoading,
+      size = "md",
       style,
+      variant = "solid",
       ...props
     },
-    ref
+    ref,
   ) => {
+    const sharedStyle = {
+      ...(backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : {}),
+      ...style,
+    };
+    const isDisabled = disabled || isLoading;
+    const sharedClassName = buildSharedClassName(
+      variant,
+      size,
+      className,
+      isDisabled,
+    );
+
+    if ("href" in props && props.href !== undefined) {
+      const { href, ...linkProps } = props;
+
+      return (
+        <Link
+          ref={ref as React.Ref<HTMLAnchorElement>}
+          href={href}
+          aria-disabled={isDisabled || undefined}
+          tabIndex={isDisabled ? -1 : linkProps.tabIndex}
+          className={sharedClassName}
+          style={sharedStyle}
+          {...linkProps}
+        >
+          <ButtonInner
+            iconAlt={iconAlt}
+            iconClassName={iconClassName}
+            iconSize={iconSize}
+            iconSrc={iconSrc}
+            isLoading={isLoading}
+          >
+            {children}
+          </ButtonInner>
+        </Link>
+      );
+    }
+
     return (
       <button
-        ref={ref}
-        disabled={disabled || isLoading}
-        style={{
-          ...(backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : {}),
-          ...style,
-        }}
-        className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-pill font-medium transition-colors",
-          "whitespace-nowrap",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "disabled:pointer-events-none disabled:opacity-50",
-          variantClasses[variant],
-          sizeClasses[size],
-          className
-        )}
+        ref={ref as React.Ref<HTMLButtonElement>}
+        disabled={isDisabled}
+        style={sharedStyle}
+        className={cn("disabled:pointer-events-none disabled:opacity-50", sharedClassName)}
         {...props}
       >
-        {isLoading && (
-          <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-        )}
-        {iconSrc && !isLoading && (
-          <Image
-            src={iconSrc}
-            alt={iconAlt}
-            width={iconSize}
-            height={iconSize}
-            aria-hidden={iconAlt === ""}
-            className={iconClassName}
-          />
-        )}
-        {children}
+        <ButtonInner
+          iconAlt={iconAlt}
+          iconClassName={iconClassName}
+          iconSize={iconSize}
+          iconSrc={iconSrc}
+          isLoading={isLoading}
+        >
+          {children}
+        </ButtonInner>
       </button>
     );
-  }
+  },
 );
 
 Button.displayName = "Button";
