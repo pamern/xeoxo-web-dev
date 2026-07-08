@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { ProductListingPage } from "@/components/templates/ProductListingPage";
 import { ROUTES } from "@/constants/routes";
-import { CATEGORIES, COLLECTIONS, PRODUCTS } from "@/data/catalog";
+import { PRODUCTS } from "@/data/catalog";
 import {
   fetchCollectionBySlugFromApi,
   mapApiCollectionToCollection,
   mapApiProductLinesToProducts,
 } from "@/data/collections.api";
-import type { ProductFilterGroup } from "@/components/organisms/ProductFilterSidebar";
+import { deriveFilterOptionsFromProducts } from "@/features/homepage/homepage.service";
 
 export const metadata: Metadata = {
   title: "San pham",
@@ -21,19 +21,6 @@ type ProductsPageProps = {
 };
 
 export const dynamic = "force-dynamic";
-
-function buildProductFilterGroups(includeCollections: boolean): ProductFilterGroup[] {
-  return [
-    ...(includeCollections
-      ? [{ label: "Bộ sưu tập", options: COLLECTIONS.map((collection) => collection.name) }]
-      : []),
-    { label: "Kích thước", options: ["S", "M", "L", "XL"] },
-    { label: "Màu sắc", options: ["Đen", "Trắng ngà", "Đỏ rượu"] },
-    { label: "Giá", options: ["Dưới 1.000.000 VND", "1.000.000 - 2.000.000 VND"] },
-    { label: "Chất liệu", options: ["Gấm", "Tơ", "Organza"] },
-    { label: "Phù hợp với", options: CATEGORIES.map((category) => category.name) },
-  ];
-}
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const collectionSlug = (await searchParams)?.collection;
@@ -64,14 +51,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             : []),
           { label: "Sản phẩm" },
         ]}
-        filterGroups={buildProductFilterGroups(false)}
-        filters={[
-          { label: "Tất cả", href: ROUTES.PRODUCTS, active: true },
-          ...CATEGORIES.map((category) => ({
-            label: category.name,
-            href: ROUTES.CATEGORY(category.slug),
-          })),
-        ]}
+        filterOptions={deriveFilterOptionsFromProducts(products)}
       />
     );
   }
@@ -80,14 +60,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     <ProductListingPage
       title="Sản phẩm"
       products={PRODUCTS}
-      filterGroups={buildProductFilterGroups(true)}
-      filters={[
-        { label: "Tất cả", href: ROUTES.PRODUCTS, active: true },
-        ...CATEGORIES.map((category) => ({
-          label: category.name,
-          href: ROUTES.CATEGORY(category.slug),
-        })),
-      ]}
+      filterOptions={deriveFilterOptionsFromProducts(PRODUCTS)}
     />
   );
 }

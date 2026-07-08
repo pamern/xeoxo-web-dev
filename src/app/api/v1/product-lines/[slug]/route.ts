@@ -19,6 +19,42 @@ function sizeRank(sizeName: string) {
   return index === -1 ? SIZE_ORDER.length : index;
 }
 
+type SizeOption = {
+  variant_id: number;
+  size_name: string;
+  price: number;
+  is_available: boolean;
+  stock_quantity: number;
+};
+
+// Một product_line có thể có nhiều product_component (vd: set Áo + Quần),
+// mỗi component lại có variant riêng cho cùng 1 size_name -> gộp về 1 dòng
+// mỗi size, tránh hiện trùng size ngoài UI. Size chỉ thật sự "còn hàng" khi
+// tất cả component của size đó đều còn hàng.
+function dedupeSizesByName(sizes: SizeOption[]): SizeOption[] {
+  const groups = new Map<string, SizeOption[]>();
+
+  for (const size of sizes) {
+    const key = size.size_name.trim().toLowerCase();
+    const group = groups.get(key) ?? [];
+    group.push(size);
+    groups.set(key, group);
+  }
+
+  return [...groups.values()].map((group) => {
+    const isAvailable = group.every((option) => option.is_available);
+    const stockQuantity = Math.min(...group.map((option) => option.stock_quantity));
+    const preferred =
+      group.find((option) => option.is_available) ?? group[0];
+
+    return {
+      ...preferred,
+      is_available: isAvailable,
+      stock_quantity: stockQuantity,
+    };
+  });
+}
+
 function mediaUrl(storageKey?: string | null, bucketName?: string | null) {
   if (!storageKey) {
     return "/images/placeholder.png";
@@ -283,19 +319,21 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
               color_code: colorResult.data.color_code,
             }
           : null,
-        sizes: variants.map((variant) => {
-          const stockQuantity = stockMap.get(Number(variant.variant_id)) ?? 0;
-          return {
-            variant_id: Number(variant.variant_id),
-            size_name: variant.size_option_id
-              ? sizeMap.get(Number(variant.size_option_id)) ?? ""
-              : "",
-            price: toNumber(variant.price),
-            is_available:
-              variant.status === "ACTIVE" && stockQuantity > 0,
-            stock_quantity: stockQuantity,
-          };
-        }).sort((a, b) => {
+        sizes: dedupeSizesByName(
+          variants.map((variant) => {
+            const stockQuantity = stockMap.get(Number(variant.variant_id)) ?? 0;
+            return {
+              variant_id: Number(variant.variant_id),
+              size_name: variant.size_option_id
+                ? sizeMap.get(Number(variant.size_option_id)) ?? ""
+                : "",
+              price: toNumber(variant.price),
+              is_available:
+                variant.status === "ACTIVE" && stockQuantity > 0,
+              stock_quantity: stockQuantity,
+            };
+          }),
+        ).sort((a, b) => {
           const rankDifference = sizeRank(a.size_name) - sizeRank(b.size_name);
           return rankDifference || a.size_name.localeCompare(b.size_name, "vi");
         }),

@@ -26,6 +26,8 @@ export type Product = {
   /** Đánh dấu hàng mới / đang giảm giá để hiển thị badge. */
   isNew?: boolean;
   salePrice?: number;
+  materialName?: string;
+  collectionName?: string;
 };
 
 export type ProductColor = {

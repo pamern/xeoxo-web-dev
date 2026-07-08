@@ -137,26 +137,70 @@ async function fetchHomepageProductSections(
 
 export async function getCategoryProductSections({
   department,
+  parentCategorySlug,
   limit = 4,
 }: {
   department?: CatalogDepartment;
+  parentCategorySlug?: string;
   limit?: number;
 } = {}): Promise<HomepageProductSection[]> {
   return unstable_cache(
-    () => fetchCategoryProductSections(department, limit),
-    ["category-product-sections", department ?? "all", String(limit)],
+    () => fetchCategoryProductSections(department, parentCategorySlug, limit),
+    [
+      "category-product-sections",
+      department ?? "all",
+      parentCategorySlug ?? "all",
+      String(limit),
+    ],
     { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
   )();
 }
 
 async function fetchCategoryProductSections(
   department: CatalogDepartment | undefined,
+  parentCategorySlug: string | undefined,
   limit: number,
 ): Promise<HomepageProductSection[]> {
   const supabase = createAdminClient();
   let categoryIds: number[] | null = null;
 
-  if (department) {
+  if (parentCategorySlug) {
+    const { data: parentCategory, error: parentCategoryError } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("category_id")
+      .eq("slug", parentCategorySlug)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (parentCategoryError) {
+      throw new Error(parentCategoryError.message);
+    }
+
+    if (!parentCategory) {
+      return [];
+    }
+
+    const parentCategoryId = Number(parentCategory.category_id);
+
+    const { data: childCategories, error: childCategoryError } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("category_id")
+      .eq("parent_id", parentCategoryId)
+      .eq("is_active", true);
+
+    if (childCategoryError) {
+      throw new Error(childCategoryError.message);
+    }
+
+    categoryIds = [
+      parentCategoryId,
+      ...((childCategories ?? []) as CategoryRow[]).map(
+        (category) => category.category_id,
+      ),
+    ];
+  } else if (department) {
     const { data: categories, error: categoryError } = await supabase
       .schema("catalog")
       .from("category")
@@ -207,7 +251,9 @@ async function fetchCategoryProductSections(
   return [...rowsByCategory.values()]
     .map((sectionRows) => {
       const firstRow = sectionRows[0];
-      const gender = department ? GENDER_BY_DEPARTMENT[department] : "nu";
+      const gender = department
+        ? GENDER_BY_DEPARTMENT[department]
+        : inferGenderFromCategorySlug(firstRow.category_slug);
 
       return {
         categoryId: firstRow.category_id,
@@ -224,6 +270,97 @@ async function fetchCategoryProductSections(
       };
     })
     .sort((a, b) => a.categoryId - b.categoryId);
+}
+
+function inferGenderFromCategorySlug(categorySlug: string): Product["gender"] {
+  return categorySlug.includes("nam") ? "nam" : "nu";
+}
+
+export type CategoryNavItem = {
+  categoryId: number;
+  categoryName: string;
+  categorySlug: string;
+};
+
+// Danh sách category thật theo department, dùng cho dropdown menu ở header
+// (hover NAM/NỮ hiện category bên dưới).
+export async function getCategoriesByDepartment(
+  department: CatalogDepartment,
+): Promise<CategoryNavItem[]> {
+  return unstable_cache(
+    () => fetchCategoriesByDepartment(department),
+    ["categories-by-department", department],
+    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+  )();
+}
+
+async function fetchCategoriesByDepartment(
+  department: CatalogDepartment,
+): Promise<CategoryNavItem[]> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .schema("catalog")
+    .from("category")
+    .select("category_id, category_name, slug")
+    .eq("department", department)
+    .eq("is_active", true)
+    .order("category_name", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((category) => ({
+    categoryId: Number(category.category_id),
+    categoryName: String(category.category_name),
+    categorySlug: String(category.slug),
+  }));
+}
+
+export type CategoryDetail = {
+  categoryId: number;
+  categoryName: string;
+  categorySlug: string;
+  department: CatalogDepartment | null;
+};
+
+// Tra category thật theo slug (dùng cho trang /categories/[slug]) — trước đây
+// trang này chỉ nhận diện được slug mock, khiến banner/link dùng slug thật từ
+// Supabase bị 404.
+export async function getCategoryBySlug(
+  slug: string,
+): Promise<CategoryDetail | null> {
+  return unstable_cache(
+    () => fetchCategoryBySlug(slug),
+    ["category-by-slug", slug],
+    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+  )();
+}
+
+async function fetchCategoryBySlug(slug: string): Promise<CategoryDetail | null> {
+  const supabase = createAdminClient();
+  const { data, error } = await supabase
+    .schema("catalog")
+    .from("category")
+    .select("category_id, category_name, slug, department")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  return {
+    categoryId: Number(data.category_id),
+    categoryName: String(data.category_name),
+    categorySlug: String(data.slug),
+    department: (data.department as CatalogDepartment | null) ?? null,
+  };
 }
 
 export async function getNewestDepartmentProducts({
@@ -394,4 +531,318 @@ async function findCollectionCoverNgangStorageKey(
   );
 
   return coverNgangFile ? `${folder}/${coverNgangFile.name}` : null;
+}
+
+const SIZE_ORDER = ["XS", "S", "M", "L", "XL", "CUSTOM"];
+
+function sizeRank(sizeName: string) {
+  const normalized = sizeName.trim().toUpperCase();
+  const index = SIZE_ORDER.indexOf(normalized);
+  return index === -1 ? SIZE_ORDER.length : index;
+}
+
+export type CategoryFilterOptions = {
+  sizes: string[];
+  colors: { name: string; hex: string }[];
+  materials: string[];
+  collections: { name: string; slug: string }[];
+  priceMin: number;
+  priceMax: number;
+};
+
+export type CategoryListing = {
+  products: Product[];
+  filterOptions: CategoryFilterOptions;
+};
+
+// Lấy sản phẩm thật của 1 category kèm bộ lọc (size/màu/chất liệu/bộ sưu tập/giá)
+// tổng hợp từ chính dữ liệu thật của các sản phẩm đó — dùng cho trang danh sách
+// sản phẩm (/categories/[slug]) để bộ lọc luôn khớp dữ liệu trong DB.
+export async function getCategoryListing(
+  categorySlug: string,
+): Promise<CategoryListing> {
+  return unstable_cache(
+    () => fetchCategoryListing(categorySlug),
+    ["category-listing", categorySlug],
+    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+  )();
+}
+
+async function fetchCategoryListing(
+  categorySlug: string,
+): Promise<CategoryListing> {
+  const emptyResult: CategoryListing = {
+    products: [],
+    filterOptions: {
+      sizes: [],
+      colors: [],
+      materials: [],
+      collections: [],
+      priceMin: 0,
+      priceMax: 0,
+    },
+  };
+
+  const [section] = await getHomepageProductSections({
+    categorySlugs: [categorySlug],
+    limit: 200,
+  });
+  const products = section?.products ?? [];
+
+  if (products.length === 0) {
+    return emptyResult;
+  }
+
+  const supabase = createAdminClient();
+  const productLineIds = products.map((product) => Number(product.id));
+
+  const { data: lineRows, error: lineError } = await supabase
+    .schema("catalog")
+    .from("product_line")
+    .select("product_line_id, color_id, material_id, collection_id")
+    .in("product_line_id", productLineIds);
+
+  if (lineError) {
+    throw new Error(lineError.message);
+  }
+
+  const colorIds = [
+    ...new Set(
+      (lineRows ?? [])
+        .map((row) => row.color_id)
+        .filter((id): id is number => typeof id === "number"),
+    ),
+  ];
+  const materialIds = [
+    ...new Set(
+      (lineRows ?? [])
+        .map((row) => row.material_id)
+        .filter((id): id is number => typeof id === "number"),
+    ),
+  ];
+  const collectionIds = [
+    ...new Set(
+      (lineRows ?? [])
+        .map((row) => row.collection_id)
+        .filter((id): id is number => typeof id === "number"),
+    ),
+  ];
+
+  const [colorsResult, materialsResult, collectionsResult, componentsResult] =
+    await Promise.all([
+      colorIds.length
+        ? supabase
+            .schema("catalog")
+            .from("color")
+            .select("color_id, color_name, color_code")
+            .in("color_id", colorIds)
+        : Promise.resolve({ data: [], error: null }),
+      materialIds.length
+        ? supabase
+            .schema("catalog")
+            .from("material")
+            .select("material_id, material_name")
+            .in("material_id", materialIds)
+        : Promise.resolve({ data: [], error: null }),
+      collectionIds.length
+        ? supabase
+            .schema("catalog")
+            .from("collection")
+            .select("collection_id, collection_name, slug")
+            .in("collection_id", collectionIds)
+        : Promise.resolve({ data: [], error: null }),
+      supabase
+        .schema("catalog")
+        .from("product_component")
+        .select("component_id, product_line_id")
+        .in("product_line_id", productLineIds),
+    ]);
+
+  if (colorsResult.error) throw new Error(colorsResult.error.message);
+  if (materialsResult.error) throw new Error(materialsResult.error.message);
+  if (collectionsResult.error) throw new Error(collectionsResult.error.message);
+  if (componentsResult.error) throw new Error(componentsResult.error.message);
+
+  const colorMap = new Map(
+    (colorsResult.data ?? []).map((row) => [
+      Number(row.color_id),
+      { name: String(row.color_name), hex: String(row.color_code) },
+    ]),
+  );
+  const materialMap = new Map(
+    (materialsResult.data ?? []).map((row) => [
+      Number(row.material_id),
+      String(row.material_name),
+    ]),
+  );
+  const collectionMap = new Map(
+    (collectionsResult.data ?? []).map((row) => [
+      Number(row.collection_id),
+      { name: String(row.collection_name), slug: String(row.slug) },
+    ]),
+  );
+
+  const components = componentsResult.data ?? [];
+  const componentToLine = new Map(
+    components.map((row) => [
+      Number(row.component_id),
+      Number(row.product_line_id),
+    ]),
+  );
+  const componentIds = components.map((row) => Number(row.component_id));
+
+  const variantsResult = componentIds.length
+    ? await supabase
+        .schema("catalog")
+        .from("product_variant")
+        .select("component_id, size_option_id, price")
+        .in("component_id", componentIds)
+    : { data: [], error: null };
+
+  if (variantsResult.error) throw new Error(variantsResult.error.message);
+
+  const variants = variantsResult.data ?? [];
+  const sizeOptionIds = [
+    ...new Set(
+      variants
+        .map((variant) => variant.size_option_id)
+        .filter((id): id is number => typeof id === "number"),
+    ),
+  ];
+
+  const sizeOptionsResult = sizeOptionIds.length
+    ? await supabase
+        .schema("catalog")
+        .from("size_option")
+        .select("size_option_id, size_name")
+        .in("size_option_id", sizeOptionIds)
+    : { data: [], error: null };
+
+  if (sizeOptionsResult.error) throw new Error(sizeOptionsResult.error.message);
+
+  const sizeNameMap = new Map(
+    (sizeOptionsResult.data ?? []).map((row) => [
+      Number(row.size_option_id),
+      String(row.size_name),
+    ]),
+  );
+
+  const sizesByLine = new Map<number, Set<string>>();
+  const pricesByLine = new Map<number, number[]>();
+  for (const variant of variants) {
+    const lineId = componentToLine.get(Number(variant.component_id));
+    if (lineId === undefined) continue;
+
+    if (variant.size_option_id) {
+      const sizeName = sizeNameMap.get(Number(variant.size_option_id));
+      if (sizeName) {
+        const sizeSet = sizesByLine.get(lineId) ?? new Set<string>();
+        sizeSet.add(sizeName);
+        sizesByLine.set(lineId, sizeSet);
+      }
+    }
+
+    const priceList = pricesByLine.get(lineId) ?? [];
+    priceList.push(Number(variant.price));
+    pricesByLine.set(lineId, priceList);
+  }
+
+  const lineInfoMap = new Map(
+    (lineRows ?? []).map((row) => [Number(row.product_line_id), row]),
+  );
+
+  const enrichedProducts: Product[] = products.map((product) => {
+    const lineId = Number(product.id);
+    const lineInfo = lineInfoMap.get(lineId);
+    const color =
+      lineInfo?.color_id !== null && lineInfo?.color_id !== undefined
+        ? colorMap.get(Number(lineInfo.color_id))
+        : undefined;
+    const materialName =
+      lineInfo?.material_id !== null && lineInfo?.material_id !== undefined
+        ? materialMap.get(Number(lineInfo.material_id))
+        : undefined;
+    const collection =
+      lineInfo?.collection_id !== null && lineInfo?.collection_id !== undefined
+        ? collectionMap.get(Number(lineInfo.collection_id))
+        : undefined;
+    const sizes = [...(sizesByLine.get(lineId) ?? [])].sort(
+      (a, b) => sizeRank(a) - sizeRank(b),
+    );
+    const prices = pricesByLine.get(lineId) ?? [];
+
+    return {
+      ...product,
+      sizes: sizes.length > 0 ? sizes : product.sizes,
+      colors: color ? [color] : product.colors,
+      materialName,
+      collectionSlug: collection?.slug ?? product.collectionSlug,
+      collectionName: collection?.name,
+      price: prices.length > 0 ? Math.min(...prices) : product.price,
+    };
+  });
+
+  const allSizes = new Set<string>();
+  const allColors = new Map<string, string>();
+  const allMaterials = new Set<string>();
+  const allCollections = new Map<string, string>();
+  let priceMin = Infinity;
+  let priceMax = 0;
+
+  for (const product of enrichedProducts) {
+    product.sizes.forEach((size) => allSizes.add(size));
+    product.colors.forEach((color) => allColors.set(color.name, color.hex));
+    if (product.materialName) allMaterials.add(product.materialName);
+    if (product.collectionSlug && product.collectionName) {
+      allCollections.set(product.collectionSlug, product.collectionName);
+    }
+    priceMin = Math.min(priceMin, product.price);
+    priceMax = Math.max(priceMax, product.price);
+  }
+
+  return {
+    products: enrichedProducts,
+    filterOptions: {
+      sizes: [...allSizes].sort((a, b) => sizeRank(a) - sizeRank(b)),
+      colors: [...allColors].map(([name, hex]) => ({ name, hex })),
+      materials: [...allMaterials],
+      collections: [...allCollections].map(([slug, name]) => ({ name, slug })),
+      priceMin: Number.isFinite(priceMin) ? priceMin : 0,
+      priceMax,
+    },
+  };
+}
+
+// Tổng hợp filter options trực tiếp từ 1 danh sách Product đã có sẵn (không
+// query lại DB) — dùng cho các trang không đi qua getCategoryListing (vd:
+// /products khi lọc theo bộ sưu tập).
+export function deriveFilterOptionsFromProducts(
+  products: Product[],
+): CategoryFilterOptions {
+  const allSizes = new Set<string>();
+  const allColors = new Map<string, string>();
+  const allMaterials = new Set<string>();
+  const allCollections = new Map<string, string>();
+  let priceMin = Infinity;
+  let priceMax = 0;
+
+  for (const product of products) {
+    product.sizes.forEach((size) => allSizes.add(size));
+    product.colors.forEach((color) => allColors.set(color.name, color.hex));
+    if (product.materialName) allMaterials.add(product.materialName);
+    if (product.collectionSlug && product.collectionName) {
+      allCollections.set(product.collectionSlug, product.collectionName);
+    }
+    priceMin = Math.min(priceMin, product.price);
+    priceMax = Math.max(priceMax, product.price);
+  }
+
+  return {
+    sizes: [...allSizes].sort((a, b) => sizeRank(a) - sizeRank(b)),
+    colors: [...allColors].map(([name, hex]) => ({ name, hex })),
+    materials: [...allMaterials],
+    collections: [...allCollections].map(([slug, name]) => ({ name, slug })),
+    priceMin: Number.isFinite(priceMin) ? priceMin : 0,
+    priceMax,
+  };
 }

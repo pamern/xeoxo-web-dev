@@ -26,6 +26,7 @@ const CATALOG_CONTENT: Record<
     heroLabel: string;
     banner: string;
     department: CatalogDepartment | null;
+    parentCategorySlug?: string;
     emptyTitle: string;
     emptyDescription: string;
   }
@@ -55,6 +56,7 @@ const CATALOG_CONTENT: Record<
     heroLabel: "Áo Dài",
     banner: "/images/cat-ao-dai.png",
     department: null,
+    parentCategorySlug: "ao-dai",
     emptyTitle: "Chưa có sản phẩm áo dài",
     emptyDescription: "Các thiết kế áo dài sẽ được cập nhật trong thời gian tới.",
   },
@@ -79,10 +81,14 @@ async function getCatalogHeroCollections() {
   }
 }
 
-async function getCatalogProductSections(department: CatalogDepartment | null) {
+async function getCatalogProductSections(
+  department: CatalogDepartment | null,
+  parentCategorySlug?: string,
+) {
   try {
     return await getCategoryProductSections({
       department: department ?? undefined,
+      parentCategorySlug,
       limit: 4,
     });
   } catch {
@@ -101,7 +107,7 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
 
   const [heroCollections, productSections] = await Promise.all([
     getCatalogHeroCollections(),
-    getCatalogProductSections(content.department),
+    getCatalogProductSections(content.department, content.parentCategorySlug),
   ]);
   const firstCollection = heroCollections[0];
 
@@ -155,7 +161,9 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
       )}
 
       <ValueProposition values={VALUE_PROPS} />
-      <Materials materials={slug === "nu" ? MATERIALS_NU : MATERIALS} />
+      {slug !== "tre-em" && (
+        <Materials materials={slug === "nu" ? MATERIALS_NU : MATERIALS} />
+      )}
 
       <StarsBanner />
     </SiteLayout>

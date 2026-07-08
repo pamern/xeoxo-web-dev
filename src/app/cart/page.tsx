@@ -1,5 +1,3 @@
-"use client";
-
 import { CartSummary } from "@/components/organisms/CartSummary";
 import { CheckoutForm } from "@/components/organisms/CheckoutForm";
 import { SiteLayout } from "@/components/templates/SiteLayout";

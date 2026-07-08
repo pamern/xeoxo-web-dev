@@ -21,9 +21,13 @@ export type QuizQuestion = {
   options: [QuizOption, QuizOption];
 };
 
-// Ảnh mock dùng chung tạm thời cho mọi lựa chọn, sẽ thay khi có ảnh thật theo từng câu.
-const MOCK_OPTION_IMAGE_A = "/images/canh-giang.png";
-const MOCK_OPTION_IMAGE_B = "/images/hero-hakhue.png";
+// Ảnh thật theo từng câu/đáp án, export thủ công từ Figma và đặt vào
+// public/images/personal-color/cau-hoi/ (đặt tên đúng cau-{n}-a.jpg / cau-{n}-b.jpg).
+// Cho tới khi có ảnh thật, Next/Image sẽ 404 nếu file chưa tồn tại — cần upload đủ 10 ảnh.
+const QUESTION_IMAGE_DIR = "/images/personal-color/cau-hoi";
+function questionImage(questionNumber: number, option: "a" | "b") {
+  return `${QUESTION_IMAGE_DIR}/cau-${questionNumber}-${option}.jpg`;
+}
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [
   {
@@ -31,8 +35,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     text: "Khi quan sát mạch máu ở mặt trong cổ tay dưới ánh sáng tự nhiên, màu nào nổi bật hơn?",
     weight: 2,
     options: [
-      { key: "A", text: "Xanh lá hoặc xanh olive", tag: "WARM", image: MOCK_OPTION_IMAGE_A },
-      { key: "B", text: "Xanh dương hoặc xanh tím", tag: "COOL", image: MOCK_OPTION_IMAGE_B },
+      { key: "A", text: "Xanh lá hoặc xanh olive", tag: "WARM", image: questionImage(1, "a") },
+      { key: "B", text: "Xanh dương hoặc xanh tím", tag: "COOL", image: questionImage(1, "b") },
     ],
   },
   {
@@ -40,8 +44,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     text: "Sắc màu tự nhiên của làn da bạn thiên về màu nào hơn?",
     weight: 1,
     options: [
-      { key: "A", text: "Sắc vàng hoặc vàng beige", tag: "WARM", image: MOCK_OPTION_IMAGE_A },
-      { key: "B", text: "Sắc hồng hoặc hồng đỏ", tag: "COOL", image: MOCK_OPTION_IMAGE_B },
+      { key: "A", text: "Sắc vàng hoặc vàng beige", tag: "WARM", image: questionImage(2, "a") },
+      { key: "B", text: "Sắc hồng hoặc hồng đỏ", tag: "COOL", image: questionImage(2, "b") },
     ],
   },
   {
@@ -49,8 +53,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     text: "Sau khi ở ngoài nắng trong thời gian dài, làn da của bạn thường chuyển sang màu nào?",
     weight: 1,
     options: [
-      { key: "A", text: "Nâu hoặc rám nắng", tag: "WARM", image: MOCK_OPTION_IMAGE_A },
-      { key: "B", text: "Đỏ hoặc hồng đỏ", tag: "COOL", image: MOCK_OPTION_IMAGE_B },
+      { key: "A", text: "Nâu hoặc rám nắng", tag: "WARM", image: questionImage(3, "a") },
+      { key: "B", text: "Đỏ hoặc hồng đỏ", tag: "COOL", image: questionImage(3, "b") },
     ],
   },
   {
@@ -58,8 +62,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     text: "So với mọi người xung quanh, tông da tự nhiên của bạn thuộc nhóm nào?",
     weight: 2,
     options: [
-      { key: "A", text: "Tối hoặc ngăm hơn", tag: "DEEP", image: MOCK_OPTION_IMAGE_A },
-      { key: "B", text: "Sáng hoặc trắng hơn", tag: "LIGHT", image: MOCK_OPTION_IMAGE_B },
+      { key: "A", text: "Tối hoặc ngăm hơn", tag: "DEEP", image: questionImage(4, "a") },
+      { key: "B", text: "Sáng hoặc trắng hơn", tag: "LIGHT", image: questionImage(4, "b") },
     ],
   },
   {
@@ -67,8 +71,8 @@ export const QUIZ_QUESTIONS: QuizQuestion[] = [
     text: "Màu tóc tự nhiên của bạn gần với nhóm nào hơn?",
     weight: 1,
     options: [
-      { key: "A", text: "Nâu sáng hoặc nâu mềm", tag: "LIGHT", image: MOCK_OPTION_IMAGE_A },
-      { key: "B", text: "Nâu đậm hoặc đen", tag: "DEEP", image: MOCK_OPTION_IMAGE_B },
+      { key: "A", text: "Nâu sáng hoặc nâu mềm", tag: "LIGHT", image: questionImage(5, "a") },
+      { key: "B", text: "Nâu đậm hoặc đen", tag: "DEEP", image: questionImage(5, "b") },
     ],
   },
 ];
