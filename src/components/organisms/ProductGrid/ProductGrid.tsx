@@ -8,11 +8,13 @@ export function ProductGrid({
   className,
   cardClassName,
   cardImageClassName,
+  quickAddOnHover = false,
 }: {
   products: Product[];
   className?: string;
   cardClassName?: string;
   cardImageClassName?: string;
+  quickAddOnHover?: boolean;
 }) {
   if (products.length === 0) {
     return (
@@ -23,13 +25,19 @@ export function ProductGrid({
   }
 
   return (
-    <div className={cn("grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 xl:grid-cols-4", className)}>
+    <div
+      className={cn(
+        "grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 xl:grid-cols-4",
+        className,
+      )}
+    >
       {products.map((product, index) => (
         <ProductCard
           key={`${product.id}-${index}`}
           product={product}
           className={cardClassName}
           imageClassName={cardImageClassName}
+          quickAddOnHover={quickAddOnHover}
         />
       ))}
     </div>

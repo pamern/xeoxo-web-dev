@@ -12,6 +12,7 @@ import { useCartDrawer } from "@/components/providers/CartDrawerProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useLatestCollectionHighlight } from "@/hooks/useLatestCollectionHighlight";
+import type { CategoryNavItem } from "@/features/homepage/homepage.service";
 import type { LatestCollectionHighlight } from "@/types/collection-highlight.types";
 
 type AuthMode = "login" | "register";
@@ -46,7 +47,15 @@ const MAIN_NAV: UtilityLink[] = [
   { label: "BỘ SƯU TẬP", href: ROUTES.COLLECTIONS },
 ];
 
-export function SiteHeader() {
+export function SiteHeader({
+  womenCategories = [],
+  menCategories = [],
+  aoDaiCategories = [],
+}: {
+  womenCategories?: CategoryNavItem[];
+  menCategories?: CategoryNavItem[];
+  aoDaiCategories?: CategoryNavItem[];
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -59,6 +68,16 @@ export function SiteHeader() {
     useState<AccountMenuAnchor>(null);
   const [accountSidebarOpen, setAccountSidebarOpen] = useState(false);
   const { openDrawer: openCartDrawer } = useCartDrawer();
+  const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const CATEGORY_MENU_BY_HREF: Record<string, CategoryNavItem[]> = {
+    [ROUTES.CATALOG_WOMEN]: womenCategories,
+    [ROUTES.CATALOG_MEN]: menCategories,
+    [ROUTES.CATALOG_AO_DAI]: aoDaiCategories,
+  };
+  const CATEGORY_MENU_BY_LABEL: Record<string, CategoryNavItem[]> = {
+    NỮ: womenCategories,
+    NAM: menCategories,
+  };
   const utilityAccountMenuRef = useRef<HTMLDivElement>(null);
   const mainAccountMenuRef = useRef<HTMLDivElement>(null);
   const authMode = searchParams.get("auth");
@@ -156,7 +175,8 @@ export function SiteHeader() {
   const latestProductImage =
     latestCollectionHighlight?.productImage || "/images/story-2.jpg";
   const latestProductImageAlt =
-    latestCollectionHighlight?.productImageAlt || "Sản phẩm trong bộ sưu tập mới nhất";
+    latestCollectionHighlight?.productImageAlt ||
+    "Sản phẩm trong bộ sưu tập mới nhất";
 
   const accountLabel =
     auth.customer?.customer_name?.trim() ||
@@ -257,17 +277,69 @@ export function SiteHeader() {
             >
               {MAIN_NAV.map((item) => {
                 const active = pathname === item.href;
+                const categories = item.href
+                  ? CATEGORY_MENU_BY_HREF[item.href]
+                  : CATEGORY_MENU_BY_LABEL[item.label];
+                const hasDropdown = Boolean(categories?.length);
+                const dropdownAlignment =
+                  item.href === ROUTES.CATALOG_WOMEN ||
+                  item.href === ROUTES.CATALOG_MEN
+                    ? "left-0"
+                    : "left-1/2 -translate-x-1/2";
+
                 return (
-                  <Link
+                  <div
                     key={item.label}
-                    href={item.href!}
-                    className={cn(
-                      "text-[22px] transition-colors hover:text-foreground/60",
-                      active && "underline underline-offset-8",
-                    )}
+                    className="relative"
+                    onMouseEnter={() =>
+                      hasDropdown && setHoveredNav(item.label)
+                    }
+                    onMouseLeave={() => hasDropdown && setHoveredNav(null)}
                   >
-                    {item.label}
-                  </Link>
+                    <Link
+                      href={item.href!}
+                      className={cn(
+                        "text-[22px] transition-colors hover:text-foreground/60",
+                        active && "underline underline-offset-8",
+                      )}
+                    >
+                      {item.label}
+                    </Link>
+
+                    {hasDropdown && (
+                      <div
+                        className={cn(
+                          "absolute top-full z-[90] w-[720px] max-w-[calc(100vw-48px)] pt-[14px]",
+                          dropdownAlignment,
+                          hoveredNav === item.label
+                            ? "pointer-events-auto"
+                            : "pointer-events-none",
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "rounded-[16px] bg-background p-5 text-foreground shadow-[0_18px_38px_rgba(0,0,0,0.16)] transition-all duration-200",
+                            hoveredNav === item.label
+                              ? "translate-y-0 opacity-100"
+                              : "-translate-y-2 opacity-0",
+                          )}
+                        >
+                          <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+                            {categories.map((category) => (
+                              <Link
+                                key={category.categoryId}
+                                href={ROUTES.CATEGORY(category.categorySlug)}
+                                className="block min-w-0 whitespace-nowrap text-[18px] leading-[1.25] transition-colors hover:text-foreground/60"
+                                onClick={() => setHoveredNav(null)}
+                              >
+                                {category.categoryName}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </nav>

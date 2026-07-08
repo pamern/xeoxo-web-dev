@@ -53,7 +53,7 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
           priority={i === 0}
           sizes="100vw"
           className={cn(
-            "object-cover transition-[opacity,transform] duration-[900ms] ease-out",
+            "object-cover transition-[opacity,transform] duration-500 ease-out",
             i === index
               ? "translate-x-0 scale-100 opacity-100"
               : cn(

@@ -42,7 +42,12 @@ export function useAuth() {
       setUser(me.user);
       setCustomer(me.customer);
     } catch (error) {
-      logAuthError("refresh", error);
+      // Kiểm tra đăng nhập nền chạy trên mọi trang, kể cả khi khách chưa
+      // đăng nhập hoặc request bị huỷ giữa chừng do chuyển trang — đây là
+      // tình huống bình thường, không phải lỗi ứng dụng, nên chỉ warn thay
+      // vì console.error (Next.js dev mode bung overlay chặn UI cho mọi
+      // console.error, gây cảm giác "lỗi" dù trang vẫn hoạt động đúng).
+      console.warn("[useAuth/refresh]", error);
       setUser(null);
       setCustomer(null);
     } finally {

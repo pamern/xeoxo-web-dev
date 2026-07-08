@@ -32,17 +32,21 @@ export function ProductCard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quickAddOnHover, product.slug]);
 
-  const quickAddSizes = product.sizes.slice(0, 5).map((size) => {
-    const variant = quickAdd.productDetail?.sizes.find(
-      (option) => option.size_name.trim().toLowerCase() === size.trim().toLowerCase(),
-    );
-    return {
-      size,
-      // Chỉ coi là còn hàng khi đã tải xong dữ liệu thật và khớp được variant available.
-      // Mặc định false để tránh cho bấm trước khi biết chắc, hoặc khi size không tồn tại cho biến thể này.
-      isAvailable: Boolean(variant?.is_available),
-    };
-  });
+  // Khi đã có dữ liệu chi tiết thật, lấy đúng danh sách size của sản phẩm này
+  // (không dùng product.sizes tĩnh vì đó chỉ là placeholder mặc định, có thể thiếu XS/2XL...).
+  // Trong lúc chưa tải xong thì tạm hiện theo danh sách mặc định, khóa hết để tránh bấm nhầm.
+  const quickAddSizes = quickAdd.productDetail
+    ? quickAdd.productDetail.sizes.slice(0, 5).map((option) => ({
+        size: option.size_name,
+        isAvailable: option.is_available,
+      }))
+    : product.sizes.slice(0, 5).map((size) => ({ size, isAvailable: false }));
+
+  // Sản phẩm chỉ có 1 size (freesize/one-size) — không cần lưới chọn size,
+  // chỉ cần 1 nút thêm giỏ hàng, kèm badge để nhận biết ngay cả khi chưa hover.
+  const isSingleSize =
+    Boolean(quickAdd.productDetail) && quickAdd.productDetail!.sizes.length <= 1;
+  const singleSize = quickAddSizes[0];
 
   return (
     <article className={cn("group flex flex-col gap-3", className)}>
@@ -75,11 +79,18 @@ export function ProductCard({
           )}
         </Link>
 
-        {product.isNew && (
-          <span className="absolute left-3 top-3 rounded-pill bg-primary px-3 py-1 text-caption text-primary-foreground">
-            NEW
-          </span>
-        )}
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
+          {product.isNew && (
+            <span className="rounded-pill bg-primary px-3 py-1 text-caption text-primary-foreground">
+              NEW
+            </span>
+          )}
+          {isSingleSize && (
+            <span className="rounded-pill bg-black/70 px-3 py-1 text-caption text-white">
+              1 SIZE
+            </span>
+          )}
+        </div>
         {onSale && (
           <span className="absolute right-3 top-3 rounded-pill bg-destructive px-3 py-1 text-caption text-destructive-foreground">
             SALE
@@ -113,54 +124,64 @@ export function ProductCard({
               >
                 {quickAdd.message ?? "Thêm vào giỏ hàng"}
               </p>
-              <div className="grid grid-cols-3 gap-x-2 gap-y-1">
-                {quickAddSizes.map(({ size, isAvailable }, index) => {
-                  const isActiveSize = quickAdd.selectedSize === size;
-                  const isLoadingSize =
-                    quickAdd.isLoading && quickAdd.selectedSize === size;
-                  const isLocked = !isAvailable;
+              {isSingleSize && singleSize ? (
+                <SingleSizeAddButton
+                  size={singleSize.size}
+                  isAvailable={singleSize.isAvailable}
+                  isLoading={quickAdd.isLoading}
+                  isSuccess={quickAdd.status === "success"}
+                  onAdd={() => void quickAdd.addSize(singleSize.size)}
+                />
+              ) : (
+                <div className="grid grid-cols-3 gap-x-2 gap-y-1">
+                  {quickAddSizes.map(({ size, isAvailable }, index) => {
+                    const isActiveSize = quickAdd.selectedSize === size;
+                    const isLoadingSize =
+                      quickAdd.isLoading && quickAdd.selectedSize === size;
+                    const isLocked = !isAvailable;
 
-                  return (
-                    <button
-                      key={`${size}-${index}`}
-                      type="button"
-                      disabled={quickAdd.isLoading || isLocked}
-                      aria-label={
-                        isLocked
-                          ? `Size ${size} đã hết hàng`
-                          : `Thêm size ${size} vào giỏ hàng`
-                      }
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (isLocked) return;
-                        void quickAdd.addSize(size);
-                      }}
-                      className={cn(
-                        "relative flex h-[18px] items-center justify-center overflow-hidden text-[12px] font-medium leading-none transition-colors duration-200",
-                        isLocked
-                          ? "cursor-not-allowed rounded-full border border-black/60 bg-gray-200 text-black/50"
-                          : cn(
-                              "rounded-[6px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
-                              isActiveSize &&
-                                quickAdd.status === "success" &&
-                                "bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]",
-                            ),
-                      )}
-                      style={
-                        isLocked
-                          ? {
-                              backgroundImage:
-                                "linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(0,0,0,0.65) 50%, transparent calc(50% + 1px))",
-                            }
-                          : undefined
-                      }
-                    >
-                      {isLoadingSize ? "..." : size}
-                    </button>
-                  );
-                })}
-              </div>
+                    return (
+                      <button
+                        key={`${size}-${index}`}
+                        type="button"
+                        disabled={quickAdd.isLoading || isLocked}
+                        aria-label={
+                          isLocked
+                            ? `Size ${size} đã hết hàng`
+                            : `Thêm size ${size} vào giỏ hàng`
+                        }
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          if (isLocked) return;
+                          void quickAdd.addSize(size);
+                        }}
+                        className={cn(
+                          "relative flex h-[18px] items-center justify-center overflow-hidden text-[12px] font-medium leading-none transition-colors duration-200",
+                          isLocked
+                            ? "cursor-not-allowed rounded-full border border-black/60 bg-gray-200 text-black/50"
+                            : cn(
+                                "rounded-[6px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
+                                isActiveSize &&
+                                  quickAdd.status === "success" &&
+                                  "bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]",
+                              ),
+                        )}
+                        style={
+                          isLocked
+                            ? {
+                                backgroundImage:
+                                  "linear-gradient(to bottom right, transparent calc(50% - 1px), rgba(0,0,0,0.65) 50%, transparent calc(50% + 1px))",
+                              }
+                            : undefined
+                        }
+                      >
+                        {isLoadingSize ? "..." : size}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -183,5 +204,46 @@ export function ProductCard({
         )}
       </Link>
     </article>
+  );
+}
+
+function SingleSizeAddButton({
+  size,
+  isAvailable,
+  isLoading,
+  isSuccess,
+  onAdd,
+}: {
+  size: string;
+  isAvailable: boolean;
+  isLoading: boolean;
+  isSuccess: boolean;
+  onAdd: () => void;
+}) {
+  const isLocked = !isAvailable;
+
+  return (
+    <button
+      type="button"
+      disabled={isLoading || isLocked}
+      aria-label={isLocked ? "Sản phẩm đã hết hàng" : "Thêm vào giỏ hàng"}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (isLocked) return;
+        onAdd();
+      }}
+      className={cn(
+        "flex h-[26px] w-full items-center justify-center gap-1.5 rounded-full text-[12px] font-medium leading-none transition-colors duration-200",
+        isLocked
+          ? "cursor-not-allowed bg-gray-200 text-black/50"
+          : cn(
+              "bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
+              isSuccess && "bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]",
+            ),
+      )}
+    >
+      {isLoading ? "..." : isLocked ? "Hết hàng" : `Thêm vào giỏ · ${size || "Freesize"}`}
+    </button>
   );
 }

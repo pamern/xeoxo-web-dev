@@ -1,11 +1,36 @@
 import { SiteFooter } from "@/components/organisms/SiteFooter";
 import { SiteHeader } from "@/components/organisms/SiteHeader";
+import { getCategoriesByDepartment } from "@/features/homepage/homepage.service";
+
+async function getHeaderCategoryMenus() {
+  try {
+    const [womenCategories, menCategories] = await Promise.all([
+      getCategoriesByDepartment("WOMEN"),
+      getCategoriesByDepartment("MEN"),
+    ]);
+    const aoDaiCategories = [...womenCategories, ...menCategories].filter(
+      (category) =>
+        category.categorySlug.includes("ao-dai") ||
+        category.categoryName.toLowerCase().includes("áo dài"),
+    );
+    return { womenCategories, menCategories, aoDaiCategories };
+  } catch {
+    return { womenCategories: [], menCategories: [], aoDaiCategories: [] };
+  }
+}
 
 // Khung dùng chung cho mọi trang public của website (header + footer).
-export function SiteLayout({ children }: { children: React.ReactNode }) {
+export async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const { womenCategories, menCategories, aoDaiCategories } =
+    await getHeaderCategoryMenus();
+
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+      <SiteHeader
+        womenCategories={womenCategories}
+        menCategories={menCategories}
+        aoDaiCategories={aoDaiCategories}
+      />
       <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>
