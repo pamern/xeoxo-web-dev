@@ -155,6 +155,7 @@ export function SiteHeader({
   const latestProductImageAlt =
     latestCollectionHighlight?.productImageAlt ||
     "Sản phẩm trong bộ sưu tập mới nhất";
+  const isProductDetailPage = pathname.startsWith("/products/");
 
   const accountLabel =
     auth.customer?.customer_name?.trim() ||
@@ -362,7 +363,13 @@ export function SiteHeader({
               </div>
               <button
                 type="button"
-                onClick={openCartDrawer}
+                onClick={() => {
+                  if (isProductDetailPage) {
+                    router.push(ROUTES.CART);
+                    return;
+                  }
+                  openCartDrawer();
+                }}
                 aria-label="Giỏ hàng"
                 className="relative"
               >
