@@ -267,11 +267,11 @@ Tao/lap lai payment link cho order online neu can retry.
 
 ### POST `/api/v1/customization-requests`
 
-Tao yeu cau may do va measurement profile.
+Tao yeu cau may do voi `measurement_snapshot` la du lieu giao dich chinh. Neu member chon luu mac dinh thi update `measurement_profile` nhu side effect rieng.
 
 ### PUT `/api/v1/customization-requests/{customization_id}/measurements`
 
-Cap nhat measurement cua yeu cau custom.
+Cap nhat `measurement_snapshot` cua yeu cau custom. Khong doc nguoc du lieu giao dich tu `measurement_profile`.
 
 ### POST `/api/v1/measurement-appointments`
 

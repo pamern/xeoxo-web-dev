@@ -197,7 +197,7 @@ Phạm vi tài liệu bám theo các bảng hiện có trong đặc tả databas
 | Role | Quyền đề xuất |
 |---|---|
 | postgres | ALL |
-| service_role | ALL; dùng cho backend auth/profile sync và các server-side flow nội bộ |
+| service_role | ALL |
 | authenticated | SELECT/UPDATE dữ liệu customer, address của chính mình; SELECT reward của chính mình |
 | anon | Không truy cập trực tiếp |
 
@@ -206,8 +206,6 @@ Phạm vi tài liệu bám theo các bảng hiện có trong đặc tả databas
 - `authenticated` chỉ được đọc/cập nhật thông tin `customer`, `address` của chính mình.
 - `authenticated` được đọc `loyalty_reward`, `reward_usage` của chính mình.
 - `authenticated` được đọc `loyalty_tier` nếu cần hiển thị chính sách hạng thành viên.
-- Nếu UI membership đọc trực tiếp qua Supabase client thì cần có `GRANT SELECT` và policy `SELECT` tương ứng cho `iam.loyalty_tier`; không nên giả định frontend luôn đi qua backend.
-- `service_role` được phép truy cập server-side vào `iam.account` và `iam.customer` để đồng bộ hồ sơ sau đăng nhập/đăng ký, hoặc đọc profile customer từ API backend.
 - Không cho người dùng đọc danh sách customer, staff, account hoặc reward của người khác.
 - Không cho khách tự cập nhật `customer.total_spent`, `customer.spent_in_year`, `customer.tier_id`, `loyalty_reward.status`.
 
@@ -260,9 +258,7 @@ Phạm vi tài liệu bám theo các bảng hiện có trong đặc tả databas
 
 - `authenticated` được thao tác với `cart`, `cart_item`, `sales_order`, `review`, `return_request` của chính mình.
 - Không cho khách tự cập nhật trạng thái đơn hàng, thanh toán, giao hàng, hoàn tiền.
-- Các cột nhạy cảm như `order_status`, `payment_status`, `shipping_status`, `refund_status`, `reward_dicount_amount` chỉ nên cập nhật qua backend.
-- Với `sales.cart_item`, dữ liệu `CUSTOMIZED` yêu cầu backend kiểm tra ownership của `customization.customization_request` trước khi insert/update; không được chỉ tin vào `customization_id` do client gửi lên.
-- `sales.order_item.customization_snapshot` phải được giữ như dữ liệu giao dịch bất biến, không overwrite sau khi order đã tạo.
+- Các cột nhạy cảm như `order_status`, `payment_status`, `shipping_status`, `refund_status`, `reward_discount_amount`, `customization_snapshot` chỉ nên cập nhật qua backend.
 
 ---
 
@@ -278,9 +274,7 @@ Phạm vi tài liệu bám theo các bảng hiện có trong đặc tả databas
 **Ghi chú:**
 
 - Dữ liệu số đo cá nhân chỉ được đọc bởi chủ sở hữu và backend.
-- `authenticated` nên có quyền owner-based trên `customization.customization_request` và `customization.measurement_appointment`, không chỉ `measurement_profile`/`measurement_profile_detail`.
-- Nếu backend dùng `service_role` để đọc `customization_request`, vẫn phải tự kiểm tra `customer_id` khớp với actor hiện tại vì `service_role` bypass RLS.
-- `customization_request.measurement_snapshot`, `sales.cart_item.customization_snapshot`, `sales.order_item.customization_snapshot` là các lớp snapshot độc lập cho giao dịch; không nên sửa hồi tố để “đồng bộ” với profile hiện tại.
+- Snapshot số đo của request/cart/order nên được chụp qua backend hoặc trigger DB, không để frontend sửa trực tiếp sau khi đã chốt.
 - Nhân viên xử lý lịch hẹn thông qua API/backend, không cần role database riêng.
 
 ---
@@ -412,6 +406,9 @@ Các cột không nên cho frontend cập nhật trực tiếp:
 - `customer.total_spent`
 - `customer.spent_in_year`
 - `customer.tier_id`
-- `sales_order.reward_dicount_amount`
+- `sales_order.reward_discount_amount`
+- `customization_request.measurement_snapshot`
+- `cart_item.customization_snapshot`
+- `order_item.customization_snapshot`
 
 ---

@@ -47,15 +47,6 @@ type ComponentSelection = {
   variantId?: number;
 };
 
-function getInitialSelectedSize(sizes: ProductSizeOptionDto[]) {
-  const regularSizes = sizes.filter(
-    (option) => option.size_name.trim().toUpperCase() !== "CUSTOM",
-  );
-
-  const firstAvailable = regularSizes.find((option) => option.is_available);
-  return firstAvailable?.size_name ?? "";
-}
-
 export function ProductDetail({
   product,
   apiProduct,
@@ -65,7 +56,7 @@ export function ProductDetail({
   apiProduct: ProductDetailDto;
   relatedProducts?: Product[];
 }) {
-  const [size, setSize] = useState(() => getInitialSelectedSize(apiProduct.sizes));
+  const [size, setSize] = useState("");
   const [color, setColor] = useState(product.colors[0]);
   const [quantity, setQuantity] = useState(1);
   const [errorMessage, setErrorMessage] = useState<string>();
@@ -126,21 +117,6 @@ export function ProductDetail({
     : selectedVariant?.price ?? apiProduct.price ?? product.salePrice ?? product.price;
   const stockQuantity = selectedVariant?.stock_quantity ?? 0;
   const maxQuantity = Math.max(1, stockQuantity);
-
-  useEffect(() => {
-    if (size === "CUSTOM") {
-      return;
-    }
-
-    const hasSelectedSize = apiProduct.sizes.some(
-      (option) =>
-        option.size_name.trim().toLowerCase() === size.trim().toLowerCase(),
-    );
-
-    if (!hasSelectedSize) {
-      setSize(getInitialSelectedSize(apiProduct.sizes));
-    }
-  }, [apiProduct.sizes, size]);
 
   useEffect(() => {
     setQuantity((current) =>
@@ -778,7 +754,7 @@ function SingleComponentPurchasePanel({
     isAdding || (!customSelected && !selectedVariant?.is_available);
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[145] hidden border-y border-[#d4d4d4] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:block">
+    <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:block">
       <div className="mx-auto grid min-h-[88px] max-w-site grid-cols-[minmax(240px,1.1fr)_minmax(280px,1fr)_minmax(130px,0.52fr)_minmax(220px,0.82fr)] items-start gap-4 px-3 py-3 xl:px-[80px]">
         <div className="flex min-w-0 items-start gap-3 self-start">
           <div className="relative h-[58px] w-[44px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">

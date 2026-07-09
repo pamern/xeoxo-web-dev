@@ -9,22 +9,20 @@
 - customer_name (VARCHAR(255), NULL): Tên khách hàng
 - email (VARCHAR(255), NULL): Email
 - phone (VARCHAR(20), NULL): Số điện thoại
-- gender (VARCHAR(20)/CHECK, NULL): Giới tính
-- birthday (DATE, NULL): Ngày sinh
+- gender (VARCHAR(20), NULL): Giới tính khách hàng
+- birthday (DATE, NULL): Ngày sinh khách hàng
 - customer_type (VARCHAR/CHECK, NOT NULL): Loại khách hàng 
 - tier_id (VARCHAR(20), FK, NULL): Mã hạng thành viên
-- total_spent (NUMERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu
-- spent_in_year (NUMERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu trong năm
+- total_spent (NUMBERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu
+- spent_in_year (NUMBERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu trong năm
 - last_tier_updated_at(TIMESTAMPTZ, NULL): Lần cập nhập hạng thành viên gần nhất
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
 
 **Ghi chú / Enum:**
 - customer_type = {MEMBER, GUEST}
-- gender = {MALE, FEMALE, OTHER}
 - email và phone trong CUSTOMER là thông tin liên hệ, không phải thông tin đăng nhập nên có thể không UNIQUE.
-- Với flow auth hiện tại, `email` và `phone` có thể tạm thời cùng `NULL` sau social login nếu provider không trả dữ liệu liên hệ; hệ thống sẽ yêu cầu bổ sung ở bước sau như checkout hoặc cập nhật hồ sơ.
-- customer_name và email có thể để NULL, phù hợp với một số flow guest hoặc dữ liệu chưa hoàn thiện.
+- `total_spent` và `spent_in_year` có thể được hệ thống tự đồng bộ khi đơn hàng chuyển sang `COMPLETED`, và bị bù trừ ngược nếu đơn rời khỏi trạng thái `COMPLETED`.
 
 ## LOYALTY_TIER
 
@@ -81,7 +79,7 @@
 - recipient_name (VARCHAR(255), NOT NULL): Tên người nhận
 - recipient_phone (CHAR(20), NOT NULL): Số điện thoại người nhận
 - province_id (INT, FK, NOT NULL): Mã tỉnh/thành phố
-- district_name (VARCHAR(255), NOT NULL): Quận/huyện
+- district_name (CHECKIN, NOT NULL): Quận
 - address_detail (TEXT, NOT NULL): Địa chỉ chi tiết
 - is_default (BOOLEAN, NOT NULL): Có phải địa chỉ mặc định không?
 - is_active (BOOLEAN, NOT NULL): Trạng thái hoạt động
@@ -96,8 +94,13 @@
 - province_id (SERIAL, PK, NOT NULL): Mã tỉnh/thành phố
 - province_name (VARCHAR(150), NOT NULL): Tên tỉnh/thành phố
 - region (VARCHAR(30), NOT NULL): Miền
+- ward (TEXT[], NOT NULL): Danh sách phường/xã/đặc khu thuộc tỉnh/thành phố
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
+
+**Ghi chú / Enum:**
+- region = {Miền Bắc, Miền Trung, Miền Nam}
+- `ward` lưu dạng mảng text để phục vụ chọn địa chỉ nhanh ở frontend/backend.
 
 ## STAFF
 
@@ -141,7 +144,6 @@
 
 - collection_id (SERIAL, PK, NOT NULL): Mã bộ sưu tập
 - collection_name (VARCHAR(255), NOT NULL): Tên bộ sưu tập
-- slug (VARCHAR(255), UNIQUE, NOT NULL): Slug URL của bộ sưu tập
 - description (TEXT, NULL): Mô tả bộ sưu tập
 - media_id (BIGINT, FK, NULL): Mã hình ảnh
 - content_json (JSONB, NULL): Nội dung dạng JSON
@@ -153,7 +155,6 @@
 
 **Ghi chú / Enum:**
 - season = {SPRING, SUMMER, AUTUMN, WINTER}
-- `slug` dùng cho URL thân thiện và nên được giữ ổn định sau khi public.
 
 ## PRODUCT_LINE
 
@@ -161,7 +162,6 @@
 - collection_id (INT, FK, NULL): Mã bộ sưu tập
 - color_id (INT, FK, NULL): Mã màu chính của sản phẩm
 - line_name (VARCHAR(255), NOT NULL): Tên dòng sản phẩm
-- slug (VARCHAR(255), UNIQUE, NOT NULL): Slug URL của dòng sản phẩm
 - description (TEXT, NULL): Mô tả dòng sản phẩm
 - material_id (INT, FK, NOT NULL): Mã chất liệu
 - design_style (VARCHAR(500), NULL): Kiểu dáng thiết kế
@@ -174,7 +174,8 @@
 
 **Ghi chú / Enum:**
 - status = {ACTIVE, INACTIVE}
-- `slug` dùng cho route/public URL của dòng sản phẩm và nên unique toàn hệ thống.
+- Hệ thống có thể tự chuyển `product_line.status = INACTIVE` khi toàn bộ variant/size của dòng sản phẩm đều hết hàng trong `inventory.inventory`.
+- Nếu có ít nhất một variant có hàng trở lại, `product_line.status` có thể được đồng bộ về `ACTIVE`.
 
 ## LINE_CATEGORY
 
@@ -214,6 +215,8 @@
 
 **Ghi chú / Enum:**
 - status = {ACTIVE, INACTIVE, OUT_OF_STOCK, COMING_SOON, PREORDER}
+- Khi tổng tồn kho của một variant ở tất cả branch bằng `0`, hệ thống có thể tự đồng bộ sang `OUT_OF_STOCK`.
+- Nếu variant đang `OUT_OF_STOCK` và có hàng trở lại, hệ thống có thể tự đồng bộ về `ACTIVE`.
 
 ## COLOR
 
@@ -395,23 +398,22 @@
 
 - cart_item_id (BIGSERIAL, PK, NOT NULL): Mã dòng giỏ hàng
 - cart_id (BIGINT, FK, NOT NULL): Mã giỏ hàng
-- variant_id (INT, FK, NULL): Mã biến thể sản phẩm tiêu chuẩn
-- customization_id (BIGINT, FK, NULL): Mã yêu cầu may đo được thêm vào giỏ
-- customization_snapshot (JSONB, NULL): Snapshot số đo được copy từ `customization.customization_request.measurement_snapshot` tại thời điểm thêm vào giỏ
+- variant_id (INT, FK, NULL): Mã biến thể sản phẩm thường
+- customization_id (BIGINT, FK, NULL): Mã yêu cầu customize đang được thêm vào giỏ
+- customization_snapshot (JSONB, NULL): Snapshot thông tin customize tại thời điểm thêm vào giỏ
 - item_type (VARCHAR(20), NOT NULL): Phân loại dòng giỏ hàng
 - quantity (INT, NOT NULL): Số lượng
-- unit_price (NUMERIC(14,2), NOT NULL): Đơn giá gốc 1 dòng tại thời điểm thêm vào giỏ hàng
+- unit_price (NUMERIC(14,2), NOT NULL): Đơn giá tại thời điểm thêm vào giỏ hàng, với hàng customize đây là giá đã tính phụ phí hiện tại
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
 
 **Ghi chú / Enum:**
+- UNIQUE (cart_id, variant_id)
+- UNIQUE (cart_id, customization_id)
 - item_type = {STANDARD, CUSTOMIZED}
-- Nếu `item_type = STANDARD` thì `variant_id` bắt buộc có giá trị và `customization_id` phải NULL.
-- Nếu `item_type = CUSTOMIZED` thì `customization_id` bắt buộc có giá trị và `variant_id` phải NULL.
-- `UNIQUE (cart_id, variant_id)` cho dòng `STANDARD`.
-- `UNIQUE (cart_id, customization_id)` cho dòng `CUSTOMIZED`.
-- `customization_snapshot` là bản copy bất biến phục vụ render cart và checkout; không nên đọc ngược động từ `measurement_profile`.
-- API/backend thêm `CUSTOMIZED` item phải xác minh `customization_request.customer_id` thuộc về chủ giỏ hàng hiện tại trước khi dùng `custom_price` và `measurement_snapshot`.
+- Nếu item_type = STANDARD thì variant_id NOT NULL và customization_id NULL.
+- Nếu item_type = CUSTOMIZED thì variant_id NULL và customization_id NOT NULL.
+- `customization_snapshot` nên được chụp từ `customization_request.measurement_snapshot` khi item customize được thêm vào giỏ.
 
 ## SALES_ORDER
 
@@ -431,7 +433,8 @@
 **Ghi chú / Enum:**
 - order_status tham chiếu ENUM ORDER_STATUS
 - payment_status tham chiếu ENUM PAYMENT_STATUS
-- Tên cột trong DB hiện tại là `reward_dicount_amount` theo migration. Ở lớp API/DTO nên map thành `reward_discount_amount` để tránh lan typo ra ngoài boundary của database.
+- Khi `order_status` chuyển sang `COMPLETED`, hệ thống có thể tự cộng chi tiêu cho `iam.customer`.
+- Nếu đơn đã `COMPLETED` nhưng sau đó chuyển sang `CANCELLED` hoặc `RETURNED`, hệ thống có thể tự trừ ngược phần chi tiêu tương ứng.
 
 ## ORDER_ITEM
 
@@ -439,7 +442,7 @@
 - order_id (BIGINT, FK, NOT NULL): Mã đơn hàng
 - variant_id (INT, FK, NULL): Mã biến thể sản phẩm
 - customization_id (BIGINT, FK, NULL): Mã may đo cá nhân
-- customization_snapshot (JSONB, NULL): Snapshot số đo được copy từ `sales.cart_item.customization_snapshot` tại thời điểm checkout
+- customization_snapshot (JSONB, NULL): Snapshot customize tại thời điểm checkout
 - item_type (VARCHAR(20), NOT NULL): Phân loại sản phẩm
 - quantity (INT, NOT NULL): Số lượng mua
 - unit_price (NUMERIC(14,2), NOT NULL): Đơn giá tại thời điểm mua
@@ -450,8 +453,7 @@
 **Ghi chú / Enum:**
 - item_type = {STANDARD, CUSTOMIZED}
 - Nếu item_type = CUSTOMIZED thì variant_id NULL và customization_id NOT NULL.
-- Với dòng `CUSTOMIZED`, `customization_snapshot` là source of truth bất biến để audit, hiển thị lại thông tin số đo và xử lý nghiệp vụ hậu mãi của đơn hàng.
-- Không nên phụ thuộc vào `customization_request`, `measurement_profile` hay `measurement_profile_detail` để dựng lại dữ liệu giao dịch cũ vì các bản ghi nguồn có thể thay đổi theo thời gian.
+- Với item customize, `customization_snapshot` nên được copy từ `sales.cart_item.customization_snapshot` để dữ liệu đơn hàng không bị trôi theo thay đổi về sau.
 
 ## PAYMENT
 
@@ -602,7 +604,6 @@
 - appointment_id (INT, FK, NULL): Mã lịch hẹn phát sinh số đo
 - customer_id (BIGINT, FK, NULL): Mã khách hàng
 - measured_by (INT, FK, NULL): Nhân viên đo
-- profile_type (VARCHAR(30), NOT NULL): Loại hồ sơ số đo
 - note (TEXT, NULL): Ghi chú số đo
 - is_active (BOOLEAN, NOT NULL): Trạng thái hồ sơ, có đang dùng không?
 - measurement_date (TIMESTAMPTZ, NOT NULL): Thời gian đo
@@ -610,9 +611,7 @@
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
 
 **Ghi chú / Enum:**
-- Dùng để lưu dữ liệu số đo cá nhân cho 2 trường hợp: khách hàng nhập số đo để hệ thống gợi ý size và khách hàng lưu hồ sơ số đo mặc định.
-- profile_type = {SIZE_RECOMMENDATION, CUSTOMER_MEASUREMENT}
-- `measurement_profile` là hồ sơ số đo cá nhân hiện hành của khách, phục vụ quản lý tài khoản, gợi ý size và làm nguồn prefill cho request mới.
+- `measurement_profile` là hồ sơ số đo cá nhân hiện hành của khách, phục vụ quản lý tài khoản, gợi ý size và làm nguồn tạo request mới.
 - Không nên dùng `measurement_profile` làm nguồn động để hiển thị lại số đo của giao dịch cũ.
 - Khi khách nhập/chỉnh sửa số đo, hệ thống có thể cập nhật trực tiếp hồ sơ đang active; dữ liệu giao dịch vẫn được giữ ở snapshot của `customization_request`.
 - Mỗi customer chỉ nên có tối đa một profile đang `is_active = true`.
@@ -732,11 +731,9 @@
 
 - result_id (BIGINT, PK, FK, NOT NULL): Mã kết quả tư vấn personal color.
 - color_id (INT, PK, FK, NOT NULL): Mã màu phù hợp được hệ thống đề xuất.
-- match_score (NUMERIC(5,2), NULL): Điểm tương đồng giữa kết quả personal color và màu trong hệ thống.
-- display_order (SMALLINT, NOT NULL): Thứ tự hiển thị màu được đề xuất.
+- display_order (SMALLINT, NULL): Thứ tự hiển thị màu được đề xuất.
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo.
 
 **Ghi chú / Enum:**
 - Một kết quả personal color có thể đề xuất nhiều màu từ bảng COLOR.
-- match_score được tính dựa trên mức độ tương đồng giữa season_result và thuộc tính màu trong bảng COLOR.
 - Danh sách sản phẩm phù hợp được truy vấn động dựa trên các color_id đã được đề xuất.

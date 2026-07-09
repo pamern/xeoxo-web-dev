@@ -2,9 +2,12 @@
 
 ## Ghi chú ngắn
 
-- `customization_request.measurement_snapshot` là source of truth cho dữ liệu giao dịch may đo.
-- `measurement_profile` và `measurement_profile_detail` chỉ là hồ sơ mặc định của member, chỉ cập nhật khi user chọn lưu.
-- `Guest` phải được map vào `iam.customer` với `customer_type = GUEST` để các flow lookup/cancel/return hoạt động ổn định.
+- Ưu tiên vẽ theo nghiệp vụ mục tiêu.
+- Có vài điểm docs và code hiện tại chưa khớp hoàn toàn:
+  - `customization request`: chốt theo hướng `measurement_snapshot` là source of truth; profile mặc định chỉ là side effect khi user muốn lưu
+  - `measurement appointment`: docs có branch check slot/guest customer rõ hơn code hiện tại
+  - `measurement profile`: code hiện tại đang dùng flow `GET/PUT /api/v1/measurement-profiles/current`
+  - `refund`: nên tách riêng `hủy đơn trước giao hàng` và `hoàn tiền sau return request`
 
 ## 1. Checkout Preview - Voucher / Reward
 
@@ -15,15 +18,48 @@ flowchart TD
   A[Customer chọn cart item, địa chỉ, voucher] --> B[Frontend gọi POST /api/v1/cart/checkout-preview]
   B --> C[API validate request và lấy customer_id nếu có]
   C --> D[Feature service re-query cart, giá, địa chỉ, loyalty_reward]
-  D --> E{Voucher hoặc reward hợp lệ?}
+  D --> E{Voucher / reward hợp lệ?}
   E -->|Không| F[Trả lỗi 404 hoặc 422]
   E -->|Có| G[Tính subtotal, shipping_fee, discount_amount, reward_discount_amount, total_amount]
   G --> H[Trả checkout preview cho UI]
 ```
 
-## 2. Đặt Hàng - Member và Guest
+## 2. Đặt Hàng - Consume Reward - Ghi Dữ Liệu Bán Hàng
 
 Mục tiêu: tạo order theo transaction atomic, consume reward và trừ tồn kho cùng một lần xử lý.
+
+Xử lý member và guest:
+- `Member`: lấy `customer_id` từ session, dùng `address_id` hoặc địa chỉ mới, đơn nằm trong lịch sử tài khoản.
+- `Guest`: không tin `customer_id` từ client; backend phải tìm hoặc tạo `iam.customer` với `customer_type = GUEST` theo phone/email, rồi gắn `sales_order.customer_id` vào row guest đó.
+- DB lưu:
+  - `iam.customer`: 1 row `GUEST` hoặc `MEMBER`
+  - `iam.address`: tạo row địa chỉ nội bộ nếu guest checkout hoặc member nhập địa chỉ mới
+  - `sales.sales_order.customer_id`: luôn trỏ về một `customer_id`, kể cả guest
+  - `sales.shipping.address_id`: luôn có địa chỉ đã lưu để phục vụ giao hàng
+- Quản lý về sau:
+  - `Member`: xem lịch sử bằng tài khoản
+  - `Guest`: tra cứu bằng `order_code + contact`
+  - các flow `lookup`, `cancel`, `return`, `review` đều dựa vào `sales_order.customer_id` + đối chiếu `CUSTOMER.phone/email`
+
+```mermaid
+flowchart TD
+  A[Customer bấm Thanh toán] --> B[Frontend gọi POST /api/v1/orders]
+  B --> C[API validate body]
+  C --> D[API gọi RPC sales.checkout_order bằng service_role]
+  D --> E[RPC lock cart, cart_item, inventory]
+  E --> F[Re-query giá, tồn kho, voucher, shipping fee]
+  F --> G{Cart hợp lệ, tồn kho đủ, reward AVAILABLE?}
+  G -->|Không| H[Rollback transaction và trả lỗi 409/422]
+  G -->|Có| I[Insert sales_order]
+  I --> J[Insert order_item]
+  J --> K[Insert shipping]
+  K --> L[Insert payment]
+  L --> M[Update loyalty_reward AVAILABLE to USED]
+  M --> N[Insert reward_usage]
+  N --> O[Delete or consume cart_item]
+  O --> P[Trừ inventory]
+  P --> Q[Trả order thành công]
+```
 
 ```mermaid
 flowchart TD
@@ -38,7 +74,7 @@ flowchart TD
   G --> J[Insert shipping với address_id]
   H --> J
   I --> J
-  J --> K[Gọi checkout RPC để insert order_item, payment, reward_usage và trừ inventory]
+  J --> K[Tra cứu và quản lý đơn bằng customer_id + contact hoặc session]
 ```
 
 ## 3. Cập Nhật Hạng Thành Viên
@@ -58,9 +94,32 @@ flowchart TD
   B -->|Từ COMPLETED sang CANCELLED hoặc RETURNED| J[Trừ ngược total_spent và spent_in_year rồi đánh giá lại tier]
 ```
 
-## 4. Đặt Lịch May Đo - Member và Guest
+## 4. Đặt Lịch May Đo
 
 Mục tiêu: nhận lịch hẹn, kiểm tra slot và tạo appointment trạng thái chờ xác nhận.
+
+Xử lý member và guest:
+- `Member`: lấy `customer_id` từ session rồi gắn thẳng vào lịch hẹn.
+- `Guest`: backend nên tìm hoặc tạo `iam.customer` với `customer_type = GUEST` theo phone/email, rồi gắn `measurement_appointment.customer_id` vào row guest đó.
+- DB lưu:
+  - `customization.measurement_appointment.customer_id`: nên luôn có giá trị để support `lookup`, `cancel`, `confirm`
+  - `iam.customer.phone/email`: là dữ liệu đối chiếu cho guest
+- Quản lý về sau:
+  - `Member`: xem danh sách qua `GET /api/v1/measurement-appointments`
+  - `Guest`: tra cứu qua `appointment_id + contact`
+  - huỷ lịch hoặc xác thực lịch guest đều check contact khớp với `CUSTOMER` gắn vào appointment
+
+```mermaid
+flowchart TD
+  A[Customer nhập thông tin lịch hẹn] --> B[Frontend gọi POST /api/v1/measurement-appointments]
+  B --> C[API validate body và lấy customer_id nếu có]
+  C --> D[Feature service kiểm tra product line, branch, ngày, start_time]
+  D --> E[Tính end_time = start_time + 30 phút]
+  E --> F{Slot còn trống?}
+  F -->|Không| G[Trả lỗi 409 slot đã được đặt]
+  F -->|Có| H[Insert customization.measurement_appointment status = PENDING]
+  H --> I[Trả appointment_id, ngày, giờ, status]
+```
 
 ```mermaid
 flowchart TD
@@ -78,23 +137,51 @@ flowchart TD
 
 ## 5. Tạo Customization Request
 
-Mục tiêu: lưu yêu cầu may đo cá nhân, tính giá custom và lưu snapshot số đo bất biến cho giao dịch.
+Mục tiêu: lưu yêu cầu may đo cá nhân, tính giá custom và gắn số đo cho yêu cầu đó.
+
+DB lưu số đo:
+- `Code hiện tại` lưu thêm `customization_request.measurement_snapshot` dạng JSON, ví dụ:
+```json
+{
+  "component_id": 123,
+  "component_type": "AO",
+  "measurements": {
+    "height": 165,
+    "weight": 52,
+    "chest": 84,
+    "waist": 68
+  },
+  "note": "May ôm vừa",
+  "source": "CUSTOMIZE_MODAL",
+  "saved_as_default": true,
+  "created_at": "2026-07-09T10:00:00Z"
+}
+```
+- JSON này là `snapshot tại thời điểm tạo request`, dùng để giữ nguyên số đo gắn với đơn/customization đó, kể cả sau này profile mặc định của khách thay đổi.
+
+`measurement_profile` và `measurement_profile_detail`:
+- `measurement_snapshot` là source of truth cho giao dịch customize.
+- `measurement_profile` và `measurement_profile_detail` chỉ dùng cho hồ sơ mặc định của member.
+- nếu `customerId` có và `save_as_default = true` thì gọi `upsertProfile(...)`
+- `measurement_profile`: không tạo profile mới mỗi lần; nếu đã có profile active thì `update` profile đó
+- `measurement_profile_detail`: không update từng dòng; code đang `delete toàn bộ detail cũ` rồi `insert lại toàn bộ detail mới`
+- nếu guest hoặc không chọn `save_as_default` thì không bắt buộc ghi `measurement_profile/detail`; dữ liệu số đo chính chỉ nằm trong `measurement_snapshot`
 
 ```mermaid
 flowchart TD
   A[Customer nhập số đo và ghi chú] --> B[Frontend gọi POST /api/v1/customization-requests]
   B --> C[API validate body và lấy customer_id nếu có]
-  C --> D[Feature service query component gốc và variant active]
+  C --> D[Feature service query sản phẩm hoặc component gốc]
   D --> E{Sản phẩm active và số đo hợp lệ?}
   E -->|Không| F[Trả lỗi 404 hoặc 422]
-  E -->|Có| G[Tạo measurement_snapshot JSON]
+  E -->|Có| G[Insert measurement_snapshot JSON vào customization_request]
   G --> H{Member và save_as_default = true?}
   H -->|Không| I[Bỏ qua measurement_profile]
   H -->|Có| J[Upsert measurement_profile]
   J --> K[Delete detail cũ rồi insert detail mới]
   I --> L[Tính unit_price, surcharge_percent, surcharge_amount, custom_price]
   K --> L
-  L --> M[Insert customization_request với measurement_snapshot]
+  L --> M[Insert customization_request status = REQUESTED]
   M --> N[Trả customization_id, measurement_snapshot, custom_price]
 ```
 
@@ -106,14 +193,13 @@ Mục tiêu: đưa customization đã tạo vào cart rồi đi tiếp qua flow 
 flowchart TD
   A[Customer có customization_id] --> B[Frontend gọi API add to cart]
   B --> C[API validate customization_id và ownership]
-  C --> D[Load customization_request.measurement_snapshot]
-  D --> E{Cart đã tồn tại?}
-  E -->|Chưa| F[Insert sales.cart]
-  E -->|Rồi| G[Đi tiếp]
-  F --> G
-  G --> H[Insert sales.cart_item item_type = CUSTOMIZED và copy customization_snapshot]
-  H --> I[Customer checkout]
-  I --> J[Order flow ghi order_item với customization_id và snapshot]
+  C --> D{Cart đã tồn tại?}
+  D -->|Chưa| E[Insert sales.cart]
+  D -->|Rồi| F[Đi tiếp]
+  E --> F
+  F --> G[Insert sales.cart_item item_type = CUSTOMIZED]
+  G --> H[Customer checkout]
+  H --> I[Order flow ghi order_item với customization_id]
 ```
 
 ## 7. Hủy Đơn Trước Giao Hàng Và Refund
@@ -122,8 +208,8 @@ Mục tiêu: hủy đơn hợp lệ, hủy shipping và tạo refund nếu khác
 
 ```mermaid
 flowchart TD
-  A[Customer hoặc guest lookup bấm Hủy đơn] --> B[UI hiển thị modal xác nhận]
-  B --> C{User xác nhận hủy?}
+  A[Customer hoặc guest lookup bấm Huỷ đơn] --> B[UI hiển thị modal xác nhận]
+  B --> C{User xác nhận huỷ?}
   C -->|Không| D[Dừng flow]
   C -->|Có| E[POST /api/v1/orders/:order_id/cancel]
   E --> F[Xác thực bằng session hoặc order_code + contact]
@@ -154,7 +240,7 @@ flowchart TD
   B --> C[Xác thực ownership bằng session hoặc contact]
   C --> D[Validate order COMPLETED, còn hạn, item hợp lệ]
   D --> E{Đủ điều kiện?}
-  E -->|Không| F[Trả lỗi 403 hoặc 409 hoặc 422]
+  E -->|Không| F[Trả lỗi 403/409/422]
   E -->|Có| G[Insert return_request status = REQUESTED]
   G --> H[Insert return_item]
   H --> I[Staff review]
