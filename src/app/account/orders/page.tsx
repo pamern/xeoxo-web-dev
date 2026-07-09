@@ -102,8 +102,8 @@ export default async function AccountOrdersRoute({
               ]}
             />
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
-              <aside className="lg:sticky lg:top-[180px]">
+            <div className="mt-8 grid gap-8 lg:h-[calc(100vh-176px)] lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start lg:overflow-hidden">
+              <aside className="lg:h-full lg:overflow-y-auto lg:pr-2">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
                   activeHref={ROUTES.ACCOUNT_ORDERS}
@@ -111,8 +111,8 @@ export default async function AccountOrdersRoute({
                 />
               </aside>
 
-              <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
-                <div className="flex flex-col gap-5">
+              <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12 lg:h-full lg:overflow-y-auto">
+                <div className="flex flex-col gap-5 border-b border-black/10 pb-6">
                   <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
                     Lịch sử đơn hàng
                   </h1>

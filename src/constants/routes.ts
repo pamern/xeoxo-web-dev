@@ -70,6 +70,8 @@ export const API = {
 
   PRODUCT_LINE: (slug: string) =>
     `/api/v1/product-lines/${encodeURIComponent(slug)}`,
+  PRODUCT_LINE_SIZES: (slug: string) =>
+    `/api/v1/product-lines/${encodeURIComponent(slug)}/sizes`,
   PRODUCT_SIZE_CHART: (slug: string) =>
     `/api/v1/product-lines/${encodeURIComponent(slug)}/size-chart`,
   PRODUCT_REVIEWS: (slug: string) =>

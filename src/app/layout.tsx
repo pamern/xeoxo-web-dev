@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CartProvider } from "@/components/providers/CartProvider";
 import { Crimson_Pro, Unbounded } from "next/font/google";
 import { CartDrawerProvider } from "@/components/providers/CartDrawerProvider";
 import { CartToastProvider } from "@/components/providers/CartToastProvider";
@@ -36,9 +37,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       suppressHydrationWarning
     >
       <body className="font-sans antialiased">
-        <CartDrawerProvider>
-          <CartToastProvider>{children}</CartToastProvider>
-        </CartDrawerProvider>
+        <CartProvider>
+          <CartDrawerProvider>
+            <CartToastProvider>{children}</CartToastProvider>
+          </CartDrawerProvider>
+        </CartProvider>
       </body>
     </html>
   );

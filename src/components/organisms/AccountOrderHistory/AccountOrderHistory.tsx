@@ -43,6 +43,10 @@ export function AccountOrderHistory({
     initialOrders,
   );
   const statusTabs = buildOrderStatusTabs();
+  const summaryLabel =
+    statusGroup === "all"
+      ? `Tất cả đơn hàng (${orders.length})`
+      : `${statusTabs.find((tab) => tab.value === statusGroup)?.label ?? "Đơn hàng"} (${orders.length})`;
 
   if (!isAuthenticated) {
     return (
@@ -68,7 +72,29 @@ export function AccountOrderHistory({
 
   return (
     <div className="mt-8">
-      <OrderStatusTabs items={statusTabs} value={statusGroup} />
+      <div className="-mx-2 rounded-[18px] bg-white px-2 pb-5 pt-1">
+        <div className="flex flex-col gap-3 border-b border-black/10 pb-5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#cf5c43]">
+                Quản lý đơn hàng
+              </p>
+              <p className="mt-2 text-lg font-semibold text-foreground md:text-[22px]">
+                {summaryLabel}
+              </p>
+            </div>
+            <p className="max-w-[420px] text-sm font-light leading-relaxed text-foreground/68">
+              Bộ lọc luôn được giữ trong tầm nhìn để bạn đổi trạng thái mà không mất vị trí đang đọc.
+            </p>
+          </div>
+
+          <OrderStatusTabs
+            items={statusTabs}
+            value={statusGroup}
+            className="border-b-0 pb-0"
+          />
+        </div>
+      </div>
 
       {isLoading ? (
         <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
@@ -81,7 +107,7 @@ export function AccountOrderHistory({
           <p className="text-lg font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : orders.length ? (
-        <div className="mt-8 space-y-8">
+        <div className="mt-8 space-y-6">
           {orders.map((order) => {
             const status = getOrderStatusPresentation(order.order_status);
 

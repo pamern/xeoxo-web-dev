@@ -2,8 +2,8 @@ import { API } from "@/constants/routes";
 import { cachedFetch } from "@/lib/requestCache";
 import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
 import type {
+  ProductQuickAddDto,
   ProductDetailDto,
-  ProductReviewDto,
   ProductReviewsPageDto,
   SizeChartDto,
 } from "@/types/product-api.types";
@@ -22,6 +22,23 @@ async function readApi<T>(response: Response, fallback: string) {
 }
 
 export const productService = {
+  async getProductQuickAdd(slug: string) {
+    return cachedFetch(
+      `product-quick-add:${slug}`,
+      async () => {
+        const response = await fetch(API.PRODUCT_LINE_SIZES(slug), {
+          credentials: "include",
+        });
+
+        return readApi<ProductQuickAddDto>(
+          response,
+          "Khong the tai ton kho size san pham.",
+        );
+      },
+      PRODUCT_DETAIL_TTL_MS,
+    );
+  },
+
   async getProductDetail(slug: string) {
     return cachedFetch(
       `product-detail:${slug}`,

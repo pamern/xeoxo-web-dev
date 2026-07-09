@@ -171,7 +171,7 @@ export function SiteHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-background">
+      <header className="sticky top-0 z-[140] w-full bg-background">
         <div
           className="relative bg-black bg-[length:100%_auto] bg-top text-white"
           style={{ backgroundImage: "url(/images/header-line-up.png)" }}

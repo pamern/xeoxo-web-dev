@@ -5,7 +5,7 @@ import { cartService } from "@/services/cart.service";
 import { productService } from "@/services/product.service";
 import { invalidateCache } from "@/lib/requestCache";
 import { useCartToast } from "@/components/providers/CartToastProvider";
-import type { ProductDetailDto } from "@/types/product-api.types";
+import type { ProductQuickAddDto } from "@/types/product-api.types";
 
 type QuickAddState = {
   size?: string;
@@ -18,7 +18,7 @@ const DEFAULT_STATE: QuickAddState = {
 };
 
 export function useQuickAddProduct(productSlug: string) {
-  const [productDetail, setProductDetail] = useState<ProductDetailDto | null>(
+  const [productDetail, setProductDetail] = useState<ProductQuickAddDto | null>(
     null,
   );
   const [isDetailLoading, setIsDetailLoading] = useState(false);
@@ -33,7 +33,7 @@ export function useQuickAddProduct(productSlug: string) {
       return productDetail;
     }
 
-    const detail = await productService.getProductDetail(productSlug);
+    const detail = await productService.getProductQuickAdd(productSlug);
     setProductDetail(detail);
     return detail;
   }
@@ -45,7 +45,7 @@ export function useQuickAddProduct(productSlug: string) {
 
     setIsDetailLoading(true);
     productService
-      .getProductDetail(productSlug)
+      .getProductQuickAdd(productSlug)
       .then(setProductDetail)
       .catch(() => {})
       .finally(() => setIsDetailLoading(false));
@@ -78,7 +78,7 @@ export function useQuickAddProduct(productSlug: string) {
         showAddedToCart(addedItem);
       }
 
-      invalidateCache(`product-detail:${productSlug}`);
+      invalidateCache(`product-quick-add:${productSlug}`);
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
       setState({
         size,

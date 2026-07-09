@@ -155,7 +155,7 @@ export default async function ProductPage({
   const recommendedProducts = relatedProducts.slice(0, 4);
 
   return (
-    <SiteLayout>
+    <SiteLayout fixedHeader={false}>
       <div className="mx-auto w-full max-w-site px-6 pb-12 pt-5 xl:px-[100px]">
         <Breadcrumbs
           items={[

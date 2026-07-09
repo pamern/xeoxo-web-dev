@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn, formatPrice } from "@/lib/utils";
@@ -24,13 +24,49 @@ export function ProductCard({
   const onSale = typeof product.salePrice === "number" && product.salePrice < product.price;
   const quickAdd = useQuickAddProduct(product.slug);
   const productHref = ROUTES.PRODUCT(product.slug);
+  const cardRef = useRef<HTMLElement | null>(null);
+  const { isDetailLoading, prefetchDetail, productDetail } = quickAdd;
+  const prefetchHandlers = quickAddOnHover
+    ? {
+        onMouseEnter: prefetchDetail,
+        onFocus: prefetchDetail,
+        onTouchStart: prefetchDetail,
+      }
+    : undefined;
 
   useEffect(() => {
-    if (quickAddOnHover) {
-      quickAdd.prefetchDetail();
+    if (!quickAddOnHover || productDetail || isDetailLoading) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quickAddOnHover, product.slug]);
+
+    const element = cardRef.current;
+    if (!element) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) {
+          return;
+        }
+
+        prefetchDetail();
+        observer.disconnect();
+      },
+      { rootMargin: "180px 0px" },
+    );
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    isDetailLoading,
+    prefetchDetail,
+    productDetail,
+    quickAddOnHover,
+  ]);
 
   // Khi đã có dữ liệu chi tiết thật, lấy đúng danh sách size của sản phẩm này
   // (không dùng product.sizes tĩnh vì đó chỉ là placeholder mặc định, có thể thiếu XS/2XL...).
@@ -49,7 +85,11 @@ export function ProductCard({
   const singleSize = quickAddSizes[0];
 
   return (
-    <article className={cn("group flex flex-col gap-3", className)}>
+    <article
+      ref={cardRef}
+      className={cn("group flex flex-col gap-3", className)}
+      {...prefetchHandlers}
+    >
       <div
         className={cn(
           "relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-secondary",

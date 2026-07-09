@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { LazyRender } from "@/components/atoms/LazyRender";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { CollectionProducts } from "@/components/organisms/CollectionProducts";
 import { StarsBanner } from "@/components/organisms/StarsBanner";
@@ -220,44 +221,76 @@ function ImageStoryGrid({
         </div>
       </div>
 
-      <div className="grid gap-[50px] xl:grid-cols-2">
-        <div className="flex flex-col gap-[30px]">
-          <div className="grid gap-[10px] md:grid-cols-2">
-            <div className="relative h-[450px] overflow-hidden">
-              <Image src={displayImages[3]} alt="" fill sizes="377px" className="object-cover" />
+      <LazyRender fallback={<StoryGridSkeleton variant="editorial" />}>
+        <div className="grid gap-[50px] xl:grid-cols-2">
+          <div className="flex flex-col gap-[30px]">
+            <div className="grid gap-[10px] md:grid-cols-2">
+              <div className="relative h-[450px] overflow-hidden">
+                <Image src={displayImages[3]} alt="" fill sizes="377px" className="object-cover" />
+              </div>
+              <div className="relative h-[450px] overflow-hidden">
+                <Image src={displayImages[4]} alt="" fill sizes="377px" className="object-cover" />
+              </div>
             </div>
-            <div className="relative h-[450px] overflow-hidden">
-              <Image src={displayImages[4]} alt="" fill sizes="377px" className="object-cover" />
-            </div>
+
+            {editorialItems && editorialItems.length > 0 ? (
+              <div className="flex flex-col gap-5">
+                {editorialItems.map((item, index) => (
+                  <JsonTextBlock
+                    key={`${item.heading}-${index}`}
+                    heading={item.heading}
+                    body={item.body}
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
 
-          {editorialItems && editorialItems.length > 0 ? (
-            <div className="flex flex-col gap-5">
-              {editorialItems.map((item, index) => (
-                <JsonTextBlock
-                  key={`${item.heading}-${index}`}
-                  heading={item.heading}
-                  body={item.body}
-                />
-              ))}
-            </div>
-          ) : null}
+          <div className="relative h-[720px] overflow-hidden xl:h-[904px]">
+            <Image src={displayImages[5]} alt="" fill sizes="754px" className="object-cover" />
+          </div>
         </div>
+      </LazyRender>
 
-        <div className="relative h-[720px] overflow-hidden xl:h-[904px]">
-          <Image src={displayImages[5]} alt="" fill sizes="754px" className="object-cover" />
+      <LazyRender fallback={<StoryGridSkeleton variant="closing" />}>
+        <div className="grid gap-[50px] xl:grid-cols-2">
+          <div className="relative h-[904px] overflow-hidden">
+            <Image src={displayImages[6]} alt="" fill sizes="759px" className="object-cover" />
+          </div>
+          <div className="relative h-[902px] overflow-hidden">
+            <Image src={displayImages[7]} alt="" fill sizes="757px" className="object-cover" />
+          </div>
         </div>
-      </div>
-
-      <div className="grid gap-[50px] xl:grid-cols-2">
-        <div className="relative h-[904px] overflow-hidden">
-          <Image src={displayImages[6]} alt="" fill sizes="759px" className="object-cover" />
-        </div>
-        <div className="relative h-[902px] overflow-hidden">
-          <Image src={displayImages[7]} alt="" fill sizes="757px" className="object-cover" />
-        </div>
-      </div>
+      </LazyRender>
     </section>
+  );
+}
+
+function StoryGridSkeleton({
+  variant,
+}: {
+  variant: "editorial" | "closing";
+}) {
+  if (variant === "closing") {
+    return (
+      <div className="grid gap-[50px] xl:grid-cols-2" aria-hidden>
+        <div className="h-[904px] animate-pulse bg-secondary/40" />
+        <div className="h-[902px] animate-pulse bg-secondary/40" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-[50px] xl:grid-cols-2" aria-hidden>
+      <div className="flex flex-col gap-[30px]">
+        <div className="grid gap-[10px] md:grid-cols-2">
+          <div className="h-[450px] animate-pulse bg-secondary/40" />
+          <div className="h-[450px] animate-pulse bg-secondary/40" />
+        </div>
+        <div className="h-[220px] animate-pulse bg-secondary/30" />
+      </div>
+      <div className="h-[720px] animate-pulse bg-secondary/40 xl:h-[904px]" />
+    </div>
   );
 }
 

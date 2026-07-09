@@ -12,6 +12,10 @@ export type ProductSizeOptionDto = {
   stock_quantity?: number;
 };
 
+export type ProductQuickAddDto = {
+  sizes: ProductSizeOptionDto[];
+};
+
 export type ProductReviewDto = {
   review_id: number;
   customer_name: string;
@@ -95,4 +99,3 @@ export type SizeChartDto = {
     }>;
   }>;
 };
-

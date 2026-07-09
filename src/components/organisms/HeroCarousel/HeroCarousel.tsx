@@ -13,6 +13,18 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
   const [direction, setDirection] = useState(1);
   const total = slides.length;
   const current = slides[index];
+  const renderedIndexes = slides.reduce<number[]>((acc, _slide, slideIndex) => {
+    if (
+      total <= 2 ||
+      slideIndex === index ||
+      slideIndex === (index - 1 + total) % total ||
+      slideIndex === (index + 1) % total
+    ) {
+      acc.push(slideIndex);
+    }
+
+    return acc;
+  }, []);
 
   const go = (delta: number) => {
     setDirection(delta > 0 ? 1 : -1);
@@ -44,13 +56,17 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
       onMouseEnter={() => (isPausedRef.current = true)}
       onMouseLeave={() => (isPausedRef.current = false)}
     >
-      {slides.map((slide, i) => (
+      {renderedIndexes.map((i) => {
+        const slide = slides[i];
+
+        return (
         <Image
           key={slide.slug}
           src={slide.coverImage}
           alt={slide.name}
           fill
           priority={i === 0}
+          fetchPriority={i === 0 ? "high" : undefined}
           sizes="100vw"
           className={cn(
             "object-cover transition-[opacity,transform] duration-500 ease-out",
@@ -62,7 +78,8 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
                 )
           )}
         />
-      ))}
+        );
+      })}
       <div className="absolute inset-0 bg-black/30" aria-hidden />
 
       <div className="relative mx-auto flex h-full max-w-site flex-col justify-end gap-4 px-6 pb-16 xl:px-[100px]">
