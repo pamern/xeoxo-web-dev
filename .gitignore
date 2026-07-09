@@ -224,3 +224,4 @@ tsconfig.tsbuildinfo
 .codex-screens-mobile/
 .codex-screens-mobile-after/
 .env.local
+.env.figma
