@@ -221,6 +221,81 @@ Nghĩa là:
 - database business chỉ nhận update cuối cùng vào `sales_order.order_status`
 - phần verify email/OTP do Supabase Auth quản lý, không được xem là thay đổi schema trong task này
 
+## 5.1 Phân biệt theo trạng thái thanh toán
+
+Khi finalize hủy đơn, cần tách 2 case theo `sales.sales_order.payment_status`:
+
+- `PENDING` hoặc trạng thái chưa ghi nhận thu tiền thành công:
+  - đây là đơn chưa thanh toán xong
+  - xử lý tối thiểu là update `sales_order.order_status = CANCELLED`
+  - `sales_order.payment_status` nên giữ nguyên trạng thái nghiệp vụ hiện có, thông thường là `PENDING`
+  - không cần tạo thêm bản ghi `sales.payment` mới
+  - không cần tạo `sales.refund`
+
+- `PAID`:
+  - đây là đơn đã thu tiền thành công, nên hủy đơn không được dừng ở việc đổi `sales_order.order_status`
+  - cần ghi nhận thêm nghiệp vụ hoàn tiền ở lớp `payment/refund`
+
+## 5.2 Cách ghi nhận với đơn đã thanh toán
+
+Theo schema hiện tại, cách ghi nhận hợp lý nhất là:
+
+1. Update `sales_order.order_status = CANCELLED` sau khi xác thực hủy thành công và đơn vẫn còn nằm trong tập cho phép hủy (`PENDING`, `CONFIRMED`, `PACKING`).
+2. Giữ `sales_order.payment_status = PAID` trong lúc hoàn tiền chưa hoàn tất, để phản ánh đúng là tiền đã được thu.
+3. Tạo một bản ghi `sales.refund` gắn với `payment_id` của giao dịch đã thanh toán:
+   - `payment_id`: payment gốc của đơn
+   - `return_id = NULL`: vì đây là hủy đơn trước giao hàng, không phải quy trình đổi/trả hàng sau mua
+   - `refund_status = PENDING` hoặc `PROCESSING` tùy thời điểm gọi cổng thanh toán
+   - `reason`: ví dụ `Khách hủy đơn hàng trước khi giao`
+   - `transaction_code`: mã refund từ gateway nếu đã có
+4. Chỉ khi refund hoàn tất mới update `sales.payment.payment_status = REFUNDED` và đồng bộ `sales_order.payment_status = REFUNDED`.
+
+Ý nghĩa của cách làm này:
+
+- `sales.payment` tiếp tục phản ánh giao dịch thu tiền gốc
+- `sales.refund` là nơi phản ánh giao dịch hoàn tiền phát sinh sau hủy
+- `sales_order` phản ánh 2 chiều trạng thái riêng biệt:
+  - `order_status = CANCELLED`: đơn đã bị hủy
+  - `payment_status = PAID` hoặc `REFUNDED`: tiền đã hoàn hay chưa
+
+## 5.3 Có nên ghi vào return hay không
+
+Với schema hiện tại, không nên tạo `return_request` cho case hủy đơn đã thanh toán nhưng chưa giao hàng.
+
+Lý do:
+
+- `sales.return_request` và `sales.return_item` đang được thiết kế cho flow đổi/trả sau mua, đặc biệt là đơn `COMPLETED`
+- API hiện có cho return cũng đang ràng buộc `order COMPLETED` và còn hạn 78 giờ
+- Hủy đơn trước giao hàng là nghiệp vụ `cancel + refund`, không phải `return`
+
+Vì vậy:
+
+- đơn `PAID` nhưng vẫn còn ở `PENDING` / `CONFIRMED` / `PACKING`:
+  - đi theo flow `cancel + refund`
+  - không tạo `return_request`
+
+- đơn đã `SHIPPING` hoặc `COMPLETED`:
+  - không nên cho hủy theo flow này
+  - nếu business vẫn muốn khách trả hàng/nhận lại tiền thì chuyển sang flow `return_request`
+
+## 5.4 Gợi ý response cho lookup/order detail
+
+Nếu web muốn hiển thị rõ cho user sau khi hủy đơn đã thanh toán, response nên có thêm trạng thái hoàn tiền thay vì chỉ trả mỗi `order_status`.
+
+Ví dụ shape hợp lý:
+
+- `order_status: CANCELLED`
+- `payment_status: PAID` hoặc `REFUNDED`
+- `refund_status: PENDING | PROCESSING | COMPLETED | FAILED | CANCELLED`
+- `message`:
+  - `Đơn hàng đã được hủy. Hệ thống đang xử lý hoàn tiền.`
+  - hoặc `Đơn hàng đã được hủy và hoàn tiền thành công.`
+
+Như vậy UI lookup có thể phân biệt rõ:
+
+- hủy đơn thành công nhưng hoàn tiền đang chờ xử lý
+- hủy đơn thành công và hoàn tiền đã xong
+
 ---
 
 ## 6. Tận dụng Supabase cho email

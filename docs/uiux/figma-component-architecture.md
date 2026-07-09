@@ -331,6 +331,7 @@ src/
 | `/login` | `AuthShell`, `LoginForm`, `Button` |
 | `/register` | `AuthShell`, `RegisterForm`, `Button` |
 | `/appointment` | `ModalShell`, `AppointmentForm`, `TextField`, `SelectField`, `DatePickerField`, `TimeSlotPicker`, `Button` |
+| `/account/appointments` | `SiteLayout`, `Breadcrumbs`, `AccountNavigation`, `AccountAppointmentHistory`, `OrderStatusTabs`, appointment management cards, `PolicyClosingNote` |
 | `/cart` or `/checkout` | `SiteLayout`, `CheckoutForm`, `CartSummary`, `CartItem`, `TextField`, `SelectField`, `Button`, `SiteFooter` |
 
 ## 8. Final Component Report
