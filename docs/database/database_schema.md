@@ -13,8 +13,8 @@
 - birthday (DATE, NULL): Ngày sinh
 - customer_type (VARCHAR/CHECK, NOT NULL): Loại khách hàng 
 - tier_id (VARCHAR(20), FK, NULL): Mã hạng thành viên
-- total_spent (NUMBERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu
-- spent_in_year (NUMBERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu trong năm
+- total_spent (NUMERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu
+- spent_in_year (NUMERIC(14,2), NOT NULL, DEFAULT 0): Tổng chi tiêu trong năm
 - last_tier_updated_at(TIMESTAMPTZ, NULL): Lần cập nhập hạng thành viên gần nhất
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
@@ -81,7 +81,7 @@
 - recipient_name (VARCHAR(255), NOT NULL): Tên người nhận
 - recipient_phone (CHAR(20), NOT NULL): Số điện thoại người nhận
 - province_id (INT, FK, NOT NULL): Mã tỉnh/thành phố
-- district_name (CHECKIN, NOT NULL): Quận
+- district_name (VARCHAR(255), NOT NULL): Quận/huyện
 - address_detail (TEXT, NOT NULL): Địa chỉ chi tiết
 - is_default (BOOLEAN, NOT NULL): Có phải địa chỉ mặc định không?
 - is_active (BOOLEAN, NOT NULL): Trạng thái hoạt động
@@ -395,14 +395,23 @@
 
 - cart_item_id (BIGSERIAL, PK, NOT NULL): Mã dòng giỏ hàng
 - cart_id (BIGINT, FK, NOT NULL): Mã giỏ hàng
-- variant_id (INT, FK, NOT NULL): Mã biến thể sản phẩm
+- variant_id (INT, FK, NULL): Mã biến thể sản phẩm tiêu chuẩn
+- customization_id (BIGINT, FK, NULL): Mã yêu cầu may đo được thêm vào giỏ
+- customization_snapshot (JSONB, NULL): Snapshot số đo được copy từ `customization.customization_request.measurement_snapshot` tại thời điểm thêm vào giỏ
+- item_type (VARCHAR(20), NOT NULL): Phân loại dòng giỏ hàng
 - quantity (INT, NOT NULL): Số lượng
 - unit_price (NUMERIC(14,2), NOT NULL): Đơn giá gốc 1 dòng tại thời điểm thêm vào giỏ hàng
 - created_at (TIMESTAMPTZ, NOT NULL): Thời gian tạo
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
 
 **Ghi chú / Enum:**
-- UNIQUE (cart_id, variant_id)
+- item_type = {STANDARD, CUSTOMIZED}
+- Nếu `item_type = STANDARD` thì `variant_id` bắt buộc có giá trị và `customization_id` phải NULL.
+- Nếu `item_type = CUSTOMIZED` thì `customization_id` bắt buộc có giá trị và `variant_id` phải NULL.
+- `UNIQUE (cart_id, variant_id)` cho dòng `STANDARD`.
+- `UNIQUE (cart_id, customization_id)` cho dòng `CUSTOMIZED`.
+- `customization_snapshot` là bản copy bất biến phục vụ render cart và checkout; không nên đọc ngược động từ `measurement_profile`.
+- API/backend thêm `CUSTOMIZED` item phải xác minh `customization_request.customer_id` thuộc về chủ giỏ hàng hiện tại trước khi dùng `custom_price` và `measurement_snapshot`.
 
 ## SALES_ORDER
 
@@ -422,6 +431,7 @@
 **Ghi chú / Enum:**
 - order_status tham chiếu ENUM ORDER_STATUS
 - payment_status tham chiếu ENUM PAYMENT_STATUS
+- Tên cột trong DB hiện tại là `reward_dicount_amount` theo migration. Ở lớp API/DTO nên map thành `reward_discount_amount` để tránh lan typo ra ngoài boundary của database.
 
 ## ORDER_ITEM
 
@@ -429,6 +439,7 @@
 - order_id (BIGINT, FK, NOT NULL): Mã đơn hàng
 - variant_id (INT, FK, NULL): Mã biến thể sản phẩm
 - customization_id (BIGINT, FK, NULL): Mã may đo cá nhân
+- customization_snapshot (JSONB, NULL): Snapshot số đo được copy từ `sales.cart_item.customization_snapshot` tại thời điểm checkout
 - item_type (VARCHAR(20), NOT NULL): Phân loại sản phẩm
 - quantity (INT, NOT NULL): Số lượng mua
 - unit_price (NUMERIC(14,2), NOT NULL): Đơn giá tại thời điểm mua
@@ -439,6 +450,8 @@
 **Ghi chú / Enum:**
 - item_type = {STANDARD, CUSTOMIZED}
 - Nếu item_type = CUSTOMIZED thì variant_id NULL và customization_id NOT NULL.
+- Với dòng `CUSTOMIZED`, `customization_snapshot` là source of truth bất biến để audit, hiển thị lại thông tin số đo và xử lý nghiệp vụ hậu mãi của đơn hàng.
+- Không nên phụ thuộc vào `customization_request`, `measurement_profile` hay `measurement_profile_detail` để dựng lại dữ liệu giao dịch cũ vì các bản ghi nguồn có thể thay đổi theo thời gian.
 
 ## PAYMENT
 

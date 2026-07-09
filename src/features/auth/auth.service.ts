@@ -14,11 +14,18 @@ export function isAuthSessionMissing(error: unknown) {
   );
 }
 
+export function isAuthUserMissing(error: unknown) {
+  return (
+    error instanceof Error &&
+    error.message.includes("User from sub claim in JWT does not exist")
+  );
+}
+
 export async function getAuthenticatedUser(supabase: SupabaseClient) {
   const { data, error } = await supabase.auth.getUser();
 
   if (error) {
-    if (isAuthSessionMissing(error)) {
+    if (isAuthSessionMissing(error) || isAuthUserMissing(error)) {
       return null;
     }
 
