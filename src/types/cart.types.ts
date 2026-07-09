@@ -8,7 +8,7 @@ export type CartVariantOption = {
 
 export type CartItemDto = {
   cart_item_id: number;
-  variant_id: number;
+  variant_id: number | null;
   product_line_id: number;
   slug: string;
   name: string;
@@ -19,6 +19,13 @@ export type CartItemDto = {
   unit_price: number;
   line_total: number;
   available_variants?: CartVariantOption[];
+  item_type: "STANDARD" | "CUSTOMIZED";
+  customization_id?: number | null;
+  surcharge_percent?: number | null;
+  surcharge_amount?: number | null;
+  custom_price?: number | null;
+  measurement_summary?: Record<string, number> | null;
+  customization_snapshot?: unknown;
 };
 
 export type CartDto = {
@@ -30,8 +37,10 @@ export type CartDto = {
 };
 
 export type AddCartItemValues = {
-  variant_id: number;
+  variant_id?: number;
   quantity: number;
+  item_type?: "STANDARD" | "CUSTOMIZED";
+  customization_id?: number;
 };
 
 export type UpdateCartItemValues = {

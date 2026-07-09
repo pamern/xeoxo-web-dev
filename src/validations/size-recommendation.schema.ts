@@ -1,5 +1,6 @@
 import {
   getMeasurementFields,
+  type MeasurementComponentType,
   type MeasurementKey,
   type MeasurementValues,
 } from "@/features/size-recommendation/size-recommendation";
@@ -11,9 +12,12 @@ export function validateMeasurementField(
   key: MeasurementKey,
   rawValue: string,
   gender: Gender,
+  componentType?: MeasurementComponentType,
   validateRequired = true,
 ): string | undefined {
-  const field = getMeasurementFields(gender).find((item) => item.key === key);
+  const field = getMeasurementFields(gender, componentType).find(
+    (item) => item.key === key,
+  );
   if (!field) return undefined;
 
   const raw = rawValue.trim();
@@ -34,10 +38,16 @@ export function validateMeasurementField(
 export function validateMeasurements(
   values: MeasurementValues,
   gender: Gender,
+  componentType?: MeasurementComponentType,
 ): MeasurementErrors {
   const errors: MeasurementErrors = {};
-  for (const field of getMeasurementFields(gender)) {
-    const error = validateMeasurementField(field.key, values[field.key], gender);
+  for (const field of getMeasurementFields(gender, componentType)) {
+    const error = validateMeasurementField(
+      field.key,
+      values[field.key],
+      gender,
+      componentType,
+    );
     if (error) errors[field.key] = error;
   }
   return errors;

@@ -6,8 +6,7 @@ export const metadata: Metadata = {
 };
 
 const BRANCHES = [
-  { label: "XEO XO Ha Noi", value: "ha-noi" },
-  { label: "XEO XO Sai Gon", value: "sai-gon" },
+  { label: "XEOXO Test Branch", value: "1" },
 ];
 
 const TIME_SLOTS = [

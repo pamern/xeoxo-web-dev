@@ -10,6 +10,7 @@ import {
   recommendSize,
   type MeasurementKey,
   type MeasurementValues,
+  type MeasurementComponentType,
 } from "@/features/size-recommendation/size-recommendation";
 import { cn } from "@/lib/utils";
 import type { ProductSizeOptionDto } from "@/types/product-api.types";
@@ -33,23 +34,43 @@ type Recommendation = {
 
 export function SizeRecommendationModal({
   gender,
+  componentType,
   sizes,
+  initialValues,
+  canPersistMeasurements = false,
+  hasPersistedMeasurements = false,
+  onClearMeasurements,
+  onPersistMeasurements,
   onOpenAppointment,
   onOpenCustomize,
+  onValuesChange,
   onClose,
 }: {
   gender: Gender;
+  componentType?: MeasurementComponentType;
   sizes: ProductSizeOptionDto[];
+  initialValues?: Partial<MeasurementValues>;
+  canPersistMeasurements?: boolean;
+  hasPersistedMeasurements?: boolean;
+  onClearMeasurements?: () => void;
+  onPersistMeasurements?: (values: MeasurementValues) => Promise<void> | void;
   onOpenAppointment: () => void;
   onOpenCustomize: () => void;
+  onValuesChange?: (values: MeasurementValues) => void;
   onClose: () => void;
 }) {
-  const [values, setValues] = useState<MeasurementValues>(EMPTY_VALUES);
+  const [values, setValues] = useState<MeasurementValues>({
+    ...EMPTY_VALUES,
+    ...initialValues,
+  });
   const [errors, setErrors] = useState<MeasurementErrors>({});
   const [touched, setTouched] = useState<Partial<Record<MeasurementKey, boolean>>>({});
   const [result, setResult] = useState<Recommendation | null>(null);
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
+  const [persistError, setPersistError] = useState<string>();
+  const [isPersisting, setIsPersisting] = useState(false);
   const chart = getSizeChart(gender);
-  const fields = getMeasurementFields(gender);
+  const fields = getMeasurementFields(gender, componentType);
   const genderLabel = gender === "nam" ? "Nam" : "Nữ";
 
   useEffect(() => {
@@ -65,26 +86,39 @@ export function SizeRecommendationModal({
     };
   }, [onClose]);
 
+  useEffect(() => {
+    setValues({
+      ...EMPTY_VALUES,
+      ...initialValues,
+    });
+  }, [initialValues]);
+
+  useEffect(() => {
+    setSaveAsDefault(hasPersistedMeasurements);
+  }, [hasPersistedMeasurements]);
+
   function update(key: MeasurementKey, value: string) {
     const next = { ...values, [key]: value };
     setValues(next);
+    onValuesChange?.(next);
     setResult(null);
+    setPersistError(undefined);
     if (touched[key]) {
-      const error = validateMeasurementField(key, value, gender);
+      const error = validateMeasurementField(key, value, gender, componentType);
       setErrors((current) => ({ ...current, [key]: error }));
     }
   }
 
   function handleBlur(key: MeasurementKey) {
     setTouched((current) => ({ ...current, [key]: true }));
-    const error = validateMeasurementField(key, values[key], gender, false);
+    const error = validateMeasurementField(key, values[key], gender, componentType);
     setErrors((current) => ({ ...current, [key]: error }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateMeasurements(values, gender);
-    setTouched(Object.fromEntries(MEASUREMENT_FIELDS.map((field) => [field.key, true])));
+    const nextErrors = validateMeasurements(values, gender, componentType);
+    setTouched(Object.fromEntries(fields.map((field) => [field.key, true])));
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
@@ -97,6 +131,30 @@ export function SizeRecommendationModal({
       isOffered: Boolean(matchingVariant),
       isAvailable: Boolean(matchingVariant?.is_available),
     });
+
+    if (canPersistMeasurements && saveAsDefault && onPersistMeasurements) {
+      setIsPersisting(true);
+      setPersistError(undefined);
+      try {
+        await onPersistMeasurements(values);
+      } catch (error) {
+        setPersistError(
+          error instanceof Error ? error.message : "Không thể lưu số đo mặc định.",
+        );
+      } finally {
+        setIsPersisting(false);
+      }
+    }
+  }
+
+  function handleClear() {
+    setValues(EMPTY_VALUES);
+    setErrors({});
+    setTouched({});
+    setResult(null);
+    setPersistError(undefined);
+    onValuesChange?.(EMPTY_VALUES);
+    onClearMeasurements?.();
   }
 
   return (
@@ -175,9 +233,38 @@ export function SizeRecommendationModal({
 
           <div className="mt-6 flex flex-wrap items-center gap-4">
             <Button type="submit" variant="primaryPill" size="pill" className="bg-black text-white hover:bg-black/80">
-              Tính size phù hợp
+              {isPersisting ? "Đang lưu..." : "Tính size phù hợp"}
             </Button>
+            {canPersistMeasurements && (
+              <span className="ml-auto flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleClear}
+                  title="Xóa dữ liệu đang nhập trên giao diện"
+                  aria-label="Xóa dữ liệu đang nhập trên giao diện"
+                  className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white transition hover:border-black hover:bg-black hover:text-white"
+                >
+                  <Image src="/icons/xoa.svg" alt="" width={17} height={17} className="transition group-hover:invert" aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSaveAsDefault((current) => !current)}
+                  title="Lưu lại để sử dụng lần sau"
+                  className={cn(
+                    "relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-white",
+                    saveAsDefault && "border-black/40",
+                  )}
+                >
+                  {saveAsDefault ? <SavedIcon /> : <SaveIcon />}
+                </button>
+              </span>
+            )}
           </div>
+          {persistError && (
+            <p role="alert" className="mt-3 text-sm font-semibold text-red-600">
+              {persistError}
+            </p>
+          )}
         </form>
 
         <div aria-live="polite" className="mt-6">
@@ -246,20 +333,37 @@ export function SizeRecommendationModal({
           </p>
         </div>
 
-        <div
-          className="mt-7 flex flex-col items-center justify-between gap-3 rounded-[14px] bg-cover bg-center px-5 py-4 text-center text-white sm:flex-row sm:text-left"
-          style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
-        >
-          <p className="text-sm">Bạn chưa biết size hoặc muốn chắc chắn hơn về số đo? Hãy đặt lịch cùng Xéo Xọ.</p>
-          <button
-            type="button"
-            onClick={onOpenAppointment}
-            className="font-bold underline underline-offset-4 hover:text-white/75"
-          >
-            Đặt lịch may đo
-          </button>
-        </div>
       </section>
     </div>
+  );
+}
+
+function SaveIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 3h12l2 2v16H5V3Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M8 3v6h8V3" stroke="currentColor" strokeWidth="2" />
+      <path d="M8 21v-7h8v7" stroke="currentColor" strokeWidth="2" />
+    </svg>
+  );
+}
+
+function SavedIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 3h12l2 2v16H5V3Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <path d="M8 3v6h8V3" stroke="currentColor" strokeWidth="2" />
+      <path d="m8 16 2.2 2.2L16 12.5" stroke="currentColor" strokeWidth="2" />
+    </svg>
   );
 }

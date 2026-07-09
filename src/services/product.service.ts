@@ -4,6 +4,7 @@ import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
 import type {
   ProductDetailDto,
   ProductReviewDto,
+  ProductReviewsPageDto,
   SizeChartDto,
 } from "@/types/product-api.types";
 
@@ -55,7 +56,7 @@ export const productService = {
     );
   },
 
-  async getReviews(slug: string, page = 1, limit = 3) {
+  async getReviews(slug: string, page = 1, limit = 5) {
     const params = new URLSearchParams({
       page: String(page),
       limit: String(limit),
@@ -64,7 +65,7 @@ export const productService = {
       credentials: "include",
     });
 
-    return readApi<ProductReviewDto[]>(
+    return readApi<ProductReviewsPageDto>(
       response,
       "Khong the tai danh sach danh gia.",
     );

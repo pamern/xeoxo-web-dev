@@ -11,61 +11,106 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const variantId = Number(body.variant_id);
     const quantity = Number(body.quantity ?? 1);
-    console.info("[cart-items/POST] start", { variantId, quantity });
+    const variantId = body.variant_id ? Number(body.variant_id) : null;
+    const customizationId = body.customization_id ? Number(body.customization_id) : null;
+    const itemType =
+      body.item_type === "CUSTOMIZED" || customizationId
+        ? "CUSTOMIZED"
+        : "STANDARD";
 
-    if (!Number.isInteger(variantId) || variantId <= 0) {
-      return fail("variant_id khong hop le.", 400);
-    }
+    console.info("[cart-items/POST] start", { itemType, variantId, customizationId, quantity });
 
     if (!Number.isInteger(quantity) || quantity <= 0) {
       return fail("quantity phai la so nguyen duong.", 422);
     }
 
-    const variant = await getVariantById(variantId);
-    if (!variant || variant.status !== "ACTIVE") {
-      return fail("Bien the san pham khong kha dung.", 404);
-    }
-
     const admin = createAdminClient();
-    const { data: component, error: componentError } = await admin
-      .schema("catalog")
-      .from("product_component")
-      .select("component_id, product_line_id")
-      .eq("component_id", variant.component_id)
-      .maybeSingle();
+    let finalVariantId: number | null = null;
+    let finalUnitPrice = 0;
+    let finalCustomizationId: number | null = null;
+    let finalCustomizationSnapshot: unknown = null;
+    let stockQuantity = 999; // Default large for customized if no inventory check
 
-    if (componentError) throw new Error(componentError.message);
-    if (!component) return fail("San pham khong con ton tai.", 404);
+    if (itemType === "STANDARD") {
+      if (!variantId || !Number.isInteger(variantId) || variantId <= 0) {
+        return fail("variant_id khong hop le cho san pham STANDARD.", 400);
+      }
+      finalVariantId = variantId;
 
-    const { data: productLine, error: productLineError } = await admin
-      .schema("catalog")
-      .from("product_line")
-      .select("product_line_id, status")
-      .eq("product_line_id", component.product_line_id)
-      .maybeSingle();
+      const variant = await getVariantById(finalVariantId);
+      if (!variant || variant.status !== "ACTIVE") {
+        return fail("Bien the san pham khong kha dung.", 404);
+      }
 
-    if (productLineError) throw new Error(productLineError.message);
-    if (!productLine || productLine.status !== "ACTIVE") {
-      return fail("San pham hien khong the mua.", 409);
-    }
+      const { data: component, error: componentError } = await admin
+        .schema("catalog")
+        .from("product_component")
+        .select("component_id, product_line_id")
+        .eq("component_id", variant.component_id)
+        .maybeSingle();
 
-    const stockQuantity = await getVariantStock(variantId);
-    if (stockQuantity <= 0) {
-      return fail("San pham da het hang.", 409);
+      if (componentError) throw new Error(componentError.message);
+      if (!component) return fail("San pham khong con ton tai.", 404);
+
+      const { data: productLine, error: productLineError } = await admin
+        .schema("catalog")
+        .from("product_line")
+        .select("product_line_id, status")
+        .eq("product_line_id", component.product_line_id)
+        .maybeSingle();
+
+      if (productLineError) throw new Error(productLineError.message);
+      if (!productLine || productLine.status !== "ACTIVE") {
+        return fail("San pham hien khong the mua.", 409);
+      }
+
+      stockQuantity = await getVariantStock(finalVariantId);
+      if (stockQuantity <= 0) {
+        return fail("San pham da het hang.", 409);
+      }
+
+      finalUnitPrice = Number(variant.price);
+    } else {
+      if (!customizationId || !Number.isInteger(customizationId) || customizationId <= 0) {
+        return fail("customization_id khong hop le cho san pham CUSTOMIZED.", 400);
+      }
+      finalCustomizationId = customizationId;
+
+      const { data: request, error: requestError } = await admin
+        .schema("customization")
+        .from("customization_request")
+        .select("custom_price, component_id, customization_status, measurement_snapshot")
+        .eq("customization_id", finalCustomizationId)
+        .maybeSingle();
+
+      if (requestError) throw new Error(requestError.message);
+      if (!request) return fail("Khong tim thay yeu cau may do.", 404);
+
+      // We don't check stock for customized items currently as they are made to order
+      finalUnitPrice = Number(request.custom_price);
+      finalCustomizationSnapshot = request.measurement_snapshot ?? null;
     }
 
     const owner = await getCartOwner();
     console.info("[cart-items/POST] owner", owner);
     const cart = await getOrCreateActiveCart(owner);
-    const { data: existing, error: existingError } = await admin
+
+    // Check if item already exists in cart
+    let existingQuery = admin
       .schema("sales")
       .from("cart_item")
       .select("cart_item_id, quantity")
       .eq("cart_id", cart.cart_id)
-      .eq("variant_id", variantId)
-      .maybeSingle();
+      .eq("item_type", itemType);
+
+    if (itemType === "STANDARD") {
+      existingQuery = existingQuery.eq("variant_id", finalVariantId!);
+    } else {
+      existingQuery = existingQuery.eq("customization_id", finalCustomizationId!);
+    }
+
+    const { data: existing, error: existingError } = await existingQuery.maybeSingle();
 
     if (existingError) {
       throw new Error(existingError.message);
@@ -73,7 +118,7 @@ export async function POST(request: Request) {
 
     const requestedTotal = Number(existing?.quantity ?? 0) + quantity;
 
-    if (requestedTotal > stockQuantity) {
+    if (itemType === "STANDARD" && requestedTotal > stockQuantity) {
       return fail(`Chi con ${stockQuantity} san pham trong kho.`, 409);
     }
 
@@ -93,14 +138,23 @@ export async function POST(request: Request) {
       }
     } else {
       const now = new Date().toISOString();
-      const { error } = await admin.schema("sales").from("cart_item").insert({
+      const insertData: any = {
         cart_id: cart.cart_id,
-        variant_id: variantId,
+        item_type: itemType,
         quantity,
-        unit_price: Number(variant.price),
+        unit_price: finalUnitPrice,
         created_at: now,
         updated_at: now,
-      });
+      };
+
+      if (itemType === "STANDARD") {
+        insertData.variant_id = finalVariantId;
+      } else {
+        insertData.customization_id = finalCustomizationId;
+        insertData.customization_snapshot = finalCustomizationSnapshot;
+      }
+
+      const { error } = await admin.schema("sales").from("cart_item").insert(insertData);
 
       if (error) {
         throw new Error(error.message);

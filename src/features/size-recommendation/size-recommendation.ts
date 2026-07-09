@@ -12,6 +12,7 @@ export type MeasurementKey =
   | "upperArm";
 
 export type MeasurementValues = Record<MeasurementKey, string>;
+export type MeasurementComponentType = "AO" | "QUAN" | "SET" | string | null | undefined;
 type Range = readonly [number, number];
 
 export type SizeRow = {
@@ -77,11 +78,19 @@ export function getSizeChart(gender: Gender) {
   return SIZE_CHARTS[gender === "nam" ? "nam" : "nu"];
 }
 
-export function getMeasurementFields(gender: Gender) {
+export function getMeasurementFields(
+  gender: Gender,
+  componentType?: MeasurementComponentType,
+) {
   const chart = getSizeChart(gender);
+  const normalizedComponentType = componentType?.trim().toUpperCase();
   const visibleFields =
     gender === "nam"
       ? MEASUREMENT_FIELDS
+      : normalizedComponentType === "QUAN"
+        ? (["waist", "hip"] as MeasurementKey[])
+            .map((key) => MEASUREMENT_FIELDS.find((field) => field.key === key))
+            .filter((field): field is (typeof MEASUREMENT_FIELDS)[number] => Boolean(field))
       : (["neck", "shoulder", "bust", "waist", "hip"] as MeasurementKey[])
           .map((key) => MEASUREMENT_FIELDS.find((field) => field.key === key))
           .filter((field): field is (typeof MEASUREMENT_FIELDS)[number] => Boolean(field));

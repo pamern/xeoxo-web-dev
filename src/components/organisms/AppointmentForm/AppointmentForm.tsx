@@ -45,7 +45,7 @@ export function AppointmentForm({
 }: {
   branches: SelectOption[];
   timeSlots: TimeSlot[];
-  onSubmit?: (values: AppointmentValues) => void;
+  onSubmit?: (values: AppointmentValues) => void | Promise<void>;
 }) {
   const timeOptions = timeSlots.map((slot) => ({
     label: slot.label,
@@ -58,11 +58,14 @@ export function AppointmentForm({
     timeSlot: timeSlots[0]?.id ?? "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string>();
   const [errors, setErrors] = useState<AppointmentErrors>({});
 
   function update<K extends keyof AppointmentValues>(key: K, value: AppointmentValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
     setSubmitted(false);
+    setSubmitError(undefined);
     if (errors[key]) {
       setErrors((current) => ({ ...current, [key]: validateField(key, value) }));
     }
@@ -75,13 +78,24 @@ export function AppointmentForm({
     }));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateAppointment(values);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
-    onSubmit?.(values);
-    setSubmitted(true);
+    setIsSubmitting(true);
+    setSubmitError(undefined);
+    try {
+      await onSubmit?.(values);
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Không thể đặt lịch hẹn.",
+      );
+      setSubmitted(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -184,10 +198,14 @@ export function AppointmentForm({
             Đã ghi nhận thông tin đặt lịch.
           </p>
         )}
+        {submitError && (
+          <p className="text-body-sm font-medium text-white">{submitError}</p>
+        )}
         <Button
           type="submit"
           variant="outline"
           size="md"
+          disabled={isSubmitting}
           className="h-11 w-full max-w-[300px] rounded-pill border border-white bg-transparent px-6 text-lg font-bold normal-case text-white hover:bg-white hover:text-black"
         >
           Lưu Biểu mẫu

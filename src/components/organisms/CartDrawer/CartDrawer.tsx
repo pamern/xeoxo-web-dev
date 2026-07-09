@@ -82,8 +82,33 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                   <div className="flex flex-1 flex-col gap-1">
                     <p className="text-body-sm font-semibold leading-snug">{item.name}</p>
                     <p className="text-caption text-muted-foreground">
-                      {item.color} - {item.size}
+                      {item.color} - {item.item_type === "CUSTOMIZED" ? "Customize" : item.size}
                     </p>
+                    {item.item_type === "CUSTOMIZED" && (
+                      <div className="text-[10px] text-muted-foreground leading-tight">
+                        {(() => {
+                          const snapshot = typeof item.customization_snapshot === "string"
+                            ? (() => { try { return JSON.parse(item.customization_snapshot); } catch { return null; } })()
+                            : item.customization_snapshot;
+                          const measurements = (snapshot as any)?.measurements || {};
+                          const MEASUREMENT_LABELS: Record<string, string> = {
+                            height: "Chiều cao",
+                            weight: "Cân nặng",
+                            bust: "Ngực",
+                            waist: "Eo",
+                            hip: "Mông",
+                            shoulder: "Vai",
+                            neck: "Cổ",
+                            sleeve: "Dài tay",
+                            upperArm: "Bắp tay",
+                          };
+                          const list = Object.entries(measurements)
+                            .filter(([, val]) => val !== undefined && val !== null && String(val).trim() !== "")
+                            .map(([k, v]) => `${MEASUREMENT_LABELS[k] || k}: ${v}`);
+                          return list.join(" | ");
+                        })()}
+                      </div>
+                    )}
                     <p className="text-body-sm">
                       {item.quantity} <span className="font-bold">x {formatPrice(item.unit_price)}</span>
                     </p>

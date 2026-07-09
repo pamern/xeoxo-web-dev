@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { CartDrawer } from "@/components/organisms/CartDrawer";
 
 type CartDrawerContextValue = {
@@ -23,6 +23,11 @@ export function CartDrawerProvider({ children }: { children: React.ReactNode }) 
 
   const openDrawer = useCallback(() => setOpen(true), []);
   const closeDrawer = useCallback(() => setOpen(false), []);
+
+  useEffect(() => {
+    window.addEventListener("xeoxo-cart-updated", closeDrawer);
+    return () => window.removeEventListener("xeoxo-cart-updated", closeDrawer);
+  }, [closeDrawer]);
 
   return (
     <CartDrawerContext.Provider value={{ openDrawer, closeDrawer }}>

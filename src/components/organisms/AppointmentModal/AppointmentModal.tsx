@@ -1,20 +1,48 @@
+"use client";
+
 import Image from "next/image";
-import { AppointmentForm } from "@/components/organisms/AppointmentForm";
+import {
+  AppointmentForm,
+  type AppointmentValues,
+} from "@/components/organisms/AppointmentForm";
 import type { SelectOption } from "@/components/molecules/SelectField";
 import type { TimeSlot } from "@/components/molecules/TimeSlotPicker";
 import { cn } from "@/lib/utils";
+import { createAppointment } from "@/services/appointment.service";
 
 export function AppointmentModal({
   branches,
   timeSlots,
+  productLineId,
   onClose,
   className,
 }: {
   branches: SelectOption[];
   timeSlots: TimeSlot[];
+  productLineId?: number;
   onClose?: () => void;
   className?: string;
 }) {
+  async function handleSubmit(values: AppointmentValues) {
+    await createAppointment({
+      full_name: values.fullName,
+      phone: values.phone,
+      email: values.email || undefined,
+      branch_id: Number(values.branch),
+      appointment_date: values.date,
+      start_time: values.timeSlot,
+      product_line_id: productLineId,
+      customer_note: [
+        values.fullName ? `Họ tên: ${values.fullName}` : "",
+        values.phone ? `SĐT: ${values.phone}` : "",
+        values.email ? `Email: ${values.email}` : "",
+        values.note ? `Ghi chú: ${values.note}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    });
+  }
+
   return (
     <section
       className={cn(
@@ -47,7 +75,11 @@ export function AppointmentModal({
       </header>
 
       <div className="mx-auto w-full max-w-[960px] overflow-visible bg-white">
-        <AppointmentForm branches={branches} timeSlots={timeSlots} />
+        <AppointmentForm
+          branches={branches}
+          timeSlots={timeSlots}
+          onSubmit={handleSubmit}
+        />
       </div>
     </section>
   );

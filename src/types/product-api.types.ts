@@ -18,6 +18,7 @@ export type ProductReviewDto = {
   rating: number;
   review_content: string | null;
   created_at: string;
+  classification?: string;
   media: Array<Pick<ProductMediaDto, "url" | "media_type">>;
 };
 
@@ -25,6 +26,15 @@ export type ProductReviewsSummaryDto = {
   avg_rating: number;
   total: number;
   preview_count: number;
+  has_more: boolean;
+  rating_counts: Record<1 | 2 | 3 | 4 | 5, number>;
+};
+
+export type ProductReviewsPageDto = {
+  reviews: ProductReviewDto[];
+  total: number;
+  page: number;
+  limit: number;
   has_more: boolean;
 };
 
@@ -48,6 +58,24 @@ export type ProductDetailDto = {
   } | null;
   reviews_summary: ProductReviewsSummaryDto;
   reviews_preview: ProductReviewDto[];
+  collection?: {
+    collection_name: string;
+    slug: string;
+  } | null;
+  design_style?: string | null;
+  usage_context?: string | null;
+  features?: string[] | null;
+  components?: ProductComponentDto[];
+};
+
+export type ProductComponentDto = {
+  component_id: number;
+  component_name: string;
+  component_type: string;
+  is_required: boolean;
+  display_order: number;
+  min_price: number;
+  variants: ProductSizeOptionDto[];
 };
 
 export type SizeChartDto = {

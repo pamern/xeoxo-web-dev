@@ -23,9 +23,12 @@ type CartRecord = {
 type CartItemRecord = {
   cart_item_id: number;
   cart_id: number;
-  variant_id: number;
+  variant_id: number | null;
   quantity: number;
   unit_price: number;
+  item_type: string;
+  customization_id: number | null;
+  customization_snapshot?: unknown;
 };
 
 type VariantRecord = {
@@ -279,7 +282,7 @@ export async function assertCartItemOwnership(cartItemId: number, owner: CartOwn
   const { data, error } = await admin
     .schema("sales")
     .from("cart_item")
-    .select("cart_item_id, cart_id, variant_id, quantity, unit_price")
+    .select("cart_item_id, cart_id, variant_id, quantity, unit_price, item_type, customization_id, customization_snapshot")
     .eq("cart_item_id", cartItemId)
     .maybeSingle();
 
@@ -308,7 +311,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
   const { data: cartItems, error: cartItemsError } = await admin
     .schema("sales")
     .from("cart_item")
-    .select("cart_item_id, cart_id, variant_id, quantity, unit_price")
+    .select("cart_item_id, cart_id, variant_id, quantity, unit_price, item_type, customization_id, customization_snapshot")
     .eq("cart_id", cart.cart_id)
     .order("created_at", { ascending: true });
 
@@ -333,15 +336,34 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
     "product_variant",
     "variant_id, component_id, size_option_id, price, status",
     "variant_id",
-    items.map((item) => item.variant_id),
+    items.map((item) => item.variant_id).filter((id): id is number => id !== null),
   );
+  const customizationIds = items
+    .map((item) => item.customization_id)
+    .filter((id): id is number => id !== null);
+
+  let customizations: any[] = [];
+  if (customizationIds.length > 0) {
+    const { data } = await admin
+      .schema("customization")
+      .from("customization_request")
+      .select("customization_id, component_id, surcharge_percent, surcharge_amount, custom_price")
+      .in("customization_id", customizationIds);
+    customizations = data || [];
+  }
+  const customizationMap = new Map(customizations.map((c) => [Number(c.customization_id), c]));
+
+  const componentIdsFromVariants = variants.map((variant) => variant.component_id);
+  const componentIdsFromCustomizations = customizations.map((c) => c.component_id);
+  const allComponentIds = Array.from(new Set([...componentIdsFromVariants, ...componentIdsFromCustomizations]));
+
   const components = await fetchRecordsByIds<ComponentRecord>(
     admin,
     "catalog",
     "product_component",
     "component_id, product_line_id",
     "component_id",
-    variants.map((variant) => variant.component_id),
+    allComponentIds,
   );
   const productLines = await fetchRecordsByIds<ProductLineRecord>(
     admin,
@@ -478,8 +500,14 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
   }
 
   const cartDtoItems: CartItemDto[] = items.map((item) => {
-    const variant = variantMap.get(item.variant_id);
-    const component = variant ? componentMap.get(variant.component_id) : undefined;
+    const variant = item.variant_id ? variantMap.get(item.variant_id) : undefined;
+    const customization = item.customization_id ? customizationMap.get(item.customization_id) : undefined;
+
+    let componentId: number | undefined;
+    if (variant) componentId = variant.component_id;
+    else if (customization) componentId = customization.component_id;
+
+    const component = componentId ? componentMap.get(componentId) : undefined;
     const productLine = component
       ? productLineMap.get(component.product_line_id)
       : undefined;
@@ -524,6 +552,8 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
         };
       });
 
+    const itemType = (item.item_type as "STANDARD" | "CUSTOMIZED") || "STANDARD";
+
     return {
       cart_item_id: item.cart_item_id,
       variant_id: item.variant_id,
@@ -536,7 +566,13 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
       quantity,
       unit_price: unitPrice,
       line_total: unitPrice * quantity,
-      available_variants: availableVariants,
+      available_variants: itemType === "STANDARD" ? availableVariants : [],
+      item_type: itemType,
+      customization_id: item.customization_id,
+      surcharge_percent: customization?.surcharge_percent,
+      surcharge_amount: customization?.surcharge_amount,
+      custom_price: customization?.custom_price,
+      customization_snapshot: item.customization_snapshot ?? null,
     };
   });
 

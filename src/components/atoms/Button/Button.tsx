@@ -62,7 +62,7 @@ const variantClasses: Record<Variant, string> = {
     "border-2 border-primary bg-primary bg-cover bg-center text-primary-foreground shadow-[0_3px_6px_rgba(0,0,0,0.18)] hover:brightness-95",
   cart: "border border-primary bg-primary text-primary-foreground hover:bg-primary/85",
   customPill:
-    "border-[3px] border-input bg-white text-black hover:border-primary active:border-primary active:bg-primary active:text-primary-foreground",
+    "border-[3px] border-input bg-white text-black hover:border-primary hover:bg-primary hover:text-primary-foreground active:border-primary active:bg-primary active:text-primary-foreground",
 };
 
 const sizeClasses: Record<Size, string> = {

@@ -44,6 +44,18 @@ function VariantSelect({
 }
 
 
+const MEASUREMENT_LABELS: Record<string, string> = {
+  height: "Chiều cao",
+  weight: "Cân nặng",
+  bust: "Vòng ngực",
+  waist: "Vòng eo",
+  hip: "Vòng mông",
+  shoulder: "Ngang vai",
+  neck: "Vòng cổ",
+  sleeve: "Dài tay",
+  upperArm: "Bắp tay",
+};
+
 export function CartItem({
   item,
   selected = true,
@@ -99,6 +111,14 @@ export function CartItem({
     event.preventDefault();
     openProduct();
   };
+
+  const isCustomized = item.item_type === "CUSTOMIZED";
+  const snapshot = typeof item.customization_snapshot === "string"
+    ? (() => { try { return JSON.parse(item.customization_snapshot); } catch { return null; } })()
+    : item.customization_snapshot;
+
+  const measurements = (snapshot as any)?.measurements || {};
+  const note = (snapshot as any)?.note;
 
   return (
     <article
@@ -159,17 +179,47 @@ export function CartItem({
             ariaLabel={`Màu của ${item.name}`}
             onChange={handleColorChange}
           />
-          <VariantSelect
-            value={item.size}
-            options={sizeOptions}
-            ariaLabel={`Kích cỡ của ${item.name}`}
-            onChange={handleSizeChange}
-          />
+          {isCustomized ? (
+            <span className="inline-flex h-[38px] items-center rounded-pill border border-[#f15a42] bg-[#fff4ee] px-4 text-body-sm font-bold text-[#f15a42]">
+              Customize
+            </span>
+          ) : (
+            <VariantSelect
+              value={item.size}
+              options={sizeOptions}
+              ariaLabel={`Kích cỡ của ${item.name}`}
+              onChange={handleSizeChange}
+            />
+          )}
           <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
           <span className="ml-auto text-right text-base font-bold uppercase text-black sm:text-lg">
             {formatPrice(item.line_total)}
           </span>
         </div>
+
+        {isCustomized && (
+          <div className="mt-2 rounded-[8px] bg-black/[0.03] p-3 text-body-sm text-black/70">
+            <p className="font-bold text-black/80">Số đo Customize:</p>
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+              {Object.entries(measurements)
+                .filter(([, val]) => val !== undefined && val !== null && String(val).trim() !== "")
+                .map(([key, val]) => {
+                  const label = MEASUREMENT_LABELS[key] || key;
+                  const unit = key === "weight" ? "kg" : "cm";
+                  return (
+                    <span key={key} className="bg-white px-2 py-0.5 rounded border border-black/10 text-xs font-medium text-black/75">
+                      {label}: {val as string | number}{unit}
+                    </span>
+                  );
+                })}
+            </div>
+            {note && (
+              <p className="mt-2 text-xs italic text-black/60">
+                <span className="font-semibold not-italic text-black/75">Ghi chú:</span> {note}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </article>
   );

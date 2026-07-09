@@ -11,7 +11,7 @@ export async function GET(request: Request, { params }: { params: Promise<Params
     const { slug } = await params;
     const { searchParams } = new URL(request.url);
     const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
-    const limit = Math.max(1, Number(searchParams.get("limit") ?? "5"));
+    const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? "5")));
     const offset = (page - 1) * limit;
 
     const supabase = await createClient();
@@ -101,6 +101,7 @@ export async function GET(request: Request, { params }: { params: Promise<Params
       .select("review_id, customer_id, order_item_id, rating, review_content, created_at")
       .eq("review_status", "DISPLAY")
       .in("order_item_id", orderItemIds)
+      .order("rating", { ascending: false })
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 

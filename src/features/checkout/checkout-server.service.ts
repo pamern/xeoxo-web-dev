@@ -106,9 +106,14 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
 
   const validatedItems = await Promise.all(
     selectedItems.map(async (item) => {
+      if (item.item_type === "CUSTOMIZED") {
+        return item;
+      }
+
+      const variantId = item.variant_id ?? 0;
       const [variant, stockQuantity] = await Promise.all([
-        getVariantById(item.variant_id),
-        getVariantStock(item.variant_id),
+        getVariantById(variantId),
+        getVariantStock(variantId),
       ]);
 
       if (!variant || variant.status !== "ACTIVE") {

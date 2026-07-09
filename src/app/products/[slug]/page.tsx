@@ -68,14 +68,16 @@ function safeImageSrc(src?: string | null) {
 }
 
 function mapApiProduct(product: ProductDetailDto): Product {
+  const images = product.media
+    .filter((media) => media.media_type === "IMAGE")
+    .map((media) => safeImageSrc(media.url));
+
   return {
     id: String(product.product_line_id),
     slug: product.slug,
     name: product.name,
     price: product.price,
-    images: product.media.length
-      ? product.media.map((media) => safeImageSrc(media.url))
-      : ["/images/placeholder.png"],
+    images: images.length ? images : ["/images/placeholder.png"],
     categorySlug: "api",
     gender: "nu",
     description: product.description ?? "",
@@ -83,6 +85,30 @@ function mapApiProduct(product: ProductDetailDto): Product {
     colors: product.color
       ? [{ name: product.color.color_name, hex: product.color.color_code }]
       : [{ name: "Mặc định", hex: "#111111" }],
+  };
+}
+
+function mergeProductDetailImageData(
+  apiProduct: ProductDetailDto,
+  fallbackProduct?: Product | null,
+): Product {
+  const apiMappedProduct = mapApiProduct(apiProduct);
+
+  if (!fallbackProduct) {
+    return apiMappedProduct;
+  }
+
+  return {
+    ...fallbackProduct,
+    id: apiMappedProduct.id,
+    slug: apiMappedProduct.slug,
+    name: apiMappedProduct.name,
+    price: apiMappedProduct.price,
+    salePrice: apiMappedProduct.salePrice,
+    description: apiMappedProduct.description,
+    images: apiMappedProduct.images,
+    sizes: apiMappedProduct.sizes,
+    colors: apiMappedProduct.colors,
   };
 }
 
@@ -97,7 +123,7 @@ export async function generateMetadata({
     fetchProductBySlugFromApi(slug),
   ]);
   const product =
-    result?.product ?? (apiProduct ? mapApiProduct(apiProduct) : null);
+    apiProduct ? mergeProductDetailImageData(apiProduct, result?.product) : null;
 
   if (!product) {
     return { title: "Không tìm thấy sản phẩm" };
@@ -124,7 +150,7 @@ export default async function ProductPage({
     notFound();
   }
 
-  const product = result?.product ?? mapApiProduct(apiProduct);
+  const product = mergeProductDetailImageData(apiProduct, result?.product);
   const relatedProducts = result?.relatedProducts ?? [];
   const recommendedProducts = relatedProducts.slice(0, 4);
 
@@ -153,6 +179,7 @@ export default async function ProductPage({
       <StripDivider />
       <ProductDescription
         product={product}
+        apiProduct={apiProduct}
         collectionName={result?.collection?.collection_name ?? null}
         materialName={apiProduct.material?.material_name ?? null}
         careInstruction={apiProduct.material?.care_instruction ?? null}
@@ -176,11 +203,13 @@ function StripDivider() {
 
 function ProductDescription({
   product,
+  apiProduct,
   collectionName,
   materialName,
   careInstruction,
 }: {
   product: Product;
+  apiProduct: ProductDetailDto;
   collectionName: string | null;
   materialName: string | null;
   careInstruction: string | null;
@@ -192,12 +221,12 @@ function ProductDescription({
       materialName ??
         "Thông tin chất liệu sẽ được đồng bộ từ dữ liệu sản phẩm.",
     ],
-    ["Kiểu dáng", "Thông tin kiểu dáng sẽ được đồng bộ từ dữ liệu sản phẩm."],
+    ["Kiểu dáng", apiProduct.design_style ?? "Thông tin kiểu dáng sẽ được cập nhật."],
     [
       "Phù hợp với",
-      "Thông tin usage context sẽ được đồng bộ từ dữ liệu sản phẩm.",
+      apiProduct.usage_context ?? "Thông tin phù hợp với sẽ được cập nhật.",
     ],
-    ["Tính năng", "Thông tin features sẽ được đồng bộ từ dữ liệu sản phẩm."],
+    ["Tính năng", apiProduct.features?.join(", ") || "Đang cập nhật"],
     [
       "Bảo quản",
       careInstruction ??

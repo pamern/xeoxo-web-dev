@@ -2,8 +2,9 @@
 
 import { createContext, useCallback, useContext, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { ROUTES } from "@/constants/routes";
 import { cn, formatPrice } from "@/lib/utils";
-import { useCartDrawer } from "@/components/providers/CartDrawerProvider";
 import type { CartItemDto } from "@/types/cart.types";
 
 type CartToastContextValue = {
@@ -49,8 +50,6 @@ function CartAddedToast({
   visible: boolean;
   onClose: () => void;
 }) {
-  const { openDrawer } = useCartDrawer();
-
   return (
     <div
       className={cn(
@@ -61,7 +60,7 @@ function CartAddedToast({
       )}
       aria-live="polite"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-4">
         <p className="text-body-lg font-semibold">Thêm vào giỏ hàng thành công</p>
         <button
           type="button"
@@ -83,7 +82,7 @@ function CartAddedToast({
           <div className="flex flex-col gap-1">
             <p className="text-body-sm font-semibold leading-snug">{item.name}</p>
             <p className="text-caption text-muted-foreground">
-              {item.color} - {item.size}
+              {[item.color, item.item_type === "CUSTOMIZED" ? "Customize" : item.size].filter(Boolean).join(" - ")}
             </p>
             <p className="text-body-sm">
               {item.quantity} <span className="font-bold">x {formatPrice(item.unit_price)}</span>
@@ -92,16 +91,13 @@ function CartAddedToast({
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => {
-          onClose();
-          openDrawer();
-        }}
+      <Link
+        href={ROUTES.CART}
+        onClick={onClose}
         className="mt-5 flex w-full items-center justify-center rounded-pill border border-black px-6 py-3 text-body-sm font-medium transition-colors hover:bg-black hover:text-white"
       >
         Xem giỏ hàng
-      </button>
+      </Link>
     </div>
   );
 }

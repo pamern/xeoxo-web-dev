@@ -96,7 +96,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
       .schema("catalog")
       .from("product_line")
       .select(
-        "product_line_id, slug, line_name, description, color_id, material_id, status",
+        "product_line_id, slug, line_name, description, color_id, material_id, status, design_style, usage_context, features",
       )
       .eq("slug", slug)
       .eq("status", "ACTIVE")
@@ -145,8 +145,9 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
       admin
         .schema("catalog")
         .from("product_component")
-        .select("component_id")
-        .eq("product_line_id", productLineId),
+        .select("component_id, component_name, component_type, is_required, display_order")
+        .eq("product_line_id", productLineId)
+        .order("display_order", { ascending: true }),
     ]);
 
     for (const result of [
@@ -160,7 +161,24 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
       }
     }
 
-    const productMedia = mediaResult.data ?? [];
+    const mediaRoleRank = {
+      MAIN: 0,
+      GALLERY: 1,
+      DETAIL: 2,
+      LOOKBOOK: 3,
+    } as const;
+    const productMedia = [...(mediaResult.data ?? [])].sort((a, b) => {
+      const roleA =
+        mediaRoleRank[String(a.media_role) as keyof typeof mediaRoleRank] ?? 99;
+      const roleB =
+        mediaRoleRank[String(b.media_role) as keyof typeof mediaRoleRank] ?? 99;
+
+      return (
+        roleA - roleB ||
+        Number(a.display_order ?? 0) - Number(b.display_order ?? 0) ||
+        Number(a.media_id) - Number(b.media_id)
+      );
+    });
     const mediaRows = productMedia.length
       ? await admin
           .schema("catalog")
@@ -187,7 +205,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
       ? await admin
           .schema("catalog")
           .from("product_variant")
-          .select("variant_id, size_option_id, price, status")
+          .select("variant_id, component_id, size_option_id, price, status")
           .in("component_id", componentIds)
       : { data: [], error: null };
 
@@ -220,6 +238,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
           .select("review_id, customer_id, order_item_id, rating, review_content, created_at")
           .eq("review_status", "DISPLAY")
           .in("order_item_id", orderItemIds)
+          .order("rating", { ascending: false })
           .order("created_at", { ascending: false })
       : { data: [], error: null };
 
@@ -269,7 +288,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     }
 
     const displayReviews = safeReviewsResult.data ?? [];
-    const reviewPreview = displayReviews.slice(0, 3);
+    const reviewPreview = displayReviews.slice(0, 5);
     const customerIds = reviewPreview.map((review) => Number(review.customer_id));
     const customersResult = customerIds.length
       ? await admin
@@ -293,9 +312,48 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
       ? displayReviews.reduce((sum, review) => sum + Number(review.rating), 0) /
         displayReviews.length
       : 0;
+    const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const review of displayReviews) {
+      const rating = Math.max(1, Math.min(5, Math.round(Number(review.rating)))) as 1 | 2 | 3 | 4 | 5;
+      ratingCounts[rating] += 1;
+    }
     const minPrice = variants.length
       ? Math.min(...variants.map((variant) => toNumber(variant.price)))
       : 0;
+
+    const componentsList = componentsResult.data ?? [];
+    const mappedComponents = componentsList.map((comp) => {
+      const compVariants = variants.filter(v => Number(v.component_id) === Number(comp.component_id));
+      const minPrice = compVariants.length > 0 ? Math.min(...compVariants.map(v => toNumber(v.price))) : 0;
+
+      const compSizes = dedupeSizesByName(
+        compVariants.map((variant) => {
+          const stockQuantity = stockMap.get(Number(variant.variant_id)) ?? 0;
+          return {
+            variant_id: Number(variant.variant_id),
+            size_name: variant.size_option_id
+              ? sizeMap.get(Number(variant.size_option_id)) ?? ""
+              : "",
+            price: toNumber(variant.price),
+            is_available: variant.status === "ACTIVE" && stockQuantity > 0,
+            stock_quantity: stockQuantity,
+          };
+        })
+      ).sort((a, b) => {
+        const rankDifference = sizeRank(a.size_name) - sizeRank(b.size_name);
+        return rankDifference || a.size_name.localeCompare(b.size_name, "vi");
+      });
+
+      return {
+        component_id: Number(comp.component_id),
+        component_name: String(comp.component_name),
+        component_type: String(comp.component_type),
+        is_required: Boolean(comp.is_required),
+        display_order: Number(comp.display_order),
+        min_price: minPrice,
+        variants: compSizes,
+      };
+    });
 
     return ok(
       {
@@ -303,6 +361,14 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         slug: productLine.slug,
         name: productLine.line_name,
         description: productLine.description,
+        design_style: productLine.design_style,
+        usage_context: productLine.usage_context,
+        features: productLine.features
+          ? String(productLine.features)
+              .split(/\r?\n|[;•]/)
+              .map((item) => item.trim())
+              .filter(Boolean)
+          : [],
         price: minPrice,
         currency: "VND",
         media: productMedia.map((item) => {
@@ -343,6 +409,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
           total: displayReviews.length,
           preview_count: reviewPreview.length,
           has_more: displayReviews.length > reviewPreview.length,
+          rating_counts: ratingCounts,
         },
         reviews_preview: reviewPreview.map((review) => {
           const variantId = orderItemMap.get(Number(review.order_item_id));
@@ -363,6 +430,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
             media: [],
           };
         }),
+        components: mappedComponents,
       },
       "Lay chi tiet san pham thanh cong.",
     );

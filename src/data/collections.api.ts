@@ -148,14 +148,18 @@ export function mapApiProductLinesToProducts(productLines: ApiProductLine[] = []
     const productLineId = productLine.product_line_id ?? `api-product-${index}`;
     const media = Array.isArray(productLine.media) ? productLine.media : [];
     const components = Array.isArray(productLine.components) ? productLine.components : [];
-    const firstMedia = media[0] ?? {};
     const productLineName =
       readString(productLine, ["line_name", "product_line_name", "name", "title"]) ??
       `San pham ${String(productLineId)}`;
-    const image =
-      readString(firstMedia, ["url", "image_url", "media_url", "public_url", "src"]) ??
-      getProductLineMainImage(productLineName) ??
-      IMAGE_PLACEHOLDER;
+
+    const mediaImages = media.map((item) =>
+      readString(item, ["url", "image_url", "media_url", "public_url", "src"])
+    ).filter((url): url is string => typeof url === "string" && url.trim().length > 0);
+
+    const images = mediaImages.length > 0
+      ? mediaImages
+      : [getProductLineMainImage(productLineName) ?? IMAGE_PLACEHOLDER];
+
     const price =
       readNumber(productLine, ["price", "base_price", "list_price"]) ??
       readLowestVariantPrice(components) ??
@@ -172,7 +176,7 @@ export function mapApiProductLinesToProducts(productLines: ApiProductLine[] = []
         `product-line-${String(productLineId)}`,
       name: productLineName,
       price,
-      images: [image],
+      images,
       categorySlug: readString(productLine, ["category_slug"]) ?? "ao-dam-vay",
       gender: ["nam", "men", "male"].includes(genderValue ?? "")
         ? "nam"

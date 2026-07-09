@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
 import { TextActionButton } from "@/components/atoms/TextActionButton";
@@ -13,16 +12,24 @@ import { CustomizeModal } from "@/components/organisms/CustomizeModal";
 import { SizeGuideModal } from "@/components/organisms/SizeGuideModal";
 import { SizeRecommendationModal } from "@/components/organisms/SizeRecommendationModal";
 import { VariantSelector } from "@/components/organisms/VariantSelector";
-import { ROUTES } from "@/constants/routes";
-import { formatPrice } from "@/lib/utils";
+import { useCartToast } from "@/components/providers/CartToastProvider";
+import { cn, formatPrice } from "@/lib/utils";
 import { cartService } from "@/services/cart.service";
+import { createCustomizationRequest } from "@/services/customization.service";
+import { saveProfile } from "@/services/measurement.service";
+import { useAuth } from "@/hooks/useAuth";
+import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
+import type { MeasurementValues } from "@/features/size-recommendation/size-recommendation";
 import type { CartItemDto } from "@/types/cart.types";
-import type { ProductDetailDto } from "@/types/product-api.types";
-import type { Product } from "@/types/product.types";
+import type {
+  ProductComponentDto,
+  ProductDetailDto,
+  ProductSizeOptionDto,
+} from "@/types/product-api.types";
+import type { Product, ProductColor } from "@/types/product.types";
 
 const APPOINTMENT_BRANCHES = [
-  { label: "XEO XO Hà Nội", value: "ha-noi" },
-  { label: "XEO XO Sài Gòn", value: "sai-gon" },
+  { label: "XEOXO Test Branch", value: "1" },
 ];
 
 const APPOINTMENT_TIME_SLOTS = [
@@ -33,6 +40,13 @@ const APPOINTMENT_TIME_SLOTS = [
   { id: "17:00", label: "17:00" },
 ];
 
+type ComponentSelection = {
+  customizationId?: number;
+  quantity: number;
+  sizeName?: string;
+  variantId?: number;
+};
+
 export function ProductDetail({
   product,
   apiProduct,
@@ -42,30 +56,65 @@ export function ProductDetail({
   apiProduct: ProductDetailDto;
   relatedProducts?: Product[];
 }) {
-  const resolvedApiProduct = apiProduct;
-  const initialSize =
-    resolvedApiProduct?.sizes.find((option) => option.is_available)
-      ?.size_name ?? "";
-  const [size, setSize] = useState(initialSize);
+  const [size, setSize] = useState("");
   const [color, setColor] = useState(product.colors[0]);
   const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
-  const [addedItem, setAddedItem] = useState<CartItemDto | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [isAdding, setIsAdding] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isSizeRecommendationOpen, setIsSizeRecommendationOpen] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+  const [showPurchasePanel, setShowPurchasePanel] = useState(false);
+  const [activeCustomizeComponentId, setActiveCustomizeComponentId] =
+    useState<number | null>(null);
+  const [componentSelections, setComponentSelections] = useState<
+    Record<number, ComponentSelection>
+  >({});
+  const [tempCustomization, setTempCustomization] = useState<{
+    values: MeasurementValues;
+    note: string;
+    saveAsDefault: boolean;
+  } | null>(null);
+  const [tempComponentCustomizations, setTempComponentCustomizations] = useState<
+    Record<
+      number,
+      {
+        values: MeasurementValues;
+        note: string;
+        saveAsDefault: boolean;
+      }
+    >
+  >({});
+  const { showAddedToCart } = useCartToast();
+  const { isAuthenticated } = useAuth();
+  const {
+    profile: savedMeasurementProfile,
+    values: sharedMeasurementValues,
+    updateValues: updateSharedMeasurementValues,
+    clearValues: clearSharedMeasurementValues,
+  } = useSharedMeasurements(product.gender);
+  const canPersistMeasurements = isAuthenticated;
 
-  const selectedVariant = resolvedApiProduct?.sizes.find(
+  const components = apiProduct.components ?? [];
+  const isMultiComponent = components.length > 1;
+  const selectedVariant = apiProduct.sizes.find(
     (option) => option.size_name === size,
   );
-  const price =
-    selectedVariant?.price ??
-    resolvedApiProduct?.price ??
-    product.salePrice ??
-    product.price;
+  const defaultComponent = components[0];
+  const activeCustomizeComponent =
+    activeCustomizeComponentId == null
+      ? defaultComponent
+      : components.find(
+          (component) => component.component_id === activeCustomizeComponentId,
+        );
+  const isCustomized = size === "CUSTOM";
+  const customBasePrice =
+    defaultComponent?.min_price ?? apiProduct.price ?? product.salePrice ?? product.price;
+  const customPrice = customBasePrice * 1.2;
+  const price = isCustomized
+    ? customPrice
+    : selectedVariant?.price ?? apiProduct.price ?? product.salePrice ?? product.price;
   const stockQuantity = selectedVariant?.stock_quantity ?? 0;
   const maxQuantity = Math.max(1, stockQuantity);
 
@@ -76,47 +125,96 @@ export function ProductDetail({
   }, [maxQuantity, size]);
 
   useEffect(() => {
-    if (!resolvedApiProduct) return;
-    const current = resolvedApiProduct.sizes.find(
-      (option) => option.size_name === size && option.is_available,
-    );
-    if (!current) {
-      setSize(
-        resolvedApiProduct.sizes.find((option) => option.is_available)
-          ?.size_name ?? "",
-      );
+    if (!apiProduct.color) return;
+    setColor({
+      name: apiProduct.color.color_name,
+      hex: apiProduct.color.color_code,
+    });
+  }, [apiProduct.color]);
+
+  useEffect(() => {
+    if (isMultiComponent) {
+      setShowPurchasePanel(false);
+      return;
     }
-    if (resolvedApiProduct.color) {
-      setColor({
-        name: resolvedApiProduct.color.color_name,
-        hex: resolvedApiProduct.color.color_code,
-      });
+
+    function handleScroll() {
+      setShowPurchasePanel(window.scrollY > 560);
     }
-  }, [resolvedApiProduct, size]);
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [isMultiComponent]);
 
   async function handleAdd() {
+    if (isCustomized) {
+      if (!tempCustomization) {
+        setIsCustomizeOpen(true);
+        return;
+      }
+
+      if (!defaultComponent) {
+        setErrorMessage("Không thể tạo yêu cầu may đo cho sản phẩm này.");
+        return;
+      }
+
+      setErrorMessage(undefined);
+      setIsAdding(true);
+
+      try {
+        const request = await createCustomizationRequest({
+          component_id: defaultComponent.component_id,
+          measurements: parseMeasurementValues(tempCustomization.values),
+          customer_note: tempCustomization.note,
+          save_as_default: tempCustomization.saveAsDefault,
+        });
+
+        const cart = await cartService.addItem({
+          customization_id: request.customization_id,
+          quantity,
+        });
+
+        const addedItem =
+          cart.items.find(
+            (item: CartItemDto) =>
+              item.customization_id === request.customization_id,
+          ) ?? null;
+
+        if (addedItem) showAddedToCart(addedItem);
+        window.dispatchEvent(new Event("xeoxo-cart-updated"));
+        setTempCustomization(null); // Clear temp values after successfully adding to cart
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Không thể thêm sản phẩm may đo vào giỏ.",
+        );
+      } finally {
+        setIsAdding(false);
+      }
+      return;
+    }
+
     setErrorMessage(undefined);
     setIsAdding(true);
 
     try {
-      if (selectedVariant?.variant_id) {
-        const cart = await cartService.addItem({
-          variant_id: selectedVariant.variant_id,
-          quantity,
-        });
-        setAddedItem(
-          cart.items.find(
-            (item) => item.variant_id === selectedVariant.variant_id,
-          ) ?? null,
-        );
-        window.dispatchEvent(new Event("xeoxo-cart-updated"));
-      } else {
-        throw new Error(
-          "Vui lòng chọn size có sẵn trước khi thêm vào giỏ hàng.",
-        );
+      if (!selectedVariant?.variant_id || !selectedVariant.is_available) {
+        throw new Error("Vui lòng chọn size còn hàng trước khi thêm vào giỏ.");
       }
-      setAdded(true);
-      window.setTimeout(() => setAdded(false), 2000);
+
+      const cart = await cartService.addItem({
+        variant_id: selectedVariant.variant_id,
+        quantity,
+      });
+      const addedItem =
+        cart.items.find(
+          (item: CartItemDto) => item.variant_id === selectedVariant.variant_id,
+        ) ?? null;
+
+      if (addedItem) showAddedToCart(addedItem);
+      window.dispatchEvent(new Event("xeoxo-cart-updated"));
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -128,11 +226,186 @@ export function ProductDetail({
     }
   }
 
+  async function handlePersistMeasurements(values: MeasurementValues) {
+    await saveProfile({ measurements: parseMeasurementValues(values) });
+  }
+
+  async function handleCustomizeSubmit(
+    values: MeasurementValues,
+    note: string,
+    saveAsDefault: boolean,
+  ) {
+    if (isMultiComponent && activeCustomizeComponent) {
+      await handleMultiCustomizeSubmit(
+        activeCustomizeComponent,
+        values,
+        note,
+        saveAsDefault,
+      );
+      return;
+    }
+
+    setTempCustomization({ values, note, saveAsDefault });
+    setIsCustomizeOpen(false);
+  }
+
+  async function handleMultiCustomizeSubmit(
+    component: ProductComponentDto,
+    values: MeasurementValues,
+    note: string,
+    saveAsDefault: boolean,
+  ) {
+    setTempComponentCustomizations((current) => ({
+      ...current,
+      [component.component_id]: { values, note, saveAsDefault },
+    }));
+    setComponentSelections((current) => ({
+      ...current,
+      [component.component_id]: {
+        quantity: current[component.component_id]?.quantity ?? 1,
+        sizeName: "CUSTOM",
+        variantId: undefined,
+        customizationId: undefined,
+      },
+    }));
+    setIsCustomizeOpen(false);
+    setActiveCustomizeComponentId(null);
+  }
+
+  async function handleMultiAdd() {
+    const selectedEntries = Object.entries(componentSelections)
+      .map(([componentId, selection]) => ({
+        componentId: Number(componentId),
+        selection,
+      }))
+      .filter(({ selection }) => selection.variantId || selection.sizeName === "CUSTOM");
+
+    if (selectedEntries.length === 0) {
+      setErrorMessage("Vui lòng chọn size hoặc Customize ít nhất một thành phần.");
+      return;
+    }
+
+    setErrorMessage(undefined);
+    setIsAdding(true);
+
+    try {
+      let latestCartItem: CartItemDto | null = null;
+
+      for (const { componentId, selection } of selectedEntries) {
+        let customizationId = selection.customizationId;
+
+        if (selection.sizeName === "CUSTOM" && !customizationId) {
+          const temp = tempComponentCustomizations[componentId];
+          if (!temp) {
+            setActiveCustomizeComponentId(componentId);
+            setIsCustomizeOpen(true);
+            throw new Error(`Vui lòng nhập số đo Customize cho thành phần này.`);
+          }
+
+          const request = await createCustomizationRequest({
+            component_id: componentId,
+            measurements: parseMeasurementValues(temp.values),
+            customer_note: temp.note,
+            save_as_default: temp.saveAsDefault,
+          });
+          customizationId = request.customization_id;
+
+          setComponentSelections((current) => ({
+            ...current,
+            [componentId]: {
+              ...current[componentId],
+              customizationId: request.customization_id,
+            },
+          }));
+        }
+
+        const cart = await cartService.addItem({
+          ...(customizationId
+            ? { customization_id: customizationId }
+            : { variant_id: selection.variantId! }),
+          quantity: selection.quantity,
+        });
+
+        latestCartItem = customizationId
+          ? cart.items.find(
+              (item: CartItemDto) =>
+                item.customization_id === customizationId,
+            ) ?? latestCartItem
+          : cart.items.find(
+              (item: CartItemDto) => item.variant_id === selection.variantId,
+            ) ?? latestCartItem;
+      }
+
+      if (latestCartItem) showAddedToCart(latestCartItem);
+      window.dispatchEvent(new Event("xeoxo-cart-updated"));
+      setTempComponentCustomizations({}); // Clear temporary customizations after successfully adding all
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể thêm các thành phần đã chọn vào giỏ.",
+      );
+    } finally {
+      setIsAdding(false);
+    }
+  }
+
+  function selectComponentVariant(
+    component: ProductComponentDto,
+    option: ProductSizeOptionDto,
+  ) {
+    if (!option.is_available) return;
+    setComponentSelections((current) => ({
+      ...current,
+      [component.component_id]: {
+        quantity: current[component.component_id]?.quantity ?? 1,
+        variantId:
+          current[component.component_id]?.variantId === option.variant_id
+            ? undefined
+            : option.variant_id,
+        sizeName:
+          current[component.component_id]?.variantId === option.variant_id
+            ? undefined
+            : option.size_name,
+        customizationId: undefined,
+      },
+    }));
+  }
+
+  function updateComponentQuantity(componentId: number, nextQuantity: number) {
+    setComponentSelections((current) => ({
+      ...current,
+      [componentId]: {
+        ...current[componentId],
+        quantity: Math.max(1, nextQuantity),
+      },
+    }));
+  }
+
+  function openComponentCustomize(componentId: number) {
+    if (componentSelections[componentId]?.sizeName === "CUSTOM") {
+      setComponentSelections((current) => ({
+        ...current,
+        [componentId]: {
+          quantity: current[componentId]?.quantity ?? 1,
+          variantId: undefined,
+          sizeName: undefined,
+          customizationId: undefined,
+        },
+      }));
+      setTempComponentCustomizations((current) => {
+        const next = { ...current };
+        delete next[componentId];
+        return next;
+      });
+      return;
+    }
+    setActiveCustomizeComponentId(componentId);
+    setIsCustomizeOpen(true);
+  }
+
   return (
     <div className="relative grid gap-8 lg:grid-cols-[minmax(0,728px)_minmax(0,714px)] lg:items-start lg:justify-between xl:gap-20">
-      {added && addedItem && (
-        <AddToCartPopup item={addedItem} onClose={() => setAdded(false)} />
-      )}
       {isSizeGuideOpen && (
         <SizeGuideModal
           gender={product.gender}
@@ -142,7 +415,14 @@ export function ProductDetail({
       {isSizeRecommendationOpen && (
         <SizeRecommendationModal
           gender={product.gender}
-          sizes={resolvedApiProduct.sizes}
+          componentType={defaultComponent?.component_type}
+          sizes={apiProduct.sizes}
+          initialValues={sharedMeasurementValues}
+          canPersistMeasurements={canPersistMeasurements}
+          hasPersistedMeasurements={Boolean(savedMeasurementProfile)}
+          onClearMeasurements={clearSharedMeasurementValues}
+          onPersistMeasurements={handlePersistMeasurements}
+          onValuesChange={updateSharedMeasurementValues}
           onOpenAppointment={() => {
             setIsSizeRecommendationOpen(false);
             setIsAppointmentOpen(true);
@@ -165,6 +445,7 @@ export function ProductDetail({
             <AppointmentModal
               branches={APPOINTMENT_BRANCHES}
               timeSlots={APPOINTMENT_TIME_SLOTS}
+              productLineId={apiProduct.product_line_id}
               onClose={() => setIsAppointmentOpen(false)}
               className="max-w-[1240px]"
             />
@@ -174,8 +455,49 @@ export function ProductDetail({
       {isCustomizeOpen && (
         <CustomizeModal
           gender={product.gender}
-          basePrice={price}
-          onClose={() => setIsCustomizeOpen(false)}
+          componentType={activeCustomizeComponent?.component_type}
+          initialValues={
+            activeCustomizeComponentId == null
+              ? (tempCustomization?.values ?? sharedMeasurementValues)
+              : (tempComponentCustomizations[activeCustomizeComponentId]?.values ?? sharedMeasurementValues)
+          }
+          canPersistMeasurements={canPersistMeasurements}
+          hasPersistedMeasurements={Boolean(savedMeasurementProfile)}
+          basePrice={activeCustomizeComponent?.min_price ?? customBasePrice}
+          onClose={() => {
+            setIsCustomizeOpen(false);
+            setActiveCustomizeComponentId(null);
+          }}
+          onClearMeasurements={clearSharedMeasurementValues}
+          onValuesChange={updateSharedMeasurementValues}
+          onSubmit={handleCustomizeSubmit}
+        />
+      )}
+      {!isMultiComponent && showPurchasePanel && (
+        <SingleComponentPurchasePanel
+          color={color}
+          image={product.images[0]}
+          isAdding={isAdding}
+          onAdd={handleAdd}
+          onOpenCustomize={() => {
+            if (size === "CUSTOM") {
+              setSize("");
+              setTempCustomization(null);
+              return;
+            }
+            setSize("CUSTOM");
+            setIsCustomizeOpen(true);
+          }}
+          onQuantityChange={setQuantity}
+          onSelectSize={(nextSize) =>
+            setSize((current) => (current === nextSize ? "" : nextSize))
+          }
+          price={price}
+          productName={product.name}
+          quantity={quantity}
+          selectedSize={size}
+          sizes={apiProduct.sizes}
+          maxQuantity={Math.max(1, maxQuantity)}
         />
       )}
 
@@ -187,8 +509,10 @@ export function ProductDetail({
             {product.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
-            <StarRating rating={4.5} size={22} />
-            <span className="text-foreground/70">(4.5)</span>
+            <StarRating rating={apiProduct.reviews_summary.avg_rating} size={22} />
+            <span className="text-foreground/70">
+              ({apiProduct.reviews_summary.avg_rating.toFixed(1)})
+            </span>
             <span className="text-[#3568ff]">Chia sẻ</span>
           </div>
         </section>
@@ -221,57 +545,72 @@ export function ProductDetail({
           title="Tận hưởng đặc quyền hấp dẫn khi tham gia Xéo Hội"
         />
 
-        <div className="mt-5">
-          <VariantSelector
-            colors={resolvedApiProduct?.color ? [color] : product.colors}
-            sizes={resolvedApiProduct?.sizes ?? []}
-            selectedColor={color}
-            selectedSize={size}
-            onColorChange={setColor}
-            onSizeChange={setSize}
+        {isMultiComponent ? (
+          <MultiComponentPurchaseCompact
+            color={color}
+            components={components}
+            isAdding={isAdding}
+            selections={componentSelections}
+            onAdd={handleMultiAdd}
+            onOpenAppointment={() => setIsAppointmentOpen(true)}
+            onOpenCustomize={openComponentCustomize}
             onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
             onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
-            onOpenCustomize={() => setIsCustomizeOpen(true)}
+            onQuantityChange={updateComponentQuantity}
+            onSelectVariant={selectComponentVariant}
           />
-        </div>
+        ) : (
+          <>
+            <div className="mt-5">
+              <VariantSelector
+                colors={apiProduct.color ? [color] : product.colors}
+                sizes={apiProduct.sizes}
+                selectedColor={color}
+                selectedSize={size}
+                onColorChange={setColor}
+                onSizeChange={(nextSize) =>
+                  setSize((current) => (current === nextSize ? "" : nextSize))
+                }
+                onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
+                onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
+                onOpenAppointment={() => setIsAppointmentOpen(true)}
+                onOpenCustomize={() => {
+                  if (size === "CUSTOM") {
+                    setSize("");
+                    setTempCustomization(null);
+                    return;
+                  }
+                  setSize("CUSTOM");
+                  setIsCustomizeOpen(true);
+                }}
+              />
+            </div>
 
-        <div className="mt-5 grid gap-4 sm:grid-cols-[95px_minmax(0,1fr)]">
-          <QuantityPill
-            value={quantity}
-            max={Math.max(1, maxQuantity)}
-            onChange={setQuantity}
-          />
-          <Button
-            onClick={handleAdd}
-            variant="cart"
-            size="cart"
-            disabled={isAdding || !selectedVariant?.is_available}
-            className="min-w-0"
-          >
-            <Image
-              src="/icons/cart.svg"
-              alt=""
-              width={28}
-              height={28}
-              aria-hidden
-              className="invert"
-            />
-            {added ? "Đã thêm vào giỏ" : "Thêm vào giỏ hàng"}
-          </Button>
-        </div>
-
-        {selectedVariant && (
-          <p
-            className={`mt-3 rounded-[8px] px-4 py-2 text-sm font-semibold ${
-              stockQuantity > 0
-                ? "bg-emerald-50 text-emerald-800"
-                : "bg-red-50 text-red-600"
-            }`}
-          >
-            {stockQuantity > 0
-              ? `Còn ${stockQuantity} sản phẩm trong kho`
-              : "Sản phẩm đã hết hàng"}
-          </p>
+            <div className="mt-5 grid gap-4 sm:grid-cols-[95px_minmax(0,1fr)]">
+              <QuantityPill
+                value={quantity}
+                max={Math.max(1, maxQuantity)}
+                onChange={setQuantity}
+              />
+              <Button
+                onClick={handleAdd}
+                variant="cart"
+                size="cart"
+                disabled={isAdding || (!isCustomized && !selectedVariant?.is_available)}
+                className="min-w-0"
+              >
+                <Image
+                  src="/icons/cart.svg"
+                  alt=""
+                  width={28}
+                  height={28}
+                  aria-hidden
+                  className="invert"
+                />
+                Thêm vào giỏ hàng
+              </Button>
+            </div>
+          </>
         )}
 
         {errorMessage && (
@@ -283,9 +622,11 @@ export function ProductDetail({
           </p>
         )}
 
-        <TextActionButton type="button" className="mx-auto mt-5 text-base">
-          Mô tả sản phẩm
-        </TextActionButton>
+        <div className="flex justify-center">
+          <TextActionButton type="button" className="mt-5 text-base">
+            Mô tả sản phẩm
+          </TextActionButton>
+        </div>
 
         <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
           <div className="grid gap-x-10 gap-y-3 rounded-[10px] bg-[#ededed] px-7 py-4 sm:grid-cols-2">
@@ -312,7 +653,7 @@ export function ProductDetail({
           </div>
         </div>
 
-        {relatedProducts.length > 0 && (
+        {isMultiComponent && relatedProducts.length > 0 && (
           <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
             <h2 className="mb-3 text-lg font-bold uppercase">
               Có thể phù hợp với bạn
@@ -326,6 +667,625 @@ export function ProductDetail({
         )}
       </aside>
     </div>
+  );
+}
+
+function parseMeasurementValues(values: MeasurementValues) {
+  const parsedMeasurements: Record<string, number> = {};
+  for (const [key, value] of Object.entries(values)) {
+    const num = parseFloat(value);
+    if (!Number.isNaN(num)) parsedMeasurements[key] = num;
+  }
+  return parsedMeasurements;
+}
+
+function SingleComponentPurchasePanel({
+  color,
+  image,
+  isAdding,
+  maxQuantity,
+  onAdd,
+  onOpenCustomize,
+  onQuantityChange,
+  onSelectSize,
+  price,
+  productName,
+  quantity,
+  selectedSize,
+  sizes,
+}: {
+  color: ProductColor;
+  image: string;
+  isAdding: boolean;
+  maxQuantity: number;
+  onAdd: () => void;
+  onOpenCustomize: () => void;
+  onQuantityChange: (quantity: number) => void;
+  onSelectSize: (size: string) => void;
+  price: number;
+  productName: string;
+  quantity: number;
+  selectedSize: string;
+  sizes: ProductSizeOptionDto[];
+}) {
+  const regularSizes = sizes.filter(
+    (option) => option.size_name.trim().toUpperCase() !== "CUSTOM",
+  );
+  const hasAvailableVariant = regularSizes.some((option) => option.is_available);
+  const customSelected = selectedSize === "CUSTOM";
+  const selectedVariant = regularSizes.find(
+    (option) => option.size_name === selectedSize,
+  );
+  const addDisabled =
+    isAdding || (!customSelected && !selectedVariant?.is_available);
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-[85] hidden border-y border-black/15 bg-white shadow-[0_-12px_32px_rgba(0,0,0,0.12)] lg:block">
+      <div className="mx-auto flex h-[112px] max-w-site items-stretch px-6 xl:px-[100px]">
+        <div className="flex min-w-[420px] items-center gap-4 pr-7">
+          <div className="relative h-[76px] w-[58px] overflow-hidden rounded-[6px] bg-secondary">
+            <Image
+              src={image}
+              alt={productName}
+              fill
+              sizes="58px"
+              className="object-contain"
+            />
+          </div>
+          <div className="min-w-0">
+            <h3 className="truncate text-lg font-bold">{productName}</h3>
+            <p className="mt-1 text-lg font-bold">{formatPrice(price)}</p>
+          </div>
+        </div>
+
+        <div className="w-px self-stretch bg-black/15" aria-hidden />
+
+        <div className="grid flex-1 grid-cols-[minmax(360px,1fr)_minmax(180px,240px)] items-center gap-8 px-7">
+          <div className="min-w-0">
+            <div className="grid grid-cols-[minmax(0,1fr)_220px] gap-8 text-sm font-bold">
+              <span>Kích thước</span>
+              <span>Màu sắc:</span>
+            </div>
+            <div className="mt-2 grid grid-cols-[minmax(0,1fr)_220px] items-center gap-8">
+              <div className="flex flex-wrap gap-2">
+                {regularSizes.map((option) => (
+                  <button
+                    key={option.variant_id}
+                    type="button"
+                    onClick={() => onSelectSize(option.size_name)}
+                    disabled={!option.is_available}
+                    aria-pressed={selectedSize === option.size_name}
+                    className={cn(
+                      "h-[36px] min-w-[58px] rounded-pill border-[3px] px-4 text-sm font-bold transition-colors",
+                      !option.is_available &&
+                        "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                      selectedSize === option.size_name && option.is_available
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : option.is_available && "border-input bg-white hover:border-primary",
+                    )}
+                  >
+                    {option.size_name}
+                  </button>
+                ))}
+                <Button
+                  type="button"
+                  onClick={onOpenCustomize}
+                  disabled={!hasAvailableVariant}
+                  variant="customPill"
+                  size="custom"
+                  iconSrc="/icons/custom.svg"
+                  iconSize={30}
+                  iconClassName={cn("h-6 w-7 object-contain", customSelected && "invert")}
+                  className={cn(
+                    "h-[36px] min-w-[138px] gap-1.5 text-sm",
+                    customSelected &&
+                      "border-primary bg-primary text-primary-foreground",
+                    !hasAvailableVariant &&
+                      "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                  )}
+                >
+                  Customize
+                </Button>
+              </div>
+              <span
+                className="inline-flex h-[36px] w-full items-center justify-center rounded-full border-[3px] border-input px-5 text-sm font-bold text-white"
+                style={{ backgroundColor: color.hex }}
+              >
+                {color.name}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="w-px self-stretch bg-black/15" aria-hidden />
+
+        <div className="flex min-w-[420px] items-center gap-6 pl-7">
+          <QuantityPill
+            value={quantity}
+            max={maxQuantity}
+            onChange={onQuantityChange}
+          />
+          <Button
+            onClick={onAdd}
+            variant="cart"
+            size="cart"
+            disabled={addDisabled}
+            className="h-[54px] min-w-[260px] px-7"
+          >
+            <Image
+              src="/icons/cart.svg"
+              alt=""
+              width={24}
+              height={24}
+              aria-hidden
+              className="invert"
+            />
+            Thêm vào giỏ
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MultiComponentPurchaseCompact({
+  color,
+  components,
+  isAdding,
+  selections,
+  onAdd,
+  onOpenAppointment,
+  onOpenCustomize,
+  onOpenSizeGuide,
+  onOpenSizeRecommendation,
+  onQuantityChange,
+  onSelectVariant,
+}: {
+  color: ProductColor;
+  components: ProductComponentDto[];
+  isAdding: boolean;
+  selections: Record<number, ComponentSelection>;
+  onAdd: () => void;
+  onOpenAppointment: () => void;
+  onOpenCustomize: (componentId: number) => void;
+  onOpenSizeGuide: () => void;
+  onOpenSizeRecommendation: () => void;
+  onQuantityChange: (componentId: number, quantity: number) => void;
+  onSelectVariant: (component: ProductComponentDto, option: ProductSizeOptionDto) => void;
+}) {
+  const selectedCount = Object.values(selections).filter(
+    (selection) => selection.variantId || selection.customizationId || selection.sizeName === "CUSTOM",
+  ).length;
+
+  return (
+    <div className="mt-5 flex flex-col gap-4">
+      <div className="border-y-2 border-primary/80 bg-white py-3">
+        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold text-black/55">Màu sắc: {color.name}</p>
+            <span
+              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-full border-[3px] border-input px-5 text-sm font-bold text-white"
+              style={{ backgroundColor: color.hex }}
+            >
+              {color.name}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={onOpenSizeGuide}
+            className="text-xs font-bold text-[#3568ff] underline underline-offset-4 hover:opacity-70"
+          >
+            Hướng dẫn cách đo
+          </button>
+        </div>
+
+        <div className="flex flex-col">
+          {components.map((component) => (
+            <ComponentPurchaseCardCompact
+              key={component.component_id}
+              component={component}
+              selection={selections[component.component_id]}
+              onOpenCustomize={() => onOpenCustomize(component.component_id)}
+              onQuantityChange={(quantity) =>
+                onQuantityChange(component.component_id, quantity)
+              }
+              onSelectVariant={(option) => onSelectVariant(component, option)}
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={onOpenAppointment}
+            className="flex h-[38px] items-center justify-center rounded-full border border-black px-6 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+            style={{
+              backgroundImage: "url(/images/bg-gia-nhap-btn.png)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            Đặt lịch may đo
+          </button>
+          <button
+            type="button"
+            onClick={onOpenSizeRecommendation}
+            className="text-sm font-bold underline underline-offset-4 hover:opacity-70"
+          >
+            Hướng dẫn chọn size
+          </button>
+        </div>
+      </div>
+
+      <Button
+        onClick={onAdd}
+        variant="cart"
+        size="cart"
+        disabled={isAdding || selectedCount === 0}
+        className="min-w-0"
+      >
+        <Image
+          src="/icons/cart.svg"
+          alt=""
+          width={28}
+          height={28}
+          aria-hidden
+          className="invert"
+        />
+        Thêm vào giỏ hàng
+      </Button>
+    </div>
+  );
+}
+
+function ComponentPurchaseCardCompact({
+  component,
+  selection,
+  onOpenCustomize,
+  onQuantityChange,
+  onSelectVariant,
+}: {
+  component: ProductComponentDto;
+  selection?: ComponentSelection;
+  onOpenCustomize: () => void;
+  onQuantityChange: (quantity: number) => void;
+  onSelectVariant: (option: ProductSizeOptionDto) => void;
+}) {
+  const selectedVariant = component.variants.find(
+    (option) => option.variant_id === selection?.variantId,
+  );
+  const selectedSize = selection?.sizeName ?? "";
+  const isCustomSelected = selection?.sizeName === "CUSTOM";
+  const hasAvailableVariant = component.variants.some((option) => option.is_available);
+  const quantity = selection?.quantity ?? 1;
+  const maxQuantity = isCustomSelected
+    ? 99
+    : Math.max(1, selectedVariant?.stock_quantity ?? 1);
+  const title = component.component_name || component.component_type;
+
+  return (
+    <section className="grid gap-3 border-t-2 border-primary/80 py-3 last:border-b-2 sm:grid-cols-[104px_minmax(0,1fr)_96px] sm:items-center">
+      <div className="min-w-0">
+        <p className="line-clamp-1 text-sm font-bold">{title}</p>
+        <p className="mt-0.5 text-sm font-bold">
+          {formatPrice(
+            isCustomSelected
+              ? component.min_price * 1.2
+              : selectedVariant?.price ?? component.min_price,
+          )}
+        </p>
+        <p className="mt-1 text-[11px] font-semibold text-black/45">
+          {isCustomSelected
+            ? "Customize"
+            : selectedSize
+              ? `Size ${selectedSize}`
+              : "Chọn size"}
+        </p>
+      </div>
+
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span className="mr-1 text-xs font-bold text-black/55">Chọn size</span>
+        {component.variants.map((option) => (
+          <button
+            key={option.variant_id}
+            type="button"
+            onClick={() => onSelectVariant(option)}
+            disabled={!option.is_available}
+            aria-pressed={selection?.variantId === option.variant_id}
+            className={cn(
+              "h-[26px] min-w-[42px] rounded-pill border-[2px] px-3 text-[11px] font-bold transition-colors",
+              !option.is_available &&
+                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+              selection?.variantId === option.variant_id && option.is_available
+                ? "border-primary bg-primary text-primary-foreground"
+                : option.is_available &&
+                  "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
+            )}
+          >
+            {option.size_name}
+          </button>
+        ))}
+        <Button
+          type="button"
+          onClick={onOpenCustomize}
+          disabled={!hasAvailableVariant}
+          variant="customPill"
+          size="custom"
+          iconSrc="/icons/custom.svg"
+          iconSize={22}
+          iconClassName={cn("h-5 w-5 object-contain", isCustomSelected && "invert")}
+          className={cn(
+            "h-[26px] min-w-[96px] gap-1 border-[2px] px-2 text-[11px]",
+            isCustomSelected && "border-primary bg-primary text-primary-foreground",
+            !hasAvailableVariant &&
+              "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+          )}
+        >
+          Custom
+        </Button>
+      </div>
+
+      <div className="justify-self-start sm:justify-self-end">
+        <QuantityPill
+          value={quantity}
+          max={maxQuantity}
+          onChange={onQuantityChange}
+        />
+      </div>
+    </section>
+  );
+}
+
+function MultiComponentPurchase({
+  color,
+  components,
+  isAdding,
+  selections,
+  onAdd,
+  onOpenAppointment,
+  onOpenCustomize,
+  onOpenSizeGuide,
+  onOpenSizeRecommendation,
+  onQuantityChange,
+  onSelectVariant,
+}: {
+  color: ProductColor;
+  components: ProductComponentDto[];
+  isAdding: boolean;
+  selections: Record<number, ComponentSelection>;
+  onAdd: () => void;
+  onOpenAppointment: () => void;
+  onOpenCustomize: (componentId: number) => void;
+  onOpenSizeGuide: () => void;
+  onOpenSizeRecommendation: () => void;
+  onQuantityChange: (componentId: number, quantity: number) => void;
+  onSelectVariant: (component: ProductComponentDto, option: ProductSizeOptionDto) => void;
+}) {
+  const selectedCount = Object.values(selections).filter(
+    (selection) => selection.variantId || selection.customizationId,
+  ).length;
+  const selectedTotal = useMemo(
+    () =>
+      components.reduce((sum, component) => {
+        const selection = selections[component.component_id];
+        if (!selection) return sum;
+        const quantity = selection.quantity || 1;
+        if (selection.customizationId) {
+          return sum + component.min_price * 1.2 * quantity;
+        }
+        const variant = component.variants.find(
+          (option) => option.variant_id === selection.variantId,
+        );
+        return sum + (variant?.price ?? 0) * quantity;
+      }, 0),
+    [components, selections],
+  );
+
+  return (
+    <div className="mt-5 flex flex-col gap-4">
+      <div className="rounded-[18px] border border-black/15 bg-white p-4 shadow-[0_10px_30px_rgba(0,0,0,0.06)]">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.14em] text-[#f15a42]">
+              Chọn từng thành phần
+            </p>
+            <p className="mt-1 text-sm text-black/60">
+              Áo/quần/set được chọn độc lập. Chọn phần nào thì thêm phần đó.
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs font-bold text-black/50">Màu sắc:</p>
+            <span
+              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-full border-[3px] border-input px-5 text-sm font-bold text-white"
+              style={{ backgroundColor: color.hex }}
+            >
+              {color.name}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-4">
+          {components.map((component) => (
+            <ComponentPurchaseCard
+              key={component.component_id}
+              component={component}
+              selection={selections[component.component_id]}
+              onOpenCustomize={() => onOpenCustomize(component.component_id)}
+              onQuantityChange={(quantity) =>
+                onQuantityChange(component.component_id, quantity)
+              }
+              onSelectVariant={(option) => onSelectVariant(component, option)}
+            />
+          ))}
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-4">
+          <button
+            type="button"
+            onClick={onOpenAppointment}
+            className="flex h-[43px] items-center justify-center rounded-full border border-black px-6 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+            style={{
+              backgroundImage: "url(/images/bg-gia-nhap-btn.png)",
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          >
+            Đặt lịch may đo
+          </button>
+          <button
+            type="button"
+            onClick={onOpenSizeRecommendation}
+            className="text-sm font-bold underline underline-offset-4 hover:opacity-70"
+          >
+            Hướng dẫn chọn size
+          </button>
+          <button
+            type="button"
+            onClick={onOpenSizeGuide}
+            className="text-sm font-bold text-[#3568ff] underline underline-offset-4 hover:opacity-70"
+          >
+            Hướng dẫn cách đo
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_minmax(240px,320px)] sm:items-center">
+        <div className="rounded-[14px] border border-black/10 bg-[#f3f3f3] px-5 py-4">
+          <p className="text-sm font-semibold text-black/60">
+            Đã chọn {selectedCount}/{components.length} thành phần
+          </p>
+          <p className="mt-1 text-xl font-bold">
+            Tạm tính: {formatPrice(selectedTotal)}
+          </p>
+        </div>
+        <Button
+          onClick={onAdd}
+          variant="cart"
+          size="cart"
+          disabled={isAdding || selectedCount === 0}
+          className="min-w-0"
+        >
+          <Image
+            src="/icons/cart.svg"
+            alt=""
+            width={28}
+            height={28}
+            aria-hidden
+            className="invert"
+          />
+          Thêm vào giỏ hàng
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function ComponentPurchaseCard({
+  component,
+  selection,
+  onOpenCustomize,
+  onQuantityChange,
+  onSelectVariant,
+}: {
+  component: ProductComponentDto;
+  selection?: ComponentSelection;
+  onOpenCustomize: () => void;
+  onQuantityChange: (quantity: number) => void;
+  onSelectVariant: (option: ProductSizeOptionDto) => void;
+}) {
+  const selectedVariant = component.variants.find(
+    (option) => option.variant_id === selection?.variantId,
+  );
+  const selectedSize = selection?.sizeName ?? "";
+  const isCustomSelected = selection?.customizationId != null;
+  const hasAvailableVariant = component.variants.some((option) => option.is_available);
+  const quantity = selection?.quantity ?? 1;
+  const maxQuantity = isCustomSelected
+    ? 99
+    : Math.max(1, selectedVariant?.stock_quantity ?? 1);
+
+  return (
+    <section className="rounded-[16px] border border-black/15 bg-white p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-black/45">
+            {component.component_type}
+          </p>
+          <h3 className="mt-1 text-lg font-bold">{component.component_name}</h3>
+        </div>
+        <p className="text-right text-base font-bold">
+          {formatPrice(
+            isCustomSelected
+              ? component.min_price * 1.2
+              : selectedVariant?.price ?? component.min_price,
+          )}
+        </p>
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+          <span className="font-bold">
+            Kích thước
+          </span>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {component.variants.map((option) => (
+            <button
+              key={option.variant_id}
+              type="button"
+              onClick={() => onSelectVariant(option)}
+              disabled={!option.is_available}
+              aria-pressed={selection?.variantId === option.variant_id}
+              className={cn(
+                "h-[40px] min-w-[78px] rounded-pill border-[3px] px-4 text-sm font-bold transition-colors",
+                !option.is_available &&
+                  "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                selection?.variantId === option.variant_id && option.is_available
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : option.is_available &&
+                    "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
+              )}
+            >
+              {option.size_name}
+            </button>
+          ))}
+          <Button
+            type="button"
+            onClick={onOpenCustomize}
+            disabled={!hasAvailableVariant}
+            variant="customPill"
+            size="custom"
+            iconSrc="/icons/custom.svg"
+            iconSize={34}
+            iconClassName={cn("h-7 w-8 object-contain", isCustomSelected && "invert")}
+            className={cn(
+              "min-w-[148px] gap-1.5",
+              isCustomSelected &&
+                "border-primary bg-primary text-primary-foreground",
+              !hasAvailableVariant &&
+                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+            )}
+          >
+            Customize
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-[95px_minmax(0,1fr)] sm:items-center">
+        <QuantityPill
+          value={quantity}
+          max={maxQuantity}
+          onChange={onQuantityChange}
+        />
+        <p className="text-sm text-black/55">
+          {isCustomSelected
+            ? "Đã lưu yêu cầu Customize cho thành phần này."
+            : selectedVariant
+              ? `Tồn kho size ${selectedVariant.size_name}: ${selectedVariant.stock_quantity ?? 0}`
+              : "Chọn size hoặc Customize nếu muốn thêm thành phần này."}
+        </p>
+      </div>
+    </section>
   );
 }
 
@@ -345,61 +1305,6 @@ function ProductNotice({ icon, title }: { icon: string; title: string }) {
         height={8}
         aria-hidden
       />
-    </div>
-  );
-}
-
-function AddToCartPopup({
-  item,
-  onClose,
-}: {
-  item: CartItemDto;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed right-6 top-[170px] z-50 w-[min(92vw,520px)] rounded-[18px] bg-white px-7 py-6 text-black shadow-[0_12px_32px_rgba(0,0,0,0.22)]">
-      <div className="flex items-start justify-between gap-4">
-        <h2 className="text-xl font-bold">Thêm vào giỏ hàng thành công</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Đóng"
-          className="text-3xl leading-none text-black transition hover:text-black/60"
-        >
-          ×
-        </button>
-      </div>
-
-      <div className="mt-4 border-t border-black/35 pt-4">
-        <div className="grid grid-cols-[82px_minmax(0,1fr)] gap-4">
-          <div className="relative h-[82px] w-[82px] overflow-hidden bg-secondary">
-            <Image
-              src={item.thumbnail || "/images/placeholder.png"}
-              alt={item.name}
-              fill
-              sizes="82px"
-              className="object-cover"
-            />
-          </div>
-          <div className="min-w-0">
-            <h3 className="line-clamp-2 text-lg font-bold">{item.name}</h3>
-            <p className="mt-1 text-sm text-black/70">
-              {[item.color, item.size].filter(Boolean).join(" - ")}
-            </p>
-            <p className="mt-1 text-base">
-              {item.quantity} <span className="mx-2">×</span>{" "}
-              <strong>{formatPrice(item.unit_price)}</strong>
-            </p>
-          </div>
-        </div>
-
-        <Link
-          href={ROUTES.CART}
-          className="mt-5 inline-flex h-11 min-w-[240px] items-center justify-center rounded-pill border border-black px-8 text-sm font-bold transition hover:bg-black hover:text-white"
-        >
-          Xem giỏ hàng
-        </Link>
-      </div>
     </div>
   );
 }
