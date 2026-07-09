@@ -1,82 +1,82 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ROUTES } from "@/constants/routes";
-import { useAppointmentLookup } from "@/hooks/useAppointmentLookup";
-import type {
-  AppointmentLookupValues,
-} from "@/types/appointment-lookup.types";
+import { cn } from "@/lib/utils";
+
+type AppointmentLookupValues = {
+  appointment_code: string;
+  contact: string;
+};
 
 type AppointmentLookupExperienceProps = {
   initialValues?: Partial<AppointmentLookupValues>;
 };
 
-type AppointmentLookupCardData = {
-  appointment_id: number;
-  branch_address: string;
-  branch_name: string;
-  date_label: string;
-  duration_label: string;
-  service_name: string;
-  status: "upcoming" | "completed" | "cancelled";
-  status_label: string;
-  time_label: string;
+type MockAppointmentStatus = "confirmed" | "pending" | "completed";
+
+type MockAppointmentDetail = {
+  appointmentCode: string;
+  branch: string;
+  contact: string;
+  consultant: string;
+  dateLabel: string;
+  note: string;
+  service: string;
+  status: MockAppointmentStatus;
+  statusLabel: string;
+  timeLabel: string;
 };
 
-function getStatusClasses(status: string) {
-  if (status === "CONFIRMED") {
+const MOCK_APPOINTMENT: MockAppointmentDetail = {
+  appointmentCode: "LH2607090121",
+  branch: "Xéo Xọ Sài Gòn",
+  contact: "0981812568",
+  consultant: "Tư vấn viên Linh Chi",
+  dateLabel: "Thứ Bảy, 12.07.2026",
+  note: "Vui lòng đến sớm 10 phút để được chuẩn bị khu vực thử đồ.",
+  service: "Tư vấn số đo và chỉnh phom trực tiếp",
+  status: "confirmed",
+  statusLabel: "Lịch hẹn đã xác nhận",
+  timeLabel: "10:30 - 11:15",
+};
+
+function normalizeText(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function getMockAppointment(values: AppointmentLookupValues) {
+  const appointmentCode = values.appointment_code.trim().toUpperCase();
+  const contact = values.contact.trim();
+
+  if (!appointmentCode || !contact) {
+    return null;
+  }
+
+  const matchesCode =
+    normalizeText(appointmentCode) ===
+    normalizeText(MOCK_APPOINTMENT.appointmentCode);
+  const matchesContact =
+    normalizeText(contact) === normalizeText(MOCK_APPOINTMENT.contact);
+
+  if (!matchesCode || !matchesContact) {
+    return null;
+  }
+
+  return MOCK_APPOINTMENT;
+}
+
+function getStatusClasses(status: MockAppointmentStatus) {
+  if (status === "confirmed") {
     return "border-[#ff593d]/20 bg-[#fff1ec] text-[#cf5c43]";
   }
 
-  if (status === "COMPLETED") {
+  if (status === "completed") {
     return "border-[#9ac7a7]/30 bg-[#edf8ef] text-[#2f7a45]";
   }
 
-  if (status === "CANCELLED" || status === "NO_SHOW") {
-    return "border-[#d4d4d4]/30 bg-[#f8f8f8] text-[#525252]";
-  }
-
   return "border-black/10 bg-black/[0.03] text-black/65";
-}
-
-function formatAppointmentDate(dateValue: string) {
-  const [year, month, day] = dateValue.split("-");
-  if (!year || !month || !day) {
-    return dateValue;
-  }
-
-  return `Ngày ${Number(day)} tháng ${Number(month)} năm ${year}`;
-}
-
-function formatTimeLabel(startTime: string, endTime: string) {
-  return `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}`;
-}
-
-function normalizeAppointmentResult(result: any): AppointmentLookupCardData {
-  return {
-    appointment_id: Number(result.appointment_id),
-    branch_address: result.address ?? "Chưa cập nhật địa chỉ chi nhánh.",
-    branch_name: result.branch_name ?? "Xéo Xọ",
-    date_label: formatAppointmentDate(result.appointment_date),
-    duration_label: "Thời lượng theo lịch hẹn",
-    service_name: "Lịch hẹn tư vấn số đo",
-    status: result.appointment_status === "COMPLETED"
-      ? "completed"
-      : result.appointment_status === "CANCELLED" || result.appointment_status === "NO_SHOW"
-      ? "cancelled"
-      : "upcoming",
-    status_label:
-      result.appointment_status === "COMPLETED"
-        ? "Hoàn thành"
-        : result.appointment_status === "CANCELLED"
-        ? "Đã hủy"
-        : result.appointment_status === "NO_SHOW"
-        ? "Vắng mặt"
-        : "Sắp diễn ra",
-    time_label: formatTimeLabel(result.start_time, result.end_time),
-  };
 }
 
 export function AppointmentLookupExperience({
@@ -84,13 +84,23 @@ export function AppointmentLookupExperience({
 }: AppointmentLookupExperienceProps) {
   const router = useRouter();
   const [formValues, setFormValues] = useState<AppointmentLookupValues>({
-    appointment_id: initialValues?.appointment_id ?? "",
+    appointment_code: initialValues?.appointment_code ?? "",
     contact: initialValues?.contact ?? "",
   });
-  const { errorMessage, isLoading, lookup, reset, result } =
-    useAppointmentLookup(initialValues);
+  const [submittedValues, setSubmittedValues] = useState<AppointmentLookupValues>({
+    appointment_code: initialValues?.appointment_code ?? "",
+    contact: initialValues?.contact ?? "",
+  });
+  const [hasSearched, setHasSearched] = useState(
+    Boolean(initialValues?.appointment_code && initialValues?.contact),
+  );
 
-  const normalizedResult = result ? normalizeAppointmentResult(result) : null;
+  const result = useMemo(
+    () => getMockAppointment(submittedValues),
+    [submittedValues],
+  );
+
+  const showError = hasSearched && !result;
 
   const inputBaseClass =
     "h-[62px] w-full rounded-[100px] border border-black bg-white px-[26px] py-5 text-[18px] font-light text-black outline-none transition-colors placeholder:text-black/50 focus:border-black md:px-[50px]";
@@ -99,11 +109,11 @@ export function AppointmentLookupExperience({
   const secondaryActionClass =
     "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-white px-[60px] py-5 text-[20px] font-bold text-black transition hover:bg-black hover:text-white md:min-w-[306px] md:px-[100px] md:text-[22px]";
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const nextValues = {
-      appointment_id: formValues.appointment_id.trim(),
+      appointment_code: formValues.appointment_code.trim().toUpperCase(),
       contact: formValues.contact.trim(),
     };
 
@@ -112,15 +122,20 @@ export function AppointmentLookupExperience({
       scroll: false,
     });
 
-    await lookup(nextValues);
+    setSubmittedValues(nextValues);
+    setHasSearched(true);
   };
 
   const handleReset = () => {
     setFormValues({
-      appointment_id: "",
+      appointment_code: "",
       contact: "",
     });
-    reset();
+    setSubmittedValues({
+      appointment_code: "",
+      contact: "",
+    });
+    setHasSearched(false);
     router.replace(ROUTES.APPOINTMENT, {
       scroll: false,
     });
@@ -150,14 +165,13 @@ export function AppointmentLookupExperience({
                   Mã lịch hẹn:
                 </span>
                 <input
-                  id="appointment_id"
-                  name="appointment_id"
-                  type="text"
-                  value={formValues.appointment_id}
+                  id="appointment_code"
+                  name="appointment_code"
+                  value={formValues.appointment_code}
                   onChange={(event) =>
                     setFormValues((prev) => ({
                       ...prev,
-                      appointment_id: event.target.value,
+                      appointment_code: event.target.value.toUpperCase(),
                     }))
                   }
                   placeholder="Mã lịch hẹn của bạn"
@@ -172,7 +186,6 @@ export function AppointmentLookupExperience({
                 <input
                   id="contact"
                   name="contact"
-                  type="text"
                   value={formValues.contact}
                   onChange={(event) =>
                     setFormValues((prev) => ({
@@ -189,7 +202,7 @@ export function AppointmentLookupExperience({
             <div className="space-y-[30px] border-t border-black/10 pb-1 pt-[25px]">
               <div className="flex flex-wrap items-center justify-end gap-4">
                 <button type="submit" className={primaryActionClass}>
-                  {isLoading ? "Đang tra cứu..." : "Tra cứu"}
+                  Tra cứu
                 </button>
                 <button
                   type="button"
@@ -204,74 +217,100 @@ export function AppointmentLookupExperience({
         </div>
       </section>
 
-      {errorMessage ? (
+      {showError ? (
         <section className="mx-auto max-w-[1529px] border border-[#cf5c43] bg-[#fff4f0] px-6 py-5 text-[#a64e3b] md:px-[40px]">
-          <p className="text-[18px] font-medium">{errorMessage}</p>
+          <p className="text-[18px] font-medium">
+            Không tìm thấy lịch hẹn phù hợp. Anh/chị vui lòng kiểm tra lại mã lịch
+            hẹn và thông tin liên hệ.
+          </p>
         </section>
       ) : null}
 
-      {normalizedResult ? (
-        <article className="overflow-hidden border border-black/40 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.03)]">
-          <div className="flex flex-col gap-4 px-4 py-5 md:px-6 md:py-6">
-            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <div className="min-w-0">
-                <p className="text-[15px] leading-[1.3] tracking-[-0.01em] text-black/72">
-                  <span className="font-bold text-black">{normalizedResult.service_name}</span>
-                </p>
-                <p className="text-[13px] leading-[1.4] tracking-[-0.01em] text-black/60">
-                  {normalizedResult.branch_name}
-                </p>
+      {result ? (
+        <section className="mx-auto max-w-[1529px] rounded-[26px] bg-white p-6 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:p-[40px]">
+          <div className="flex flex-col gap-6 border-b border-black/10 pb-8 lg:flex-row lg:items-start lg:justify-between">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-3 text-[18px] text-black">
+                <span className="font-light">Mã lịch hẹn:</span>
+                <span className="font-semibold">{result.appointmentCode}</span>
               </div>
 
-              <span
-                className={
-                  `rounded-full px-3 py-1 text-[13px] font-bold leading-none tracking-[-0.015em] ${getStatusClasses(normalizedResult.status)}`
-                }
+              <div
+                className={cn(
+                  "inline-flex rounded-full border px-4 py-2 text-sm font-semibold",
+                  getStatusClasses(result.status),
+                )}
               >
-                {normalizedResult.status_label}
-              </span>
-            </div>
-
-            <div className="relative -mx-4 border-t border-neutral-300 bg-white px-5 py-5 shadow-[0_14px_38px_rgba(0,0,0,0.08)] transition duration-200 hover:shadow-[0_18px_46px_rgba(0,0,0,0.12)] md:-mx-6 md:px-6 md:py-6">
-              <div className="absolute -left-4 -top-px h-px w-4 bg-white" />
-              <div className="absolute -right-4 -top-px h-px w-4 bg-white" />
-              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
-                <div className="grid gap-2">
-                  <p className="text-[14px] leading-[1.35] tracking-[-0.01em] text-black">
-                    {normalizedResult.branch_address}
-                  </p>
-                  <p className="text-[12px] leading-[1.4] tracking-[-0.01em] text-black/60">
-                    {normalizedResult.duration_label}
-                  </p>
-                </div>
-
-                <div className="grid gap-2 pr-4 text-right sm:pr-6">
-                  <p className="whitespace-nowrap text-[15px] leading-[1.22] tracking-[-0.01em] text-black">
-                    Thời gian: {normalizedResult.time_label}
-                  </p>
-                  <p className="whitespace-nowrap text-[15px] leading-[1.22] tracking-[-0.01em] text-black">
-                    {normalizedResult.date_label}
-                  </p>
-                </div>
+                {result.statusLabel}
               </div>
+
+              <p className="max-w-[720px] text-[16px] leading-relaxed text-black/72 md:text-[18px]">
+                {result.note}
+              </p>
             </div>
 
-            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black/20 bg-white px-6 text-sm font-medium text-black transition-colors duration-200 hover:border-black hover:bg-black/5"
-              >
-                Huỷ lịch
-              </button>
-              <Link
-                href={ROUTES.FAQ_ACCOUNT}
-                className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black bg-black px-6 text-sm font-bold text-white transition-colors duration-200 hover:bg-white hover:text-black"
-              >
-                Liên hệ
-              </Link>
+            <div className="rounded-[22px] border border-[#f5ebe0] bg-[#fffcf6] px-6 py-5 text-left shadow-[0_10px_24px_rgba(0,0,0,0.04)] lg:min-w-[360px]">
+              <p className="text-sm font-medium uppercase tracking-[0.08em] text-[#cf5c43]">
+                Khung giờ đã chọn
+              </p>
+              <p className="mt-3 text-[28px] font-bold leading-none text-black">
+                {result.timeLabel}
+              </p>
+              <p className="mt-3 text-[16px] font-medium text-black/72">
+                {result.dateLabel}
+              </p>
+              <p className="mt-2 text-[16px] font-medium text-black/72">
+                {result.branch}
+              </p>
             </div>
           </div>
-        </article>
+
+          <div className="mt-8 grid gap-8 md:grid-cols-2">
+            <div className="rounded-[22px] border border-black/10 bg-white p-6">
+              <h2 className="border-b border-black/5 pb-3 text-[22px] font-bold text-black">
+                Thông tin lịch hẹn
+              </h2>
+              <dl className="mt-5 space-y-4 text-[16px] text-black/75">
+                <div className="flex items-start justify-between gap-4 border-b border-black/5 pb-4">
+                  <dt className="font-medium text-black">Dịch vụ</dt>
+                  <dd className="max-w-[300px] text-right">{result.service}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4 border-b border-black/5 pb-4">
+                  <dt className="font-medium text-black">Chi nhánh</dt>
+                  <dd className="text-right">{result.branch}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4 border-b border-black/5 pb-4">
+                  <dt className="font-medium text-black">Ngày hẹn</dt>
+                  <dd className="text-right">{result.dateLabel}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="font-medium text-black">Giờ hẹn</dt>
+                  <dd className="text-right">{result.timeLabel}</dd>
+                </div>
+              </dl>
+            </div>
+
+            <div className="rounded-[22px] border border-black/10 bg-white p-6">
+              <h2 className="border-b border-black/5 pb-3 text-[22px] font-bold text-black">
+                Thông tin liên hệ
+              </h2>
+              <dl className="mt-5 space-y-4 text-[16px] text-black/75">
+                <div className="flex items-start justify-between gap-4 border-b border-black/5 pb-4">
+                  <dt className="font-medium text-black">Người phụ trách</dt>
+                  <dd className="text-right">{result.consultant}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4 border-b border-black/5 pb-4">
+                  <dt className="font-medium text-black">SĐT/Email</dt>
+                  <dd className="text-right">{result.contact}</dd>
+                </div>
+                <div className="flex items-start justify-between gap-4">
+                  <dt className="font-medium text-black">Ghi chú</dt>
+                  <dd className="max-w-[300px] text-right">{result.note}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </section>
       ) : null}
     </div>
   );

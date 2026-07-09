@@ -34,15 +34,11 @@ export default async function OrderLookupPage({
 
         <section className="mx-auto w-full max-w-site px-6 pb-12 pt-2 xl:px-[100px] xl:pb-16">
           <div className="mx-auto max-w-[1529px]">
-<<<<<<< HEAD
             <div
               aria-hidden="true"
               className="h-[5px] w-full max-w-[438px] bg-[length:100%_100%] bg-center bg-no-repeat"
               style={{ backgroundImage: "url(/images/header-line-up.png)" }}
             />
-=======
-            <div className="h-[5px] w-full max-w-[438px] bg-black" />
->>>>>>> 50e92c7 (feat: frontend lookup order)
             <div className="py-5 md:py-[20px]">
               <h2 className="text-[34px] font-bold uppercase leading-[1.1] text-black md:text-[50px]">
                 Xéo xọ luôn lắng nghe bạn
@@ -53,15 +49,11 @@ export default async function OrderLookupPage({
                 phẩm tốt hơn nữa.
               </p>
             </div>
-<<<<<<< HEAD
             <div
               aria-hidden="true"
               className="h-[5px] w-full max-w-[438px] bg-[length:100%_100%] bg-center bg-no-repeat"
               style={{ backgroundImage: "url(/images/header-line-up.png)" }}
             />
-=======
-            <div className="h-[5px] w-full max-w-[438px] bg-black" />
->>>>>>> 50e92c7 (feat: frontend lookup order)
           </div>
         </section>
       </div>
