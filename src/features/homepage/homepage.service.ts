@@ -19,6 +19,7 @@ const CATALOG_CACHE_TTL_SECONDS = 60;
 const DEFAULT_PRODUCT_SIZES = ["S", "M", "L", "XL"];
 const COLLECTION_STORAGE_PREFIX = "collections/";
 const COLLECTION_COVER_NGANG_PATTERN = /cover_ngang/i;
+const PRODUCT_CARD_VIEW_NAME = "v_product_line_card";
 
 const EMPTY_PRODUCT_COLORS = [] as Product["colors"];
 
@@ -48,66 +49,42 @@ function mapHomepageRowToProduct(
 const PRODUCT_CARD_COLUMNS = [
   "product_line_id",
   "line_name",
-  "product_line_slug",
-  "category_id",
-  "category_name",
-  "category_slug",
-  "price",
+  "slug",
+  "primary_category_id",
+  "primary_category_name",
+  "min_price",
   "main_storage_key",
-  "main_image_alt",
-  "hover_storage_key",
-  "hover_image_alt",
 ].join(",");
 
-type ProductLineCardViewRow = {
+type ProductCardViewRow = {
   product_line_id: number;
   line_name: string;
+  slug: string;
   primary_category_id: number | null;
+  primary_category_name: string | null;
   min_price: number | null;
   main_storage_key: string | null;
 };
+export type CatalogDepartment = "WOMEN" | "MEN" | "KIDS";
 
-type CategoryMapRow = {
+type CategoryRow = {
   category_id: number;
   category_name: string;
   slug: string;
 };
 
-function mapProductLineCardViewRow(
-  row: ProductLineCardViewRow,
-  categoryMap: Map<number, CategoryMapRow>,
-  slugMap: Map<number, string>,
-): HomepageProductCardRow | null {
-  const categoryId = Number(row.primary_category_id ?? 0);
-  const category = categoryMap.get(categoryId);
-  const productLineId = Number(row.product_line_id);
-  const productLineSlug = slugMap.get(productLineId);
+const GENDER_BY_DEPARTMENT: Record<CatalogDepartment, Product["gender"]> = {
+  WOMEN: "nu",
+  MEN: "nam",
+  KIDS: "tre-em",
+};
 
-  if (!category || !productLineSlug) {
-    return null;
-  }
-
-  return {
-    product_line_id: productLineId,
-    line_name: String(row.line_name),
-    product_line_slug: productLineSlug,
-    category_id: Number(category.category_id),
-    category_name: String(category.category_name),
-    category_slug: String(category.slug),
-    price: row.min_price != null ? Number(row.min_price) : null,
-    main_storage_key: row.main_storage_key ?? null,
-    main_image_alt: null,
-    hover_storage_key: row.main_storage_key ?? null,
-    hover_image_alt: null,
-  };
-}
-
-async function getCategoryMapByIds(
+async function getCategoryLookupByIds(
   supabase: ReturnType<typeof createAdminClient>,
   categoryIds: number[],
 ) {
   if (categoryIds.length === 0) {
-    return new Map<number, CategoryMapRow>();
+    return new Map<number, CategoryRow>();
   }
 
   const { data, error } = await supabase
@@ -121,49 +98,67 @@ async function getCategoryMapByIds(
     throw new Error(error.message);
   }
 
-  const rows = ((data ?? []) as unknown) as CategoryMapRow[];
-  return new Map(rows.map((row) => [Number(row.category_id), row]));
+  return new Map(
+    ((data ?? []) as CategoryRow[]).map((category) => [
+      category.category_id,
+      category,
+    ]),
+  );
 }
 
-async function getProductLineSlugMapByIds(
+async function getHomepageProductCardRows(
   supabase: ReturnType<typeof createAdminClient>,
-  productLineIds: number[],
-) {
-  if (productLineIds.length === 0) {
-    return new Map<number, string>();
+  categoryIds?: number[],
+): Promise<HomepageProductCardRow[]> {
+  let query = supabase
+    .schema("catalog")
+    .from(PRODUCT_CARD_VIEW_NAME)
+    .select(PRODUCT_CARD_COLUMNS)
+    .order("product_line_id", { ascending: false });
+
+  if (categoryIds && categoryIds.length > 0) {
+    query = query.in("primary_category_id", categoryIds);
   }
 
-  const { data, error } = await supabase
-    .schema("catalog")
-    .from("product_line")
-    .select("product_line_id, slug")
-    .in("product_line_id", productLineIds);
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const rows = ((data ?? []) as Array<{
-    product_line_id: number;
-    slug: string | null;
-  }>).filter((row) => row.slug);
-
-  return new Map(
-    rows.map((row) => [Number(row.product_line_id), String(row.slug)]),
+  const rows = ((data ?? []) as unknown) as ProductCardViewRow[];
+  const categoryLookup = await getCategoryLookupByIds(
+    supabase,
+    rows
+      .map((row) => row.primary_category_id)
+      .filter((categoryId): categoryId is number => categoryId !== null),
   );
+
+  return rows
+    .map((row): HomepageProductCardRow | null => {
+      if (row.primary_category_id === null) {
+        return null;
+      }
+
+      const category = categoryLookup.get(row.primary_category_id);
+      if (!category) {
+        return null;
+      }
+
+      return {
+        product_line_id: row.product_line_id,
+        line_name: row.line_name,
+        product_line_slug: row.slug,
+        category_id: category.category_id,
+        category_name: category.category_name,
+        category_slug: category.slug,
+        price: row.min_price,
+        main_storage_key: row.main_storage_key,
+        hover_storage_key: null,
+      };
+    })
+    .filter((row): row is HomepageProductCardRow => row !== null);
 }
-
-export type CatalogDepartment = "WOMEN" | "MEN" | "KIDS";
-
-type CategoryRow = {
-  category_id: number;
-};
-
-const GENDER_BY_DEPARTMENT: Record<CatalogDepartment, Product["gender"]> = {
-  WOMEN: "nu",
-  MEN: "nam",
-  KIDS: "tre-em",
-};
 
 export async function getHomepageProductSections({
   categorySlugs,
@@ -199,11 +194,8 @@ async function fetchHomepageProductSections(
     throw new Error(categoryError.message);
   }
 
-  const categoryRows = ((categories ?? []) as unknown) as CategoryMapRow[];
+  const categoryRows = ((categories ?? []) as unknown) as CategoryRow[];
   const categoryIds = categoryRows.map((row) => row.category_id);
-  const categoryMap = new Map(
-    categoryRows.map((row) => [Number(row.category_id), row]),
-  );
 
   if (categoryIds.length === 0) {
     return categorySlugs.map((categorySlug) => ({
@@ -214,27 +206,10 @@ async function fetchHomepageProductSections(
     }));
   }
 
-  const { data, error } = await supabase
-    .schema("catalog")
-    .from("v_product_line_card")
-    .select(
-      "product_line_id, line_name, primary_category_id, min_price, main_storage_key",
-    )
-    .in("primary_category_id", categoryIds)
-    .order("product_line_id", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const rawRows = ((data ?? []) as unknown) as ProductLineCardViewRow[];
-  const slugMap = await getProductLineSlugMapByIds(
+  const rows = await getHomepageProductCardRows(
     supabase,
-    rawRows.map((row) => Number(row.product_line_id)),
+    categoryRows.map((category) => category.category_id),
   );
-  const rows = rawRows
-    .map((row) => mapProductLineCardViewRow(row, categoryMap, slugMap))
-    .filter((row): row is HomepageProductCardRow => row !== null);
   const rowsByCategory = new Map<string, HomepageProductCardRow[]>();
 
   rows.forEach((row) => {
@@ -245,13 +220,20 @@ async function fetchHomepageProductSections(
     }
   });
 
+  console.info("[homepage] product sections rows", {
+    categorySlugs,
+    slugs: rows.map((row) => row.product_line_slug),
+  });
+
   return categorySlugs.map((categorySlug) => {
     const sectionRows = rowsByCategory.get(categorySlug) ?? [];
+    const category = categoryRows.find((item) => item.slug === categorySlug);
 
     return {
-      categoryId: sectionRows[0]?.category_id ?? 0,
+      categoryId: sectionRows[0]?.category_id ?? category?.category_id ?? 0,
       categorySlug,
-      categoryName: sectionRows[0]?.category_name ?? categorySlug,
+      categoryName:
+        sectionRows[0]?.category_name ?? category?.category_name ?? categorySlug,
       products: sectionRows.map((row) =>
         mapHomepageRowToProduct(
           row,
@@ -290,13 +272,13 @@ async function fetchCategoryProductSections(
   limit: number,
 ): Promise<HomepageProductSection[]> {
   const supabase = createAdminClient();
-  let categoryIds: number[] | null = null;
+  let categoryRows: CategoryRow[] | null = null;
 
   if (parentCategorySlug) {
     const { data: parentCategory, error: parentCategoryError } = await supabase
       .schema("catalog")
       .from("category")
-      .select("category_id")
+      .select("category_id, category_name, slug")
       .eq("slug", parentCategorySlug)
       .eq("is_active", true)
       .maybeSingle();
@@ -314,7 +296,7 @@ async function fetchCategoryProductSections(
     const { data: childCategories, error: childCategoryError } = await supabase
       .schema("catalog")
       .from("category")
-      .select("category_id")
+      .select("category_id, category_name, slug")
       .eq("parent_id", parentCategoryId)
       .eq("is_active", true);
 
@@ -322,17 +304,15 @@ async function fetchCategoryProductSections(
       throw new Error(childCategoryError.message);
     }
 
-    categoryIds = [
-      parentCategoryId,
-      ...((childCategories ?? []) as CategoryRow[]).map(
-        (category) => category.category_id,
-      ),
+    categoryRows = [
+      parentCategory as CategoryRow,
+      ...((childCategories ?? []) as CategoryRow[]),
     ];
   } else if (department) {
     const { data: categories, error: categoryError } = await supabase
       .schema("catalog")
       .from("category")
-      .select("category_id")
+      .select("category_id, category_name, slug")
       .eq("department", department)
       .eq("is_active", true);
 
@@ -340,51 +320,17 @@ async function fetchCategoryProductSections(
       throw new Error(categoryError.message);
     }
 
-    categoryIds = ((categories ?? []) as CategoryRow[]).map(
-      (category) => category.category_id,
-    );
+    categoryRows = (categories ?? []) as CategoryRow[];
 
-    if (categoryIds.length === 0) {
+    if (categoryRows.length === 0) {
       return [];
     }
   }
 
-  let query = supabase
-    .schema("catalog")
-    .from("v_product_line_card")
-    .select(
-      "product_line_id, line_name, primary_category_id, min_price, main_storage_key",
-    )
-    .order("product_line_id", { ascending: false });
-
-  if (categoryIds) {
-    query = query.in("primary_category_id", categoryIds);
-  }
-
-  const { data, error } = await query;
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const rawRows = ((data ?? []) as unknown) as ProductLineCardViewRow[];
-  const resolvedCategoryIds =
-    categoryIds ??
-    Array.from(
-      new Set(
-        rawRows
-          .map((row) => Number(row.primary_category_id ?? 0))
-          .filter((categoryId) => categoryId > 0),
-      ),
-    );
-  const categoryMap = await getCategoryMapByIds(supabase, resolvedCategoryIds);
-  const slugMap = await getProductLineSlugMapByIds(
+  const rows = await getHomepageProductCardRows(
     supabase,
-    rawRows.map((row) => Number(row.product_line_id)),
+    categoryRows?.map((category) => category.category_id),
   );
-  const rows = rawRows
-    .map((row) => mapProductLineCardViewRow(row, categoryMap, slugMap))
-    .filter((row): row is HomepageProductCardRow => row !== null);
   const rowsByCategory = new Map<number, HomepageProductCardRow[]>();
 
   rows.forEach((row) => {
@@ -541,38 +487,14 @@ async function fetchNewestDepartmentProducts(
     throw new Error(categoryError.message);
   }
 
-  const categoryRows = ((categories ?? []) as unknown) as CategoryMapRow[];
+  const categoryRows = ((categories ?? []) as unknown) as CategoryRow[];
   const categoryIds = categoryRows.map((category) => category.category_id);
 
   if (categoryIds.length === 0) {
     return [];
   }
 
-  const categoryMap = new Map(
-    categoryRows.map((row) => [Number(row.category_id), row]),
-  );
-
-  const { data, error } = await supabase
-    .schema("catalog")
-    .from("v_product_line_card")
-    .select(
-      "product_line_id, line_name, primary_category_id, min_price, main_storage_key",
-    )
-    .in("primary_category_id", categoryIds)
-    .order("product_line_id", { ascending: false });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  const rawRows = ((data ?? []) as unknown) as ProductLineCardViewRow[];
-  const slugMap = await getProductLineSlugMapByIds(
-    supabase,
-    rawRows.map((row) => Number(row.product_line_id)),
-  );
-  const rows = rawRows
-    .map((row) => mapProductLineCardViewRow(row, categoryMap, slugMap))
-    .filter((row): row is HomepageProductCardRow => row !== null);
+  const rows = await getHomepageProductCardRows(supabase, categoryIds);
   const seenProductLineIds = new Set<number>();
   const uniqueRows: HomepageProductCardRow[] = [];
 
@@ -747,6 +669,11 @@ async function fetchCategoryListing(
     limit: 200,
   });
   const products = section?.products ?? [];
+
+  console.info("[category-listing] products", {
+    categorySlug,
+    productSlugs: products.map((product) => product.slug),
+  });
 
   if (products.length === 0) {
     return emptyResult;

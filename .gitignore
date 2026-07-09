@@ -223,3 +223,4 @@ tsconfig.tsbuildinfo
 .codex-screens/
 .codex-screens-mobile/
 .codex-screens-mobile-after/
+.env.local

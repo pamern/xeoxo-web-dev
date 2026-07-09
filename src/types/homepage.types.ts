@@ -9,9 +9,7 @@ export type HomepageProductCardRow = {
   category_slug: string;
   price: number | null;
   main_storage_key: string | null;
-  main_image_alt: string | null;
   hover_storage_key: string | null;
-  hover_image_alt: string | null;
 };
 
 export type HomepageProductSection = {
