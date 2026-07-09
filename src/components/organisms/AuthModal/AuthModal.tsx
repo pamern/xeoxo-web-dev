@@ -44,9 +44,9 @@ export function AuthModal({
       aria-modal="true"
       aria-label={mode === "login" ? "Đăng nhập" : "Đăng ký"}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-5 sm:px-6 sm:py-8"
+      className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto bg-black/50 p-3 backdrop-blur-[1px] sm:p-5"
     >
-      <div className="mx-auto flex min-h-full w-full max-w-[1100px] items-start justify-center">
+      <div className="w-full max-w-[1100px]">
         <div className="relative w-full px-5 pt-10 sm:px-9 sm:pt-12">
           <button
             type="button"

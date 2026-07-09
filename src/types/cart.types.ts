@@ -44,7 +44,9 @@ export type AddCartItemValues = {
 };
 
 export type UpdateCartItemValues = {
-  variant_id?: number;
+  variant_id?: number | null;
   quantity?: number;
+  item_type?: "STANDARD" | "CUSTOMIZED";
+  customization_id?: number | null;
 };
 
