@@ -25,7 +25,7 @@ export function CollectionProducts({
   const hasMore = products.length > INITIAL_VISIBLE_COUNT && !showAll;
 
   return (
-    <section className="mx-auto w-full max-w-site px-6 py-[50px] xl:px-[100px]">
+    <section className="product-page-shell py-section">
       <div className="mb-5 flex items-center justify-between gap-6">
         <h2 className="text-heading-section font-medium uppercase text-black">
           Sản phẩm {collectionName}
@@ -40,13 +40,19 @@ export function CollectionProducts({
 
       {products.length > 0 ? (
         <>
-          <div className="grid gap-x-[42px] gap-y-[21px] sm:grid-cols-2 lg:grid-cols-4">
+          <div
+            className="grid sm:grid-cols-2 lg:grid-cols-4"
+            style={{
+              columnGap: "var(--product-grid-gap-x)",
+              rowGap: "var(--product-card-gap)",
+            }}
+          >
             {visibleProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
-                className="gap-[13px]"
-                imageClassName="aspect-auto h-[430px] rounded-none"
+                className="gap-[var(--product-card-gap)]"
+                imageClassName="aspect-auto h-[clamp(320px,26vw,430px)] rounded-none"
               />
             ))}
           </div>

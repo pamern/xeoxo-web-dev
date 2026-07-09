@@ -127,7 +127,10 @@ function AccountFaqPage() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
+        <section
+          className="px-6 pb-16 xl:px-gutter xl:pb-24"
+          style={{ paddingTop: "var(--product-page-top-offset)" }}
+        >
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -153,7 +156,7 @@ function AccountFaqPage() {
 
               <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
                 <div className="flex flex-col gap-5">
-                  <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
+                  <h1 className="text-display-section font-extrabold leading-none md:text-display-page">
                     Câu hỏi thường gặp
                   </h1>
                   <FloralDivider />
@@ -181,7 +184,7 @@ function PublicFaqPage() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <div className="site-container pb-5 pt-12">
+        <div className="breadcrumb-shell">
           <Breadcrumbs
             items={[
               {
@@ -202,7 +205,7 @@ function PublicFaqPage() {
             alt=""
             width={438}
             height={5}
-            className="mt-[10px] h-[5px] w-full max-w-[438px]"
+            className="mt-[10px] h-[5px] w-full max-w-narrow"
             aria-hidden
           />
         </section>

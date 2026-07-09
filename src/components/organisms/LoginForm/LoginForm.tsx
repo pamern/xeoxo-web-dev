@@ -7,7 +7,7 @@ import { loginSchema } from "@/validations/auth/login.schema";
 import { cn } from "@/lib/utils";
 
 const inputClassName =
-  "h-12 w-full rounded-pill border border-input bg-background px-6 text-base font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
+  "h-12 w-full rounded-pill border border-input bg-background px-6 text-body-lg font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
 
 type LoginValues = {
   account: string;
@@ -112,7 +112,7 @@ export function LoginForm({
           )}
         />
         {touched.account && fieldErrors.account ? (
-          <p className="px-2 text-sm font-light text-destructive">
+          <p className="px-2 text-body-sm font-light text-destructive">
             {fieldErrors.account}
           </p>
         ) : null}
@@ -142,24 +142,24 @@ export function LoginForm({
           />
         </div>
         {touched.password && fieldErrors.password ? (
-          <p className="px-2 text-sm font-light text-destructive">
+          <p className="px-2 text-body-sm font-light text-destructive">
             {fieldErrors.password}
           </p>
         ) : null}
       </div>
 
       {errorMessage && (
-        <p className="text-sm font-light text-destructive">{errorMessage}</p>
+        <p className="text-body-sm font-light text-destructive">{errorMessage}</p>
       )}
       {noticeMessage && !errorMessage && (
-        <p className="text-sm font-light text-foreground/70">{noticeMessage}</p>
+        <p className="text-body-sm font-light text-foreground/70">{noticeMessage}</p>
       )}
 
       <Button
         type="submit"
         size="lg"
         isLoading={isLoading}
-        className="mt-1 h-[54px] w-full rounded-pill border-2 border-white/50 text-lg font-bold"
+        className="mt-1 h-control w-full rounded-pill border-2 border-white/50 text-button font-bold"
       >
         Đăng nhập
       </Button>

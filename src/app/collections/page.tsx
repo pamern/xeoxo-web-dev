@@ -37,7 +37,7 @@ export default async function CollectionsPage() {
     <SiteLayout>
       <main className="bg-white">
         <div className="mx-auto w-full max-w-site">
-          <section className="flex h-20 items-start bg-white px-6 pb-5 pt-12 xl:h-[86px] xl:pl-[100px] xl:pr-[50px] xl:pt-[50px]">
+          <section className="breadcrumb-shell flex items-start bg-white">
             <Breadcrumbs
               items={[
                 {
@@ -55,7 +55,7 @@ export default async function CollectionsPage() {
           <section className="pb-12 md:pb-20 xl:pb-[100px]">
             <div className="flex min-h-32 flex-col items-center justify-start px-4 py-6 md:h-36 md:px-0 xl:h-[146px] xl:pb-[25px] xl:pt-[25px]">
               <div className="relative flex w-full max-w-[376px] flex-col items-center">
-                <p className="eyebrow-text mb-0 self-center sm:text-body-lg md:text-xl xl:text-eyebrow">
+                <p className="eyebrow-text mb-0 self-center sm:text-body-lg md:text-eyebrow xl:text-eyebrow">
                   Khám phá
                 </p>
 
@@ -83,18 +83,18 @@ export default async function CollectionsPage() {
                 />
 
                 <div className="absolute left-6 right-6 top-56 flex flex-col gap-3 font-serif text-white md:left-12 md:right-12 md:top-72 xl:left-[50px] xl:right-[50px] xl:top-[380px] xl:gap-[10px]">
-                  <p className="text-lg font-light leading-none md:text-xl xl:text-eyebrow">
+                  <p className="text-body-lg md:text-eyebrow xl:text-eyebrow">
                     Xin chào,
                   </p>
 
-                  <h2 className="text-3xl font-light leading-tight md:text-4xl xl:text-heading-section xl:leading-[1.15]">
+                  <h2 className="text-heading-section md:text-display-section xl:text-heading-section xl:leading-[1.15]">
                     Chúng mình là{" "}
-                    <span className="text-4xl font-bold italic leading-tight md:text-5xl xl:text-display-page xl:leading-[1.15]">
+                    <span className="text-display-section italic md:text-display-page xl:text-display-page xl:leading-[1.15]">
                       Xéo xọ
                     </span>
                   </h2>
 
-                  <p className="text-right text-xl font-light italic leading-snug md:text-2xl xl:text-[26px] xl:leading-[1.2]">
+                  <p className="text-right text-body-xl italic md:text-quote-lg xl:text-quote-lg xl:leading-[1.2]">
                     ...một người kể chuyện bằng vải tơ, bằng những đường kim mũi chỉ.
                   </p>
                 </div>
@@ -127,7 +127,7 @@ export default async function CollectionsPage() {
                   <IntroCopy
                     title="10 năm qua, Xéo xọ đã, đang kể những câu chuyện ấy,"
                     className="min-h-32 px-6 py-8 text-left md:px-12 xl:h-[129px] xl:px-[50px] xl:py-0 xl:pr-[100px] xl:text-left"
-                    bodyClassName="text-xl md:text-2xl xl:text-[25px]"
+                    bodyClassName="text-body-xl md:text-quote-lg xl:text-body-xl"
                   >
                     Và hành trình ấy của Xéo xọ chỉ mới bắt đầu...
                   </IntroCopy>
@@ -146,15 +146,13 @@ export default async function CollectionsPage() {
                 />
               ))
             ) : (
-              <p className="px-6 py-20 text-center text-body-lg text-black xl:px-[100px]">
+              <p className="px-6 py-20 text-center text-body-lg text-black xl:px-gutter">
                 Chưa có bộ sưu tập.
               </p>
             )}
           </section>
 
-          <div className="[&>section]:mb-0 [&>section]:h-[520px] [&>section]:md:h-[772px] [&>section>h2]:mt-16 [&>section>h2]:text-3xl [&>section>h2]:md:mt-24 [&>section>h2]:md:text-5xl [&>section>img]:!bottom-auto [&>section>img]:!h-[420px] [&>section>img]:!top-12 [&>section>img]:md:!h-[615px]">
-            <StarsBanner />
-          </div>
+          <StarsBanner />
         </div>
       </main>
     </SiteLayout>
@@ -195,7 +193,7 @@ function IntroCopy({
       </h2>
 
       <p
-        className={`eyebrow-text md:text-lg xl:text-body-lg ${
+        className={`eyebrow-text md:text-body-lg xl:text-body-lg ${
           bodyClassName ?? ""
         }`}
       >

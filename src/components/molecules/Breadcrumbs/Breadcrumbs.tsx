@@ -22,7 +22,7 @@ export function Breadcrumbs({
 }) {
   const variantClassName =
     variant === "account"
-      ? "text-sm font-medium text-foreground/68"
+      ? "text-body-sm font-medium text-foreground/68"
       : "text-body-sm font-light text-muted-foreground";
 
   return (

@@ -25,7 +25,7 @@ export function ProductFilterSidebar({
   const hasSelection = Object.values(selected).some((values) => values.length > 0);
 
   return (
-    <aside className={cn("w-full text-black lg:w-[346px]", className)}>
+    <aside className={cn("w-full text-black lg:w-[clamp(250px,18vw,320px)]", className)}>
       <div className="flex items-center justify-between border-b border-black pb-5">
         <h2 className="text-heading-card font-bold leading-none">Bộ lọc</h2>
         <span className="text-body-lg font-light leading-none">{resultCount} kết quả</span>

@@ -18,7 +18,24 @@
   --color-destructive: 0 72% 51%;
   --color-destructive-foreground: 0 0% 100%;
 
+  /* Accent (cam brand) - CTA/badge/nhan */
+  --color-accent: 9 100% 62%;
+  --color-accent-foreground: 0 0% 100%;
+  --color-accent-muted: 21 100% 95%;
+  /* Accent dam - chu/border accent tren nen sang (error block, CTA account) */
+  --color-accent-strong: 9 55% 55%;
+
+  /* Action (xanh link/nhan phu) */
+  --color-action: 225 100% 60%;
+
+  /* Success */
+  --color-success: 160 84% 30%;
+  --color-success-foreground: 0 0% 100%;
+  --color-success-muted: 152 80% 96%;
+
   --color-border: 0 0% 89%;
+  /* Border/divider dam hon + nen placeholder anh (thay #d9d9d9) */
+  --color-border-strong: 0 0% 85%;
   --color-input: 0 0% 56%;
   --color-ring: 0 0% 0%;
 
@@ -28,6 +45,7 @@
   --radius-sm: 0.5rem;
   --radius-md: 0.625rem;
   --radius-lg: 1.25rem;
+  --radius-panel: 26px;
   --radius-pill: 9999px;
 
   --font-display: var(--font-unbounded), system-ui, sans-serif;
@@ -36,6 +54,60 @@
 
   --site-max-width: 1728px;
   --site-header-height: 0px;
+  --desktop-viewport-min: 1280;
+  --desktop-viewport-max: 1728;
+
+  /* Layout / spacing - fluid: co gian tuyen tinh tu viewport 375px -> 1728px, max = Figma */
+  --site-gutter-x: 1.5rem;
+  --site-gutter-x-lg: clamp(32px, -105.14px + 10.71vw, 80px);
+  --control-height: clamp(44px, 41.2px + 0.74vw, 54px);
+  --section-gap-y: clamp(28px, 11.54px + 1.29vw, 46px);
+  --header-utility-height: clamp(30px, 18.57px + 0.89vw, 34px);
+  --header-main-gap: clamp(10px, -1.43px + 0.89vw, 14px);
+  --header-utility-px: clamp(32px, 9.14px + 1.79vw, 40px);
+  --header-main-px: clamp(32px, 9.14px + 1.79vw, 40px);
+  --header-utility-gap: clamp(5px, 2.14px + 0.22vw, 6px);
+  --header-utility-divider: clamp(6px, 0.29px + 0.45vw, 8px);
+  --header-nav-gap: clamp(12px, -5.14px + 1.34vw, 18px);
+  --header-search-width: clamp(164px, 72.57px + 7.14vw, 196px);
+  --header-search-gap: clamp(8px, -0.57px + 0.67vw, 11px);
+  --header-logo-height: clamp(52px, 29.14px + 1.79vw, 60px);
+  --hero-min-height: clamp(420px, 294.29px + 9.82vw, 464px);
+  --hero-block-padding: clamp(36px, 7.43px + 2.23vw, 46px);
+  --homepage-card-gap-x: clamp(14px, 8.29px + 0.45vw, 16px);
+  --homepage-card-gap-y: clamp(20px, 8.57px + 0.89vw, 24px);
+  --homepage-collection-gap: clamp(10px, 4.29px + 0.45vw, 12px);
+  --product-page-block-y: clamp(32px, 15.43px + 1.29vw, 50px);
+  --product-page-top-offset: clamp(16px, 6.86px + 0.71vw, 26px);
+  --product-grid-gap-x: clamp(14px, 8.29px + 0.45vw, 16px);
+  --product-grid-gap-y: clamp(24px, 12.57px + 0.89vw, 28px);
+  --product-card-gap: clamp(8px, 2.29px + 0.45vw, 10px);
+  --product-gallery-main-width: clamp(520px, 257.14px + 20.54vw, 612px);
+  --product-gallery-thumb-width: clamp(56px, 30.29px + 2.01vw, 65px);
+  --product-gallery-thumb-height: clamp(84px, 44px + 3.13vw, 98px);
+  --product-detail-side-min-height: clamp(540px, 225.71px + 24.55vw, 650px);
+  --product-detail-grid-gap: clamp(28px, -0.57px + 2.23vw, 38px);
+  --product-detail-services-gap-x: clamp(20px, -8.57px + 2.23vw, 30px);
+  --product-detail-services-gap-y: clamp(10px, 4.29px + 0.45vw, 12px);
+  --catalog-hero-min-height: clamp(420px, 294.29px + 9.82vw, 464px);
+  --catalog-hero-band-height: clamp(28px, 12px + 1.25vw, 39px);
+  --catalog-hero-grid-gap: clamp(12px, 2.86px + 0.71vw, 16px);
+  --catalog-hero-grid-py: clamp(24px, 2.29px + 1.70vw, 39px);
+  --filter-bar-gap: clamp(10px, 4.29px + 0.45vw, 12px);
+  --filter-chip-px: clamp(16px, 10.29px + 0.45vw, 18px);
+  --filter-chip-py: clamp(8px, 5.14px + 0.22vw, 9px);
+  --variant-pill-width: clamp(84px, 32.57px + 4.02vw, 102px);
+  --review-card-px: clamp(20px, 8.57px + 0.89vw, 24px);
+  --review-card-py: clamp(18px, 9.43px + 0.67vw, 21px);
+  --product-divider-height: clamp(16px, 3.43px + 0.98vw, 25px);
+  --product-description-gap: clamp(24px, 1.14px + 1.79vw, 32px);
+  --product-description-table-label: clamp(100px, 42.86px + 4.46vw, 120px);
+
+  /* Footer - fluid, max = desktop hien tai. Chinh spacing/size footer tap trung tai day. */
+  --footer-block-py: clamp(24px, 21.78px + 0.59vw, 32px);
+  --footer-gap: clamp(12px, 10.89px + 0.30vw, 16px);
+  --footer-contact-icon-size: clamp(48px, 43.56px + 1.18vw, 64px);
+  --footer-social-icon-size: clamp(40px, 37.23px + 0.74vw, 50px);
 }
 
 * {
@@ -80,11 +152,18 @@ select {
 
 @layer components {
   .site-container {
-    @apply mx-auto w-full max-w-site px-6 xl:px-[100px];
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  @media (min-width: 1280px) {
+    .site-container {
+      padding-inline: var(--site-gutter-x-lg);
+    }
   }
 
   .page-heading {
-    @apply text-[34px] font-bold uppercase leading-[1.2] text-black sm:text-[40px] md:text-display-page;
+    @apply text-display-page font-bold uppercase text-black;
   }
 
   .eyebrow-text {
@@ -102,7 +181,7 @@ select {
   }
 
   .form-control {
-    @apply w-full rounded-md border border-input bg-background px-4 py-3 text-base text-foreground outline-none transition-colors;
+    @apply w-full rounded-md border border-input bg-background px-4 py-3 text-field text-foreground outline-none transition-colors;
     @apply placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-1;
   }
 
@@ -114,6 +193,156 @@ select {
     .account-sticky-rail {
       position: sticky;
       top: calc(var(--site-header-height, 0px) + 24px);
+    }
+  }
+
+  .header-utility-shell {
+    @apply mx-auto flex max-w-site flex-wrap items-center justify-between text-nav-utility;
+    min-height: var(--header-utility-height);
+    padding-inline: var(--header-utility-px);
+    padding-block: 0.2rem;
+    column-gap: clamp(12px, 6.29px + 0.45vw, 14px);
+    row-gap: 0.25rem;
+  }
+
+  .header-utility-group {
+    @apply flex min-w-0 flex-wrap items-center;
+    gap: var(--header-utility-gap);
+  }
+
+  .header-utility-item {
+    @apply whitespace-nowrap transition-opacity hover:opacity-70;
+  }
+
+  .header-utility-shell > :first-child {
+    @apply min-w-0 flex-1 basis-auto;
+  }
+
+  .header-utility-shell > :last-child {
+    @apply min-w-0 flex-1 basis-auto justify-end;
+  }
+
+  .header-utility-divider {
+    @apply h-[22px] w-px shrink-0 bg-white/60;
+    margin-inline: calc(var(--header-utility-divider) - var(--header-utility-gap));
+  }
+
+  .header-main-shell {
+    @apply mx-auto grid max-w-site grid-cols-[auto_1fr_auto] items-center;
+    gap: var(--header-main-gap);
+    padding-inline: var(--header-main-px);
+  }
+
+  .header-logo {
+    height: var(--header-logo-height);
+  }
+
+  .header-main-nav {
+    @apply hidden items-center justify-center lg:flex;
+    gap: var(--header-nav-gap);
+  }
+
+  .header-nav-link {
+    @apply whitespace-nowrap text-nav transition-colors hover:text-foreground/60;
+  }
+
+  .header-dropdown-link {
+    @apply block min-w-0 whitespace-nowrap text-button transition-colors hover:text-foreground/60;
+  }
+
+  .header-search {
+    @apply hidden items-center rounded-[30px] border-2 border-muted-foreground md:flex;
+    gap: var(--header-search-gap);
+    width: var(--header-search-width);
+    padding-block: clamp(8px, 5.14px + 0.22vw, 9px);
+    padding-left: clamp(14px, -0.29px + 1.12vw, 19px);
+    padding-right: clamp(10px, 1.43px + 0.67vw, 13px);
+  }
+
+  @media (min-width: 1280px) and (max-width: 1365px) {
+    .header-utility-shell {
+      padding-inline: clamp(28px, 2.19vw, 32px);
+      column-gap: 12px;
+      row-gap: 0.35rem;
+    }
+
+    .header-main-shell {
+      padding-inline: clamp(32px, 2.5vw, 36px);
+    }
+
+    .header-main-nav {
+      gap: clamp(10px, 1.09vw, 14px);
+    }
+
+    .header-search {
+      width: clamp(156px, 12vw, 172px);
+    }
+  }
+
+  .homepage-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  .product-page-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  .breadcrumb-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+    padding-top: var(--product-page-top-offset);
+    padding-bottom: 1.25rem;
+  }
+
+  .homepage-product-grid {
+    @apply grid grid-cols-2 lg:grid-cols-4;
+    column-gap: var(--homepage-card-gap-x);
+    row-gap: var(--homepage-card-gap-y);
+  }
+
+  .homepage-collection-grid {
+    @apply grid;
+    gap: var(--homepage-collection-gap);
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  @media (min-width: 640px) {
+    .homepage-collection-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 960px) and (max-width: 1279px) {
+    .homepage-collection-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .homepage-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+
+    .product-page-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+
+    .breadcrumb-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .homepage-collection-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-height: 900px) and (min-width: 1024px) {
+    .header-main-shell {
+      padding-block: 0.125rem;
     }
   }
 }

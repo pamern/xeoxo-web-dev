@@ -52,7 +52,7 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
 
   return (
     <section
-      className="relative h-[70vh] min-h-[480px] w-full overflow-hidden"
+      className="relative h-[min(70vh,760px)] min-h-[var(--hero-min-height)] w-full overflow-hidden"
       onMouseEnter={() => (isPausedRef.current = true)}
       onMouseLeave={() => (isPausedRef.current = false)}
     >
@@ -82,14 +82,17 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
       })}
       <div className="absolute inset-0 bg-black/30" aria-hidden />
 
-      <div className="relative mx-auto flex h-full max-w-site flex-col justify-end gap-4 px-6 pb-16 xl:px-[100px]">
-        <p className="text-shadow text-2xl font-medium text-white md:text-4xl">{current.subtitle}</p>
-        <h1 className="text-shadow text-5xl font-extrabold uppercase text-white md:text-7xl">
+      <div
+        className="homepage-shell relative flex h-full flex-col justify-end gap-3"
+        style={{ paddingBottom: "var(--hero-block-padding)" }}
+      >
+        <p className="text-shadow text-display-hero-sub text-white">{current.subtitle}</p>
+        <h1 className="text-shadow text-display-hero uppercase text-white">
           {current.name}
         </h1>
         <Link
           href={ROUTES.COLLECTION(current.slug)}
-          className="inline-flex w-fit items-center rounded-pill border border-white px-8 py-4 text-xl font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
+          className="inline-flex w-fit items-center rounded-pill border border-white px-8 py-4 text-button-hero text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
         >
           Khám phá
         </Link>

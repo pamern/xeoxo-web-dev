@@ -45,7 +45,7 @@ export function SizeGuide() {
             aria-selected={active === tab.id}
             onClick={() => setActive(tab.id)}
             className={cn(
-              "rounded-pill border px-6 py-2.5 text-base transition-colors",
+              "rounded-pill border px-6 py-2.5 text-button transition-colors",
               active === tab.id
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-input hover:border-primary"
@@ -61,10 +61,10 @@ export function SizeGuide() {
           <caption className="sr-only">Bảng kích thước {current.label} (đơn vị: cm)</caption>
           <thead>
             <tr className="border-b border-border">
-              <th scope="col" className="py-3 pr-4 text-base font-medium">Size</th>
-              <th scope="col" className="py-3 pr-4 text-base font-medium">Vòng ngực</th>
-              <th scope="col" className="py-3 pr-4 text-base font-medium">Vòng eo</th>
-              <th scope="col" className="py-3 text-base font-medium">Vòng mông</th>
+              <th scope="col" className="py-3 pr-4 text-body font-medium">Size</th>
+              <th scope="col" className="py-3 pr-4 text-body font-medium">Vòng ngực</th>
+              <th scope="col" className="py-3 pr-4 text-body font-medium">Vòng eo</th>
+              <th scope="col" className="py-3 text-body font-medium">Vòng mông</th>
             </tr>
           </thead>
           <tbody>
@@ -82,14 +82,14 @@ export function SizeGuide() {
       </div>
 
       <div>
-        <h2 className="mb-6 text-2xl font-medium uppercase">Hướng dẫn cách đo</h2>
+        <h2 className="mb-6 text-heading-section uppercase">Hướng dẫn cách đo</h2>
         <div className="grid gap-6 md:grid-cols-3">
           {MEASURE_STEPS.map((step, index) => (
             <div key={step.title} className="flex flex-col gap-2 rounded-lg border border-border p-6">
               <span className="text-3xl font-medium text-muted-foreground">
                 {String(index + 1).padStart(2, "0")}
               </span>
-              <h3 className="text-lg font-medium">{step.title}</h3>
+              <h3 className="text-heading-card font-medium">{step.title}</h3>
               <p className="text-body-sm font-light text-foreground/70">{step.description}</p>
             </div>
           ))}

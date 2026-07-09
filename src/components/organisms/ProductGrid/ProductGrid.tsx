@@ -27,9 +27,13 @@ export function ProductGrid({
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3 xl:grid-cols-4",
+        "grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4",
         className,
       )}
+      style={{
+        columnGap: "var(--product-grid-gap-x)",
+        rowGap: "var(--product-grid-gap-y)",
+      }}
     >
       {products.map((product, index) => (
         <ProductCard

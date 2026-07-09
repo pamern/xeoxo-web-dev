@@ -58,7 +58,10 @@ export default async function AccountProfileRoute() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
+        <section
+          className="px-6 pb-16 xl:px-gutter xl:pb-24"
+          style={{ paddingTop: "var(--product-page-top-offset)" }}
+        >
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -84,10 +87,10 @@ export default async function AccountProfileRoute() {
 
               <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
                 <div className="flex flex-col gap-2">
-                  <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
+                  <h1 className="text-display-section font-extrabold leading-none md:text-display-page">
                     Hồ sơ thông tin
                   </h1>
-                  <p className="text-sm font-medium text-foreground/72 md:text-lg">
+                  <p className="text-body-sm font-medium text-foreground/72 md:text-body-lg">
                     Quản lý thông tin hồ sơ để bảo mật tài khoản
                   </p>
                 </div>
@@ -97,18 +100,18 @@ export default async function AccountProfileRoute() {
                 {isAuthenticated ? (
                   <AccountProfileEditor user={user} customer={customer} />
                 ) : (
-                  <div className="mt-8 rounded-[20px] border border-border bg-secondary px-6 py-8">
-                    <p className="text-lg font-medium">
+                  <div className="mt-8 rounded-lg border border-border bg-secondary px-6 py-8">
+                    <p className="text-body-lg font-medium">
                       Bạn cần đăng nhập để xem hồ sơ thông tin.
                     </p>
-                    <p className="mt-2 text-sm font-light text-foreground/72">
+                    <p className="mt-2 text-body-sm font-light text-foreground/72">
                       Sau khi đăng nhập, trang này sẽ hiển thị tên, email và các
                       thông tin thành viên đã đồng bộ từ tài khoản của bạn.
                     </p>
                     <div className="mt-6">
                       <Link
                         href={`${ROUTES.HOME}?auth=login`}
-                        className="inline-flex h-12 items-center justify-center rounded-pill bg-black px-8 text-sm font-bold uppercase tracking-[0.03em] text-white"
+                        className="inline-flex h-12 items-center justify-center rounded-pill bg-black px-8 text-button-sm font-bold uppercase tracking-[0.03em] text-white"
                       >
                         Đăng nhập ngay
                       </Link>

@@ -15,7 +15,7 @@ export function SectionHeading({
 }) {
   return (
     <div className={cn("flex items-end justify-between gap-4", className)}>
-      <h2 className="text-2xl font-medium uppercase md:text-3xl">{title}</h2>
+      <h2 className="text-heading-section font-medium uppercase">{title}</h2>
       {actionHref && (
         <Link
           href={actionHref}

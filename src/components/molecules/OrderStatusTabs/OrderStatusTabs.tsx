@@ -39,8 +39,8 @@ export function OrderStatusTabs({
           >
             <span
               className={cn(
-                "text-lg leading-none md:text-[22px]",
-                active ? "font-normal text-[#ff593d]" : "font-normal text-black",
+                "text-nav leading-none",
+                active ? "font-normal text-accent" : "font-normal text-black",
               )}
             >
               {item.label}

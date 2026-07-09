@@ -186,7 +186,7 @@ export function AccountProfileEditor({
   return (
     <div className="mt-8">
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="max-w-[760px]">
+        <form onSubmit={handleSubmit} className="max-w-form">
           <div className="grid gap-5 md:grid-cols-2 md:gap-x-8">
             <Field label="Họ và tên">
               <input
@@ -194,7 +194,7 @@ export function AccountProfileEditor({
                 onChange={(event) =>
                   updateField("customer_name", event.target.value)
                 }
-                className="form-control rounded-[14px]"
+                className="form-control rounded-card"
                 placeholder="Nhập họ và tên"
                 autoComplete="name"
               />
@@ -204,7 +204,7 @@ export function AccountProfileEditor({
               <input
                 value={values.phone}
                 onChange={(event) => updateField("phone", event.target.value)}
-                className="form-control rounded-[14px]"
+                className="form-control rounded-card"
                 placeholder="Nhập số điện thoại"
                 autoComplete="tel"
               />
@@ -215,7 +215,7 @@ export function AccountProfileEditor({
                 type="email"
                 value={values.email}
                 onChange={(event) => updateField("email", event.target.value)}
-                className="form-control rounded-[14px]"
+                className="form-control rounded-card"
                 placeholder="Nhập email"
                 autoComplete="email"
               />
@@ -230,7 +230,7 @@ export function AccountProfileEditor({
                     event.target.value as UpdateCustomerProfileValues["gender"],
                   )
                 }
-                className="form-control rounded-[14px]"
+                className="form-control rounded-card"
               >
                 <option value="">Chọn giới tính</option>
                 <option value="MALE">Nam</option>
@@ -248,12 +248,12 @@ export function AccountProfileEditor({
           </div>
 
           {errorMessage ? (
-            <p className="mt-5 text-sm font-medium text-destructive">
+            <p className="mt-5 text-body-sm font-medium text-destructive">
               {errorMessage}
             </p>
           ) : null}
           {successMessage ? (
-            <p className="mt-5 text-sm font-medium text-foreground/72">
+            <p className="mt-5 text-body-sm font-medium text-foreground/72">
               {successMessage}
             </p>
           ) : null}
@@ -264,7 +264,7 @@ export function AccountProfileEditor({
               variant="solid"
               size="lg"
               isLoading={isSubmitting}
-              className="h-[54px] w-full max-w-[360px] text-base font-extrabold uppercase md:text-[18px]"
+              className="h-control w-full max-w-[360px] text-heading-content-sm font-extrabold uppercase"
             >
               Lưu thông tin
             </Button>
@@ -273,7 +273,7 @@ export function AccountProfileEditor({
               variant="secondaryPill"
               size="lg"
               disabled={isSubmitting}
-              className="h-[54px] w-full max-w-[240px] text-base font-bold md:text-[18px]"
+              className="h-control w-full max-w-[240px] text-heading-content-sm font-bold"
               onClick={handleCancel}
             >
               Hủy
@@ -282,7 +282,7 @@ export function AccountProfileEditor({
         </form>
       ) : (
         <>
-          <dl className="grid gap-y-4 md:max-w-[760px] md:grid-cols-[190px_minmax(0,1fr)] md:gap-x-12">
+          <dl className="grid gap-y-4 md:max-w-form md:grid-cols-[190px_minmax(0,1fr)] md:gap-x-12">
             <ProfileRow
               label="Họ và tên:"
               value={getDisplayValue(displayValues.customer_name)}
@@ -306,7 +306,7 @@ export function AccountProfileEditor({
           </dl>
 
           {successMessage ? (
-            <p className="mt-5 text-sm font-medium text-foreground/72">
+            <p className="mt-5 text-body-sm font-medium text-foreground/72">
               {successMessage}
             </p>
           ) : null}
@@ -316,7 +316,7 @@ export function AccountProfileEditor({
               type="button"
               variant="solid"
               size="lg"
-              className="h-[54px] w-full max-w-[560px] text-base font-extrabold uppercase md:text-[18px]"
+              className="h-control w-full max-w-[560px] text-heading-content-sm font-extrabold uppercase"
               onClick={() => setIsEditing(true)}
             >
               Cập nhật thông tin cá nhân
@@ -337,7 +337,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-2">
-      <span className="text-base font-extrabold">{label}</span>
+      <span className="text-heading-content-sm font-extrabold">{label}</span>
       {children}
     </label>
   );
@@ -416,12 +416,12 @@ function BirthdayPicker({
       <button
         type="button"
         onClick={handleToggle}
-        className="form-control flex h-[54px] items-center justify-between rounded-[14px] text-left"
+        className="form-control flex h-control items-center justify-between rounded-card text-left"
       >
         <span className={value ? "text-foreground" : "text-muted-foreground"}>
           {formatBirthdayLabel(value)}
         </span>
-        <span className="text-lg text-foreground/60">{isOpen ? "−" : "+"}</span>
+        <span className="text-heading-card text-foreground/60">{isOpen ? "−" : "+"}</span>
       </button>
 
       {isOpen ? (
@@ -430,23 +430,23 @@ function BirthdayPicker({
             <button
               type="button"
               onClick={() => moveMonth(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-xl transition-colors hover:bg-secondary"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-heading-card transition-colors hover:bg-secondary"
               aria-label="Tháng trước"
             >
               ‹
             </button>
             <div className="text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground/45">
+              <p className="text-caption font-medium uppercase tracking-[0.18em] text-foreground/45">
                 Ngày sinh
               </p>
-              <p className="mt-1 text-base font-extrabold">
+              <p className="mt-1 text-heading-content-sm font-extrabold">
                 {MONTH_LABELS[visibleMonth.getMonth()]} {visibleMonth.getFullYear()}
               </p>
             </div>
             <button
               type="button"
               onClick={() => moveMonth(1)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-xl transition-colors hover:bg-secondary"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-heading-card transition-colors hover:bg-secondary"
               aria-label="Tháng sau"
             >
               ›
@@ -457,7 +457,7 @@ function BirthdayPicker({
             {WEEKDAY_LABELS.map((label) => (
               <span
                 key={label}
-                className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/45"
+                className="text-caption font-bold uppercase tracking-[0.12em] text-foreground/45"
               >
                 {label}
               </span>
@@ -472,7 +472,7 @@ function BirthdayPicker({
                   type="button"
                   onClick={() => handleSelect(date)}
                   className={[
-                    "flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                    "flex h-10 w-10 items-center justify-center rounded-full text-body-sm font-medium transition-colors",
                     isSelected
                       ? "bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
                       : isCurrentMonth
@@ -494,14 +494,14 @@ function BirthdayPicker({
                 onChange("");
                 setIsOpen(false);
               }}
-              className="text-sm font-medium text-foreground/62 transition-colors hover:text-foreground"
+              className="text-body-sm font-medium text-foreground/62 transition-colors hover:text-foreground"
             >
               Xóa ngày
             </button>
             <button
               type="button"
               onClick={() => handleSelect(today)}
-              className="rounded-full border border-black px-4 py-2 text-sm font-bold transition-colors hover:bg-black hover:text-white"
+              className="rounded-full border border-black px-4 py-2 text-button-sm transition-colors hover:bg-black hover:text-white"
             >
               Hôm nay
             </button>
@@ -515,8 +515,8 @@ function BirthdayPicker({
 function ProfileRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="contents">
-      <dt className="text-lg font-extrabold md:text-[18px]">{label}</dt>
-      <dd className="text-lg font-medium text-foreground/88 md:text-[18px]">
+      <dt className="text-heading-content-sm font-extrabold">{label}</dt>
+      <dd className="text-body-lg font-medium text-foreground/88">
         {value}
       </dd>
     </div>

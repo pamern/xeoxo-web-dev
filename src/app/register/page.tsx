@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AuthExperience } from "@/components/organisms/AuthExperience";
 
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
 export default function RegisterPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-secondary p-4">
-      <AuthExperience mode="register" className="max-w-[1068px]" pageFallback />
+      <Suspense fallback={null}>
+        <AuthExperience mode="register" className="max-w-[1068px]" pageFallback />
+      </Suspense>
     </main>
   );
 }

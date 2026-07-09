@@ -83,13 +83,13 @@ export default async function HomePage() {
           className="object-cover"
           aria-hidden
         />
-        <div className="no-scrollbar relative mx-auto flex w-full max-w-site gap-5 overflow-x-auto px-6 py-10 xl:px-[100px]">
+        <div className="homepage-shell homepage-collection-grid relative py-10">
           {homepageCollections.map((collection) => (
             <CollectionCard
               key={collection.slug}
               collection={collection}
               revealOnHover
-              className="w-[280px] shrink-0"
+              className="min-w-0"
             />
           ))}
         </div>
@@ -97,10 +97,10 @@ export default async function HomePage() {
 
       <GenderSelect />
 
-      <section className="mx-auto w-full max-w-site px-6 pb-12 xl:px-[100px]">
+      <section className="homepage-shell pb-12">
         <Link
           href={ROUTES.PERSONAL_COLOR}
-          className="group relative flex min-h-[260px] overflow-hidden rounded-lg md:min-h-[420px] lg:min-h-[615px]"
+          className="group relative flex min-h-[260px] overflow-hidden rounded-lg md:min-h-[380px] lg:min-h-[clamp(460px,36vw,560px)]"
         >
           <Image
             src="/images/homepage_personal_color.png"
@@ -113,14 +113,14 @@ export default async function HomePage() {
             className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent"
             aria-hidden
           />
-          <div className="relative mt-auto flex flex-col items-start px-6 pb-8 text-white md:px-20 md:pb-20">
-            <span className="text-shadow text-2xl font-light md:text-[40px] md:leading-tight">
+          <div className="relative mt-auto flex flex-col items-start px-6 pb-8 text-white md:px-12 md:pb-14 xl:px-16 xl:pb-16">
+            <span className="text-shadow text-display-hero-sub text-white">
               Tìm kiếm
             </span>
-            <h2 className="text-shadow mt-2 text-2xl font-extrabold uppercase md:text-[40px] md:leading-tight">
+            <h2 className="text-shadow mt-2 text-display-section uppercase text-white">
               PERSONAL COLOR
             </h2>
-            <span className="text-shadow mt-5 inline-flex min-w-[150px] items-center justify-center rounded-pill border border-white px-6 py-2 text-lg font-bold transition-colors group-hover:bg-white group-hover:text-black group-hover:[text-shadow:none] md:min-w-[289px] md:py-3 md:text-[24px]">
+            <span className="text-shadow mt-4 inline-flex min-h-control min-w-[150px] items-center justify-center rounded-pill border border-white px-6 text-button-hero font-bold transition-colors group-hover:bg-white group-hover:text-black group-hover:[text-shadow:none] md:min-w-[220px]">
               Khám phá
             </span>
           </div>

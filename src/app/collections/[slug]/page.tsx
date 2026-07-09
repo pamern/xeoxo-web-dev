@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { LazyRender } from "@/components/atoms/LazyRender";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { CollectionProducts } from "@/components/organisms/CollectionProducts";
 import { StarsBanner } from "@/components/organisms/StarsBanner";
@@ -60,7 +59,7 @@ export default async function CollectionDetailPage({
     <SiteLayout>
       <div className="bg-white">
         <div className="mx-auto w-full max-w-site">
-          <section className="flex h-20 items-start bg-white px-6 pb-5 pt-12 xl:h-[86px] xl:pl-[100px] xl:pr-[50px] xl:pt-[50px]">
+          <section className="breadcrumb-shell flex items-start bg-white">
             <Breadcrumbs
               items={[
                 {
@@ -90,9 +89,7 @@ export default async function CollectionDetailPage({
           />
           <ValueProposition values={VALUE_PROPS} />
 
-          <div>
-            <StarsBanner />
-          </div>
+          <StarsBanner />
         </div>
       </div>
     </SiteLayout>
@@ -126,20 +123,20 @@ function CollectionHero({
 
       <div className="relative z-10 flex w-full max-w-[1427px] translate-y-12 flex-col items-center px-6 text-center text-white md:translate-y-[115px]">
         {eyebrow ? (
-          <p className="text-heading-section font-bold uppercase leading-[1.1] [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-[38px]">
+          <p className="text-heading-section uppercase [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-display-section">
             {eyebrow}
           </p>
         ) : null}
         {subtitle ? (
-          <p className="mt-2 text-button font-bold uppercase leading-[1.1] [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-[18px]">
+          <p className="mt-2 text-button uppercase [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-button">
             {subtitle}
           </p>
         ) : null}
-        <h1 className="mt-2 text-display-section font-extrabold uppercase leading-none [text-shadow:0px_5px_14px_rgba(0,0,0,0.75)] md:text-[56px]">
+        <h1 className="mt-2 text-display-section uppercase [text-shadow:0px_5px_14px_rgba(0,0,0,0.75)] md:text-display-hero">
           {title}
         </h1>
         {description ? (
-          <p className="mt-10 max-w-[1427px] text-center text-body-lg font-light leading-[1.55] [text-shadow:0px_3px_8px_rgba(0,0,0,0.65)] md:text-[20px]">
+          <p className="mt-10 max-w-[1427px] text-center text-body-lg [text-shadow:0px_3px_8px_rgba(0,0,0,0.65)] md:text-body-xl">
             {description}
           </p>
         ) : null}
@@ -152,7 +149,7 @@ function JsonSections({ sections }: { sections?: CollectionContent["sections"] }
   if (!sections || sections.length === 0) return null;
 
   return (
-    <section className="mx-auto flex w-full max-w-site flex-col gap-8 px-6 py-16 xl:px-[100px]">
+    <section className="mx-auto flex w-full max-w-site flex-col gap-8 px-6 py-16 xl:px-gutter">
       {sections.map((section, index) => (
         <JsonTextBlock
           key={`${section.heading}-${index}`}
@@ -199,7 +196,7 @@ function ImageStoryGrid({
   const displayImages = resolveStoryImages(images);
 
   return (
-    <section className="mx-auto flex w-full max-w-site flex-col gap-[50px] px-6 pb-[50px] xl:px-[100px]">
+    <section className="mx-auto flex w-full max-w-site flex-col gap-[50px] px-6 pb-[50px] xl:px-gutter">
       <div className="grid gap-[50px] xl:grid-cols-2">
         <div className="relative h-[450px] overflow-hidden">
           <Image src={displayImages[0]} alt="" fill sizes="754px" className="object-cover" />
@@ -221,76 +218,44 @@ function ImageStoryGrid({
         </div>
       </div>
 
-      <LazyRender fallback={<StoryGridSkeleton variant="editorial" />}>
-        <div className="grid gap-[50px] xl:grid-cols-2">
-          <div className="flex flex-col gap-[30px]">
-            <div className="grid gap-[10px] md:grid-cols-2">
-              <div className="relative h-[450px] overflow-hidden">
-                <Image src={displayImages[3]} alt="" fill sizes="377px" className="object-cover" />
-              </div>
-              <div className="relative h-[450px] overflow-hidden">
-                <Image src={displayImages[4]} alt="" fill sizes="377px" className="object-cover" />
-              </div>
+      <div className="grid gap-[50px] xl:grid-cols-2">
+        <div className="flex flex-col gap-[30px]">
+          <div className="grid gap-[10px] md:grid-cols-2">
+            <div className="relative h-[450px] overflow-hidden">
+              <Image src={displayImages[3]} alt="" fill sizes="377px" className="object-cover" />
             </div>
-
-            {editorialItems && editorialItems.length > 0 ? (
-              <div className="flex flex-col gap-5">
-                {editorialItems.map((item, index) => (
-                  <JsonTextBlock
-                    key={`${item.heading}-${index}`}
-                    heading={item.heading}
-                    body={item.body}
-                  />
-                ))}
-              </div>
-            ) : null}
+            <div className="relative h-[450px] overflow-hidden">
+              <Image src={displayImages[4]} alt="" fill sizes="377px" className="object-cover" />
+            </div>
           </div>
 
-          <div className="relative h-[720px] overflow-hidden xl:h-[904px]">
-            <Image src={displayImages[5]} alt="" fill sizes="754px" className="object-cover" />
-          </div>
+          {editorialItems && editorialItems.length > 0 ? (
+            <div className="flex flex-col gap-5">
+              {editorialItems.map((item, index) => (
+                <JsonTextBlock
+                  key={`${item.heading}-${index}`}
+                  heading={item.heading}
+                  body={item.body}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
-      </LazyRender>
 
-      <LazyRender fallback={<StoryGridSkeleton variant="closing" />}>
-        <div className="grid gap-[50px] xl:grid-cols-2">
-          <div className="relative h-[904px] overflow-hidden">
-            <Image src={displayImages[6]} alt="" fill sizes="759px" className="object-cover" />
-          </div>
-          <div className="relative h-[902px] overflow-hidden">
-            <Image src={displayImages[7]} alt="" fill sizes="757px" className="object-cover" />
-          </div>
+        <div className="relative h-[720px] overflow-hidden xl:h-[904px]">
+          <Image src={displayImages[5]} alt="" fill sizes="754px" className="object-cover" />
         </div>
-      </LazyRender>
+      </div>
+
+      <div className="grid gap-[50px] xl:grid-cols-2">
+        <div className="relative h-[904px] overflow-hidden">
+          <Image src={displayImages[6]} alt="" fill sizes="759px" className="object-cover" />
+        </div>
+        <div className="relative h-[902px] overflow-hidden">
+          <Image src={displayImages[7]} alt="" fill sizes="757px" className="object-cover" />
+        </div>
+      </div>
     </section>
-  );
-}
-
-function StoryGridSkeleton({
-  variant,
-}: {
-  variant: "editorial" | "closing";
-}) {
-  if (variant === "closing") {
-    return (
-      <div className="grid gap-[50px] xl:grid-cols-2" aria-hidden>
-        <div className="h-[904px] animate-pulse bg-secondary/40" />
-        <div className="h-[902px] animate-pulse bg-secondary/40" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-[50px] xl:grid-cols-2" aria-hidden>
-      <div className="flex flex-col gap-[30px]">
-        <div className="grid gap-[10px] md:grid-cols-2">
-          <div className="h-[450px] animate-pulse bg-secondary/40" />
-          <div className="h-[450px] animate-pulse bg-secondary/40" />
-        </div>
-        <div className="h-[220px] animate-pulse bg-secondary/30" />
-      </div>
-      <div className="h-[720px] animate-pulse bg-secondary/40 xl:h-[904px]" />
-    </div>
   );
 }
 

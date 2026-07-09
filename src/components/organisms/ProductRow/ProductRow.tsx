@@ -19,16 +19,14 @@ export function ProductRow({
   if (products.length === 0) return null;
 
   return (
-    <section className="mx-auto flex w-full max-w-site flex-col gap-6 px-6 py-10 xl:px-[100px]">
+    <section className="homepage-shell flex flex-col gap-6 py-10">
       <SectionHeading title={title} actionHref={actionHref} />
-      <div className="no-scrollbar -mx-6 flex gap-6 overflow-x-auto px-6 pb-8 xl:-mx-[100px] xl:px-[100px] lg:grid lg:grid-cols-4 lg:mx-0 lg:px-0 lg:overflow-x-visible">
+      <div className="homepage-product-grid">
         {products.map((product) => (
           <ProductCard
             key={product.id}
             product={product}
-            className={
-              cardClassName ?? "w-[240px] shrink-0 md:w-[300px] lg:w-auto xl:w-auto"
-            }
+            className={cardClassName}
             quickAddOnHover={quickAddOnHover}
           />
         ))}

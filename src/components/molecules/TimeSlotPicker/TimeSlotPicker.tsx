@@ -23,7 +23,7 @@ export function TimeSlotPicker({
 }) {
   return (
     <fieldset className={cn("flex flex-col gap-3", className)}>
-      <legend className={cn("text-base font-medium", legendClassName)}>{label}</legend>
+      <legend className={cn("text-heading-content-sm font-medium", legendClassName)}>{label}</legend>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         {slots.map((slot) => (
           <button

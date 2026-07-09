@@ -312,7 +312,7 @@ function CustomerPolicyPage() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <div className="site-container pb-5 pt-12">
+        <div className="breadcrumb-shell">
           <Breadcrumbs
             items={[
               {
@@ -335,7 +335,7 @@ function CustomerPolicyPage() {
             alt=""
             width={438}
             height={5}
-            className="mt-[10px] h-[5px] w-full max-w-[438px]"
+            className="mt-[10px] h-[5px] w-full max-w-narrow"
             aria-hidden
           />
         </section>
@@ -436,7 +436,7 @@ function GenericPolicyPage({
   return (
     <SiteLayout>
       <div className="bg-background">
-        <div className="site-container pb-5 pt-12">
+        <div className="breadcrumb-shell">
           <Breadcrumbs
             items={[
               {
@@ -457,7 +457,7 @@ function GenericPolicyPage({
             alt=""
             width={438}
             height={5}
-            className="mt-[10px] h-[5px] w-full max-w-[438px]"
+            className="mt-[10px] h-[5px] w-full max-w-narrow"
             aria-hidden
           />
         </section>
