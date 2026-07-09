@@ -5,6 +5,7 @@ import {
   getOrCreateActiveCart,
   getVariantById,
   getVariantStock,
+  isVariantPurchasableStatus,
 } from "@/features/cart/cart-server.service";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
       finalVariantId = variantId;
 
       const variant = await getVariantById(finalVariantId);
-      if (!variant || variant.status !== "ACTIVE") {
+      if (!variant || !isVariantPurchasableStatus(variant.status)) {
         return fail("Bien the san pham khong kha dung.", 404);
       }
 

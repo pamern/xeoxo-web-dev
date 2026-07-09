@@ -2,7 +2,7 @@ export function QuantityStepper({
   value,
   min = 1,
   onChange,
-  label = "Số lượng",
+  label = "So luong",
 }: {
   value: number;
   min?: number;
@@ -10,21 +10,21 @@ export function QuantityStepper({
   label?: string;
 }) {
   return (
-    <div className="inline-flex h-[38px] items-center rounded-pill border border-black bg-white" aria-label={label}>
+    <div className="inline-flex items-center rounded-pill border border-input" aria-label={label}>
       <button
         type="button"
-        aria-label="Giảm số lượng"
+        aria-label="Giam so luong"
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="h-[36px] w-9 text-base flex items-center justify-center font-bold text-black hover:opacity-75"
+        className="h-12 w-12 text-xl"
       >
         -
       </button>
-      <span className="w-10 text-center text-sm font-semibold text-black">{value}</span>
+      <span className="w-10 text-center text-lg">{value}</span>
       <button
         type="button"
-        aria-label="Tăng số lượng"
+        aria-label="Tang so luong"
         onClick={() => onChange(value + 1)}
-        className="h-[36px] w-9 text-base flex items-center justify-center font-bold text-black hover:opacity-75"
+        className="h-12 w-12 text-xl"
       >
         +
       </button>

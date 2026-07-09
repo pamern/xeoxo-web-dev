@@ -26,7 +26,20 @@ export type QuizQuestion = {
 // Cho tới khi có ảnh thật, Next/Image sẽ 404 nếu file chưa tồn tại — cần upload đủ 10 ảnh.
 const QUESTION_IMAGE_DIR = "/images/personal-color/cau-hoi";
 function questionImage(questionNumber: number, option: "a" | "b") {
-  return `${QUESTION_IMAGE_DIR}/cau-${questionNumber}-${option}.jpg`;
+  const images: Record<string, string> = {
+    "1-a": "29.png",
+    "1-b": "28.png",
+    "2-a": "30.png",
+    "2-b": "31.png",
+    "3-a": "32.png",
+    "3-b": "33.png",
+    "4-a": "34.png",
+    "4-b": "35.png",
+    "5-a": "37.png",
+    "5-b": "38.png",
+  };
+
+  return `${QUESTION_IMAGE_DIR}/${images[`${questionNumber}-${option}`]}`;
 }
 
 export const QUIZ_QUESTIONS: QuizQuestion[] = [

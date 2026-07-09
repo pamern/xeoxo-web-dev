@@ -27,7 +27,7 @@ export const ORDER_HISTORY_FILTERS: Array<{
   { label: "Đang vận chuyển", value: "shipping" },
   { label: "Hoàn thành", value: "completed" },
   { label: "Đã hủy", value: "cancelled" },
-  { label: "Hoàn hàng", value: "returned" },
+  { label: "Đã hoàn trả", value: "returned" },
 ];
 
 function isPaidPaymentStatus(status: string) {
@@ -54,21 +54,37 @@ export function isOrderHistoryFilter(
 export function getOrderStatusPresentation(status: string): OrderStatusPresentation {
   const normalized = status.trim().toUpperCase();
 
-  if (["COMPLETED", "DELIVERED", "SUCCESS"].includes(normalized)) {
-    return { filter: "completed", label: "Hoàn thành", tone: "completed" };
+  if (normalized === "COMPLETED") {
+    return { filter: "completed", label: "Giao hàng thành công", tone: "completed" };
   }
 
-  if (["CANCELLED", "CANCELED", "FAILED"].includes(normalized)) {
+  if (normalized === "CANCELLED") {
     return { filter: "cancelled", label: "Đã hủy", tone: "cancelled" };
   }
 
-  if (["RETURNED", "RETURNING", "REFUNDED", "RETURN_REQUESTED"].includes(normalized)) {
-    return { filter: "returned", label: "Hoàn hàng", tone: "returned" };
+  if (normalized === "RETURNED") {
+    return { filter: "returned", label: "Đã hoàn trả", tone: "returned" };
+  }
+
+  if (normalized === "PENDING") {
+    return { filter: "shipping", label: "Chờ xác nhận", tone: "shipping" };
+  }
+
+  if (normalized === "CONFIRMED") {
+    return { filter: "shipping", label: "Đã xác nhận", tone: "shipping" };
+  }
+
+  if (normalized === "PACKING") {
+    return { filter: "shipping", label: "Đang chuẩn bị hàng", tone: "shipping" };
+  }
+
+  if (normalized === "SHIPPING") {
+    return { filter: "shipping", label: "Đang giao hàng", tone: "shipping" };
   }
 
   return {
     filter: "shipping",
-    label: "Đang vận chuyển",
+    label: status,
     tone: "shipping",
   };
 }
@@ -94,6 +110,7 @@ export function getOrderActions(
     returnPolicy: string;
     shippingPolicy: string;
     product: (slug: string) => string;
+    orderDetail: (id: string) => string;
   },
 ): OrderActionPresentation[] {
   const status = getOrderStatusPresentation(order.order_status).filter;
@@ -123,8 +140,8 @@ export function getOrderActions(
     }
 
     actions.push({
-      href: routes.returnPolicy,
-      label: "Liên hệ đổi hàng",
+      href: routes.customerPolicy,
+      label: "Liên hệ hỗ trợ",
       variant: "secondary",
     });
 
@@ -134,7 +151,7 @@ export function getOrderActions(
   if (status === "shipping") {
     return [
       {
-        href: routes.shippingPolicy,
+        href: routes.orderDetail(order.order_id.toString()),
         label: "Theo dõi đơn",
         variant: "secondary",
       },

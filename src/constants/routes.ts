@@ -35,6 +35,7 @@ export const ROUTES = {
   ACCOUNT_PROFILE: "/account/profile",
   ACCOUNT_ADDRESSES: "/account/addresses",
   ACCOUNT_ORDERS: "/account/orders",
+  ACCOUNT_APPOINTMENTS: "/account/appointments",
   ACCOUNT_ORDER: (orderId: string) =>
     `/account/orders/${encodeURIComponent(orderId)}`,
 
@@ -82,6 +83,8 @@ export const API = {
   ADDRESSES: "/api/v1/addresses",
   PAYMENT_METHODS: "/api/v1/payment-methods",
   ORDERS: "/api/v1/orders",
+  ORDER_LOOKUP: "/api/v1/orders/lookup",
+  APPOINTMENT_LOOKUP: "/api/v1/measurement-appointments/lookup",
   ORDER_PAYMENTS: (orderId: number) => `/api/v1/orders/${orderId}/payments`,
 
   POSTS: "/api/posts",

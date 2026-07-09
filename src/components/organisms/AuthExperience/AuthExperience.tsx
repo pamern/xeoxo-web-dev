@@ -102,17 +102,21 @@ export function AuthExperience({
             <button
               type="button"
               onClick={() => onModeChange(switchMode)}
-              className="text-left transition-opacity hover:opacity-70"
+              className="text-left underline-offset-4 transition hover:underline focus-visible:underline"
             >
               {mode === "login" ? "Đăng ký tài khoản" : "Đăng nhập ngay"}
             </button>
           ) : (
-            <Link href={`${ROUTES.HOME}?auth=${switchMode}`}>
+            <Link
+              href={`${ROUTES.HOME}?auth=${switchMode}`}
+              className="underline-offset-4 transition hover:underline focus-visible:underline"
+            >
               {mode === "login" ? "Đăng ký tài khoản" : "Đăng nhập ngay"}
             </Link>
           )}
           <Link
             href={pageFallback ? ROUTES.HOME : `${ROUTES.HOME}?auth=${mode}`}
+            className="underline-offset-4 transition hover:underline focus-visible:underline"
           >
             Quên mật khẩu
           </Link>

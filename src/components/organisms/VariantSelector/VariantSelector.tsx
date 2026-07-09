@@ -36,7 +36,7 @@ export function VariantSelector({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <div className="text-sm font-bold">
-          Mau sac: <span className="font-bold">{selectedColor.name}</span>
+          Màu sắc: <span className="font-bold">{selectedColor.name}</span>
         </div>
         <div className="flex flex-wrap gap-2">
           {colors.map((option) => (
@@ -74,10 +74,10 @@ export function VariantSelector({
 
       <div className="flex flex-col gap-3">
         <div className="flex w-full items-center justify-between gap-3 text-sm">
-          <span className="font-bold">Kich thuoc</span>
+          <span className="font-bold">Kích thước</span>
           <span className="flex flex-wrap justify-end gap-3 text-caption font-bold text-[#3568ff] underline underline-offset-4">
             <button type="button" onClick={onOpenSizeGuide}>
-              Huong dan cach do
+              Hướng dẫn cách đo
             </button>
           </span>
         </div>
@@ -140,7 +140,7 @@ export function VariantSelector({
               backgroundPosition: "center",
             }}
           >
-            Dat lich may do
+            Đặt lịch may đo
           </button>
           <div className="flex items-center gap-1.5 text-sm font-bold text-[#111111]">
             <span className="text-black/60">&gt;</span>
@@ -149,7 +149,7 @@ export function VariantSelector({
               onClick={onOpenSizeRecommendation}
               className="underline underline-offset-4 hover:opacity-80"
             >
-              Huong dan chon size
+              Hướng dẫn chọn size
             </button>
           </div>
         </div>

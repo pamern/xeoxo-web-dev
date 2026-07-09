@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { IconButton } from "@/components/atoms/IconButton";
 import { cn } from "@/lib/utils";
@@ -13,11 +13,46 @@ export function ProductImageGallery({
   alt: string;
 }) {
   const [activeImage, setActiveImage] = useState(0);
+  const [galleryHeight, setGalleryHeight] = useState<number | null>(null);
+  const mainImageRef = useRef<HTMLDivElement | null>(null);
   const current = images[activeImage] ?? images[0];
+
+  useEffect(() => {
+    function updateHeight() {
+      const element = mainImageRef.current;
+      if (!element) {
+        return;
+      }
+
+      setGalleryHeight(element.getBoundingClientRect().height);
+    }
+
+    const element = mainImageRef.current;
+    if (!element) {
+      return;
+    }
+
+    updateHeight();
+
+    const observer = new ResizeObserver(() => {
+      updateHeight();
+    });
+
+    observer.observe(element);
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
 
   return (
     <div className="grid gap-3 lg:grid-cols-[65px_minmax(0,650px)]">
-      <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:max-h-[975px] lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0">
+      <div
+        className="no-scrollbar order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:self-start lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0"
+        style={galleryHeight ? { maxHeight: `${galleryHeight}px` } : undefined}
+      >
         {images.map((image, index) => (
           <button
             key={`${image}-${index}`}
@@ -34,7 +69,10 @@ export function ProductImageGallery({
         ))}
       </div>
 
-      <div className="relative order-1 aspect-[2/3] w-full overflow-hidden bg-secondary lg:order-2 lg:max-w-[650px]">
+      <div
+        ref={mainImageRef}
+        className="relative order-1 aspect-[2/3] w-full overflow-hidden bg-secondary lg:order-2 lg:max-w-[650px]"
+      >
         {current && (
           <Image
             src={current}

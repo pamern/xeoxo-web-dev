@@ -92,6 +92,7 @@ export function AccountOrderHistory({
                 statusLabel={status.label}
                 statusTone={status.tone}
                 totalLabel={formatCurrency(order.total_amount)}
+                href={ROUTES.ACCOUNT_ORDER(order.order_id.toString())}
                 items={order.items.map((item) => ({
                   imageAlt: item.image_alt ?? item.title,
                   imageSrc: item.image_src,
@@ -106,6 +107,7 @@ export function AccountOrderHistory({
                   product: ROUTES.PRODUCT,
                   returnPolicy: ROUTES.POLICY("return"),
                   shippingPolicy: ROUTES.POLICY("shipping"),
+                  orderDetail: ROUTES.ACCOUNT_ORDER,
                 })}
               />
             );

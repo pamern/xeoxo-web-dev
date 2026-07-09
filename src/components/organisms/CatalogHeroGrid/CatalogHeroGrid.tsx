@@ -26,7 +26,7 @@ export function CatalogHeroGrid({ collections }: { collections: Collection[] }) 
                 alt={collection.name}
                 fill
                 sizes="(max-width: 768px) 40vw, 20vw"
-                className="object-cover object-top blur-sm brightness-75 transition duration-500 group-hover:blur-0 group-hover:brightness-100"
+                className="object-cover object-top blur-[1px] brightness-90 transition duration-500 group-hover:blur-0 group-hover:brightness-100"
               />
               <span className="absolute inset-0 flex items-end bg-black/10 px-5 pb-5 text-xl font-bold text-white opacity-0 transition duration-300 group-hover:bg-black/20 group-hover:opacity-100 text-shadow">
                 {collection.name}

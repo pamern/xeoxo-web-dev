@@ -49,7 +49,6 @@ const PRODUCT_CARD_COLUMNS = [
   "product_line_id",
   "line_name",
   "product_line_slug",
-  "created_at",
   "category_id",
   "category_name",
   "category_slug",
@@ -59,6 +58,70 @@ const PRODUCT_CARD_COLUMNS = [
   "hover_storage_key",
   "hover_image_alt",
 ].join(",");
+
+type ProductLineCardViewRow = {
+  product_line_id: number;
+  line_name: string;
+  product_line_slug: string;
+  primary_category_id: number | null;
+  min_price: number | null;
+  main_storage_key: string | null;
+};
+
+type CategoryMapRow = {
+  category_id: number;
+  category_name: string;
+  slug: string;
+};
+
+function mapProductLineCardViewRow(
+  row: ProductLineCardViewRow,
+  categoryMap: Map<number, CategoryMapRow>,
+): HomepageProductCardRow | null {
+  const categoryId = Number(row.primary_category_id ?? 0);
+  const category = categoryMap.get(categoryId);
+
+  if (!category) {
+    return null;
+  }
+
+  return {
+    product_line_id: Number(row.product_line_id),
+    line_name: String(row.line_name),
+    product_line_slug: String(row.product_line_slug),
+    category_id: Number(category.category_id),
+    category_name: String(category.category_name),
+    category_slug: String(category.slug),
+    price: row.min_price != null ? Number(row.min_price) : null,
+    main_storage_key: row.main_storage_key ?? null,
+    main_image_alt: null,
+    hover_storage_key: row.main_storage_key ?? null,
+    hover_image_alt: null,
+  };
+}
+
+async function getCategoryMapByIds(
+  supabase: ReturnType<typeof createAdminClient>,
+  categoryIds: number[],
+) {
+  if (categoryIds.length === 0) {
+    return new Map<number, CategoryMapRow>();
+  }
+
+  const { data, error } = await supabase
+    .schema("catalog")
+    .from("category")
+    .select("category_id, category_name, slug")
+    .in("category_id", categoryIds)
+    .eq("is_active", true);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const rows = ((data ?? []) as unknown) as CategoryMapRow[];
+  return new Map(rows.map((row) => [Number(row.category_id), row]));
+}
 
 export type CatalogDepartment = "WOMEN" | "MEN" | "KIDS";
 
@@ -95,18 +158,48 @@ async function fetchHomepageProductSections(
   limit: number,
 ): Promise<HomepageProductSection[]> {
   const supabase = createAdminClient();
+  const { data: categories, error: categoryError } = await supabase
+    .schema("catalog")
+    .from("category")
+    .select("category_id, category_name, slug")
+    .in("slug", categorySlugs)
+    .eq("is_active", true);
+
+  if (categoryError) {
+    throw new Error(categoryError.message);
+  }
+
+  const categoryRows = ((categories ?? []) as unknown) as CategoryMapRow[];
+  const categoryIds = categoryRows.map((row) => row.category_id);
+  const categoryMap = new Map(
+    categoryRows.map((row) => [Number(row.category_id), row]),
+  );
+
+  if (categoryIds.length === 0) {
+    return categorySlugs.map((categorySlug) => ({
+      categoryId: 0,
+      categorySlug,
+      categoryName: categorySlug,
+      products: [],
+    }));
+  }
+
   const { data, error } = await supabase
     .schema("catalog")
-    .from("product_card_homepage")
-    .select(PRODUCT_CARD_COLUMNS)
-    .in("category_slug", categorySlugs)
-    .order("created_at", { ascending: false });
+    .from("v_product_line_card")
+    .select(
+      "product_line_id, line_name, product_line_slug, primary_category_id, min_price, main_storage_key",
+    )
+    .in("primary_category_id", categoryIds)
+    .order("product_line_id", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const rows = ((data ?? []) as unknown) as HomepageProductCardRow[];
+  const rows = (((data ?? []) as unknown) as ProductLineCardViewRow[])
+    .map((row) => mapProductLineCardViewRow(row, categoryMap))
+    .filter((row): row is HomepageProductCardRow => row !== null);
   const rowsByCategory = new Map<string, HomepageProductCardRow[]>();
 
   rows.forEach((row) => {
@@ -221,14 +314,18 @@ async function fetchCategoryProductSections(
     }
   }
 
+  const categoryMap = await getCategoryMapByIds(supabase, categoryIds ?? []);
+
   let query = supabase
     .schema("catalog")
-    .from("product_card_homepage")
-    .select(PRODUCT_CARD_COLUMNS)
-    .order("created_at", { ascending: false });
+    .from("v_product_line_card")
+    .select(
+      "product_line_id, line_name, product_line_slug, primary_category_id, min_price, main_storage_key",
+    )
+    .order("product_line_id", { ascending: false });
 
   if (categoryIds) {
-    query = query.in("category_id", categoryIds);
+    query = query.in("primary_category_id", categoryIds);
   }
 
   const { data, error } = await query;
@@ -237,7 +334,9 @@ async function fetchCategoryProductSections(
     throw new Error(error.message);
   }
 
-  const rows = ((data ?? []) as unknown) as HomepageProductCardRow[];
+  const rows = (((data ?? []) as unknown) as ProductLineCardViewRow[])
+    .map((row) => mapProductLineCardViewRow(row, categoryMap))
+    .filter((row): row is HomepageProductCardRow => row !== null);
   const rowsByCategory = new Map<number, HomepageProductCardRow[]>();
 
   rows.forEach((row) => {
@@ -386,7 +485,7 @@ async function fetchNewestDepartmentProducts(
   const { data: categories, error: categoryError } = await supabase
     .schema("catalog")
     .from("category")
-    .select("category_id")
+    .select("category_id, category_name, slug")
     .eq("department", department)
     .eq("is_active", true);
 
@@ -394,26 +493,33 @@ async function fetchNewestDepartmentProducts(
     throw new Error(categoryError.message);
   }
 
-  const categoryIds = (categories ?? []).map(
-    (category) => (category as { category_id: number }).category_id,
-  );
+  const categoryRows = ((categories ?? []) as unknown) as CategoryMapRow[];
+  const categoryIds = categoryRows.map((category) => category.category_id);
 
   if (categoryIds.length === 0) {
     return [];
   }
 
+  const categoryMap = new Map(
+    categoryRows.map((row) => [Number(row.category_id), row]),
+  );
+
   const { data, error } = await supabase
     .schema("catalog")
-    .from("product_card_homepage")
-    .select(PRODUCT_CARD_COLUMNS)
-    .in("category_id", categoryIds)
-    .order("created_at", { ascending: false });
+    .from("v_product_line_card")
+    .select(
+      "product_line_id, line_name, product_line_slug, primary_category_id, min_price, main_storage_key",
+    )
+    .in("primary_category_id", categoryIds)
+    .order("product_line_id", { ascending: false });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  const rows = ((data ?? []) as unknown) as HomepageProductCardRow[];
+  const rows = (((data ?? []) as unknown) as ProductLineCardViewRow[])
+    .map((row) => mapProductLineCardViewRow(row, categoryMap))
+    .filter((row): row is HomepageProductCardRow => row !== null);
   const seenProductLineIds = new Set<number>();
   const uniqueRows: HomepageProductCardRow[] = [];
 

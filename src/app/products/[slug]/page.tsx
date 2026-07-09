@@ -235,7 +235,10 @@ function ProductDescription({
   ];
 
   return (
-    <section className="mx-auto w-full max-w-site px-6 pb-10 pt-8 xl:px-[100px]">
+    <section
+      id="product-description-section"
+      className="mx-auto w-full max-w-site px-6 pb-10 pt-8 xl:px-[100px]"
+    >
       <h2 className="mb-5 text-center text-heading-section font-bold uppercase">
         Mô tả sản phẩm
       </h2>

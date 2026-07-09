@@ -1049,7 +1049,7 @@ endpoints:
   screen: tương tự cái dưới
   type: CUSTOM
   name: Tạo hồ sơ số đo (may đo cá nhân)
-  description: User nhập số đo và bấm Lưu Biểu mẫu. Hệ thống tạo MEASUREMENT_PROFILE và CUSTOMIZATION_REQUEST.
+  description: User nhập số đo và bấm Lưu Biểu mẫu. Hệ thống tạo CUSTOMIZATION_REQUEST với measurement snapshot; nếu member chọn lưu mặc định thì cập nhật thêm MEASUREMENT_PROFILE.
   resource: customization-requests
   method: POST
   endpoint: /api/v1/customization-requests
@@ -1060,7 +1060,7 @@ endpoints:
     - Không có
     query_parameters:
     - Không có
-    body: 'product_line_id (integer, bắt buộc)
+    body: 'component_id (integer, bắt buộc)
 
       customer_note optional
 
@@ -1086,33 +1086,38 @@ endpoints:
     - code
     - message
     - data.customization_id
-    - data.measurement_profile_id
-    - data.product_line_id
+    - data.component_id
     - data.unit_price
     - data.surcharge_percent
     - data.surcharge_amount
     - data.custom_price
     - data.customization_status
-    - data.measurements
+    - data.measurement_snapshot
     - data.created_at
     success_example:
       code: 201
       message: Tạo yêu cầu may đo thành công
       data:
         customization_id: 101
-        measurement_profile_id: 501
-        product_line_id: PL010
+        component_id: 15
         customization_status: REQUESTED
-        measurements:
-          height: 165
-          weight: 52
-          chest: 84
-          waist: 68
-          hip: 90
-          shoulder: 38
-          neck: 34
-          arm_length: 55
-          bicep: 26
+        measurement_snapshot:
+          component_id: 15
+          component_type: AO
+          measurements:
+            height: 165
+            weight: 52
+            chest: 84
+            waist: 68
+            hip: 90
+            shoulder: 38
+            neck: 34
+            arm_length: 55
+            bicep: 26
+          note: May om vua
+          source: CUSTOMIZE_MODAL
+          saved_as_default: true
+          created_at: '2026-07-03T10:00:00Z'
         created_at: '2026-07-03T10:00:00Z'
     error_examples:
     - code: 400
@@ -1132,22 +1137,22 @@ endpoints:
   - 1. Đọc request body.
   - 2. Validate dữ liệu đầu vào.
   - 3. Nếu có token → lấy customer_id; nếu guest → customer_id = NULL.
-  - 4. Query PRODUCT_LINE theo product_line_id.
+  - 4. Query PRODUCT_COMPONENT theo component_id và load variant active để xác định giá nền.
   - 5. Nếu không tồn tại hoặc inactive → 404.
-  - 6. Insert MEASUREMENT_PROFILE với profile_type = CUSTOMER_MEASUREMENT.
-  - 7. Insert nhiều dòng MEASUREMENT_PROFILE_DETAIL.
-  - 8. Tính unit_price từ giá sản phẩm.
-  - 9. Tính surcharge_percent — nếu chưa có rule thì default 0.
-  - 10. Tính surcharge_amount = unit_price * surcharge_percent / 100.
-  - 11. Tính custom_price = unit_price + surcharge_amount.
-  - 12. Insert CUSTOMIZATION_REQUEST với customer_id, product_line_id, measurement_profile_id, unit_price, surcharge_percent,
+  - 6. Tạo measurement_snapshot JSON từ measurements + note + metadata tại thời điểm submit.
+  - 7. Tính unit_price từ giá sản phẩm.
+  - 8. Tính surcharge_percent — nếu chưa có rule thì default 0.
+  - 9. Tính surcharge_amount = unit_price * surcharge_percent / 100.
+  - 10. Tính custom_price = unit_price + surcharge_amount.
+  - 11. Insert CUSTOMIZATION_REQUEST với customer_id, component_id, measurement_snapshot, unit_price, surcharge_percent,
     surcharge_amount, custom_price, customization_status = REQUESTED, customer_note.
-  - 13. Trả về request vừa tạo.
+  - 12. Nếu member chọn save_as_default = true thì upsert MEASUREMENT_PROFILE như side effect độc lập.
+  - 13. Trả về request vừa tạo; dữ liệu giao dịch đọc từ measurement_snapshot, không đọc ngược từ profile.
   dev_notes:
   - 4 field unit_price, surcharge_percent, surcharge_amount, custom_price trong DB là NOT NULL nên không được ghi “nếu có”.
     Phải luôn tính, có thể default phụ phí = 0.
   validation_rules:
-  - product_line_id bắt buộc, tồn tại và ACTIVE.
+  - component_id bắt buộc, tồn tại và ACTIVE.
   - measurements bắt buộc.
   - Tất cả số đo là số > 0.
   - 'Range hợp lý: height 100–220, weight 20–200, vòng đo 20–200.'
@@ -1159,7 +1164,7 @@ endpoints:
   screen: null
   type: CUSTOM
   name: Cập nhật hồ sơ số đo đã lưu
-  description: User sửa lại số đo của yêu cầu custom đã tạo. Hệ thống cập nhật hồ sơ số đo đang gắn với customization request.
+  description: User sửa lại số đo của yêu cầu custom đã tạo. Hệ thống cập nhật measurement snapshot của customization request.
   resource: customization-requests
   method: PUT
   endpoint: /api/v1/customization-requests/{customization_id}/measurements
@@ -1178,29 +1183,34 @@ endpoints:
     - code
     - message
     - data.customization_id
-    - data.measurement_profile_id
-    - data.product_line_id
+    - data.component_id
     - data.customization_status
-    - data.measurements
+    - data.measurement_snapshot
     - data.updated_at
     success_example:
       code: 200
       message: Cập nhật số đo thành công
       data:
         customization_id: 101
-        measurement_profile_id: 501
-        product_line_id: PL010
+        component_id: 15
         customization_status: REQUESTED
-        measurements:
-          height: 166
-          weight: 53
-          chest: 85
-          waist: 69
-          hip: 91
-          shoulder: 38
-          neck: 34
-          arm_length: 55
-          bicep: 26
+        measurement_snapshot:
+          component_id: 15
+          component_type: AO
+          measurements:
+            height: 166
+            weight: 53
+            chest: 85
+            waist: 69
+            hip: 91
+            shoulder: 38
+            neck: 34
+            arm_length: 55
+            bicep: 26
+          note: May om vua
+          source: CUSTOMIZE_MODAL
+          saved_as_default: true
+          created_at: '2026-07-03T10:00:00Z'
         updated_at: '2026-07-03T11:00:00Z'
     error_examples:
     - code: 404
@@ -1220,13 +1230,13 @@ endpoints:
   - 3. Nếu không tồn tại → trả 404.
   - 4. Nếu request có customer_id thì token phải khớp customer đó.
   - 5. Nếu request là guest customer_id = NULL thì cho sửa theo id.
-  - 6. Lấy measurement_profile_id từ CUSTOMIZATION_REQUEST.
-  - 7. Validate measurements.
-  - 8. Update MEASUREMENT_PROFILE_DETAIL theo measurement_type_id.
-  - 9. Update CUSTOMIZATION_REQUEST.customer_note nếu có.
+  - 6. Validate measurements.
+  - 7. Update CUSTOMIZATION_REQUEST.measurement_snapshot bằng snapshot mới.
+  - 8. Update CUSTOMIZATION_REQUEST.customer_note nếu có.
+  - 9. Nếu member chọn lưu mặc định thì upsert MEASUREMENT_PROFILE như side effect riêng, không dùng để sửa dữ liệu giao dịch cũ.
   - 10. Trả về dữ liệu mới nhất
   dev_notes:
-  - Không update trực tiếp bằng measurement_profile_id, vì custom phải đi qua CUSTOMIZATION_REQUEST để biết sản phẩm nào.
+  - CUSTOMIZATION_REQUEST phải đọc số đo từ measurement_snapshot, không đọc ngược từ measurement_profile.
   - Guest sửa theo id có rủi ro; muốn chặt hơn thì thêm session_id - hỏi Mỹ thử có làm session id kh
   validation_rules:
   - customization_id phải là số nguyên dương.
@@ -1235,7 +1245,7 @@ endpoints:
   - 'Range hợp lý: height 100–220, weight 20–200, các vòng đo 20–200.'
   - Nếu request có customer_id thì phải đúng chủ sở hữu.
   security:
-  - PUBLIC; nếu có customer_id thì check ownership; validate body; tránh IDOR; dùng transaction khi update detail.
+  - PUBLIC; nếu có customer_id thì check ownership; validate body; tránh IDOR; dùng transaction khi update snapshot.
 - trigger: Product detail + Đặt lịch đo--> Form đặt lịch
   screen: null
   type: STANDARD

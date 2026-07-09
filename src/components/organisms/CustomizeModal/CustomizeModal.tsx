@@ -272,7 +272,7 @@ export function CustomizeModal({
               title="Xóa số đo"
               className="group inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-white focus:outline-none"
             >
-              <Image src="/icons/xoa.svg" alt="Xoa" width={16} height={16} className="transition group-hover:invert" />
+              <Image src="/icons/xoa.svg" alt="Xóa" width={16} height={16} className="transition group-hover:invert" />
             </button>
             <button
               type="button"
@@ -301,7 +301,7 @@ export function CustomizeModal({
                     isSaved ? "border-black/20 text-black" : "border-red-200 text-red-600",
                   )}
                 >
-                  {isSaved ? "Da luu" : saveMessage}
+                  {isSaved ? "Đã lưu" : saveMessage}
                 </span>
               )}
             </button>

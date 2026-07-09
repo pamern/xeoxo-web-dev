@@ -3,6 +3,10 @@ import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
 import type { AccountOrder } from "@/types/account-order.types";
 import type { OrderHistoryFilter } from "@/features/order/order-history";
 import type {
+  OrderLookupDto,
+  OrderLookupValues,
+} from "@/types/order-lookup.types";
+import type {
   CheckoutPreviewDto,
   CheckoutPreviewValues,
   CreatedOrderDto,
@@ -29,10 +33,20 @@ export const orderService = {
       credentials: "include",
     });
 
-    return readApi<AccountOrder[]>(
-      response,
-      "Không thể tải lịch sử đơn hàng.",
-    );
+    return readApi<AccountOrder[]>(response, "Không thể tải lịch sử đơn hàng.");
+  },
+
+  async lookupOrder(values: OrderLookupValues) {
+    const query = new URLSearchParams({
+      contact: values.contact,
+      order_code: values.order_code,
+    });
+
+    const response = await fetch(`${API.ORDER_LOOKUP}?${query.toString()}`, {
+      credentials: "include",
+    });
+
+    return readApi<OrderLookupDto>(response, "Không thể tra cứu đơn hàng.");
   },
 
   async previewCheckout(values: CheckoutPreviewValues) {

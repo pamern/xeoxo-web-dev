@@ -29,7 +29,7 @@ function AccountNavCard({
 }) {
   const className = cn(
     variant === "account"
-      ? "flex min-h-[65px] w-full items-center gap-4 rounded-md border-2 border-black px-5 py-4 text-left transition-colors"
+      ? "flex min-h-[56px] w-full items-center gap-4 rounded-md border-2 border-black px-5 py-3 text-left transition-colors"
       : "flex min-h-[58px] w-full items-center justify-between rounded-[14px] border px-5 py-4 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition-transform",
     isActive
       ? "border-black bg-black text-white"
@@ -46,8 +46,8 @@ function AccountNavCard({
           "min-w-0 flex-1 whitespace-nowrap leading-tight",
           variant === "account"
             ? isActive
-              ? "text-[18px] font-bold md:text-[20px]"
-              : "text-[18px] font-normal md:text-[20px]"
+              ? "text-[16px] font-bold md:text-[18px]"
+              : "text-[16px] font-normal md:text-[18px]"
             : "text-base font-medium md:text-[15px]",
         )}
       >

@@ -89,7 +89,7 @@ export default async function CollectionDetailPage({
           />
           <ValueProposition values={VALUE_PROPS} />
 
-          <div className="[&>section]:mb-0 [&>section]:h-[520px] [&>section]:md:h-[772px] [&>section>h2]:mt-16 [&>section>h2]:text-3xl [&>section>h2]:md:mt-[91px] [&>section>h2]:md:text-display-section [&>section>img]:!bottom-auto [&>section>img]:!h-[420px] [&>section>img]:!top-12 [&>section>img]:md:!h-[615px] [&>section>img]:md:!top-[45px]">
+          <div>
             <StarsBanner />
           </div>
         </div>

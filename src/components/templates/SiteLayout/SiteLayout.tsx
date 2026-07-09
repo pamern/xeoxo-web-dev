@@ -20,17 +20,23 @@ async function getHeaderCategoryMenus() {
 }
 
 // Khung dùng chung cho mọi trang public của website (header + footer).
-export async function SiteLayout({ children }: { children: React.ReactNode }) {
+export async function SiteLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { womenCategories, menCategories, aoDaiCategories } =
     await getHeaderCategoryMenus();
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader
-        womenCategories={womenCategories}
-        menCategories={menCategories}
-        aoDaiCategories={aoDaiCategories}
-      />
+      <div className="site-layout-header">
+        <SiteHeader
+          womenCategories={womenCategories}
+          menCategories={menCategories}
+          aoDaiCategories={aoDaiCategories}
+        />
+      </div>
       <main className="flex-1">{children}</main>
       <SiteFooter />
     </div>

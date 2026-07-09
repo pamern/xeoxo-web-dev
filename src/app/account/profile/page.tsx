@@ -26,7 +26,7 @@ export const metadata: Metadata = {
 const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Hồ sơ thông tin", href: ROUTES.ACCOUNT_PROFILE },
   { label: "Lịch sử mua hàng", href: ROUTES.ACCOUNT_ORDERS },
-  { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
+  { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
   { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
   { label: "Đánh giá và phản hồi" },
   { label: "Câu hỏi thường gặp", href: ROUTES.FAQ_ACCOUNT },
@@ -73,8 +73,8 @@ export default async function AccountProfileRoute() {
               ]}
             />
 
-            <div className="mt-8 grid gap-8 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
-              <aside className="xl:sticky xl:top-[180px]">
+            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+              <aside className="lg:sticky lg:top-[180px]">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
                   activeHref={ROUTES.ACCOUNT_PROFILE}

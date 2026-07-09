@@ -2,7 +2,6 @@ export type CustomizationRequestDto = {
   customization_id: number;
   customer_id: number;
   component_id: number;
-  measurement_profile_id: number | null;
   measurement_snapshot?: CustomizationMeasurementSnapshot | null;
   unit_price: number;
   surcharge_percent: number;

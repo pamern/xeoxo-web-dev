@@ -33,7 +33,7 @@ export function CollectionCard({
           className={cn(
             "object-cover object-top transition duration-500",
             revealOnHover
-              ? "blur-sm brightness-75 group-hover:blur-0 group-hover:brightness-100"
+              ? "blur-[1px] brightness-90 group-hover:blur-0 group-hover:brightness-100"
               : "group-hover:scale-105"
           )}
         />

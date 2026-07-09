@@ -4,7 +4,6 @@ export type HomepageProductCardRow = {
   product_line_id: number;
   line_name: string;
   product_line_slug: string;
-  created_at: string;
   category_id: number;
   category_name: string;
   category_slug: string;

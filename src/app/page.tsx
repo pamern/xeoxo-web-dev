@@ -19,7 +19,8 @@ import Link from "next/link";
 async function getHomePageProductSections() {
   try {
     return await getCategoryProductSections({ limit: 4 });
-  } catch {
+  } catch (error) {
+    console.error("[homepage] Failed to load product sections", error);
     return [] satisfies HomepageProductSection[];
   }
 }
@@ -28,7 +29,8 @@ async function getHomePageCollections() {
   try {
     const collections = await getHomepageCollections({ limit: 5 });
     return collections.length > 0 ? collections : COLLECTIONS;
-  } catch {
+  } catch (error) {
+    console.error("[homepage] Failed to load collections", error);
     return [] satisfies Collection[];
   }
 }

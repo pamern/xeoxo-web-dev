@@ -1,26 +1,37 @@
 import type { Metadata } from "next";
-import { AppointmentModal } from "@/components/organisms/AppointmentModal";
+import { AppointmentLookupExperience } from "@/components/organisms/AppointmentLookupExperience";
+import { SiteLayout } from "@/components/templates/SiteLayout";
 
 export const metadata: Metadata = {
-  title: "Dat lich hen",
+  title: "Tra cứu lịch hẹn",
+  description:
+    "Kiểm tra nhanh thông tin lịch hẹn Xéo Xọ bằng mã lịch hẹn và số điện thoại hoặc email đã đặt lịch.",
 };
 
-const BRANCHES = [
-  { label: "XEOXO Test Branch", value: "1" },
-];
+type AppointmentPageProps = {
+  searchParams?: Promise<{
+    appointment_id?: string;
+    contact?: string;
+  }>;
+};
 
-const TIME_SLOTS = [
-  { id: "09:00", label: "09:00" },
-  { id: "10:30", label: "10:30" },
-  { id: "14:00", label: "14:00" },
-  { id: "15:30", label: "15:30" },
-  { id: "17:00", label: "17:00" },
-];
+export default async function AppointmentPage({
+  searchParams,
+}: AppointmentPageProps) {
+  const resolvedSearchParams = await searchParams;
 
-export default function AppointmentPage() {
   return (
-    <main className="min-h-screen bg-secondary px-6 py-10">
-      <AppointmentModal branches={BRANCHES} timeSlots={TIME_SLOTS} />
-    </main>
+    <SiteLayout>
+      <div className="bg-background">
+        <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px] xl:py-10">
+          <AppointmentLookupExperience
+            initialValues={{
+              appointment_id: resolvedSearchParams?.appointment_id,
+              contact: resolvedSearchParams?.contact,
+            }}
+          />
+        </section>
+      </div>
+    </SiteLayout>
   );
 }

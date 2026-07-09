@@ -33,10 +33,8 @@ export async function createCustomizationRequest(
 
   const basePrice = Math.min(...activeVariants.map((v: any) => Number(v.price)));
 
-  let profileId = null;
   if (customerId && values.save_as_default) {
-    const profile = await upsertProfile(customerId, values.measurements);
-    profileId = profile.measurement_profile_id;
+    await upsertProfile(customerId, values.measurements);
   }
 
   const surchargePercent = 20;
@@ -55,7 +53,6 @@ export async function createCustomizationRequest(
   const requestData = {
     customer_id: customerId,
     component_id: values.component_id,
-    measurement_profile_id: profileId,
     measurement_snapshot: measurementSnapshot,
     unit_price: basePrice,
     surcharge_percent: surchargePercent,
@@ -80,7 +77,6 @@ export async function createCustomizationRequest(
     customization_id: request.customization_id,
     customer_id: request.customer_id,
     component_id: request.component_id,
-    measurement_profile_id: request.measurement_profile_id,
     measurement_snapshot: request.measurement_snapshot,
     unit_price: request.unit_price,
     surcharge_percent: request.surcharge_percent,

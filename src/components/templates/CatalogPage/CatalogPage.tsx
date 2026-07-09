@@ -33,14 +33,14 @@ const CATALOG_CONTENT: Record<
 > = {
   nu: {
     heroLabel: "Đồ Nữ",
-    banner: "/images/cat-dam-vay.png",
+    banner: "/images/catalog/nu/đồ nữ.png",
     department: "WOMEN",
     emptyTitle: "Chưa có sản phẩm nữ",
     emptyDescription: "Các thiết kế dành cho nữ sẽ được cập nhật trong thời gian tới.",
   },
   nam: {
     heroLabel: "Đồ Nam",
-    banner: "/images/cat-ao-cuoi.png",
+    banner: "/images/catalog/nam/đồ nam.png",
     department: "MEN",
     emptyTitle: "Chưa có sản phẩm nam",
     emptyDescription: "Các thiết kế dành cho nam sẽ được cập nhật trong thời gian tới.",
@@ -74,7 +74,10 @@ export function buildCatalogMetadata(slug: CatalogSlug): Metadata {
 
 async function getCatalogHeroCollections() {
   try {
-    const collections = await getHomepageCollections({ limit: 5 });
+    const collections = await getHomepageCollections({
+      limit: 5,
+      coverVariant: "vertical",
+    });
     return collections.length > 0 ? collections : COLLECTIONS;
   } catch {
     return COLLECTIONS;
@@ -119,7 +122,7 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
         ctaHref={ROUTES.COLLECTION(firstCollection.slug)}
       />
 
-      <CatalogHeroGrid collections={heroCollections} />
+      {slug !== "tre-em" && <CatalogHeroGrid collections={heroCollections} />}
 
       <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]">
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">

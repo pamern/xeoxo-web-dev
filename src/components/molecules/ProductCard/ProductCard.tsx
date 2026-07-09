@@ -199,6 +199,16 @@ export function ProductCard({
   );
 }
 
+function formatSingleSizeLabel(size: string) {
+  const normalized = size.trim();
+
+  if (!normalized) {
+    return "Freesize";
+  }
+
+  return normalized.replace(/^0-\s*/i, "");
+}
+
 function SingleSizeAddButton({
   size,
   isAvailable,
@@ -218,7 +228,7 @@ function SingleSizeAddButton({
     <button
       type="button"
       disabled={isLoading || isLocked}
-      aria-label={isLocked ? "Sản phẩm đã hết hàng" : "Thêm vào giỏ hàng"}
+      aria-label={isLocked ? "Sản phẩm tạm hết hàng" : "Thêm vào giỏ hàng"}
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -235,7 +245,11 @@ function SingleSizeAddButton({
             ),
       )}
     >
-      {isLoading ? "..." : isLocked ? "Hết hàng" : `Thêm vào giỏ · ${size || "Freesize"}`}
+      {isLoading
+        ? "..."
+        : isLocked
+          ? "Tạm hết hàng"
+          : formatSingleSizeLabel(size)}
     </button>
   );
 }

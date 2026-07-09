@@ -20,6 +20,7 @@ import {
 } from "@/features/order/order-history";
 import type { AccountOrder } from "@/types/account-order.types";
 import { createClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Lịch sử đơn hàng",
@@ -37,12 +38,25 @@ type AccountOrdersPageProps = {
 const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Hồ sơ thông tin", href: ROUTES.ACCOUNT_PROFILE },
   { label: "Lịch sử mua hàng", href: ROUTES.ACCOUNT_ORDERS },
-  { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
+  { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
   { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
   { label: "Đánh giá và phản hồi" },
   { label: "Câu hỏi thường gặp", href: ROUTES.FAQ_ACCOUNT },
   { label: "Đăng xuất", action: "logout" },
 ];
+
+function FloralDivider({ className }: { className?: string }) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        "h-[5px] w-full bg-[length:100%_100%] bg-center bg-no-repeat",
+        className,
+      )}
+      style={{ backgroundImage: "url(/images/header-line-up.png)" }}
+    />
+  );
+}
 
 export default async function AccountOrdersRoute({
   searchParams,
@@ -88,8 +102,8 @@ export default async function AccountOrdersRoute({
               ]}
             />
 
-            <div className="mt-8 grid gap-8 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
-              <aside className="xl:sticky xl:top-[180px]">
+            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+              <aside className="lg:sticky lg:top-[180px]">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
                   activeHref={ROUTES.ACCOUNT_ORDERS}
@@ -103,7 +117,7 @@ export default async function AccountOrdersRoute({
                     Lịch sử đơn hàng
                   </h1>
 
-                  <div className="h-[5px] w-full bg-[url('/images/strip-title-underline.png')] bg-[length:100%_100%] bg-center bg-no-repeat" />
+                  <FloralDivider />
                 </div>
 
                 <AccountOrderHistory

@@ -4,8 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/atoms/Button";
 import { IconButton } from "@/components/atoms/IconButton";
-import { TextActionButton } from "@/components/atoms/TextActionButton";
 import { StarRating } from "@/components/atoms/StarRating";
+import { TextActionButton } from "@/components/atoms/TextActionButton";
 import { ProductImageGallery } from "@/components/organisms/ProductImageGallery";
 import { AppointmentModal } from "@/components/organisms/AppointmentModal";
 import { CustomizeModal } from "@/components/organisms/CustomizeModal";
@@ -135,16 +135,33 @@ export function ProductDetail({
   useEffect(() => {
     if (isMultiComponent) {
       setShowPurchasePanel(false);
+      document.body.classList.remove("pdp-follow-bar-active");
       return;
     }
 
-    function handleScroll() {
-      setShowPurchasePanel(window.scrollY > 560);
+    function syncFollowBarState() {
+      const descriptionSection = document.getElementById("product-description-section");
+      if (!descriptionSection) {
+        setShowPurchasePanel(false);
+        document.body.classList.remove("pdp-follow-bar-active");
+        return;
+      }
+
+      const rect = descriptionSection.getBoundingClientRect();
+      const shouldShow = rect.top <= window.innerHeight;
+      setShowPurchasePanel(shouldShow);
+      document.body.classList.toggle("pdp-follow-bar-active", shouldShow);
     }
 
-    handleScroll();
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    syncFollowBarState();
+    window.addEventListener("scroll", syncFollowBarState, { passive: true });
+    window.addEventListener("resize", syncFollowBarState);
+
+    return () => {
+      document.body.classList.remove("pdp-follow-bar-active");
+      window.removeEventListener("scroll", syncFollowBarState);
+      window.removeEventListener("resize", syncFollowBarState);
+    };
   }, [isMultiComponent]);
 
   async function handleAdd() {
@@ -489,10 +506,12 @@ export function ProductDetail({
             setIsCustomizeOpen(true);
           }}
           onQuantityChange={setQuantity}
+          onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
           onSelectSize={(nextSize) =>
             setSize((current) => (current === nextSize ? "" : nextSize))
           }
           price={price}
+          productLineId={apiProduct.product_line_id}
           productName={product.name}
           quantity={quantity}
           selectedSize={size}
@@ -500,6 +519,14 @@ export function ProductDetail({
           maxQuantity={Math.max(1, maxQuantity)}
         />
       )}
+      <style jsx global>{`
+        @media (min-width: 1024px) {
+          body.pdp-follow-bar-active .site-layout-header {
+            display: none;
+            pointer-events: none;
+          }
+        }
+      `}</style>
 
       <ProductImageGallery images={product.images} alt={product.name} />
 
@@ -686,9 +713,11 @@ function SingleComponentPurchasePanel({
   maxQuantity,
   onAdd,
   onOpenCustomize,
+  onOpenSizeRecommendation,
   onQuantityChange,
   onSelectSize,
   price,
+  productLineId,
   productName,
   quantity,
   selectedSize,
@@ -700,9 +729,11 @@ function SingleComponentPurchasePanel({
   maxQuantity: number;
   onAdd: () => void;
   onOpenCustomize: () => void;
+  onOpenSizeRecommendation: () => void;
   onQuantityChange: (quantity: number) => void;
   onSelectSize: (size: string) => void;
   price: number;
+  productLineId: number;
   productName: string;
   quantity: number;
   selectedSize: string;
@@ -716,110 +747,127 @@ function SingleComponentPurchasePanel({
   const selectedVariant = regularSizes.find(
     (option) => option.size_name === selectedSize,
   );
+  const selectedSizeLabel = customSelected
+    ? "Custom"
+    : selectedSize || "Chưa chọn";
   const addDisabled =
     isAdding || (!customSelected && !selectedVariant?.is_available);
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[85] hidden border-y border-black/15 bg-white shadow-[0_-12px_32px_rgba(0,0,0,0.12)] lg:block">
-      <div className="mx-auto flex h-[112px] max-w-site items-stretch px-6 xl:px-[100px]">
-        <div className="flex min-w-[420px] items-center gap-4 pr-7">
-          <div className="relative h-[76px] w-[58px] overflow-hidden rounded-[6px] bg-secondary">
+    <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:block">
+      <div className="mx-auto grid min-h-[88px] max-w-site grid-cols-[minmax(240px,1.1fr)_minmax(280px,1fr)_minmax(130px,0.52fr)_minmax(220px,0.82fr)] items-start gap-4 px-3 py-3 xl:px-[80px]">
+        <div className="flex min-w-0 items-start gap-3 self-start">
+          <div className="relative h-[58px] w-[44px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
             <Image
               src={image}
               alt={productName}
               fill
-              sizes="58px"
-              className="object-contain"
+              sizes="44px"
+              className="object-cover"
             />
           </div>
           <div className="min-w-0">
-            <h3 className="truncate text-lg font-bold">{productName}</h3>
-            <p className="mt-1 text-lg font-bold">{formatPrice(price)}</p>
+            <h3 className="line-clamp-1 text-[16px] font-bold leading-tight">{productName}</h3>
+            <p className="mt-0.5 text-[14px] font-bold leading-none">{formatPrice(price)}</p>
           </div>
         </div>
 
-        <div className="w-px self-stretch bg-black/15" aria-hidden />
-
-        <div className="grid flex-1 grid-cols-[minmax(360px,1fr)_minmax(180px,240px)] items-center gap-8 px-7">
-          <div className="min-w-0">
-            <div className="grid grid-cols-[minmax(0,1fr)_220px] gap-8 text-sm font-bold">
-              <span>Kích thước</span>
-              <span>Màu sắc:</span>
-            </div>
-            <div className="mt-2 grid grid-cols-[minmax(0,1fr)_220px] items-center gap-8">
-              <div className="flex flex-wrap gap-2">
-                {regularSizes.map((option) => (
-                  <button
-                    key={option.variant_id}
-                    type="button"
-                    onClick={() => onSelectSize(option.size_name)}
-                    disabled={!option.is_available}
-                    aria-pressed={selectedSize === option.size_name}
-                    className={cn(
-                      "h-[36px] min-w-[58px] rounded-pill border-[3px] px-4 text-sm font-bold transition-colors",
-                      !option.is_available &&
-                        "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-                      selectedSize === option.size_name && option.is_available
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : option.is_available && "border-input bg-white hover:border-primary",
-                    )}
-                  >
-                    {option.size_name}
-                  </button>
-                ))}
-                <Button
-                  type="button"
-                  onClick={onOpenCustomize}
-                  disabled={!hasAvailableVariant}
-                  variant="customPill"
-                  size="custom"
-                  iconSrc="/icons/custom.svg"
-                  iconSize={30}
-                  iconClassName={cn("h-6 w-7 object-contain", customSelected && "invert")}
-                  className={cn(
-                    "h-[36px] min-w-[138px] gap-1.5 text-sm",
-                    customSelected &&
-                      "border-primary bg-primary text-primary-foreground",
-                    !hasAvailableVariant &&
-                      "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-                  )}
-                >
-                  Customize
-                </Button>
-              </div>
-              <span
-                className="inline-flex h-[36px] w-full items-center justify-center rounded-full border-[3px] border-input px-5 text-sm font-bold text-white"
-                style={{ backgroundColor: color.hex }}
+        <div className="min-w-0 self-start pl-4">
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-black/55">Kích thước:</span>
+            <span className="font-bold">{selectedSizeLabel}</span>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {regularSizes.map((option) => (
+              <button
+                key={option.variant_id}
+                type="button"
+                onClick={() => onSelectSize(option.size_name)}
+                disabled={!option.is_available}
+                aria-pressed={selectedSize === option.size_name}
+                className={cn(
+                  "h-[30px] min-w-[44px] rounded-pill border px-3 text-[11px] font-bold transition-colors",
+                  !option.is_available &&
+                    "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                  selectedSize === option.size_name && option.is_available
+                    ? "border-black bg-black text-white"
+                    : option.is_available &&
+                      "border-black/40 bg-white text-black hover:border-black",
+                )}
               >
-                {color.name}
-              </span>
-            </div>
+                {option.size_name}
+              </button>
+            ))}
+            <Button
+              type="button"
+              onClick={onOpenCustomize}
+              disabled={!hasAvailableVariant}
+              variant="customPill"
+              size="xs"
+              aria-label="Customize"
+              iconSrc="/icons/custom.svg"
+              iconSize={14}
+              iconClassName={cn("h-3.5 w-4 object-contain", customSelected && "invert")}
+              className={cn(
+                "h-[30px] min-w-[30px] gap-0 border px-2",
+                customSelected &&
+                  "border-black bg-black text-white",
+                !hasAvailableVariant &&
+                  "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+              )}
+            />
           </div>
+          <button
+            type="button"
+            onClick={onOpenSizeRecommendation}
+            className="mt-1.5 text-[10px] font-bold text-[#2748d9] underline underline-offset-2"
+          >
+            Hướng dẫn chọn size
+          </button>
         </div>
 
-        <div className="w-px self-stretch bg-black/15" aria-hidden />
+        <div className="min-w-0 self-start border-l border-[#d9d9d9] pl-4">
+          <div className="flex flex-nowrap items-center gap-2 text-[13px] whitespace-nowrap">
+            <span className="whitespace-nowrap text-black/55">Màu sắc:</span>
+          </div>
+          <span
+            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-pill border border-black/10 px-4 text-[11px] font-bold text-white"
+            style={{
+              backgroundColor: color.hex,
+              backgroundImage:
+                "radial-gradient(circle at 18% 50%, rgba(255,255,255,0.18), transparent 18%), radial-gradient(circle at 75% 45%, rgba(255,215,140,0.22), transparent 20%)",
+            }}
+          >
+            <span className="max-w-[120px] truncate">{color.name}</span>
+          </span>
+        </div>
 
-        <div className="flex min-w-[420px] items-center gap-6 pl-7">
-          <QuantityPill
-            value={quantity}
-            max={maxQuantity}
-            onChange={onQuantityChange}
-          />
+        <div className="flex self-start items-start justify-end gap-4 border-l border-[#d9d9d9] pl-5 pt-[22px]">
+          <div className="flex h-[30px] items-center gap-4 rounded-full px-1 text-[20px] leading-none">
+            <button
+              type="button"
+              aria-label="Giảm số lượng"
+              onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
+            >
+              −
+            </button>
+            <span className="min-w-[18px] text-center font-medium">{quantity}</span>
+            <button
+              type="button"
+              aria-label="Tăng số lượng"
+              onClick={() => onQuantityChange(Math.min(maxQuantity, quantity + 1))}
+              disabled={quantity >= maxQuantity}
+              className="disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              +
+            </button>
+          </div>
           <Button
             onClick={onAdd}
             variant="cart"
-            size="cart"
             disabled={addDisabled}
-            className="h-[54px] min-w-[260px] px-7"
+            className="h-[30px] min-w-[150px] self-center rounded-full bg-black px-6 text-[14px] font-bold text-white hover:bg-black/85"
           >
-            <Image
-              src="/icons/cart.svg"
-              alt=""
-              width={24}
-              height={24}
-              aria-hidden
-              className="invert"
-            />
             Thêm vào giỏ
           </Button>
         </div>

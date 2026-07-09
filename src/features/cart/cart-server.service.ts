@@ -74,8 +74,27 @@ type MediaRecord = {
   bucket_name: string | null;
 };
 
+type InventoryAvailabilityRecord = {
+  variant_id: number;
+  total_quantity: number | null;
+};
+
+const NON_PURCHASABLE_VARIANT_STATUSES = new Set(["INACTIVE", "COMING_SOON"]);
+
 function toNumber(value: unknown) {
   return typeof value === "number" ? value : Number(value ?? 0);
+}
+
+export function isVariantPurchasableStatus(status: string | null | undefined) {
+  const normalized = status?.trim().toUpperCase() ?? "";
+  return normalized !== "" && !NON_PURCHASABLE_VARIANT_STATUSES.has(normalized);
+}
+
+export function isVariantAvailable(
+  status: string | null | undefined,
+  stockQuantity: number,
+) {
+  return isVariantPurchasableStatus(status) && stockQuantity > 0;
 }
 
 function mediaUrl(storageKey?: string | null, bucketName?: string | null) {
@@ -243,6 +262,27 @@ async function fetchRecordsByIds<T extends Record<string, unknown>>(
   return (data ?? []) as unknown as T[];
 }
 
+async function fetchVariantAvailability(
+  admin: SupabaseClient,
+  variantIds: number[],
+) {
+  if (!variantIds.length) {
+    return [] as InventoryAvailabilityRecord[];
+  }
+
+  const { data, error } = await admin
+    .schema("catalog")
+    .from("v_inventory_availability")
+    .select("variant_id, total_quantity")
+    .in("variant_id", Array.from(new Set(variantIds)));
+
+  if (error) {
+    throw new Error(`Khong the kiem tra ton kho: ${error.message}`);
+  }
+
+  return (data ?? []) as InventoryAvailabilityRecord[];
+}
+
 export async function getVariantById(variantId: number) {
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -261,20 +301,8 @@ export async function getVariantById(variantId: number) {
 
 export async function getVariantStock(variantId: number) {
   const admin = createAdminClient();
-  const { data, error } = await admin
-    .schema("inventory")
-    .from("inventory")
-    .select("quantity")
-    .eq("variant_id", variantId);
-
-  if (error) {
-    throw new Error(`Khong the kiem tra ton kho: ${error.message}`);
-  }
-
-  return (data ?? []).reduce(
-    (total, row) => total + Math.max(0, Number(row.quantity ?? 0)),
-    0,
-  );
+  const availability = await fetchVariantAvailability(admin, [variantId]);
+  return Math.max(0, Number(availability[0]?.total_quantity ?? 0));
 }
 
 export async function assertCartItemOwnership(cartItemId: number, owner: CartOwner) {
@@ -462,21 +490,13 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
 
       const allVariantIds = allVariants.map((variant) => variant.variant_id);
       if (allVariantIds.length) {
-        const { data: inventoryRows, error: inventoryError } = await admin
-          .schema("inventory")
-          .from("inventory")
-          .select("variant_id, quantity")
-          .in("variant_id", allVariantIds);
+        const inventoryRows = await fetchVariantAvailability(admin, allVariantIds);
 
-        if (inventoryError) {
-          throw new Error(inventoryError.message);
-        }
-
-        for (const row of inventoryRows ?? []) {
+        for (const row of inventoryRows) {
           const variantId = Number(row.variant_id);
           allStockMap.set(
             variantId,
-            (allStockMap.get(variantId) ?? 0) + Math.max(0, Number(row.quantity ?? 0)),
+            Math.max(0, Number(row.total_quantity ?? 0)),
           );
         }
       }
@@ -547,8 +567,10 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
           size_name: sizeName,
           color_name: color,
           price: toNumber(v.price),
-          is_available:
-            v.status === "ACTIVE" && (allStockMap.get(Number(v.variant_id)) ?? 0) > 0,
+          is_available: isVariantAvailable(
+            v.status,
+            allStockMap.get(Number(v.variant_id)) ?? 0,
+          ),
         };
       });
 

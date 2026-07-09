@@ -16,6 +16,8 @@ const MATERIAL_LABEL = "Chất liệu";
 const COLLECTION_LABEL = "Bộ sưu tập";
 const PRICE_LABEL = "Giá";
 
+const SORT_OPTIONS = ["Giá: Thấp đến Cao", "Giá: Cao đến Thấp"];
+
 type PriceBucket = { label: string; min: number; max: number };
 
 function buildPriceBuckets(priceMin: number, priceMax: number): PriceBucket[] {
@@ -52,6 +54,7 @@ export function ProductListingResults({
 
   const filterGroups: ProductFilterGroup[] = useMemo(() => {
     const groups: ProductFilterGroup[] = [];
+
     if (filterOptions.collections.length > 0) {
       groups.push({
         label: COLLECTION_LABEL,
@@ -68,9 +71,13 @@ export function ProductListingResults({
       });
     }
     if (priceBuckets.length > 0) {
+      // Prepend sorting options inside the existing Price group
       groups.push({
         label: PRICE_LABEL,
-        options: priceBuckets.map((bucket) => bucket.label),
+        options: [
+          ...SORT_OPTIONS,
+          ...priceBuckets.map((bucket) => bucket.label),
+        ],
       });
     }
     if (filterOptions.materials.length > 0) {
@@ -82,9 +89,27 @@ export function ProductListingResults({
   function toggleOption(groupLabel: string, option: string) {
     setSelected((current) => {
       const values = current[groupLabel] ?? [];
-      const nextValues = values.includes(option)
-        ? values.filter((value) => value !== option)
-        : [...values, option];
+      let nextValues: string[];
+
+      if (groupLabel === PRICE_LABEL) {
+        if (SORT_OPTIONS.includes(option)) {
+          // Single select behavior for sorting inside the Price group
+          const hasOption = values.includes(option);
+          const cleanValues = values.filter((v) => !SORT_OPTIONS.includes(v));
+          nextValues = hasOption ? cleanValues : [...cleanValues, option];
+        } else {
+          // Multi select behavior for regular price range filters
+          nextValues = values.includes(option)
+            ? values.filter((value) => value !== option)
+            : [...values, option];
+        }
+      } else {
+        // Multi select behavior for other filter groups
+        nextValues = values.includes(option)
+          ? values.filter((value) => value !== option)
+          : [...values, option];
+      }
+
       return { ...current, [groupLabel]: nextValues };
     });
   }
@@ -94,12 +119,17 @@ export function ProductListingResults({
     const colorFilters = selected[COLOR_LABEL] ?? [];
     const materialFilters = selected[MATERIAL_LABEL] ?? [];
     const collectionFilters = selected[COLLECTION_LABEL] ?? [];
-    const priceFilters = selected[PRICE_LABEL] ?? [];
+    const priceGroupFilters = selected[PRICE_LABEL] ?? [];
+
+    // Separate sorting and range filters
+    const activeSort = priceGroupFilters.find((v) => SORT_OPTIONS.includes(v));
+    const rangeFilters = priceGroupFilters.filter((v) => !SORT_OPTIONS.includes(v));
+
     const selectedBuckets = priceBuckets.filter((bucket) =>
-      priceFilters.includes(bucket.label),
+      rangeFilters.includes(bucket.label),
     );
 
-    return products.filter((product) => {
+    const filtered = products.filter((product) => {
       if (
         sizeFilters.length > 0 &&
         !product.sizes.some((size) => sizeFilters.includes(size))
@@ -134,6 +164,15 @@ export function ProductListingResults({
       }
       return true;
     });
+
+    // Sort by price if requested
+    if (activeSort === "Giá: Thấp đến Cao") {
+      filtered.sort((a, b) => a.price - b.price);
+    } else if (activeSort === "Giá: Cao đến Thấp") {
+      filtered.sort((a, b) => b.price - a.price);
+    }
+
+    return filtered;
   }, [products, selected, priceBuckets]);
 
   return (

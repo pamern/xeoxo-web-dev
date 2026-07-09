@@ -541,12 +541,12 @@
 
 - customization_id (INT, PK, NOT NULL): Mã yêu cầu customize
 - customer_id (BIGINT, FK, NULL): Mã khách hàng
-- product_line_id (INT, FK, NOT NULL): Mã dòng sản phẩm cần customize
-- measurement_profile_id (INT, FK, NULL): Hồ sơ số đo sử dụng
+- component_id (INT, FK, NOT NULL): Mã component sản phẩm cần customize
 - unit_price (NUMERIC(14,2), NOT NULL): Giá gốc sản phẩm
 - surcharge_percent (NUMERIC(5,2), NOT NULL): Tỷ lệ phụ phí
 - surcharge_amount (NUMERIC(14,2), NOT NULL): Số tiền phụ phí
 - custom_price (NUMERIC(14,2), NOT NULL): Giá sau khi cộng phụ phí
+- measurement_snapshot (JSONB, NULL): Snapshot số đo tại thời điểm tạo request
 - customization_status (VARCHAR(30), NOT NULL): Trạng thái customize
 - customer_note (TEXT, NULL): Ghi chú yêu cầu của khách
 - staff_note (TEXT, NULL): Ghi chú xử lý của nhân viên
@@ -555,12 +555,17 @@
 
 **Ghi chú / Enum:**
 - customization_status = {REQUESTED, MEASUREMENT_PENDING, MEASURED, CONFIRMED, IN_PROGRESS, COMPLETED, CANCELLED}
+- `customization_request` gắn với `component_id`, không gắn với `product_line_id`.
+- `measurement_snapshot` là nguồn dữ liệu bất biến và là source of truth cho request tại thời điểm tạo.
+- `customization_request` không nên phụ thuộc vào `measurement_profile` hoặc `measurement_profile_detail` để đọc lại dữ liệu giao dịch.
+- Nếu member chọn lưu số đo mặc định, hệ thống có thể cập nhật `measurement_profile` như một side effect độc lập; việc đó không làm thay đổi request đã tạo.
+- Khi item được thêm vào giỏ hoặc tạo đơn, snapshot này nên tiếp tục được copy sang `sales.cart_item` và `sales.order_item`.
 
 ## MEASUREMENT_APPOINTMENT
 
 - appointment_id (SERIAL, PK, NOT NULL): Mã lịch hẹn
-- customization_id (INT, FK, NOT NULL): Mã yêu cầu customize
 - customer_id (BIGINT, FK, NULL): Mã khách hàng
+- product_line_id (INT, FK, NULL): Dòng sản phẩm khách đang quan tâm khi đặt lịch đo
 - branch_id (INT, FK, NOT NULL): Mã chi nhánh hẹn đo
 - staff_id (INT, FK, NULL): Nhân viên phụ trách
 - appointment_date (DATE, NOT NULL): Ngày hẹn
@@ -575,6 +580,8 @@
 **Ghi chú / Enum:**
 - appointment_status = {PENDING, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW}
 - Đối với start_time và end_time, mặc định diff là 30 phút. Ví dụ UI chọn 8:00 - 8:30 thì hệ thống tách start_time = 8:00 và end_time = 8:30.
+- `measurement_appointment` là nghiệp vụ lịch đo độc lập, khách có thể đặt lịch đo trước khi phát sinh `customization_request`.
+- `product_line_id` chỉ phản ánh sản phẩm khách đang quan tâm tại thời điểm đặt lịch, không đồng nghĩa đã tạo `customization_request`.
 
 ## MEASUREMENT_PROFILE
 
@@ -590,8 +597,12 @@
 - updated_at (TIMESTAMPTZ, NULL): Thời gian cập nhật
 
 **Ghi chú / Enum:**
-- Dùng để lưu dữ liệu số đo cá nhân cho 2 trường hợp: khách hàng nhập số đo để hệ thống gợi ý size và khách hàng đặt lịch may đo cá nhân.
+- Dùng để lưu dữ liệu số đo cá nhân cho 2 trường hợp: khách hàng nhập số đo để hệ thống gợi ý size và khách hàng lưu hồ sơ số đo mặc định.
 - profile_type = {SIZE_RECOMMENDATION, CUSTOMER_MEASUREMENT}
+- `measurement_profile` là hồ sơ số đo cá nhân hiện hành của khách, phục vụ quản lý tài khoản, gợi ý size và làm nguồn prefill cho request mới.
+- Không nên dùng `measurement_profile` làm nguồn động để hiển thị lại số đo của giao dịch cũ.
+- Khi khách nhập/chỉnh sửa số đo, hệ thống có thể cập nhật trực tiếp hồ sơ đang active; dữ liệu giao dịch vẫn được giữ ở snapshot của `customization_request`.
+- Mỗi customer chỉ nên có tối đa một profile đang `is_active = true`.
 
 ## MEASUREMENT_PROFILE_DETAIL
 

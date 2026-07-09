@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useState, KeyboardEvent, MouseEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { QuantityStepper } from "@/components/molecules/QuantityStepper";
-import { CustomizeModal } from "@/components/organisms/CustomizeModal";
-import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
-import { createCustomizationRequest } from "@/services/customization.service";
 import { ROUTES } from "@/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import type { CartItemDto } from "@/types/cart.types";
-import type { MeasurementValues } from "@/features/size-recommendation/size-recommendation";
 
 function VariantSelect({
   value,
@@ -47,108 +43,6 @@ function VariantSelect({
   );
 }
 
-function CustomSizeSelect({
-  value,
-  options,
-  isCustomized,
-  onChange,
-  onCustomizeClick,
-}: {
-  value: string;
-  options: string[];
-  isCustomized: boolean;
-  onChange: (value: string) => void;
-  onCustomizeClick: () => void;
-}) {
-  const [isOpen, setIsOpen] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleClose = () => setIsOpen(false);
-    window.addEventListener("click", handleClose);
-    return () => window.removeEventListener("click", handleClose);
-  }, [isOpen]);
-
-  const toggleOpen = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setIsOpen(!isOpen);
-  };
-
-  return (
-    <div className="relative inline-block text-left">
-      <button
-        type="button"
-        onClick={toggleOpen}
-        className="relative flex h-[38px] min-w-[80px] items-center justify-center rounded-pill border border-black bg-white px-7 text-body-sm font-medium text-black outline-none transition focus:ring-2 focus:ring-black/15"
-      >
-        {isCustomized ? (
-          <span className="flex items-center justify-center">
-            <img src="/icons/custom.svg" alt="Customize" className="h-5 w-6 object-contain" />
-          </span>
-        ) : (
-          <span className="text-center">{value}</span>
-        )}
-        <span
-          aria-hidden
-          className="pointer-events-none absolute right-3 top-1/2 h-1.5 w-1.5 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-black"
-        />
-      </button>
-
-      {isOpen && (
-        <div className="absolute left-1/2 z-50 mt-1 min-w-[80px] -translate-x-1/2 rounded-[8px] border border-black bg-white py-1 shadow-lg">
-          {options.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => {
-                onChange(option);
-                setIsOpen(false);
-              }}
-              className="flex w-full items-center justify-center px-4 py-2 text-center text-body-sm hover:bg-black/[0.05]"
-            >
-              {option}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => {
-              onCustomizeClick();
-              setIsOpen(false);
-            }}
-            className="flex w-full items-center justify-center px-4 py-2 hover:bg-[#fff4ee]"
-          >
-            <img src="/icons/custom.svg" alt="Customize" className="h-5 w-6 object-contain" />
-          </button>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const SIZE_ORDER: Record<string, number> = {
-  "XXS": 1,
-  "XS": 2,
-  "S": 3,
-  "M": 4,
-  "L": 5,
-  "XL": 6,
-  "XXL": 7,
-  "XXXL": 8,
-  "2XL": 7,
-  "3XL": 8,
-  "FREESIZE": 9,
-  "FREE SIZE": 9,
-  "FREE": 9,
-  "OS": 9,
-};
-
-function sortSizes(sizes: string[]): string[] {
-  return [...sizes].sort((a, b) => {
-    const orderA = SIZE_ORDER[a.trim().toUpperCase()] || 99;
-    const orderB = SIZE_ORDER[b.trim().toUpperCase()] || 99;
-    return orderA - orderB;
-  });
-}
 
 const MEASUREMENT_LABELS: Record<string, string> = {
   height: "Chiều cao",
@@ -174,58 +68,31 @@ export function CartItem({
   selected?: boolean;
   onSelectedChange?: (checked: boolean) => void;
   onQuantityChange: (quantity: number) => void;
-  onVariantChange: (next: { variant_id: number | null; item_type?: "STANDARD" | "CUSTOMIZED"; customization_id?: number | null }) => void;
+  onVariantChange: (next: { variant_id: number }) => void;
   onRemove: () => void;
 }) {
   const router = useRouter();
   const productHref = ROUTES.PRODUCT(item.slug);
-  const [productDetail, setProductDetail] = useState<any>(null);
-  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
-
-  useEffect(() => {
-    fetch(`/api/v1/product-lines/${item.slug}`)
-      .then((res) => res.json())
-      .then((res) => {
-        if (res.success && res.data) {
-          setProductDetail(res.data);
-        }
-      })
-      .catch(() => {});
-  }, [item.slug]);
-
-  const gender = productDetail?.gender || (item.name.toLowerCase().includes("nam") ? "nam" : "nu");
-  const { values: sharedMeasurementValues } = useSharedMeasurements(gender);
-
   const av = item.available_variants || [];
   const colorOptions = av.length
     ? Array.from(new Set(av.map((v) => v.color_name)))
     : [item.color].filter(Boolean);
 
-  const baseSizeOptions = sortSizes(
-    av.length
-      ? Array.from(new Set(av.map((v) => v.size_name)))
-      : [item.size].filter(Boolean)
-  );
+  const sizeOptions = av.length
+    ? Array.from(new Set(av.map((v) => v.size_name)))
+    : [item.size].filter(Boolean);
 
   const handleSizeChange = (newSize: string) => {
     const found = av.find((v) => v.size_name === newSize && v.color_name === item.color);
     if (found) {
-      onVariantChange({
-        variant_id: found.variant_id,
-        item_type: "STANDARD",
-        customization_id: null,
-      });
+      onVariantChange({ variant_id: found.variant_id });
     }
   };
 
   const handleColorChange = (newColor: string) => {
     const found = av.find((v) => v.color_name === newColor && v.size_name === item.size);
     if (found) {
-      onVariantChange({
-        variant_id: found.variant_id,
-        item_type: isCustomized ? "CUSTOMIZED" : "STANDARD",
-        customization_id: item.customization_id,
-      });
+      onVariantChange({ variant_id: found.variant_id });
     }
   };
 
@@ -253,42 +120,6 @@ export function CartItem({
   const measurements = (snapshot as any)?.measurements || {};
   const note = (snapshot as any)?.note;
 
-  function parseMeasurementValues(values: MeasurementValues) {
-    const parsedMeasurements: Record<string, number> = {};
-    for (const [key, value] of Object.entries(values)) {
-      const num = parseFloat(value);
-      if (!Number.isNaN(num)) parsedMeasurements[key] = num;
-    }
-    return parsedMeasurements;
-  }
-
-  const handleCustomizeSubmit = async (values: MeasurementValues, note: string, saveAsDefault: boolean) => {
-    try {
-      const componentId = productDetail?.components?.[0]?.component_id;
-      if (!componentId) return;
-
-      const request = await createCustomizationRequest({
-        component_id: componentId,
-        measurements: parseMeasurementValues(values),
-        customer_note: note,
-        save_as_default: saveAsDefault,
-      });
-
-      onVariantChange({
-        variant_id: null,
-        item_type: "CUSTOMIZED",
-        customization_id: request.customization_id,
-      });
-      setIsCustomizeOpen(false);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const firstComponent = productDetail?.components?.[0];
-  const componentType = firstComponent?.component_type || "AO";
-  const basePrice = firstComponent?.min_price || item.unit_price;
-
   return (
     <article
       role="link"
@@ -296,7 +127,7 @@ export function CartItem({
       aria-label={`Xem chi tiết ${item.name}`}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="grid cursor-pointer grid-cols-[24px_110px_1fr] items-center gap-3 border-b border-black/50 py-5 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-4"
+      className="grid cursor-pointer grid-cols-[24px_minmax(92px,134px)_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-5 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
     >
       <label className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
         <input
@@ -313,13 +144,13 @@ export function CartItem({
         <Link
           href={productHref}
           aria-label={`Xem chi tiết ${item.name}`}
-          className="group relative h-[140px] w-[110px] overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4"
+          className="group relative h-[150px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[180px]"
         >
           <Image
             src={item.thumbnail || "/images/placeholder.png"}
             alt={item.name}
             fill
-            sizes="110px"
+            sizes="(min-width: 1024px) 134px, 28vw"
             className="object-cover transition duration-300 group-hover:scale-105"
           />
         </Link>
@@ -341,28 +172,29 @@ export function CartItem({
           {item.name}
         </Link>
 
-        <div className="flex flex-row items-center justify-between w-full gap-2 flex-nowrap">
-          <div className="flex flex-row items-center gap-2 flex-wrap sm:flex-nowrap">
-            <VariantSelect
-              value={item.color}
-              options={colorOptions}
-              ariaLabel={`Màu của ${item.name}`}
-              onChange={handleColorChange}
-            />
-            <CustomSizeSelect
-              value={item.size}
-              options={baseSizeOptions}
-              isCustomized={isCustomized}
-              onChange={handleSizeChange}
-              onCustomizeClick={() => setIsCustomizeOpen(true)}
-            />
-            <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
-          </div>
-          <div className="ml-auto flex h-[38px] items-center">
-            <span className="shrink-0 text-right text-base font-bold uppercase text-black sm:text-lg">
-              {formatPrice(item.line_total)}
+        <div className="flex flex-wrap items-center gap-3">
+          <VariantSelect
+            value={item.color}
+            options={colorOptions}
+            ariaLabel={`Màu của ${item.name}`}
+            onChange={handleColorChange}
+          />
+          {isCustomized ? (
+            <span className="inline-flex h-[38px] items-center rounded-pill border border-[#f15a42] bg-[#fff4ee] px-4 text-body-sm font-bold text-[#f15a42]">
+              Customize
             </span>
-          </div>
+          ) : (
+            <VariantSelect
+              value={item.size}
+              options={sizeOptions}
+              ariaLabel={`Kích cỡ của ${item.name}`}
+              onChange={handleSizeChange}
+            />
+          )}
+          <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
+          <span className="ml-auto text-right text-base font-bold uppercase text-black sm:text-lg">
+            {formatPrice(item.line_total)}
+          </span>
         </div>
 
         {isCustomized && (
@@ -389,21 +221,6 @@ export function CartItem({
           </div>
         )}
       </div>
-
-      {isCustomizeOpen && (
-        <CustomizeModal
-          gender={gender}
-          componentType={componentType}
-          initialValues={measurements || sharedMeasurementValues}
-          canPersistMeasurements={false}
-          hasPersistedMeasurements={false}
-          basePrice={basePrice}
-          onClose={() => setIsCustomizeOpen(false)}
-          onClearMeasurements={() => {}}
-          onValuesChange={() => {}}
-          onSubmit={handleCustomizeSubmit}
-        />
-      )}
     </article>
   );
 }

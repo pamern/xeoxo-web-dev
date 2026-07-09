@@ -12,6 +12,7 @@ import {
   getCurrentCustomerId,
   getVariantById,
   getVariantStock,
+  isVariantPurchasableStatus,
 } from "@/features/cart/cart-server.service";
 
 type AddressRecord = {
@@ -116,7 +117,7 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
         getVariantStock(variantId),
       ]);
 
-      if (!variant || variant.status !== "ACTIVE") {
+      if (!variant || !isVariantPurchasableStatus(variant.status)) {
         throw new Error(`${item.name} khong con kha dung.`);
       }
 
@@ -365,6 +366,32 @@ export async function getActivePaymentMethod(methodId: unknown) {
   return data as PaymentMethodRecord;
 }
 
+async function attachGuestCartToCustomer(
+  cartId: number,
+  customerId: number,
+  currentCustomerId: number | null,
+) {
+  if (currentCustomerId) {
+    return;
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .schema("sales")
+    .from("cart")
+    .update({
+      customer_id: customerId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("cart_id", cartId)
+    .is("customer_id", null)
+    .eq("cart_status", "ACTIVE");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function createCheckoutOrder(values: CreateOrderValues) {
   const customerNote = values.customer_note?.trim();
   if (customerNote && customerNote.length > 200) {
@@ -384,6 +411,12 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
   if (!prepared.cart.cart_id) {
     throw new Error("Gio hang khong ton tai.");
   }
+
+  await attachGuestCartToCustomer(
+    prepared.cart.cart_id,
+    customerId,
+    currentCustomerId,
+  );
 
   const { data, error } = await admin.schema("sales").rpc("checkout_order", {
     p_cart_id: prepared.cart.cart_id,

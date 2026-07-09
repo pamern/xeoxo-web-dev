@@ -23,22 +23,7 @@ export default function PersonalColorPage() {
         />
       </section>
 
-      <section className="relative mt-4 flex h-[260px] items-center justify-center overflow-hidden md:h-[320px]">
-        <Image
-          src="/images/homepage_personal_color.png"
-          alt="Find your personal color"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div className="absolute inset-0 bg-black/25" aria-hidden />
-        <h1 className="text-shadow relative px-6 text-center font-serif text-4xl italic text-white md:text-6xl">
-          Find your personal color
-        </h1>
-      </section>
-
-      <div className="flex justify-center">
+      <div className="w-full flex justify-center">
         <PersonalColorQuiz />
       </div>
     </SiteLayout>

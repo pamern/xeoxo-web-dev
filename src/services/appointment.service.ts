@@ -1,5 +1,42 @@
-import type { CreateAppointmentValues, AppointmentDto } from "@/types/appointment.types";
-import type { ApiResponse } from "@/lib/api-response";
+import { API } from "@/constants/routes";
+import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
+import type {
+  AppointmentLookupDto,
+  AppointmentLookupValues,
+} from "@/types/appointment-lookup.types";
+import type { AppointmentDto, CreateAppointmentValues } from "@/types/appointment.types";
+import type { ApiResponse as RouteApiResponse } from "@/lib/api-response";
+
+async function readApi<T>(response: Response, fallback: string) {
+  const payload = (await response.json()) as ApiResponse<T>;
+
+  if (!response.ok || !payload.success || payload.data === undefined) {
+    throw new Error(getApiErrorMessage(payload, fallback));
+  }
+
+  return payload.data;
+}
+
+export const appointmentService = {
+  async lookupAppointment(values: AppointmentLookupValues) {
+    const query = new URLSearchParams({
+      appointment_id: values.appointment_id,
+      contact: values.contact,
+    });
+
+    const response = await fetch(
+      `${API.APPOINTMENT_LOOKUP}?${query.toString()}`,
+      {
+        credentials: "include",
+      },
+    );
+
+    return readApi<AppointmentLookupDto>(
+      response,
+      "Không thể tra cứu lịch hẹn.",
+    );
+  },
+};
 
 export async function createAppointment(values: CreateAppointmentValues): Promise<AppointmentDto> {
   const response = await fetch("/api/v1/measurement-appointments", {
@@ -10,7 +47,7 @@ export async function createAppointment(values: CreateAppointmentValues): Promis
     body: JSON.stringify(values),
   });
 
-  const result = (await response.json()) as ApiResponse<AppointmentDto>;
+  const result = (await response.json()) as RouteApiResponse<AppointmentDto>;
   if (!result.success) {
     throw new Error(result.message);
   }

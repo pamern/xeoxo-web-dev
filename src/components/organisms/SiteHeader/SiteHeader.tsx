@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -16,7 +16,6 @@ import type { CategoryNavItem } from "@/features/homepage/homepage.service";
 import type { LatestCollectionHighlight } from "@/types/collection-highlight.types";
 
 type AuthMode = "login" | "register";
-type AccountMenuAnchor = "utility" | "main" | null;
 type UtilityLink = {
   label: string;
   href?: string;
@@ -64,9 +63,8 @@ export function SiteHeader({
   const auth = useAuth();
   const latestCollectionHighlight = useLatestCollectionHighlight();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [accountMenuAnchor, setAccountMenuAnchor] =
-    useState<AccountMenuAnchor>(null);
   const [accountSidebarOpen, setAccountSidebarOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<AuthMode | null>(null);
   const { openDrawer: openCartDrawer } = useCartDrawer();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const CATEGORY_MENU_BY_HREF: Record<string, CategoryNavItem[]> = {
@@ -78,29 +76,13 @@ export function SiteHeader({
     NỮ: womenCategories,
     NAM: menCategories,
   };
-  const utilityAccountMenuRef = useRef<HTMLDivElement>(null);
-  const mainAccountMenuRef = useRef<HTMLDivElement>(null);
   const authMode = searchParams.get("auth");
   const activeAuthMode =
     authMode === "login" || authMode === "register" ? authMode : null;
 
   useEffect(() => {
-    function handlePointerDown(event: MouseEvent) {
-      if (
-        event.target instanceof Node &&
-        !utilityAccountMenuRef.current?.contains(event.target) &&
-        !mainAccountMenuRef.current?.contains(event.target)
-      ) {
-        setAccountMenuAnchor(null);
-      }
-    }
-
-    window.addEventListener("mousedown", handlePointerDown);
-
-    return () => {
-      window.removeEventListener("mousedown", handlePointerDown);
-    };
-  }, []);
+    setModalMode(activeAuthMode);
+  }, [activeAuthMode]);
 
   useEffect(() => {
     if (!accountSidebarOpen) {
@@ -143,13 +125,9 @@ export function SiteHeader({
 
   function openAuthModal(mode: AuthMode) {
     setMobileOpen(false);
-    setAccountMenuAnchor(null);
     setAccountSidebarOpen(false);
+    setModalMode(mode);
     updateAuthQuery(mode);
-  }
-
-  function toggleAccountMenu(anchor: Exclude<AccountMenuAnchor, null>) {
-    setAccountMenuAnchor((current) => (current === anchor ? null : anchor));
   }
 
   const utilityRightLinks: UtilityLink[] = auth.isAuthenticated
@@ -177,7 +155,6 @@ export function SiteHeader({
   const latestProductImageAlt =
     latestCollectionHighlight?.productImageAlt ||
     "Sản phẩm trong bộ sưu tập mới nhất";
-  const isProductDetailPage = pathname.startsWith("/products/");
 
   const accountLabel =
     auth.customer?.customer_name?.trim() ||
@@ -189,7 +166,6 @@ export function SiteHeader({
   );
 
   function openAccountSidebar() {
-    setAccountMenuAnchor(null);
     setAccountSidebarOpen(true);
   }
 
@@ -210,7 +186,7 @@ export function SiteHeader({
               {hasAccountMenu && (
                 <>
                   <span aria-hidden className="h-[22px] w-px bg-white/60" />
-                  <div ref={utilityAccountMenuRef} className="relative">
+                  <div className="relative">
                     <button
                       type="button"
                       onClick={openAccountSidebar}
@@ -361,7 +337,7 @@ export function SiteHeader({
                   aria-hidden
                 />
               </label>
-              <div ref={mainAccountMenuRef} className="relative">
+              <div className="relative">
                 <button
                   type="button"
                   aria-label={
@@ -370,7 +346,7 @@ export function SiteHeader({
                   onClick={() =>
                     hasAccountMenu
                       ? openAccountSidebar()
-                      : toggleAccountMenu("main")
+                      : openAuthModal("login")
                   }
                   className="transition-opacity hover:opacity-70"
                 >
@@ -383,24 +359,10 @@ export function SiteHeader({
                   />
                 </button>
 
-                {!hasAccountMenu && accountMenuAnchor === "main" && (
-                  <div className="absolute right-0 top-[calc(100%+12px)] z-[90] min-w-[220px] rounded-[18px] bg-background p-2 text-foreground shadow-[0_16px_40px_rgba(0,0,0,0.22)]">
-                    <GuestDropdownMenu
-                      onClose={() => setAccountMenuAnchor(null)}
-                      onOpenLogin={() => openAuthModal("login")}
-                    />
-                  </div>
-                )}
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  if (isProductDetailPage) {
-                    router.push(ROUTES.CART);
-                    return;
-                  }
-                  openCartDrawer();
-                }}
+                onClick={openCartDrawer}
                 aria-label="Giỏ hàng"
                 className="relative"
               >
@@ -480,10 +442,13 @@ export function SiteHeader({
         )}
       </header>
 
-      {activeAuthMode && (
+      {modalMode && (
         <AuthModal
-          mode={activeAuthMode}
-          onClose={() => updateAuthQuery(null)}
+          mode={modalMode}
+          onClose={() => {
+            setModalMode(null);
+            updateAuthQuery(null);
+          }}
           onModeChange={openAuthModal}
         />
       )}
@@ -564,7 +529,7 @@ function AccountSidebar({
   const sidebarLinks: Array<{ label: string; href?: string }> = [
     { label: "Hồ sơ thông tin", href: ROUTES.ACCOUNT_PROFILE },
     { label: "Lịch sử đơn hàng", href: ROUTES.ACCOUNT_ORDERS },
-    { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
+    { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
     { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
     { label: "Đánh giá và phản hồi" },
     { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
@@ -641,7 +606,7 @@ function AccountSidebar({
                 </>
               }
               actionLabel="Khám phá"
-              actionClassName="min-h-[52px] min-w-[176px] border-white/90 bg-black/20 text-[20px] font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-[10px]"
+              actionClassName="min-h-[58px] min-w-[196px] border-white/90 bg-black/20 px-6 text-[20px] font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-[10px] transition-colors hover:bg-black hover:text-white"
               onClick={onClose}
             />
 
@@ -667,14 +632,14 @@ function AccountSidebar({
                   <Link
                     href={ROUTES.MEMBERSHIP}
                     onClick={onClose}
-                    className="flex min-h-[58px] items-center justify-center rounded-full border border-white/80 bg-[#9dbf88] px-6 text-[20px] font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-transform hover:scale-[0.99]"
+                    className="flex min-h-[58px] w-full items-center justify-center rounded-full border border-white/80 bg-[url('/images/bg-tham-gia-sidebar-account-btn.png')] bg-cover bg-center bg-no-repeat px-6 text-center text-[20px] font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hover:scale-[0.99] hover:opacity-85"
                   >
                     Tham gia
                   </Link>
                   <Link
                     href={ROUTES.BENEFITS}
                     onClick={onClose}
-                    className="flex min-h-[58px] items-center justify-center rounded-full border border-white/80 bg-transparent px-6 text-[20px] font-medium text-white transition-colors hover:bg-white/10 whitespace-nowrap"
+                    className="flex min-h-[58px] w-full items-center justify-center whitespace-nowrap rounded-full border border-white/80 bg-transparent px-6 text-center text-[20px] font-medium text-white transition-colors hover:bg-black hover:text-white"
                   >
                     Tìm hiểu thêm
                   </Link>
@@ -699,10 +664,10 @@ function AccountSidebar({
           </nav>
         </div>
 
-        <div className="bg-black px-[30px] py-10">
+        <div className="bg-black px-[30px] py-7 md:py-8">
           <Link
             href={ROUTES.ACCOUNT_PROFILE}
-            className="flex items-center justify-center text-center text-[44px] font-bold leading-none text-white"
+            className="flex items-center justify-center text-center text-[34px] font-bold leading-none text-white md:text-[38px]"
             onClick={onClose}
           >
             Đến Hồ sơ
@@ -805,7 +770,7 @@ function SidebarPillAction({
   onClick?: () => void;
 }) {
   const actionClassName =
-    "flex min-h-[56px] items-center justify-start rounded-full border border-black bg-white px-8 text-left text-[18px] font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-transform hover:scale-[0.995]";
+    "flex min-h-[56px] w-full items-center justify-start rounded-full border border-black bg-white px-8 text-left text-[18px] font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white";
 
   if (href) {
     return (
@@ -818,7 +783,7 @@ function SidebarPillAction({
   return <div className={cn(actionClassName, "cursor-default")}>{label}</div>;
 }
 
-function GuestDropdownMenu({
+/* function GuestDropdownMenu({
   onClose,
   onOpenLogin,
 }: {
@@ -857,7 +822,7 @@ function GuestDropdownMenu({
       </Link>
     </>
   );
-}
+} */
 
 function MenuIcon({ open }: { open: boolean }) {
   return (

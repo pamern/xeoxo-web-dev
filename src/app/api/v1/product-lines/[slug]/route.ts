@@ -1,5 +1,6 @@
 import { fail, ok } from "@/lib/api-response";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isVariantAvailable } from "@/features/cart/cart-server.service";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,11 @@ type SizeOption = {
   price: number;
   is_available: boolean;
   stock_quantity: number;
+};
+
+type InventoryAvailabilityRow = {
+  variant_id: number;
+  total_quantity: number | null;
 };
 
 // Một product_line có thể có nhiều product_component (vd: set Áo + Quần),
@@ -261,9 +267,9 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
 
     const inventoryResult = variants.length
       ? await admin
-          .schema("inventory")
-          .from("inventory")
-          .select("variant_id, quantity")
+          .schema("catalog")
+          .from("v_inventory_availability")
+          .select("variant_id, total_quantity")
           .in(
             "variant_id",
             variants.map((variant) => variant.variant_id),
@@ -273,7 +279,8 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     if (inventoryResult.error) {
       throw new Error(`Khong the kiem tra ton kho: ${inventoryResult.error.message}`);
     }
-    const safeInventoryRows = inventoryResult.data ?? [];
+    const safeInventoryRows =
+      (inventoryResult.data as InventoryAvailabilityRow[] | null) ?? [];
 
     const sizeMap = new Map(
       (sizesResult.data ?? []).map((size) => [
@@ -284,7 +291,10 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     const stockMap = new Map<number, number>();
     for (const row of safeInventoryRows) {
       const variantId = Number(row.variant_id);
-      stockMap.set(variantId, (stockMap.get(variantId) ?? 0) + Number(row.quantity));
+      stockMap.set(
+        variantId,
+        (stockMap.get(variantId) ?? 0) + Math.max(0, Number(row.total_quantity ?? 0)),
+      );
     }
 
     const displayReviews = safeReviewsResult.data ?? [];
@@ -394,8 +404,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
                 ? sizeMap.get(Number(variant.size_option_id)) ?? ""
                 : "",
               price: toNumber(variant.price),
-              is_available:
-                variant.status === "ACTIVE" && stockQuantity > 0,
+              is_available: isVariantAvailable(variant.status, stockQuantity),
               stock_quantity: stockQuantity,
             };
           }),

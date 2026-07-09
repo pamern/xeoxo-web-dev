@@ -40,15 +40,22 @@ export function PersonalColorQuiz() {
     setAnswers(QUIZ_QUESTIONS.map(() => null));
   }
 
-  if (!started) {
-    return <PersonalColorIntro onStart={() => setStarted(true)} />;
-  }
-
   if (finished) {
     const result = computeQuizResult(
       answers.filter((answer): answer is QuizAnswer => answer !== null),
     );
-    return <PersonalColorResult result={result} onRestart={resetQuiz} />;
+    return (
+      <PersonalColorResult
+        result={result}
+        onRestart={() => {
+          setStarted(true);
+          setFinished(false);
+          setCurrentIndex(0);
+          setAnswers(QUIZ_QUESTIONS.map(() => null));
+        }}
+        onGoHome={resetQuiz}
+      />
+    );
   }
 
   const currentQuestion = QUIZ_QUESTIONS[currentIndex];
@@ -77,82 +84,99 @@ export function PersonalColorQuiz() {
   }
 
   return (
-    <section className="mx-auto w-full max-w-[650px] px-6 py-10 xl:px-0">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-2xl font-extrabold">
-          Câu {currentQuestion.number}.
-        </h2>
-        <button
-          type="button"
-          onClick={resetQuiz}
-          className="text-body-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
-        >
-          Về trang giới thiệu
-        </button>
-      </div>
-      <p className="mt-3 text-lg text-muted-foreground">
-        {currentQuestion.text}
-      </p>
+    <div className="w-full flex flex-col items-center">
+      {/* Banner image shown only when playing the quiz */}
+      <section className="mx-auto mt-4 w-[calc(100%-3rem)] max-w-[1728px] bg-white">
+        <Image
+          src="/images/homepage_personal_color.png"
+          alt="Find your personal color"
+          width={1728}
+          height={615}
+          priority
+          sizes="(max-width: 1776px) calc(100vw - 3rem), 1728px"
+          className="h-auto w-full"
+        />
+      </section>
 
-      <div className="mt-8 flex flex-col gap-6">
-        {currentQuestion.options.map((option) => (
-          <button
-            key={option.key}
-            type="button"
-            onClick={() => handleSelect(option.tag)}
-            className={
-              "group flex h-[140px] overflow-hidden rounded-md border text-left shadow-sm transition-shadow hover:shadow-md " +
-              (currentAnswer?.tag === option.tag
-                ? "border-primary ring-1 ring-primary"
-                : "border-black/10")
-            }
-          >
-            <div className="flex flex-1 flex-col justify-center gap-2 px-8">
-              <span className="text-xl font-extrabold">{option.key}.</span>
-              <span className="text-lg font-medium">{option.text}</span>
-            </div>
-            <div className="relative w-[220px] shrink-0">
-              <Image
-                src={option.image}
-                alt={option.text}
-                fill
-                sizes="220px"
-                className="object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-        <div>
-          {currentIndex > 0 && (
+      {!started ? (
+        <PersonalColorIntro onStart={() => setStarted(true)} />
+      ) : (
+        <section className="mx-auto w-full max-w-[650px] px-6 py-10 xl:px-0">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-2xl font-extrabold">
+              Câu {currentQuestion.number}.
+            </h2>
             <button
               type="button"
-              onClick={() => goToQuestion(currentIndex - 1)}
-              className="rounded-pill border border-black/20 px-6 py-2.5 text-body-sm font-medium transition-colors hover:bg-secondary"
+              onClick={resetQuiz}
+              className="text-body-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
             >
-              &larr; Câu trước
+              Về trang giới thiệu
             </button>
-          )}
-        </div>
+          </div>
+          <p className="mt-3 text-lg text-muted-foreground">
+            {currentQuestion.text}
+          </p>
 
-        <div className="flex items-center gap-2" aria-hidden>
-          {QUIZ_QUESTIONS.map((question, index) => (
-            <span
-              key={question.number}
-              className={
-                index === currentIndex
-                  ? "h-2.5 w-2.5 rounded-full bg-foreground"
-                  : "h-2.5 w-2.5 rounded-full border border-foreground/40"
-              }
-            />
-          ))}
-        </div>
+          <div className="mt-8 flex flex-col gap-6">
+            {currentQuestion.options.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => handleSelect(option.tag)}
+                className={
+                  "group relative flex h-[150px] overflow-hidden rounded-sm border text-left shadow-md transition-shadow hover:shadow-lg " +
+                  (currentAnswer?.tag === option.tag
+                    ? "border-primary ring-1 ring-primary"
+                    : "border-black/10")
+                }
+              >
+                <Image
+                  src={option.image}
+                  alt=""
+                  fill
+                  sizes="(max-width: 768px) 100vw, 650px"
+                  className="object-cover"
+                />
+                <div className="relative z-10 flex w-[58%] flex-col justify-center gap-2 px-8 sm:px-10">
+                  <span className="text-xl font-extrabold">{option.key}.</span>
+                  <span className="text-lg font-medium">{option.text}</span>
+                </div>
+              </button>
+            ))}
+          </div>
 
-        <div />
-      </div>
-    </section>
+          <div className="mt-8 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+            <div>
+              {currentIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={() => goToQuestion(currentIndex - 1)}
+                  className="rounded-pill border border-black/20 px-6 py-2.5 text-body-sm font-medium transition-colors hover:bg-secondary"
+                >
+                  &larr; Câu trước
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2" aria-hidden>
+              {QUIZ_QUESTIONS.map((question, index) => (
+                <span
+                  key={question.number}
+                  className={
+                    index === currentIndex
+                      ? "h-2.5 w-2.5 rounded-full bg-foreground"
+                      : "h-2.5 w-2.5 rounded-full border border-foreground/40"
+                  }
+                />
+              ))}
+            </div>
+
+            <div />
+          </div>
+        </section>
+      )}
+    </div>
   );
 }
 
@@ -263,9 +287,11 @@ function PersonalColorIntro({ onStart }: { onStart: () => void }) {
 function PersonalColorResult({
   result,
   onRestart,
+  onGoHome,
 }: {
   result: QuizResult;
   onRestart: () => void;
+  onGoHome: () => void;
 }) {
   const [data, setData] = useState<PersonalColorResultData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -327,76 +353,180 @@ function PersonalColorResult({
   }, [result]);
 
   return (
-    <section className="mx-auto w-full max-w-site px-6 py-12 xl:px-[100px]">
-      <h1 className="text-center text-3xl font-extrabold uppercase leading-tight md:text-4xl">
-        Personal color của bạn là
-      </h1>
-      <p className="mt-2 text-center text-2xl font-bold text-primary">
-        {SEASON_LABEL[result.season]}
-      </p>
-
-      {isLoading && (
-        <p className="mt-10 text-center text-body-lg text-muted-foreground">
-          Đang tải bảng màu phù hợp với bạn...
+    <div className="w-full">
+      {/* Headings section (Padded) */}
+      <section className="mx-auto w-full max-w-site px-6 pt-12 xl:px-[100px] text-center">
+        <h1 className="text-3xl font-extrabold uppercase leading-tight md:text-4xl">
+          Personal color của bạn là
+        </h1>
+        <p className="mt-2 text-2xl font-bold text-primary">
+          {SEASON_LABEL[result.season]}
         </p>
-      )}
+      </section>
 
-      {errorMessage && (
-        <p className="mt-10 text-center text-body-lg text-destructive">
-          {errorMessage}
-        </p>
-      )}
+      {/* Result banner section (Full Bleed - Edge to Edge) */}
+      <section className="relative mt-8 w-full aspect-[1728/615] overflow-hidden bg-slate-100">
+        <style>{`
+          @keyframes oceanWaves {
+            0% {
+              transform: translate(0, 0) scale(1.05) rotate(0deg);
+            }
+            50% {
+              transform: translate(-2.5%, 2%) scale(1.16) rotate(1.2deg);
+            }
+            100% {
+              transform: translate(0, 0) scale(1.05) rotate(0deg);
+            }
+          }
+          .animate-ocean-waves {
+            animation: oceanWaves 10s ease-in-out infinite;
+          }
+          @keyframes waterCausticsAnimation {
+            0% {
+              background-position: 0% 0%;
+              transform: scale(1.05) rotate(0deg);
+            }
+            25% {
+              background-position: 5% 10%;
+              transform: scale(1.1) rotate(0.8deg);
+            }
+            50% {
+              background-position: -5% 15%;
+              transform: scale(1.15) rotate(-0.8deg);
+            }
+            75% {
+              background-position: 10% -5%;
+              transform: scale(1.1) rotate(0.4deg);
+            }
+            100% {
+              background-position: 0% 0%;
+              transform: scale(1.05) rotate(0deg);
+            }
+          }
+          .water-caustics {
+            position: absolute;
+            inset: -40px; /* Bleed out to cover edges during scale & rotate */
+            background-image: url('/images/personal-color/water-caustics.png');
+            background-size: cover;
+            background-repeat: repeat;
+            mix-blend-mode: overlay;
+            opacity: 0.35;
+            pointer-events: none;
+            animation: waterCausticsAnimation 15s ease-in-out infinite;
+            z-index: 5;
+          }
+        `}</style>
+        
+        {/* Back Image (Background) with animation */}
+        <div className="absolute inset-0 w-full h-full overflow-hidden">
+          <Image
+            src={`/images/personal-color/ket-qua/Back/Mùa ${{
+              SPRING: "Xuân",
+              SUMMER: "Hạ",
+              AUTUMN: "Thu",
+              WINTER: "Đông",
+            }[result.season]}.png`}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover animate-ocean-waves origin-center"
+            priority
+          />
+          {/* Water Caustics Shimmer Overlay nested inside Back container */}
+          <div className="water-caustics" />
+        </div>
 
-      {data && (
-        <>
-          <div className="mx-auto mt-8 max-w-[650px] text-center">
-            <h2 className="text-xl font-bold uppercase">Màu sắc đề xuất</h2>
-            <p className="mt-2 text-body-sm text-muted-foreground">
-              {data.description}
-            </p>
-          </div>
+        {/* Front Image (Overlay) */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none z-10">
+          <Image
+            src={`/images/personal-color/ket-qua/Front/Mùa ${{
+              SPRING: "Xuân",
+              SUMMER: "Hạ",
+              AUTUMN: "Thu",
+              WINTER: "Đông",
+            }[result.season]}.png`}
+            alt={SEASON_LABEL[result.season]}
+            fill
+            sizes="100vw"
+            className="object-cover"
+            priority
+          />
+        </div>
+      </section>
 
-          <div className="mx-auto mt-6 flex max-w-[650px] flex-wrap items-center justify-center gap-4">
-            {data.palette.map((swatch) => (
-              <span
-                key={swatch.colorId}
-                title={swatch.name}
-                aria-label={swatch.name}
-                className="h-10 w-10 shrink-0 rounded-full border border-black/10 shadow-[0_1px_4px_rgba(0,0,0,0.15)]"
-                style={{ backgroundColor: swatch.hex }}
-              />
-            ))}
-          </div>
+      {/* Recommendations & products section (Padded) */}
+      <section className="mx-auto w-full max-w-site px-6 py-12 xl:px-[100px]">
+        {isLoading && (
+          <p className="mt-10 text-center text-body-lg text-muted-foreground">
+            Đang tải bảng màu phù hợp với bạn...
+          </p>
+        )}
 
-          {data.products.length > 0 && (
-            <div className="mt-14">
-              <h2 className="mb-6 text-2xl font-medium uppercase">
-                Có thể bạn sẽ thích
-              </h2>
-              <ProductGrid
-                products={data.products}
-                className="gap-x-7 gap-y-12"
-                cardClassName="gap-2"
-                cardImageClassName="aspect-[351/430]"
-              />
+        {errorMessage && (
+          <p className="mt-10 text-center text-body-lg text-destructive">
+            {errorMessage}
+          </p>
+        )}
+
+        {data && (
+          <>
+            <div className="mx-auto mt-8 max-w-[650px] text-center">
+              <h2 className="text-xl font-bold uppercase">Màu sắc đề xuất</h2>
+              <p className="mt-2 text-body-sm text-muted-foreground">
+                {data.description}
+              </p>
             </div>
-          )}
 
-          <div className="mt-12 flex justify-center">
-            <button
-              type="button"
-              onClick={onRestart}
-              className="rounded-pill border border-black px-8 py-3 text-body-sm font-medium transition-colors hover:bg-black hover:text-white"
-            >
-              Làm lại quiz
-            </button>
-          </div>
-        </>
-      )}
+            <div className="mx-auto mt-6 flex max-w-[650px] flex-wrap items-center justify-center gap-4">
+              {data.palette.map((swatch) => (
+                <span
+                  key={swatch.colorId}
+                  title={swatch.name}
+                  aria-label={swatch.name}
+                  className="h-10 w-10 shrink-0 rounded-full border border-black/10 shadow-[0_1px_4px_rgba(0,0,0,0.15)]"
+                  style={{ backgroundColor: swatch.hex }}
+                />
+              ))}
+            </div>
 
-      <div className="mt-16">
-        <StarsBanner />
-      </div>
-    </section>
+            {/* Action Buttons Panel (Above suggested products) */}
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={onRestart}
+                className="w-full sm:w-auto rounded-pill bg-black px-8 py-3 text-body-sm font-bold uppercase text-white transition-colors hover:bg-black/85"
+              >
+                Làm lại quiz
+              </button>
+              <button
+                type="button"
+                onClick={onGoHome}
+                className="w-full sm:w-auto rounded-pill border border-black px-8 py-3 text-body-sm font-bold uppercase text-black transition-colors hover:bg-black/5"
+              >
+                Quay về trang chính
+              </button>
+            </div>
+
+            {data.products.length > 0 && (
+              <div className="mt-14 border-t border-black/10 pt-10">
+                <h2 className="mb-6 text-2xl font-medium uppercase">
+                  Có thể bạn sẽ thích
+                </h2>
+                <ProductGrid
+                  products={data.products}
+                  className="gap-x-7 gap-y-12"
+                  cardClassName="gap-2"
+                  cardImageClassName="aspect-[351/430]"
+                />
+              </div>
+            )}
+          </>
+        )}
+
+        <div className="mt-16">
+          <StarsBanner />
+        </div>
+      </section>
+    </div>
   );
 }

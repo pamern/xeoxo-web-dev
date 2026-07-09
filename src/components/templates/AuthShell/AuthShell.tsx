@@ -43,21 +43,22 @@ export function AuthShell({
           <Image
             src="/images/logohong.png"
             alt="XÉO XỌ"
-            width={173}
-            height={103}
+            width={138}
+            height={82}
             priority
+            className="h-auto w-[118px] sm:w-[128px] md:w-[138px]"
           />
         </Link>
 
-        <h1 className="mt-3 max-w-[760px] text-[34px] font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-[40px] md:text-[44px]">
+        <h1 className="mt-4 max-w-[680px] text-[28px] font-extrabold leading-[1.08] tracking-[-0.03em] text-foreground sm:text-[32px] md:text-[36px]">
           Vô số đặc quyền và quyền lợi mua sắm đang chờ bạn
         </h1>
-        <p className="mt-5 text-sm font-light text-foreground sm:text-lg">
+        <p className="mt-4 text-sm font-light text-foreground sm:text-base md:text-[18px]">
           Quyền lợi dành riêng cho bạn khi tham gia{" "}
           <span className="font-bold text-foreground">Xéo Hội</span>
         </p>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
           {BENEFITS.map((benefit) => (
             <div
               key={benefit.line1}
@@ -107,7 +108,7 @@ export function AuthShell({
 
         <div className="mt-4">{children}</div>
 
-        <div className="mt-4 flex items-center justify-between gap-4 text-sm font-bold underline underline-offset-4 sm:text-lg">
+        <div className="mt-4 flex items-center justify-between gap-4 text-sm font-bold sm:text-lg">
           {footer}
         </div>
       </div>
