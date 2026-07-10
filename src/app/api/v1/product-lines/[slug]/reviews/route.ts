@@ -384,7 +384,7 @@ export async function GET(request: Request, { params }: { params: Promise<Params
 
     // Resolve review media and preserve display order.
     const reviewIds = reviewsList.map((r) => Number(r.review_id));
-    const { data: reviewMediaList } = reviewIds.length
+    const { data: allReviewMedia } = reviewIds.length
       ? await admin
           .schema("sales")
           .from("review_media")
@@ -393,33 +393,40 @@ export async function GET(request: Request, { params }: { params: Promise<Params
           .order("display_order", { ascending: true })
       : { data: [] };
 
-    const reviewMediaIds = Array.from(new Set((reviewMediaList || []).map((rm) => Number(rm.media_id))));
-    const { data: mediaItems } = reviewMediaIds.length
+    const allMediaIds = Array.from(new Set((allReviewMedia || []).map((m) => Number(m.media_id))));
+    const { data: allMediaRows } = allMediaIds.length
       ? await admin
           .schema("catalog")
           .from("media")
           .select("media_id, storage_key, bucket_name, media_type")
-          .in("media_id", reviewMediaIds)
+          .in("media_id", allMediaIds)
       : { data: [] };
 
-    const mediaLookupMap = new Map((mediaItems || []).map((m) => [Number(m.media_id), m]));
+    const mediaMapById = new Map(
+      (allMediaRows || []).map((row) => {
+        const url = mediaUrl(row.storage_key, row.bucket_name);
+        return [
+          Number(row.media_id),
+          {
+            media_id: Number(row.media_id),
+            url: url,
+            public_url: url,
+            media_type: row.media_type ?? "IMAGE",
+          },
+        ];
+      })
+    );
 
     const mediaByReviewId = new Map<number, any[]>();
-    (reviewMediaList || []).forEach((link) => {
+    (allReviewMedia || []).forEach((link) => {
       const rId = Number(link.review_id);
       const mId = Number(link.media_id);
-      const mediaItem = mediaLookupMap.get(mId);
+      const mediaItem = mediaMapById.get(mId);
       if (mediaItem) {
-        const url = mediaUrl(mediaItem.storage_key, mediaItem.bucket_name);
         if (!mediaByReviewId.has(rId)) {
           mediaByReviewId.set(rId, []);
         }
-        mediaByReviewId.get(rId)!.push({
-          media_id: mId,
-          url,
-          public_url: url,
-          media_type: mediaItem.media_type ?? "IMAGE",
-        });
+        mediaByReviewId.get(rId)!.push(mediaItem);
       }
     });
 

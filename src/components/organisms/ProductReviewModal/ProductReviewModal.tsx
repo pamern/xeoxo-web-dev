@@ -550,7 +550,7 @@ export function ProductReviewModal({
 
                         <div className="flex flex-col gap-2">
                           <span className="text-[13px] font-semibold text-black">
-                            Nội dung đánh giá:
+                            Bình luận đã gửi:
                           </span>
                           <p className="rounded-[8px] border border-black/5 bg-white p-4 text-[13px] font-light italic leading-relaxed text-black/80">
                             {state.review_content || "(Không có nội dung bình luận)"}
@@ -662,7 +662,7 @@ export function ProductReviewModal({
                         {/* Comment Textarea */}
                         <div className="flex flex-col gap-2">
                           <label className="text-[13px] font-semibold text-black">
-                            Nội dung đánh giá:
+                            Bình luận:
                           </label>
                           <textarea
                             value={state.review_content}

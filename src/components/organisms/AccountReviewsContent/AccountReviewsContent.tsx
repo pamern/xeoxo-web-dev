@@ -156,11 +156,16 @@ export function AccountReviewsContent({
 
               {/* Quality Text */}
               <div className="text-[13px] text-black">
-                <span className="font-light text-black/60">Nội dung đánh giá:</span>{" "}
-                <span className="font-normal text-black/90">
-                  {review.review_content || "(Không có nội dung bình luận)"}
-                </span>
+                <span className="font-light text-black/60">Chất lượng sản phẩm:</span>{" "}
+                <span className="font-bold">{getQualityText(review.rating)}</span>
               </div>
+
+              {/* Content */}
+              {review.review_content && (
+                <p className="text-[13px] font-light leading-relaxed text-black/85">
+                  {review.review_content}
+                </p>
+              )}
 
               {/* Media display */}
               {review.media && review.media.length > 0 && (
