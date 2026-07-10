@@ -30,7 +30,7 @@ function AccountNavCard({
 }) {
   const className = cn(
     variant === "account"
-      ? "flex min-h-[46px] w-full items-center gap-2 rounded-md border-2 border-black px-3 py-2 text-left transition-colors md:min-h-[56px] md:gap-4 md:px-5 md:py-3"
+      ? "flex min-h-[46px] w-full items-center justify-between gap-2 rounded-md border-2 border-black px-3 py-2 text-left transition-colors md:min-h-[56px] md:gap-4 md:px-5 md:py-3"
       : "flex min-h-[50px] w-full items-center justify-between rounded-[14px] border px-3 py-3 text-left shadow-[0_10px_26px_rgba(0,0,0,0.08)] transition-transform md:min-h-[58px] md:px-5 md:py-4",
     isActive
       ? "border-black bg-black text-white"
