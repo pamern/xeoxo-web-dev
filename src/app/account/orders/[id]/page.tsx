@@ -84,8 +84,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
         <section className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
           <div className="flex flex-col lg:flex-row gap-10">
-            {/* Left Column: Sidebar (20%) */}
-            <div className="w-full lg:w-1/5 shrink-0">
+            {/* Left Column: Sidebar (25%) */}
+            <div className="w-full lg:w-1/4 shrink-0">
               <AccountNavigation items={ACCOUNT_NAV_ITEMS} activeHref={ROUTES.ACCOUNT_ORDERS} variant="account" />
             </div>
 

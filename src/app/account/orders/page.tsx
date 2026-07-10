@@ -102,7 +102,7 @@ export default async function AccountOrdersRoute({
               ]}
             />
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+            <div className="account-page-grid">
               <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}

@@ -91,7 +91,7 @@ export default async function AccountReviewsRoute() {
               ]}
             />
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+            <div className="account-page-grid">
               <aside className="lg:sticky lg:top-[180px]">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
