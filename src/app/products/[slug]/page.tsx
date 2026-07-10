@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { ProductDetail } from "@/components/organisms/ProductDetail";
@@ -12,12 +13,13 @@ import { fetchProductBySlugFromApi } from "@/data/products.api";
 import type { ApiResponse } from "@/types/api.types";
 import type { ProductDetailDto } from "@/types/product-api.types";
 import type { Product } from "@/types/product.types";
+import { getRelatedProducts } from "@/features/product/product-server.service";
 
 type Params = { slug: string };
 
 export const dynamic = "force-dynamic";
 
-async function getApiProduct(slug: string) {
+const getApiProduct = cache(async function getApiProduct(slug: string) {
   const headerStore = await headers();
   const host = headerStore.get("host");
   const forwardedProtocol = headerStore
@@ -49,7 +51,7 @@ async function getApiProduct(slug: string) {
   } catch {
     return null;
   }
-}
+});
 
 function safeImageSrc(src?: string | null) {
   if (!src) {
@@ -151,8 +153,6 @@ export default async function ProductPage({
   }
 
   const product = mergeProductDetailImageData(apiProduct, result?.product);
-  const relatedProducts = result?.relatedProducts ?? [];
-  const recommendedProducts = relatedProducts.slice(0, 4);
 
   return (
     <SiteLayout fixedHeader={false}>
@@ -173,7 +173,6 @@ export default async function ProductPage({
         <ProductDetail
           product={product}
           apiProduct={apiProduct}
-          relatedProducts={relatedProducts}
         />
       </div>
       <StripDivider />
@@ -184,10 +183,29 @@ export default async function ProductPage({
         materialName={apiProduct.material?.material_name ?? null}
         careInstruction={apiProduct.material?.care_instruction ?? null}
       />
-      <RecommendationSection products={recommendedProducts} />
+      <RelatedProductsSection slug={slug} />
       <StripDivider />
       <ReviewsSection product={product} apiProduct={apiProduct} />
     </SiteLayout>
+  );
+}
+
+async function RelatedProductsSection({ slug }: { slug: string }) {
+  const related = await getRelatedProducts(slug, 5);
+
+  if (related.length === 0) return null;
+
+  return (
+    <section className="mx-auto w-full max-w-site px-6 pb-12 pt-8 xl:px-[100px]">
+      <h2 className="mb-8 text-center text-heading-section font-bold uppercase">
+        Có thể bạn sẽ thích
+      </h2>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:gap-x-6">
+        {related.map((item) => (
+          <ProductCard key={item.id} product={item} quickAddOnHover />
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -286,23 +304,6 @@ function ProductDescription({
             />
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
-
-function RecommendationSection({ products }: { products: Product[] }) {
-  if (products.length === 0) return null;
-
-  return (
-    <section className="mx-auto w-full max-w-site px-6 pb-10 pt-7 xl:px-[100px]">
-      <h2 className="mb-6 text-center text-heading-section font-bold uppercase">
-        Có thể bạn cũng thích
-      </h2>
-      <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
-        {products.map((item) => (
-          <ProductCard key={item.id} product={item} />
-        ))}
       </div>
     </section>
   );

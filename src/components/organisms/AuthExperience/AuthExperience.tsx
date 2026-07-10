@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense, useEffect } from "react";
 import Link from "next/link";
 import {
   usePathname,
@@ -7,7 +8,6 @@ import {
   useSearchParams,
   type ReadonlyURLSearchParams,
 } from "next/navigation";
-import { useEffect } from "react";
 import { AuthShell } from "@/components/templates/AuthShell";
 import { LoginForm } from "@/components/organisms/LoginForm";
 import { RegisterForm } from "@/components/organisms/RegisterForm";
@@ -28,7 +28,7 @@ function currentPathWithSearch(
   return query ? `${pathname}?${query}` : pathname;
 }
 
-export function AuthExperience({
+function AuthExperienceInner({
   mode,
   onModeChange,
   onAuthSuccess,
@@ -139,5 +139,19 @@ export function AuthExperience({
         />
       )}
     </AuthShell>
+  );
+}
+
+export function AuthExperience(props: {
+  mode: AuthMode;
+  onModeChange?: (mode: AuthMode) => void;
+  onAuthSuccess?: () => void;
+  className?: string;
+  pageFallback?: boolean;
+}) {
+  return (
+    <Suspense fallback={null}>
+      <AuthExperienceInner {...props} />
+    </Suspense>
   );
 }

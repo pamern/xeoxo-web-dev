@@ -27,7 +27,12 @@ export const customerService = {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(values),
+      body: JSON.stringify({
+        customer_name: values.customer_name,
+        phone: values.phone,
+        gender: values.gender,
+        birthday: values.birthday,
+      }),
     });
 
     const payload = (await response.json()) as CustomerApiResponse;

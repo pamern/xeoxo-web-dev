@@ -1289,7 +1289,7 @@ endpoints:
     - data.appointment_status
     success_example:
       code: 201
-      message: Đặt lịch thành công, nhân viên sẽ liên hệ xác nhận
+      message: Đặt lịch thành công
       data:
         appointment_id: 88
         product_line_id: PL010
@@ -1297,7 +1297,7 @@ endpoints:
         appointment_date: '2026-07-10'
         start_time: 08:00
         end_time: 08:30
-        appointment_status: PENDING
+        appointment_status: CONFIRMED
     error_examples:
     - code: 400
       message: Thiếu thông tin bắt buộc
@@ -1323,7 +1323,7 @@ endpoints:
   - 6. Check branch active.
   - 7. Check slot chưa trùng lịch PENDING/CONFIRMED.
   - 8. Tính end_time = start_time + 30 phút.
-  - 9. Insert MEASUREMENT_APPOINTMENT với status PENDING.
+  - 9. Insert MEASUREMENT_APPOINTMENT với status CONFIRMED.
   - 10. Trả về lịch hẹn.
   dev_notes: []
   validation_rules:
@@ -1589,8 +1589,6 @@ endpoints:
     - Không có
     body: 'customer_name (string, optional)
 
-      email (string, optional)
-
       phone (string, optional)
 
       gender (string, optional)
@@ -1631,16 +1629,16 @@ endpoints:
   business_rules:
   - 1. Lấy customer_id từ token.
   - 2. Validate request body.
-  - 3. Update CUSTOMER theo whitelist field.
+  - 3. Update CUSTOMER theo whitelist field: customer_name, phone, gender, birthday.
   - 4. Trả về data mới nhất.
   dev_notes:
+  - Không cho update email dùng để đăng nhập từ API user.
   - Không cho update tier_id, total_spent, spent_in_year, customer_type từ API user vì đây là dữ liệu hệ thống.
   validation_rules:
-  - Email đúng định dạng nếu truyền.
   - Phone đúng định dạng VN nếu truyền.
   - gender nếu truyền chỉ nhận giá trị hợp lệ.
   - birthday đúng định dạng YYYY-MM-DD.
-  - Không cho sửa customer_id, account_id, customer_type, tier_id, total_spent
+  - Không cho sửa customer_id, account_id, customer_type, tier_id, total_spent, email
   security:
   - Whitelist field; tránh mass assignment; không nhận customer_id từ body.
 - trigger: Tra cứu đơn hàng
@@ -2701,7 +2699,8 @@ endpoints:
   - 3. Query PROVINCE theo province_id.
   - 4. Nếu là địa chỉ đầu tiên hoặc is_default=true → unset default cũ.
   - 5. Insert ADDRESS với is_active=true.
-  - 6. Trả địa chỉ vừa tạo.
+  - 6. Nếu địa chỉ mới là default và CUSTOMER.phone đang trống thì đồng bộ recipient_phone sang CUSTOMER.phone.
+  - 7. Trả địa chỉ vừa tạo.
   dev_notes:
   - API này chỉ áp dụng member vì ADDRESS.customer_id NOT NULL. Guest checkout nhập address trực tiếp ở order request hoặc
     backend tạo CUSTOMER GUEST + ADDRESS khi tạo đơn.
@@ -2712,6 +2711,133 @@ endpoints:
   - is_default là boolean nếu truyền.
   security:
   - Không nhận customer_id từ body.
+- trigger: Sổ địa chỉ -> Cập nhật địa chỉ
+  screen: Sổ địa chỉ
+  type: CUSTOM
+  name: Cập nhật địa chỉ
+  description: Cập nhật địa chỉ giao hàng của member trong sổ địa chỉ.
+  resource: addresses
+  method: PUT
+  endpoint: /api/v1/addresses/{address_id}
+  http_request: PUT /api/v1/addresses/12
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - address_id bắt buộc
+    query_parameters:
+    - Không có
+    body: 'recipient_name bắt buộc
+
+      recipient_phone bắt buộc
+
+      province_id bắt buộc
+
+      district_name bắt buộc
+
+      address_detail bắt buộc
+
+      is_default optional'
+  response:
+    body_fields:
+    - code
+    - message
+    - data.address_id
+    - data.recipient_name
+    - data.recipient_phone
+    - data.province_id
+    - data.province_name
+    - data.district_name
+    - data.address_detail
+    - data.full_address
+    - data.is_default
+    success_example:
+      code: 200
+      message: Cập nhật địa chỉ thành công
+      data:
+        address_id: 12
+        recipient_name: Nguyễn A
+        recipient_phone: 0901234567
+        province_id: 79
+        province_name: TP.HCM
+        district_name: Phường Bến Thành
+        address_detail: 123 Lê Lợi
+        full_address: 123 Lê Lợi, Phường Bến Thành, TP.HCM
+        is_default: true
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 404
+      message: Không tìm thấy địa chỉ cần cập nhật
+    - code: 422
+      message: Dữ liệu địa chỉ không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Form chỉnh sửa địa chỉ
+  - Cập nhật địa chỉ mặc định
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Validate path param và body.
+  - 3. Chỉ cho cập nhật địa chỉ active của customer hiện tại.
+  - 4. Nếu địa chỉ đã từng được dùng trong SHIPPING và thay đổi thông tin giao hàng, tạo ADDRESS mới rồi set địa chỉ cũ thành is_active=false.
+  - 5. Nếu is_default=true thì unset default cũ trước khi lưu.
+  - 6. Nếu địa chỉ sau cập nhật là default và CUSTOMER.phone đang trống thì đồng bộ recipient_phone sang CUSTOMER.phone.
+  - 7. Trả địa chỉ đang active sau cập nhật.
+  dev_notes:
+  - Khi chỉ đổi cờ mặc định hoặc địa chỉ chưa từng dùng trong SHIPPING thì update trực tiếp bản ghi hiện tại.
+  validation_rules:
+  - address_id phải là số nguyên dương.
+  - Các field bắt buộc không rỗng.
+  - Phone đúng định dạng.
+  - Province tồn tại.
+  security:
+  - Không nhận customer_id từ path/body/query.
+- trigger: Sổ địa chỉ -> Xóa địa chỉ
+  screen: Sổ địa chỉ
+  type: CUSTOM
+  name: Xóa địa chỉ
+  description: Ẩn địa chỉ giao hàng của member khỏi sổ địa chỉ mà vẫn giữ lịch sử giao hàng cũ.
+  resource: addresses
+  method: DELETE
+  endpoint: /api/v1/addresses/{address_id}
+  http_request: DELETE /api/v1/addresses/12
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - address_id bắt buộc
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data.address_id
+    success_example:
+      code: 200
+      message: Xóa địa chỉ thành công
+      data:
+        address_id: 12
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 404
+      message: Không tìm thấy địa chỉ cần cập nhật
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Nút xóa địa chỉ trong sổ địa chỉ
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Validate path param.
+  - 3. Chỉ cho xóa địa chỉ active của customer hiện tại.
+  - 4. Soft delete bằng cách set is_active=false và is_default=false.
+  - 5. Nếu đang xóa địa chỉ mặc định thì chọn 1 địa chỉ active khác gần nhất làm mặc định mới.
+  - 6. Trả về address_id vừa xóa.
+  validation_rules:
+  - address_id phải là số nguyên dương.
+  security:
+  - Không nhận customer_id từ path/body/query.
 - trigger: Thanh toán -> Đổi địa chỉ / áp voucher
   screen: Thanh toán
   type: CUSTOM

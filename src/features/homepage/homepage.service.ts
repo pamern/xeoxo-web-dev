@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { CACHE_TAGS } from "@/lib/cache-policy";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   getProductMediaPublicUrl,
@@ -175,7 +176,10 @@ export async function getHomepageProductSections({
   return unstable_cache(
     () => fetchHomepageProductSections(categorySlugs, limit),
     ["homepage-product-sections", categorySlugs.join(","), String(limit)],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.homepage, CACHE_TAGS.categories, CACHE_TAGS.products],
+    },
   )();
 }
 
@@ -393,7 +397,10 @@ export async function getCategoryProductSections({
       parentCategorySlug ?? "all",
       String(limit),
     ],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.categories, CACHE_TAGS.products],
+    },
   )();
 }
 
@@ -522,7 +529,7 @@ export async function getCategoriesByDepartment(
   return unstable_cache(
     () => fetchCategoriesByDepartment(department),
     ["categories-by-department", department],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: [CACHE_TAGS.categories] },
   )();
 }
 
@@ -565,7 +572,7 @@ export async function getCategoryBySlug(
   return unstable_cache(
     () => fetchCategoryBySlug(slug),
     ["category-by-slug", slug],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: [CACHE_TAGS.categories] },
   )();
 }
 
@@ -605,7 +612,10 @@ export async function getNewestDepartmentProducts({
   return unstable_cache(
     () => fetchNewestDepartmentProducts(department, limit),
     ["newest-department-products", department, String(limit)],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.products, CACHE_TAGS.categories],
+    },
   )();
 }
 
@@ -664,7 +674,10 @@ export async function getHomepageCollections({
   return unstable_cache(
     () => fetchHomepageCollections(limit, coverVariant),
     ["homepage-collections", String(limit), coverVariant],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.homepage, CACHE_TAGS.collections],
+    },
   )();
 }
 
@@ -818,7 +831,10 @@ export async function getCategoryListing(
   return unstable_cache(
     () => fetchCategoryListing(categorySlug),
     ["category-listing", categorySlug],
-    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] },
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.categories, CACHE_TAGS.products],
+    },
   )();
 }
 

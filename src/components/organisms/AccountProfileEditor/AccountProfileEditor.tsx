@@ -25,6 +25,21 @@ const MONTH_LABELS = [
   "Tháng 12",
 ];
 
+const MONTH_SHORT_LABELS = [
+  "T1",
+  "T2",
+  "T3",
+  "T4",
+  "T5",
+  "T6",
+  "T7",
+  "T8",
+  "T9",
+  "T10",
+  "T11",
+  "T12",
+];
+
 function getDisplayValue(value?: string | null) {
   const normalized = value?.trim();
   return normalized && normalized.length > 0 ? normalized : "Chưa cập nhật";
@@ -72,6 +87,11 @@ function formatBirthdayLabel(value: string) {
   }
 
   return date.toLocaleDateString("vi-VN");
+}
+
+function clampDateToMonth(year: number, month: number, day: number) {
+  const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
+  return new Date(year, month, Math.min(day, lastDayOfMonth));
 }
 
 function isSameDay(left: Date, right: Date) {
@@ -211,13 +231,8 @@ export function AccountProfileEditor({
             </Field>
 
             <Field label="Email">
-              <input
-                type="email"
-                value={values.email}
-                onChange={(event) => updateField("email", event.target.value)}
-                className="form-control rounded-[14px]"
-                placeholder="Nhập email"
-                autoComplete="email"
+              <ReadOnlyFieldValue
+                value={getDisplayValue(displayValues.email)}
               />
             </Field>
 
@@ -343,6 +358,23 @@ function Field({
   );
 }
 
+function ReadOnlyFieldValue({
+  value,
+  helperText,
+}: {
+  value: string;
+  helperText?: string;
+}) {
+  return (
+    <div className="rounded-[14px] border border-black/10 bg-secondary px-4 py-3">
+      <p className="text-base font-medium text-black">{value}</p>
+      {helperText ? (
+        <p className="mt-1 text-xs font-medium text-black/55">{helperText}</p>
+      ) : null}
+    </div>
+  );
+}
+
 function BirthdayPicker({
   value,
   onChange,
@@ -352,7 +384,9 @@ function BirthdayPicker({
 }) {
   const pickerRef = useRef<HTMLDivElement>(null);
   const selectedDate = parseDateValue(value);
+  const [inputValue, setInputValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"days" | "months" | "years">("days");
   const [visibleMonth, setVisibleMonth] = useState<Date>(
     selectedDate ?? new Date(2000, 0, 1),
   );
@@ -361,6 +395,12 @@ function BirthdayPicker({
     () => buildCalendarDays(visibleMonth),
     [visibleMonth],
   );
+  const yearRangeStart = Math.floor(visibleMonth.getFullYear() / 12) * 12;
+  const yearOptions = Array.from({ length: 12 }, (_, index) => yearRangeStart + index);
+
+  useEffect(() => {
+    setInputValue(value);
+  }, [value]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -397,10 +437,48 @@ function BirthdayPicker({
     );
   }
 
+  function moveYearRange(offset: number) {
+    setVisibleMonth(
+      (current) => new Date(current.getFullYear() + offset * 12, current.getMonth(), 1),
+    );
+  }
+
   function handleSelect(date: Date) {
     onChange(formatDateValue(date));
+    setInputValue(formatDateValue(date));
     setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+    setViewMode("days");
     setIsOpen(false);
+  }
+
+  function handleManualInput(nextValue: string) {
+    setInputValue(nextValue);
+  }
+
+  function commitManualInput() {
+    const normalizedValue = inputValue.trim();
+
+    if (!normalizedValue) {
+      onChange("");
+      setInputValue("");
+      return;
+    }
+
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedValue)) {
+      setInputValue(value);
+      return;
+    }
+
+    const parsedDate = parseDateValue(normalizedValue);
+
+    if (!parsedDate || Number.isNaN(parsedDate.getTime())) {
+      setInputValue(value);
+      return;
+    }
+
+    onChange(formatDateValue(parsedDate));
+    setInputValue(formatDateValue(parsedDate));
+    setVisibleMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
   }
 
   function handleToggle() {
@@ -408,30 +486,41 @@ function BirthdayPicker({
       selectedDate ??
         new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1),
     );
+    setViewMode("days");
     setIsOpen((current) => !current);
   }
 
   return (
     <div ref={pickerRef} className="relative">
-      <button
-        type="button"
-        onClick={handleToggle}
-        className="form-control flex h-[54px] items-center justify-between rounded-[14px] text-left"
-      >
-        <span className={value ? "text-foreground" : "text-muted-foreground"}>
-          {formatBirthdayLabel(value)}
-        </span>
-        <span className="text-lg text-foreground/60">{isOpen ? "−" : "+"}</span>
-      </button>
+      <div className="flex gap-3">
+        <input
+          value={inputValue}
+          onChange={(event) => handleManualInput(event.target.value)}
+          onBlur={commitManualInput}
+          placeholder="YYYY-MM-DD"
+          inputMode="numeric"
+          className="form-control h-[54px] rounded-[14px]"
+        />
+        <button
+          type="button"
+          onClick={handleToggle}
+          className="form-control flex h-[54px] w-[60px] shrink-0 items-center justify-center rounded-[14px] px-0 text-left"
+          aria-label="Mở lịch chọn ngày sinh"
+        >
+          <span className="text-lg text-foreground/60">{isOpen ? "−" : "+"}</span>
+        </button>
+      </div>
 
       {isOpen ? (
-        <div className="absolute left-0 top-[calc(100%+12px)] z-20 w-[320px] rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_22px_60px_rgba(0,0,0,0.16)]">
+        <div className="absolute left-0 top-[calc(100%+12px)] z-20 w-[340px] rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_22px_60px_rgba(0,0,0,0.16)]">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
-              onClick={() => moveMonth(-1)}
+              onClick={() =>
+                viewMode === "days" ? moveMonth(-1) : moveYearRange(-1)
+              }
               className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-xl transition-colors hover:bg-secondary"
-              aria-label="Tháng trước"
+              aria-label={viewMode === "days" ? "Tháng trước" : "Nhóm năm trước"}
             >
               ‹
             </button>
@@ -439,59 +528,142 @@ function BirthdayPicker({
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground/45">
                 Ngày sinh
               </p>
-              <p className="mt-1 text-base font-extrabold">
-                {MONTH_LABELS[visibleMonth.getMonth()]} {visibleMonth.getFullYear()}
-              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setViewMode((current) =>
+                    current === "days" ? "months" : "years",
+                  )
+                }
+                className="mt-1 text-base font-extrabold transition-opacity hover:opacity-70"
+              >
+                {viewMode === "years"
+                  ? `${yearRangeStart} - ${yearRangeStart + 11}`
+                  : `${MONTH_LABELS[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`}
+              </button>
             </div>
             <button
               type="button"
-              onClick={() => moveMonth(1)}
+              onClick={() =>
+                viewMode === "days" ? moveMonth(1) : moveYearRange(1)
+              }
               className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-xl transition-colors hover:bg-secondary"
-              aria-label="Tháng sau"
+              aria-label={viewMode === "days" ? "Tháng sau" : "Nhóm năm sau"}
             >
               ›
             </button>
           </div>
 
-          <div className="mt-5 grid grid-cols-7 gap-2 text-center">
-            {WEEKDAY_LABELS.map((label) => (
-              <span
-                key={label}
-                className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/45"
-              >
-                {label}
-              </span>
-            ))}
-            {calendarDays.map(({ date, isCurrentMonth }) => {
-              const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
-              const isToday = isSameDay(date, today);
-
-              return (
-                <button
-                  key={date.toISOString()}
-                  type="button"
-                  onClick={() => handleSelect(date)}
-                  className={[
-                    "flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
-                    isSelected
-                      ? "bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
-                      : isCurrentMonth
-                        ? "text-foreground hover:bg-secondary"
-                        : "text-foreground/28 hover:bg-secondary/70",
-                    isToday && !isSelected ? "border border-black/20" : "",
-                  ].join(" ")}
+          {viewMode === "days" ? (
+            <div className="mt-5 grid grid-cols-7 gap-2 text-center">
+              {WEEKDAY_LABELS.map((label) => (
+                <span
+                  key={label}
+                  className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/45"
                 >
-                  {date.getDate()}
-                </button>
-              );
-            })}
-          </div>
+                  {label}
+                </span>
+              ))}
+              {calendarDays.map(({ date, isCurrentMonth }) => {
+                const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
+                const isToday = isSameDay(date, today);
+
+                return (
+                  <button
+                    key={date.toISOString()}
+                    type="button"
+                    onClick={() => handleSelect(date)}
+                    className={[
+                      "flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                      isSelected
+                        ? "bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
+                        : isCurrentMonth
+                          ? "text-foreground hover:bg-secondary"
+                          : "text-foreground/28 hover:bg-secondary/70",
+                      isToday && !isSelected ? "border border-black/20" : "",
+                    ].join(" ")}
+                  >
+                    {date.getDate()}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {viewMode === "months" ? (
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              {MONTH_SHORT_LABELS.map((label, monthIndex) => {
+                const isSelected =
+                  selectedDate &&
+                  selectedDate.getFullYear() === visibleMonth.getFullYear() &&
+                  selectedDate.getMonth() === monthIndex;
+
+                return (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      const baseDay = selectedDate?.getDate() ?? 1;
+                      setVisibleMonth(
+                        clampDateToMonth(
+                          visibleMonth.getFullYear(),
+                          monthIndex,
+                          baseDay,
+                        ),
+                      );
+                      setViewMode("days");
+                    }}
+                    className={[
+                      "rounded-[14px] px-3 py-3 text-sm font-semibold transition-colors",
+                      isSelected
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white text-black hover:bg-secondary",
+                    ].join(" ")}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {viewMode === "years" ? (
+            <div className="mt-5 grid grid-cols-3 gap-3">
+              {yearOptions.map((year) => {
+                const isSelected = selectedDate?.getFullYear() === year;
+
+                return (
+                  <button
+                    key={year}
+                    type="button"
+                    onClick={() => {
+                      const baseDay = selectedDate?.getDate() ?? 1;
+                      setVisibleMonth(
+                        clampDateToMonth(year, visibleMonth.getMonth(), baseDay),
+                      );
+                      setViewMode("months");
+                    }}
+                    className={[
+                      "rounded-[14px] px-3 py-3 text-sm font-semibold transition-colors",
+                      isSelected
+                        ? "bg-black text-white"
+                        : "border border-black/10 bg-white text-black hover:bg-secondary",
+                    ].join(" ")}
+                  >
+                    {year}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
 
           <div className="mt-5 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => {
                 onChange("");
+                setInputValue("");
+                setViewMode("days");
                 setIsOpen(false);
               }}
               className="text-sm font-medium text-foreground/62 transition-colors hover:text-foreground"

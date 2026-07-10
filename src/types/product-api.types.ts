@@ -1,3 +1,5 @@
+import type { Product } from "@/types/product.types";
+
 export type ProductMediaDto = {
   url: string;
   media_type: "IMAGE" | "VIDEO";
@@ -14,6 +16,25 @@ export type ProductSizeOptionDto = {
 
 export type ProductQuickAddDto = {
   sizes: ProductSizeOptionDto[];
+};
+
+export type ProductSearchSuggestionDto = {
+  product_line_id: string;
+  slug: string;
+  name: string;
+  thumbnail: string;
+  price: number;
+  currency: "VND";
+};
+
+export type ProductSearchResultsDto = {
+  query: string;
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+  };
 };
 
 export type ProductReviewDto = {

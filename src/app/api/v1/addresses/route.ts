@@ -1,9 +1,11 @@
 import { fail, ok } from "@/lib/api-response";
 import { getCurrentCustomerId } from "@/features/cart/cart-server.service";
 import {
+  CustomerAddressServiceError,
   createCustomerAddress,
   getCustomerAddressesByCustomerId,
 } from "@/features/customers/customer-address.service";
+import { customerAddressSchema } from "@/validations/customer/address.schema";
 
 export async function GET() {
   try {
@@ -32,18 +34,25 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const address = await createCustomerAddress(customerId, {
-      address_detail: body.address_detail,
-      district_name: body.district_name,
-      is_default: Boolean(body.is_default),
-      province_id: Number(body.province_id),
-      recipient_name: body.recipient_name,
-      recipient_phone: body.recipient_phone,
-    });
+    const parsed = customerAddressSchema.safeParse(body);
+
+    if (!parsed.success) {
+      return fail(
+        parsed.error.issues[0]?.message ?? "Dữ liệu địa chỉ không hợp lệ.",
+        422,
+      );
+    }
+
+    const address = await createCustomerAddress(customerId, parsed.data);
 
     return ok(address, "Thêm địa chỉ thành công.", 201);
   } catch (error) {
     console.error("[addresses/POST]", error);
+
+    if (error instanceof CustomerAddressServiceError) {
+      return fail(error.message, error.status);
+    }
+
     return fail(
       "Không thể tạo địa chỉ.",
       500,

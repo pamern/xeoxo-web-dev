@@ -6,6 +6,30 @@ type Params = {
   slug: string;
 };
 
+function mediaUrl(storageKey?: string | null, bucketName?: string | null) {
+  if (!storageKey) {
+    return "/images/placeholder.png";
+  }
+
+  if (storageKey.startsWith("http://") || storageKey.startsWith("https://") || storageKey.startsWith("/")) {
+    return storageKey;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  if (!supabaseUrl) {
+    return "/images/placeholder.png";
+  }
+
+  const normalizedKey = storageKey.replace(/^\/+/, "");
+  const normalizedBucket = bucketName?.replace(/^\/+|\/+$/g, "");
+
+  if (normalizedBucket && !normalizedKey.startsWith(`${normalizedBucket}/`)) {
+    return `${supabaseUrl}/storage/v1/object/public/${normalizedBucket}/${normalizedKey}`;
+  }
+
+  return `${supabaseUrl}/storage/v1/object/public/${normalizedKey}`;
+}
+
 export async function GET(request: Request, { params }: { params: Promise<Params> }) {
   try {
     const { slug } = await params;
@@ -13,6 +37,10 @@ export async function GET(request: Request, { params }: { params: Promise<Params
     const page = Math.max(1, Number(searchParams.get("page") ?? "1"));
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit") ?? "5")));
     const offset = (page - 1) * limit;
+
+    const ratingFilter = searchParams.get("rating") ? Number(searchParams.get("rating")) : null;
+    const hasImageFilter = searchParams.get("has_image") === "true";
+    const componentIdFilter = searchParams.get("component_id") ? Number(searchParams.get("component_id")) : null;
 
     const supabase = await createClient();
     const admin = createAdminClient();
@@ -37,71 +65,190 @@ export async function GET(request: Request, { params }: { params: Promise<Params
     const { data: components, error: compErr } = await supabase
       .schema("catalog")
       .from("product_component")
-      .select("component_id")
+      .select("component_id, component_name")
       .eq("product_line_id", productLineId);
 
     if (compErr) throw new Error(compErr.message);
     const componentIds = (components || []).map((c) => Number(c.component_id));
+    const componentList = (components || []).map((c) => ({
+      component_id: Number(c.component_id),
+      component_name: String(c.component_name),
+    }));
 
     if (!componentIds.length) {
-      return ok({ reviews: [], total: 0, has_more: false }, "Thành công.");
+      return ok({ reviews: [], total: 0, has_more: false, components: [] }, "Thành công.");
     }
 
-    // 3. Get variants
+    // Filter component targets based on filterComponentId
+    let targetComponentIds = componentIds;
+    if (componentIdFilter) {
+      targetComponentIds = componentIds.filter((id) => id === componentIdFilter);
+    }
+
+    // 3. Get variants for targeted components
     const { data: variants, error: varErr } = await supabase
       .schema("catalog")
       .from("product_variant")
       .select("variant_id, size_option_id")
-      .in("component_id", componentIds);
+      .in("component_id", targetComponentIds);
 
     if (varErr) throw new Error(varErr.message);
     const variantsList = variants || [];
     const variantIds = variantsList.map((v) => Number(v.variant_id));
 
-    if (!variantIds.length) {
-      return ok({ reviews: [], total: 0, has_more: false }, "Thành công.");
-    }
-
-    // 4. Get order items
-    const { data: orderItems, error: itemsErr } = await admin
-      .schema("sales")
-      .from("order_item")
-      .select("order_item_id, variant_id")
-      .in("variant_id", variantIds);
+    // 4. Get order items from standard variants
+    const { data: standardOrderItems, error: itemsErr } = variantIds.length
+      ? await admin
+          .schema("sales")
+          .from("order_item")
+          .select("order_item_id, variant_id, customization_id, item_type")
+          .in("variant_id", variantIds)
+      : { data: [], error: null };
 
     if (itemsErr) {
-      // If admin has permission issues, fallback gracefully
-      return ok({ reviews: [], total: 0, has_more: false }, "Thành công (Không có quyền đọc đơn hàng).");
+      return ok({ reviews: [], total: 0, has_more: false, components: componentList }, "Thành công.");
     }
 
-    const orderItemIds = (orderItems || []).map((item) => Number(item.order_item_id));
+    const { data: customizationRequests, error: customReqErr } = await admin
+      .schema("customization")
+      .from("customization_request")
+      .select("customization_id, component_id")
+      .in("component_id", targetComponentIds);
+
+    if (customReqErr) throw new Error(customReqErr.message);
+
+    const customizationIds = (customizationRequests || []).map((item) =>
+      Number(item.customization_id),
+    );
+    const { data: customOrderItems, error: customItemsErr } = customizationIds.length
+      ? await admin
+          .schema("sales")
+          .from("order_item")
+          .select("order_item_id, variant_id, customization_id, item_type")
+          .in("customization_id", customizationIds)
+      : { data: [], error: null };
+
+    if (customItemsErr) throw new Error(customItemsErr.message);
+
+    const orderItemsById = new Map<number, {
+      order_item_id: number;
+      variant_id: number | null;
+      customization_id: number | null;
+      item_type: string | null;
+    }>();
+    for (const item of [...(standardOrderItems || []), ...(customOrderItems || [])]) {
+      orderItemsById.set(Number(item.order_item_id), {
+        order_item_id: Number(item.order_item_id),
+        variant_id: item.variant_id == null ? null : Number(item.variant_id),
+        customization_id:
+          item.customization_id == null ? null : Number(item.customization_id),
+        item_type: item.item_type == null ? null : String(item.item_type),
+      });
+    }
+
+    const orderItems = [...orderItemsById.values()];
+    const orderItemIds = orderItems.map((item) => Number(item.order_item_id));
     if (!orderItemIds.length) {
-      return ok({ reviews: [], total: 0, has_more: false }, "Thành công.");
+      return ok({ reviews: [], total: 0, has_more: false, components: componentList }, "Thành công.");
     }
 
     const orderItemMap = new Map(
-      (orderItems || []).map((item) => [Number(item.order_item_id), Number(item.variant_id)]),
+      orderItems
+        .filter((item) => item.variant_id != null)
+        .map((item) => [Number(item.order_item_id), Number(item.variant_id)]),
+    );
+    const orderItemCustomizationMap = new Map(
+      orderItems
+        .filter((item) => item.customization_id != null)
+        .map((item) => [
+          Number(item.order_item_id),
+          Number(item.customization_id),
+        ]),
     );
 
-    // 5. Get reviews count
-    const { count, error: countErr } = await admin
+    // Resolve review ids with media
+    const { data: mediaReviewsList } = await admin
+      .schema("sales")
+      .from("review_media")
+      .select("review_id");
+    const mediaReviewIds = Array.from(new Set((mediaReviewsList || []).map((rm) => Number(rm.review_id))));
+
+    // Calculate total count of reviews under current component filter
+    const { count: allCount } = await admin
+      .schema("sales")
+      .from("review")
+      .select("review_id", { count: "exact", head: true })
+      .eq("review_status", "DISPLAY")
+      .in("order_item_id", orderItemIds);
+    const totalAll = allCount || 0;
+
+    // Calculate total count of reviews with images under current component filter
+    let totalImagesCount = 0;
+    if (mediaReviewIds.length > 0) {
+      const { count: imgCount } = await admin
+        .schema("sales")
+        .from("review")
+        .select("review_id", { count: "exact", head: true })
+        .eq("review_status", "DISPLAY")
+        .in("order_item_id", orderItemIds)
+        .in("review_id", mediaReviewIds);
+      totalImagesCount = imgCount || 0;
+    }
+
+    // Calculate average rating of all reviews under current component filter
+    let avgRating = 0;
+    if (totalAll > 0) {
+      const { data: allRevRatings } = await admin
+        .schema("sales")
+        .from("review")
+        .select("rating")
+        .eq("review_status", "DISPLAY")
+        .in("order_item_id", orderItemIds);
+      if (allRevRatings && allRevRatings.length > 0) {
+        const sum = allRevRatings.reduce((acc: number, curr: any) => acc + Number(curr.rating), 0);
+        avgRating = Math.round((sum / allRevRatings.length) * 10) / 10;
+      }
+    }
+
+    if (hasImageFilter && mediaReviewIds.length === 0) {
+      return ok({ reviews: [], total: 0, total_images: 0, avg_rating: 0, has_more: false, components: componentList }, "Thành công.");
+    }
+
+    // 5. Get reviews count matching active filters
+    let countQuery = admin
       .schema("sales")
       .from("review")
       .select("review_id", { count: "exact", head: true })
       .eq("review_status", "DISPLAY")
       .in("order_item_id", orderItemIds);
 
+    if (ratingFilter) {
+      countQuery = countQuery.eq("rating", ratingFilter);
+    }
+    if (hasImageFilter) {
+      countQuery = countQuery.in("review_id", mediaReviewIds);
+    }
+
+    const { count, error: countErr } = await countQuery;
     if (countErr) throw new Error(countErr.message);
     const total = count || 0;
 
     // 6. Get reviews paginated
-    const { data: reviews, error: revErr } = await admin
+    let revQuery = admin
       .schema("sales")
       .from("review")
       .select("review_id, customer_id, order_item_id, rating, review_content, created_at")
       .eq("review_status", "DISPLAY")
-      .in("order_item_id", orderItemIds)
-      .order("rating", { ascending: false })
+      .in("order_item_id", orderItemIds);
+
+    if (ratingFilter) {
+      revQuery = revQuery.eq("rating", ratingFilter);
+    }
+    if (hasImageFilter) {
+      revQuery = revQuery.in("review_id", mediaReviewIds);
+    }
+
+    const { data: reviews, error: revErr } = await revQuery
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -154,13 +301,48 @@ export async function GET(request: Request, { params }: { params: Promise<Params
       if (color?.color_name) colorName = color.color_name;
     }
 
+    // Resolve review media URLs
+    const reviewIds = reviewsList.map((r) => Number(r.review_id));
+    const { data: reviewMediaList } = reviewIds.length
+      ? await admin
+          .schema("sales")
+          .from("review_media")
+          .select("review_id, media_id")
+          .in("review_id", reviewIds)
+      : { data: [] };
+
+    const reviewMediaIds = Array.from(new Set((reviewMediaList || []).map((rm) => Number(rm.media_id))));
+    const { data: mediaItems } = reviewMediaIds.length
+      ? await admin
+          .schema("catalog")
+          .from("media")
+          .select("media_id, storage_key, bucket_name")
+          .in("media_id", reviewMediaIds)
+      : { data: [] };
+
+    const mediaLookupMap = new Map((mediaItems || []).map((m) => [Number(m.media_id), m]));
+    const reviewToMediaUrlsMap = new Map<number, string[]>();
+    for (const rm of reviewMediaList || []) {
+      const revId = Number(rm.review_id);
+      const mId = Number(rm.media_id);
+      const media = mediaLookupMap.get(mId);
+      if (media) {
+        const url = mediaUrl(media.storage_key, media.bucket_name);
+        const urls = reviewToMediaUrlsMap.get(revId) ?? [];
+        urls.push(url);
+        reviewToMediaUrlsMap.set(revId, urls);
+      }
+    }
+
     // 10. Map everything together
     const formattedReviews = reviewsList.map((rev) => {
       const variantId = orderItemMap.get(Number(rev.order_item_id));
       const variant = variantsList.find((v) => Number(v.variant_id) === variantId);
-      const sizeName = variant?.size_option_id
-        ? sizeMap.get(Number(variant.size_option_id)) ?? "F"
-        : "F";
+      const sizeName = orderItemCustomizationMap.has(Number(rev.order_item_id))
+        ? "Custom"
+        : variant?.size_option_id
+          ? sizeMap.get(Number(variant.size_option_id)) ?? "F"
+          : "F";
 
       return {
         review_id: Number(rev.review_id),
@@ -169,7 +351,10 @@ export async function GET(request: Request, { params }: { params: Promise<Params
         review_content: rev.review_content,
         created_at: rev.created_at,
         classification: `Màu: ${colorName} | Size: ${sizeName}`,
-        media: [],
+        media: (reviewToMediaUrlsMap.get(Number(rev.review_id)) ?? []).map((url) => ({
+          url,
+          media_type: "IMAGE",
+        })),
       };
     });
 
@@ -177,9 +362,13 @@ export async function GET(request: Request, { params }: { params: Promise<Params
       {
         reviews: formattedReviews,
         total,
+        total_all: totalAll,
+        total_images: totalImagesCount,
+        avg_rating: avgRating,
         page,
         limit,
         has_more: offset + limit < total,
+        components: componentList,
       },
       "Thành công.",
     );

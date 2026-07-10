@@ -10,6 +10,7 @@ import { ActionSuccessModal } from "@/components/organisms/ActionSuccessModal";
 import type { SelectOption } from "@/components/molecules/SelectField";
 import type { TimeSlot } from "@/components/molecules/TimeSlotPicker";
 import { ROUTES } from "@/constants/routes";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { createAppointment } from "@/services/appointment.service";
 import type { AppointmentDto } from "@/types/appointment.types";
@@ -29,6 +30,7 @@ export function AppointmentModal({
 }) {
   const [createdAppointment, setCreatedAppointment] =
     useState<AppointmentDto | null>(null);
+  const auth = useAuth();
   const handleSuccessClose = () => {
     setCreatedAppointment(null);
     onClose?.();
@@ -100,15 +102,18 @@ export function AppointmentModal({
 
       {createdAppointment ? (
         <ActionSuccessModal
-          title="Đặt Lịch Thành Công"
+          title="Đặt Lịch Hẹn Thành Công"
           eyebrow="Xéo Xọ đã ghi nhận"
-          message="Lịch hẹn của bạn đã được lưu thành công. Xéo Xọ sẽ chuẩn bị sẵn sàng để đón tiếp và tư vấn số đo cho bạn tại chi nhánh đã chọn."
+          message="Lịch hẹn của bạn đã được lưu thành công. Xéo Xọ đã sẵn sàng đón tiếp và tư vấn số đo cho bạn tại chi nhánh đã chọn."
           codeLabel="Mã lịch hẹn"
           codeValue={createdAppointment.appointment_code}
-          primaryLabel="Tiếp tục khám phá"
-          primaryHref={ROUTES.PRODUCTS}
+          primaryLabel="Xem lịch hẹn"
+          primaryHref={
+            auth.isAuthenticated ? ROUTES.ACCOUNT_APPOINTMENTS : ROUTES.APPOINTMENT
+          }
           primaryAction={handleSuccessClose}
-          secondaryLabel="Đóng"
+          secondaryLabel="Tiếp tục mua hàng"
+          secondaryHref={ROUTES.HOME}
           secondaryAction={handleSuccessClose}
           onClose={handleSuccessClose}
         />

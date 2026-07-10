@@ -83,16 +83,24 @@ function logAuthServiceError(
   scope: string,
   detail: {
     response?: Response;
-    payload?: unknown;
+    payload?: any;
     metadata?: unknown;
   },
 ) {
-  console.error(`[authService/${scope}]`, {
-    status: detail.response?.status ?? null,
-    statusText: detail.response?.statusText ?? null,
-    payload: detail.payload ?? null,
-    metadata: detail.metadata ?? null,
-  });
+  const isGuest = detail.response && isUnauthorizedResponse(detail.response, detail.payload);
+  if (isGuest) {
+    console.warn(`[authService/${scope}] Guest user (unauthorized)`, {
+      status: detail.response?.status ?? null,
+      statusText: detail.response?.statusText ?? null,
+    });
+  } else {
+    console.error(`[authService/${scope}]`, {
+      status: detail.response?.status ?? null,
+      statusText: detail.response?.statusText ?? null,
+      payload: detail.payload ?? null,
+      metadata: detail.metadata ?? null,
+    });
+  }
 }
 
 export const authService = {

@@ -1,7 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { appointmentService } from "@/services/appointment.service";
+import {
+  appointmentService,
+  type CancelAppointmentValues,
+} from "@/services/appointment.service";
 import type {
   AppointmentLookupDto,
   AppointmentLookupValues,
@@ -12,6 +15,7 @@ export function useAppointmentLookup(
 ) {
   const [result, setResult] = useState<AppointmentLookupDto | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>();
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -38,9 +42,43 @@ export function useAppointmentLookup(
   const reset = useCallback(() => {
     setResult(null);
     setIsLoading(false);
+    setIsCancelling(false);
     setErrorMessage(undefined);
     setHasSearched(false);
   }, []);
+
+  const cancel = useCallback(
+    async (appointmentId: number, values: CancelAppointmentValues = {}) => {
+      setIsCancelling(true);
+      setErrorMessage(undefined);
+
+      try {
+        const data = await appointmentService.cancelAppointment(
+          appointmentId,
+          values,
+        );
+
+        setResult((current) =>
+          current && current.appointment_id === appointmentId
+            ? {
+                ...current,
+                appointment_status: data.appointment_status,
+              }
+            : current,
+        );
+
+        return data;
+      } catch (error) {
+        setErrorMessage(
+          error instanceof Error ? error.message : "Không thể hủy lịch hẹn.",
+        );
+        return null;
+      } finally {
+        setIsCancelling(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     const appointmentCode = initialValues?.appointment_code?.trim();
@@ -57,8 +95,10 @@ export function useAppointmentLookup(
   }, [initialValues?.appointment_code, initialValues?.contact, lookup]);
 
   return {
+    cancel,
     errorMessage,
     hasSearched,
+    isCancelling,
     isLoading,
     lookup,
     reset,

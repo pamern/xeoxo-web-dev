@@ -1,24 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { StarRating } from "@/components/atoms/StarRating";
-import { FilterChipButton } from "@/components/atoms/FilterChipButton";
-import { Button } from "@/components/atoms/Button";
 import { productService } from "@/services/product.service";
+import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product.types";
 import type { ProductDetailDto, ProductReviewDto } from "@/types/product-api.types";
-
-type FilterValue = "all" | 5 | 4 | 3 | 2 | 1 | "comment";
-
-const FILTERS: Array<{ label: string; value: FilterValue }> = [
-  { label: "Tất cả bình luận", value: "all" },
-  { label: "5 Sao", value: 5 },
-  { label: "4 Sao", value: 4 },
-  { label: "3 Sao", value: 3 },
-  { label: "2 Sao", value: 2 },
-  { label: "1 Sao", value: 1 },
-  { label: "Có Bình luận", value: "comment" },
-];
 
 export function ReviewsSection({
   product,
@@ -29,43 +16,173 @@ export function ReviewsSection({
 }) {
   const initialReviews = apiProduct?.reviews_preview ?? [];
   const [reviews, setReviews] = useState<ProductReviewDto[]>(initialReviews);
-  const [activeFilter, setActiveFilter] = useState<FilterValue>("all");
-  const [modalOpen, setModalOpen] = useState(false);
-  const [loadingAll, setLoadingAll] = useState(false);
-  const totalReviews = apiProduct?.reviews_summary?.total ?? initialReviews.length;
-  const avgRating = apiProduct?.reviews_summary?.avg_rating ?? 0;
-  const ratingCounts =
-    apiProduct?.reviews_summary?.rating_counts ?? { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-
-  const filteredReviews = useMemo(
-    () => filterReviews(reviews, activeFilter),
-    [reviews, activeFilter],
+  const [rating, setRating] = useState<number | null>(null);
+  const [hasImage, setHasImage] = useState(false);
+  const [componentId, setComponentId] = useState<number | null>(null);
+  const [componentsList, setComponentsList] = useState<Array<{ component_id: number; component_name: string }>>(
+    apiProduct?.components?.map((c) => ({
+      component_id: c.component_id,
+      component_name: c.component_name,
+    })) ?? []
   );
+  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [filteredTotal, setFilteredTotal] = useState(
+    apiProduct?.reviews_summary?.total ?? initialReviews.length
+  );
+  const [totalAllCount, setTotalAllCount] = useState(
+    apiProduct?.reviews_summary?.total ?? initialReviews.length
+  );
+  const [totalImagesCount, setTotalImagesCount] = useState(0);
+  const [avgRating, setAvgRating] = useState(apiProduct?.reviews_summary?.avg_rating ?? 0);
 
-  async function loadAllReviews() {
-    if (loadingAll) return;
-    setLoadingAll(true);
-    try {
-      const page = await productService.getReviews(
-        product.slug,
-        1,
-        Math.max(totalReviews, 5),
-      );
-      setReviews(page.reviews);
-    } catch (error) {
-      console.error("Không thể tải thêm đánh giá:", error);
-    } finally {
-      setLoadingAll(false);
-    }
-  }
+  const [ratingOpen, setRatingOpen] = useState(false);
+  const [componentOpen, setComponentOpen] = useState(false);
 
-  async function openAllReviews(filter: FilterValue = activeFilter) {
-    setActiveFilter(filter);
-    setModalOpen(true);
-    if (reviews.length < totalReviews) {
-      await loadAllReviews();
+  const [isPending, startTransition] = useTransition();
+  const listContainerRef = useRef<HTMLDivElement>(null);
+
+  const fetchFilteredReviews = (r: number | null, hi: boolean, cid: number | null, p: number = 1) => {
+    setCurrentPage(p);
+    startTransition(async () => {
+      try {
+        const pageData = await productService.getReviews(product.slug, p, 10, {
+          rating: r,
+          has_image: hi,
+          component_id: cid,
+        });
+        setReviews(pageData.reviews);
+        setFilteredTotal(pageData.total);
+        if (pageData.components) {
+          setComponentsList(pageData.components);
+        }
+        if (pageData.total_all !== undefined) {
+          setTotalAllCount(pageData.total_all);
+        }
+        if (pageData.total_images !== undefined) {
+          setTotalImagesCount(pageData.total_images);
+        }
+        if (pageData.avg_rating !== undefined) {
+          setAvgRating(pageData.avg_rating);
+        }
+      } catch (error) {
+        console.error("Không thể tải danh sách đánh giá:", error);
+      }
+    });
+  };
+
+  useEffect(() => {
+    fetchFilteredReviews(null, false, null, 1);
+  }, []);
+
+  const handleRatingChange = (newRating: number | null) => {
+    setRating(newRating);
+    fetchFilteredReviews(newRating, hasImage, componentId, 1);
+  };
+
+  const handleHasImageChange = (newHasImage: boolean) => {
+    setHasImage(newHasImage);
+    fetchFilteredReviews(rating, newHasImage, componentId, 1);
+  };
+
+  const handleComponentChange = (newCompId: number | null) => {
+    setComponentId(newCompId);
+    fetchFilteredReviews(rating, hasImage, newCompId, 1);
+  };
+
+  const handlePageChange = (p: number) => {
+    fetchFilteredReviews(rating, hasImage, componentId, p);
+    
+    // Scroll list container back to top
+    if (listContainerRef.current) {
+      listContainerRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
     }
-  }
+  };
+
+  const renderPagination = () => {
+    const totalPages = Math.ceil(filteredTotal / 10);
+    if (totalPages <= 1) return null;
+
+    const pages: (number | string)[] = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      // Always show page 1
+      pages.push(1);
+      
+      if (currentPage <= 3) {
+        pages.push(2, 3, 4, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push("...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push("...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      }
+    }
+
+    return (
+      <div className="mt-6 flex items-center justify-center gap-2">
+        {/* Prev Page Button (Only show if currentPage > 1) */}
+        {currentPage > 1 && (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => handlePageChange(currentPage - 1)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 hover:border-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          >
+            <svg className="w-4 h-4 stroke-[2.5px] stroke-currentColor fill-none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+        )}
+
+        {pages.map((p, idx) => {
+          if (p === "...") {
+            return (
+              <span key={idx} className="px-2 text-foreground/50 select-none">
+                ...
+              </span>
+            );
+          }
+          const isCurrent = p === currentPage;
+          return (
+            <button
+              key={idx}
+              type="button"
+              disabled={isPending}
+              onClick={() => handlePageChange(p as number)}
+              className={cn(
+                "flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors",
+                isCurrent
+                  ? "bg-black text-white"
+                  : "border border-black/10 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+              )}
+            >
+              {p}
+            </button>
+          );
+        })}
+
+        {/* Next Page Button (Only show if currentPage < totalPages) */}
+        {currentPage < totalPages && (
+          <button
+            type="button"
+            disabled={isPending}
+            onClick={() => handlePageChange(currentPage + 1)}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 hover:border-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+          >
+            <svg className="w-4 h-4 stroke-[2.5px] stroke-currentColor fill-none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        )}
+      </div>
+    );
+  };
 
   return (
     <section className="reviews-shell">
@@ -81,105 +198,179 @@ export function ReviewsSection({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
-          {FILTERS.map((filter) => (
-            <FilterChipButton
-              key={String(filter.value)}
-              active={activeFilter === filter.value}
+        <div className="flex flex-wrap items-center gap-2.5 border-t border-b border-black/10 py-4">
+          {/* Nút 1: Tất cả */}
+          <button
+            type="button"
+            onClick={() => {
+              setRating(null);
+              setHasImage(false);
+              setComponentId(null);
+              fetchFilteredReviews(null, false, null, 1);
+            }}
+            className={cn(
+              "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
+              (rating === null && !hasImage && componentId === null)
+                ? "border-black bg-black text-white"
+                : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+            )}
+          >
+            Tất cả ({totalAllCount})
+          </button>
+
+          {/* Nút 2: Có hình ảnh */}
+          <button
+            type="button"
+            onClick={() => {
+              setRating(null);
+              setHasImage(true);
+              setComponentId(null);
+              fetchFilteredReviews(null, true, null, 1);
+            }}
+            className={cn(
+              "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
+              (hasImage && rating === null && componentId === null)
+                ? "border-black bg-black text-white"
+                : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+            )}
+          >
+            Có hình ảnh ({totalImagesCount})
+          </button>
+
+          {/* Nút 3: Sao custom dropdown */}
+          <div className="relative">
+            <button
+              type="button"
               onClick={() => {
-                setActiveFilter(filter.value);
-                if (reviews.length < totalReviews) void openAllReviews(filter.value);
+                setRatingOpen(!ratingOpen);
+                setComponentOpen(false);
               }}
+              className={cn(
+                "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
+                (rating !== null)
+                  ? "border-black bg-black text-white"
+                  : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+              )}
             >
-              {filter.label} {filterCount(filter.value, totalReviews, ratingCounts)}
-            </FilterChipButton>
-          ))}
+              <span className="flex items-center gap-1.5">
+                Sao {rating ? `: ${rating} Sao` : ""} 
+                <svg className="w-2.5 h-2.5 shrink-0 stroke-currentColor fill-none stroke-[2px]" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                </svg>
+              </span>
+            </button>
+            {ratingOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setRatingOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 w-36 bg-white border border-black/15 rounded-lg shadow-lg z-50 py-1 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleRatingChange(null);
+                      setRatingOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                  >
+                    Tất cả sao
+                  </button>
+                  {[5, 4, 3, 2, 1].map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => {
+                        handleRatingChange(s);
+                        setRatingOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                    >
+                      {s} Sao
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Nút 4: Thành phần custom dropdown (chỉ cho Multi-component) */}
+          {componentsList.length > 1 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  setComponentOpen(!componentOpen);
+                  setRatingOpen(false);
+                }}
+                className={cn(
+                  "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
+                  (componentId !== null)
+                    ? "border-black bg-black text-white"
+                    : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+                )}
+              >
+                <span className="flex items-center gap-1.5">
+                  Thành phần {componentId ? `: ${componentsList.find((c) => c.component_id === componentId)?.component_name}` : ""} 
+                  <svg className="w-2.5 h-2.5 shrink-0 stroke-currentColor fill-none stroke-[2px]" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                  </svg>
+                </span>
+              </button>
+              {componentOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setComponentOpen(false)} />
+                  <div className="absolute top-full left-0 mt-1 w-44 bg-white border border-black/15 rounded-lg shadow-lg z-50 py-1 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleComponentChange(null);
+                        setComponentOpen(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                    >
+                      Tất cả thành phần
+                    </button>
+                    {componentsList.map((comp) => (
+                      <button
+                        key={comp.component_id}
+                        type="button"
+                        onClick={() => {
+                          handleComponentChange(comp.component_id);
+                          setComponentOpen(false);
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                      >
+                        {comp.component_name}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {isPending && (
+            <span className="text-[10px] text-foreground/50 animate-pulse ml-auto">
+              Đang tải...
+            </span>
+          )}
         </div>
       </div>
 
-      <ReviewList reviews={filteredReviews.slice(0, 5)} className="mt-8" />
+      {/* Scrollable box container for reviews */}
+      <div 
+        ref={listContainerRef}
+        className="mt-8 max-h-[600px] overflow-y-auto pr-2 scroll-smooth border border-black/5 rounded-[12px] p-4 bg-foreground/[0.01]"
+      >
+        <ReviewList reviews={reviews} />
+        {reviews.length === 0 && (
+          <p className="py-10 text-center text-foreground/60">
+            Chưa có đánh giá phù hợp.
+          </p>
+        )}
+      </div>
 
-      {filteredReviews.length === 0 && (
-        <p className="py-10 text-center text-foreground/60">
-          Chưa có đánh giá phù hợp.
-        </p>
-      )}
-
-      {totalReviews > 5 && (
-        <div className="mt-8 text-center">
-          <Button
-            type="button"
-            variant="primaryPill"
-            size="pill"
-            onClick={() => void openAllReviews()}
-            disabled={loadingAll}
-          >
-            {loadingAll ? "Đang tải..." : "Xem tất cả đánh giá →"}
-          </Button>
-        </div>
-      )}
-
-      {modalOpen && (
-        <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/45 p-4">
-          <div className="max-h-[86vh] w-full max-w-[980px] overflow-hidden rounded-lg bg-white shadow-[0_24px_80px_rgba(0,0,0,0.25)]">
-            <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
-              <div>
-                <h3 className="text-heading-section font-bold uppercase">Tất cả đánh giá</h3>
-                <p className="mt-1 text-body-sm text-foreground/60">
-                  Sắp xếp theo đánh giá cao và mới nhất.
-                </p>
-              </div>
-              <button
-                type="button"
-                aria-label="Đóng"
-                onClick={() => setModalOpen(false)}
-                className="text-3xl leading-none hover:opacity-60"
-              >
-                ×
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2.5 px-6 py-4">
-              {FILTERS.map((filter) => (
-                <FilterChipButton
-                  key={String(filter.value)}
-                  active={activeFilter === filter.value}
-                  onClick={() => setActiveFilter(filter.value)}
-                >
-                  {filter.label} {filterCount(filter.value, totalReviews, ratingCounts)}
-                </FilterChipButton>
-              ))}
-            </div>
-            <div className="max-h-[58vh] overflow-y-auto px-6 pb-6">
-              <ReviewList reviews={filteredReviews} />
-              {filteredReviews.length === 0 && (
-                <p className="py-10 text-center text-foreground/60">
-                  Chưa có đánh giá phù hợp.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {renderPagination()}
     </section>
   );
-}
-
-function filterReviews(reviews: ProductReviewDto[], filter: FilterValue) {
-  if (filter === "all") return reviews;
-  if (filter === "comment") {
-    return reviews.filter((review) => review.review_content?.trim());
-  }
-  return reviews.filter((review) => Math.round(review.rating) === filter);
-}
-
-function filterCount(
-  filter: FilterValue,
-  total: number,
-  ratingCounts: Record<1 | 2 | 3 | 4 | 5, number>,
-) {
-  if (filter === "all") return total;
-  if (filter === "comment") return "";
-  return ratingCounts[filter];
 }
 
 function ReviewList({
@@ -192,7 +383,7 @@ function ReviewList({
   if (!reviews.length) return null;
 
   return (
-    <div className={["review-list-shell", className].filter(Boolean).join(" ")}>
+    <div className={cn("review-list-shell flex flex-col gap-4", className)}>
       {reviews.map((review) => (
         <article key={review.review_id} className="review-card">
           <div className="flex gap-4">
@@ -210,6 +401,19 @@ function ReviewList({
                 <p className="mt-3 text-body-sm font-light leading-relaxed text-foreground/90">
                   {review.review_content}
                 </p>
+              )}
+              {review.media && review.media.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {review.media.map((imgObj, idx) => (
+                    <div key={idx} className="relative h-20 w-20 overflow-hidden rounded-md border border-black/10">
+                      <img
+                        src={imgObj.url}
+                        alt={`Đánh giá hình ảnh ${idx}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

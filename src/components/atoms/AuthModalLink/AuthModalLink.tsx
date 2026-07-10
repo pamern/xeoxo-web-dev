@@ -1,12 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
 
 type AuthMode = "login" | "register";
 
-export function AuthModalLink({
+function AuthModalLinkInner({
   mode,
   children,
   className,
@@ -27,5 +28,17 @@ export function AuthModalLink({
     <Link href={href} scroll={false} className={className}>
       {children}
     </Link>
+  );
+}
+
+export function AuthModalLink(props: {
+  mode: AuthMode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Suspense fallback={<span className={props.className}>{props.children}</span>}>
+      <AuthModalLinkInner {...props} />
+    </Suspense>
   );
 }

@@ -40,7 +40,7 @@ export async function createAppointment(
     appointment_date: values.appointment_date,
     start_time: startTimeStr,
     end_time: endTimeStr,
-    appointment_status: 'PENDING',
+    appointment_status: 'CONFIRMED',
     contact_name: values.full_name.trim(),
     contact_phone: values.phone.trim(),
     contact_email: values.email?.trim().toLowerCase() || null,

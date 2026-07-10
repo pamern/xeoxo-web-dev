@@ -7,6 +7,16 @@ import type {
 import type { AppointmentDto, CreateAppointmentValues } from "@/types/appointment.types";
 import type { ApiResponse as RouteApiResponse } from "@/lib/api-response";
 
+export type CancelAppointmentValues = {
+  contact?: string;
+  cancel_reason?: string;
+};
+
+export type CancelAppointmentDto = {
+  appointment_id: number;
+  appointment_status: "CANCELLED";
+};
+
 async function readApi<T>(response: Response, fallback: string) {
   const payload = (await response.json()) as ApiResponse<T>;
 
@@ -34,6 +44,25 @@ export const appointmentService = {
     return readApi<AppointmentLookupDto>(
       response,
       "Không thể tra cứu lịch hẹn.",
+    );
+  },
+
+  async cancelAppointment(
+    appointmentId: number,
+    values: CancelAppointmentValues = {},
+  ) {
+    const response = await fetch(API.APPOINTMENT_CANCEL(appointmentId), {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    return readApi<CancelAppointmentDto>(
+      response,
+      "Không thể hủy lịch hẹn.",
     );
   },
 };
