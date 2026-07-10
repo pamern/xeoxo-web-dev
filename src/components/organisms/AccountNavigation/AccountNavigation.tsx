@@ -63,7 +63,7 @@ function AccountNavCard({
         className={cn(
           "h-auto shrink-0",
           variant === "account" ? "w-5 md:w-8" : "w-5",
-          isActive && "brightness-0 invert",
+          isActive ? "brightness-0 invert" : "brightness-0",
         )}
       />
     </>
