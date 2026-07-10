@@ -157,7 +157,7 @@ export function AccountReviewsContent({
               {/* Quality Text */}
               <div className="text-[13px] text-black">
                 <span className="font-light text-black/60">Nội dung đánh giá:</span>{" "}
-                <span className="font-bold text-black/90">
+                <span className="font-normal text-black/90">
                   {review.review_content || "(Không có nội dung bình luận)"}
                 </span>
               </div>
