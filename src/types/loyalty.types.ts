@@ -6,5 +6,4 @@ export type AvailableLoyaltyReward = {
   voucher_code: string | null;
   expired_at: string | null;
   tier_id: string | null;
-  quantity: number;
 };

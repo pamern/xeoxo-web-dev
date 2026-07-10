@@ -68,6 +68,7 @@ export const API = {
   AUTH_SYNC_PROFILE: "/api/v1/auth/sync-profile",
   COLLECTIONS_LATEST: "/api/v1/collections/latest",
   CUSTOMERS_ME: "/api/v1/customers/me",
+  LOYALTY_REWARDS: "/api/v1/loyalty-rewards",
 
   PRODUCT_LINE: (slug: string) =>
     `/api/v1/product-lines/${encodeURIComponent(slug)}`,

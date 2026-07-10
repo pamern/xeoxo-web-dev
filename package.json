@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:order-status": "tsx scripts/order-status-cli.ts",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",

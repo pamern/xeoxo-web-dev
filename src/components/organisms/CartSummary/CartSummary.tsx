@@ -45,15 +45,15 @@ function getRewardBenefit(
 
 function getRewardTitle(reward: AvailableLoyaltyReward) {
   if (reward.reward_type === "FREE_SHIPPING") {
-    return "Mien phi van chuyen";
+    return "Miễn phí vận chuyển";
   }
 
   if (reward.reward_type === "BIRTHDAY_VOUCHER") {
-    return "Qua sinh nhat thanh vien";
+    return "Quà sinh nhật thành viên";
   }
 
   if (reward.reward_type === "TIER_VOUCHER") {
-    return "Uu dai hang thanh vien";
+    return "Ưu đãi hạng thành viên";
   }
 
   return reward.reward_name;
@@ -61,22 +61,22 @@ function getRewardTitle(reward: AvailableLoyaltyReward) {
 
 function getRewardDescription(reward: AvailableLoyaltyReward) {
   if (reward.reward_type === "FREE_SHIPPING") {
-    return "Ap dung cho phi giao hang cua don nay.";
+    return "Áp dụng cho phí giao hàng của đơn này.";
   }
 
   if (
     reward.reward_type === "BIRTHDAY_VOUCHER" ||
     reward.reward_type === "TIER_VOUCHER"
   ) {
-    return `Giam toi da ${formatPrice(reward.reward_value)}.`;
+    return `Giảm tối đa ${formatPrice(reward.reward_value)}.`;
   }
 
-  return "Quyen loi nay chua ap dung tai gio hang.";
+  return "Quyền lợi này chưa áp dụng tại giỏ hàng.";
 }
 
 function formatExpiredAt(value: string | null) {
   if (!value) {
-    return "Khong gioi han";
+    return "Không giới hạn";
   }
 
   return new Intl.DateTimeFormat("vi-VN", {
@@ -628,11 +628,6 @@ function VoucherModal({
                         {reward.tier_id && (
                           <span className="rounded-[4px] border border-current px-2 py-1 text-xs font-bold uppercase">
                             {reward.tier_id}
-                          </span>
-                        )}
-                        {reward.quantity > 1 && (
-                          <span className="rounded-[4px] border border-current px-2 py-1 text-xs font-bold uppercase">
-                            x{reward.quantity}
                           </span>
                         )}
                       </div>
