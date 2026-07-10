@@ -42,7 +42,7 @@ const STARS_DATA = [
 export function StarsBanner() {
   return (
     <section
-      className="relative w-full overflow-hidden bg-cover bg-center py-10 md:py-14"
+      className="stars-shell"
       style={{ backgroundImage: "url(/images/stars-background.png)" }}
     >
       <style
@@ -77,8 +77,8 @@ export function StarsBanner() {
 
       <div className="pointer-events-none absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 mx-auto w-full max-w-site px-6 xl:px-[100px]">
-        <h2 className="mb-8 text-center text-[28px] font-extrabold uppercase tracking-widest text-white [text-shadow:0_4px_8px_rgba(0,0,0,0.5)] md:text-[36px]">
+      <div className="site-container relative z-10">
+        <h2 className="stars-title">
           STARS in XÉO XỌ
         </h2>
 
@@ -93,7 +93,7 @@ export function StarsBanner() {
                 {STARS_DATA.map((star) => (
                   <div
                     key={`${groupIndex}-${star.id}`}
-                    className="group relative aspect-[3/4] w-[280px] shrink-0 overflow-hidden border border-black/20 bg-black/10 shadow-lg transition-all duration-300 hover:shadow-xl"
+                    className="group stars-card"
                   >
                     <Image
                       src={star.image}
@@ -103,8 +103,8 @@ export function StarsBanner() {
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 
-                    <div className="absolute bottom-0 inset-x-0 flex min-h-[180px] flex-col justify-end bg-gradient-to-t from-black via-black/85 to-transparent p-4 pt-12">
-                      <p className="mb-3 min-h-[72px] line-clamp-4 text-[13px] font-light leading-relaxed text-white/90">
+                    <div className="stars-card-overlay">
+                      <p className="stars-card-copy">
                         {star.text}
                       </p>
                       <a
@@ -112,7 +112,7 @@ export function StarsBanner() {
                         target="_blank"
                         rel="noopener noreferrer"
                         tabIndex={groupIndex === 1 ? -1 : undefined}
-                        className="flex h-[38px] w-full items-center justify-center rounded-full border border-white bg-transparent text-center text-[13px] font-bold uppercase tracking-wider text-white transition-colors duration-200 hover:bg-white hover:text-black"
+                        className="stars-card-cta"
                       >
                         Khám phá
                       </a>

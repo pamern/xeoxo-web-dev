@@ -76,10 +76,10 @@ const SOCIAL_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="bg-black text-white">
-      <div className="mx-auto grid max-w-site gap-10 px-6 py-[50px] lg:grid-cols-[minmax(0,1fr)_minmax(320px,430px)] xl:px-[100px]">
-        <div className="flex max-w-[1040px] flex-col gap-[25px]">
+      <div className="footer-shell footer-hero-grid">
+        <div className="flex max-w-[1040px] flex-col gap-[clamp(18px,9.43px+0.67vw,27px)]">
           <div className="flex flex-col gap-[10px]">
-            <p className="text-2xl font-medium leading-tight md:text-heading-section">
+            <p className="text-heading-section font-medium leading-tight">
               <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á
               Đông trong từng thiết kế
             </p>
@@ -91,7 +91,7 @@ export function SiteFooter() {
 
           <Link
             href={ROUTES.COLLECTIONS}
-            className="inline-flex w-fit items-center gap-[10px] rounded-pill border border-white px-6 py-3 text-button font-medium transition-colors hover:bg-white hover:text-black"
+            className="inline-flex min-h-control w-fit items-center gap-[10px] rounded-pill border border-white px-6 text-button font-medium transition-colors hover:bg-white hover:text-black"
           >
             Khám phá bộ sưu tập
             <Image
@@ -119,14 +119,14 @@ export function SiteFooter() {
                   alt={social.label}
                   width={50}
                   height={50}
-                  className="h-[50px] w-[50px]"
+                  className="footer-social-icon"
                 />
               </a>
             ))}
           </div>
         </div>
 
-        <div className="flex w-full max-w-[430px] flex-col gap-10 lg:justify-self-end">
+        <div className="flex w-full max-w-[430px] flex-col gap-[clamp(24px,12.57px+0.89vw,36px)] lg:justify-self-end">
           <ContactRow
             icon="/icons/phone.svg"
             label="Hotline"
@@ -140,16 +140,16 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="mx-auto h-px max-w-site bg-white/20" />
+      <div className="footer-shell h-px bg-white/20" />
 
-      <div className="mx-auto grid max-w-site gap-10 px-6 py-5 lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
+      <div className="footer-shell footer-link-grid">
         <div className="grid gap-x-10 gap-y-8 sm:grid-cols-[auto_auto]">
           {LINK_COLUMNS.map((column) => (
             <FooterLinkColumn key={column.title} column={column} />
           ))}
         </div>
 
-        <div className="flex flex-col gap-[10px]">
+        <div className="footer-link-stack">
           <h3 className="text-nav font-bold">Chính sách</h3>
           {POLICY_LINKS.map((policy) => (
             <Link
@@ -162,7 +162,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-[10px]">
+        <div className="footer-link-stack">
           <h3 className="text-nav font-bold">Hệ thống cửa hàng</h3>
           {STORES.map((address) => (
             <p key={address} className="text-body-lg font-light text-white/80">
@@ -172,8 +172,8 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-site gap-10 px-6 py-5 lg:grid-cols-[1.6fr_1fr_1fr] xl:px-[100px]">
-        <div className="flex flex-col gap-[10px] lg:col-span-2">
+      <div className="footer-shell footer-meta-grid">
+        <div className="footer-link-stack lg:col-span-2">
           <p className="text-body-lg font-extrabold">
             © CÔNG TY TNHH MAI AN KIM VIỆT NAM
           </p>
@@ -205,18 +205,18 @@ function ContactRow({
   value: string;
 }) {
   return (
-    <div className="flex items-start gap-[25px]">
+    <div className="footer-contact-row">
       <Image
         src={icon}
         alt=""
         width={80}
         height={80}
         aria-hidden
-        className="h-20 w-20 brightness-0 invert"
+        className="footer-contact-icon brightness-0 invert"
       />
       <div className="flex flex-col gap-[5px]">
         <span className="text-body-lg font-medium text-white/80">{label}</span>
-        <span className="text-2xl font-medium md:text-heading-section">
+        <span className="text-heading-section font-medium">
           {value}
         </span>
       </div>
@@ -226,14 +226,14 @@ function ContactRow({
 
 function FooterLinkColumn({ column }: { column: FooterColumn }) {
   return (
-    <div className="flex flex-col gap-[10px]">
+    <div className="footer-link-stack">
       <h3 className="text-nav font-bold">{column.title}</h3>
       {column.links.map((link) =>
         link.href === ROUTES.REGISTER ? (
           <AuthModalLink
             key={link.label}
             mode="register"
-            className="text-lg font-light text-white/80 transition-colors hover:text-white"
+            className="text-body-lg font-light text-white/80 transition-colors hover:text-white"
           >
             {link.label}
           </AuthModalLink>
@@ -241,7 +241,7 @@ function FooterLinkColumn({ column }: { column: FooterColumn }) {
           <Link
             key={link.label}
             href={link.href}
-            className="text-lg font-light text-white/80 transition-colors hover:text-white"
+            className="text-body-lg font-light text-white/80 transition-colors hover:text-white"
           >
             {link.label}
           </Link>

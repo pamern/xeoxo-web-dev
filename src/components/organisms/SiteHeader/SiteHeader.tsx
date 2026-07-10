@@ -215,34 +215,34 @@ export function SiteHeader({
           className="relative bg-black bg-[length:100%_auto] bg-top text-white"
           style={{ backgroundImage: "url(/images/header-line-up.png)" }}
         >
-          <div className="mx-auto flex h-10 max-w-site items-center justify-between px-6 text-base xl:px-[100px]">
+          <div className="header-utility-shell">
             <UtilityGroup links={UTILITY_LEFT} />
-            <div className="flex items-center gap-3">
+            <div className="header-utility-group">
               <UtilityGroup
                 links={utilityRightLinks}
                 onOpenAuthModal={openAuthModal}
               />
               {hasAccountMenu && (
                 <>
-                  <span aria-hidden className="h-[22px] w-px bg-white/60" />
+                  <span aria-hidden className="header-utility-divider" />
                   <div className="relative">
                     <button
                       type="button"
                       onClick={openAccountSidebar}
-                      className="flex max-w-[220px] items-center gap-2 font-bold transition-opacity hover:opacity-70"
+                      className="header-utility-item flex max-w-[220px] items-center gap-2 font-bold"
                     >
                       <span className="truncate">{accountLabel}</span>
-                      <span aria-hidden className="text-[10px]">
+                      <span aria-hidden className="text-caption">
                         ▾
                       </span>
                     </button>
                   </div>
                 </>
               )}
-              <span aria-hidden className="h-[22px] w-px bg-white/60" />
+              <span aria-hidden className="header-utility-divider" />
               <button
                 type="button"
-                className="flex items-center gap-2 font-bold"
+                className="header-utility-item flex items-center gap-2 font-bold"
               >
                 <Image
                   src="/icons/flag-vn.svg"
@@ -252,7 +252,7 @@ export function SiteHeader({
                   aria-hidden
                 />
                 VN
-                <span aria-hidden className="text-[10px]">
+                <span aria-hidden className="text-caption">
                   ▾
                 </span>
               </button>
@@ -261,8 +261,8 @@ export function SiteHeader({
         </div>
 
         <div>
-          <div className="mx-auto flex max-w-site items-center justify-between gap-4 px-6 py-[10px] xl:px-[100px]">
-            <div className="flex items-center gap-3">
+          <div className="header-main-shell py-1">
+            <div className="flex items-center gap-3 justify-self-start">
               <button
                 type="button"
                 aria-label="Mở menu"
@@ -282,14 +282,14 @@ export function SiteHeader({
                   width={206}
                   height={84}
                   priority
-                  className="h-[88px] w-auto object-contain lg:h-[110px]"
+                  className="header-logo w-auto object-contain"
                 />
               </Link>
             </div>
 
             <nav
               aria-label="Danh mục chính"
-              className="hidden items-center gap-10 lg:flex"
+              className="header-main-nav"
             >
               {MAIN_NAV.map((item) => {
                 const active = pathname === item.href;
@@ -315,7 +315,7 @@ export function SiteHeader({
                     <Link
                       href={item.href!}
                       className={cn(
-                        "text-[22px] transition-colors hover:text-foreground/60",
+                        "header-nav-link",
                         active && "underline underline-offset-8",
                       )}
                     >
@@ -345,7 +345,7 @@ export function SiteHeader({
                               <Link
                                 key={category.categoryId}
                                 href={ROUTES.CATEGORY(category.categorySlug)}
-                                className="block min-w-0 whitespace-nowrap text-[18px] leading-[1.25] transition-colors hover:text-foreground/60"
+                                className="header-dropdown-link"
                                 onClick={() => setHoveredNav(null)}
                               >
                                 {category.categoryName}
@@ -360,13 +360,13 @@ export function SiteHeader({
               })}
             </nav>
 
-            <div className="flex items-center gap-4">
-              <label className="hidden items-center gap-3 rounded-[30px] border-2 border-[#8f8f8f] py-2.5 pl-5 pr-2.5 md:flex">
+            <div className="flex items-center gap-4 justify-self-end">
+              <label className="header-search">
                 <span className="sr-only">Tìm kiếm sản phẩm</span>
                 <input
                   type="search"
                   placeholder="Tìm kiếm..."
-                  className="w-32 bg-transparent text-base font-light text-foreground outline-none placeholder:text-[#8f8f8f]"
+                  className="min-w-0 flex-1 bg-transparent text-field font-light text-foreground outline-none placeholder:text-muted-foreground"
                 />
                 <Image
                   src="/icons/search.svg"
@@ -419,7 +419,7 @@ export function SiteHeader({
                   aria-hidden
                 />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-caption text-primary-foreground">
                     {cartCount}
                   </span>
                 )}
@@ -511,19 +511,21 @@ export function SiteHeader({
 function UtilityGroup({
   links,
   onOpenAuthModal,
+  className,
 }: {
   links: UtilityLink[];
   onOpenAuthModal?: (mode: AuthMode) => void;
+  className?: string;
 }) {
   return (
-    <div className="flex items-center gap-3">
+    <div className={cn("header-utility-group", className)}>
       {links.map((link, index) => (
-        <span key={link.label} className="flex items-center gap-3">
+        <span key={link.label} className="flex items-center">
           {link.authMode ? (
             <button
               type="button"
               onClick={() => onOpenAuthModal?.(link.authMode!)}
-              className="flex items-center gap-2 transition-opacity hover:opacity-70"
+              className="header-utility-item flex items-center gap-2"
             >
               {link.icon && (
                 <Image
@@ -539,7 +541,7 @@ function UtilityGroup({
           ) : (
             <Link
               href={link.href!}
-              className="flex items-center gap-2 transition-opacity hover:opacity-70"
+              className="header-utility-item flex items-center gap-2"
             >
               {link.icon && (
                 <Image
@@ -554,7 +556,7 @@ function UtilityGroup({
             </Link>
           )}
           {index < links.length - 1 && (
-            <span aria-hidden className="h-[22px] w-px bg-white/60" />
+            <span aria-hidden className="header-utility-divider" />
           )}
         </span>
       ))}

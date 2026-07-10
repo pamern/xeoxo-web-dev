@@ -52,7 +52,7 @@ function FloralDivider({ className }: { className?: string }) {
     <div
       aria-hidden="true"
       className={cn(
-        "h-[5px] w-full bg-[length:100%_100%] bg-center bg-no-repeat",
+        "floral-divider",
         className,
       )}
       style={{ backgroundImage: "url(/images/header-line-up.png)" }}
@@ -95,8 +95,8 @@ export default async function AccountAppointmentsPage({
 
   return (
     <SiteLayout>
-      <div className="bg-background">
-        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
+      <div className="account-page-shell">
+        <section className="account-page-section">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -111,7 +111,7 @@ export default async function AccountAppointmentsPage({
               ]}
             />
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+            <div className="account-page-grid">
               <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
@@ -120,9 +120,9 @@ export default async function AccountAppointmentsPage({
                 />
               </aside>
 
-              <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
+              <section className="account-content-panel">
                 <div className="flex flex-col gap-5">
-                  <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
+                  <h1 className="account-panel-title">
                     Quản lý lịch hẹn
                   </h1>
 

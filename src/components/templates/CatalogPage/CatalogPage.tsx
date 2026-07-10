@@ -124,8 +124,8 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
 
       {slug !== "tre-em" && <CatalogHeroGrid collections={heroCollections} />}
 
-      <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]">
-        <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
+      <section className="catalog-shell py-8">
+        <div className="no-scrollbar flex gap-[var(--filter-bar-gap)] overflow-x-auto pb-2">
           <FilterPill
             href={productSections[0] ? ROUTES.CATEGORY(productSections[0].categorySlug) : "#"}
             active
@@ -181,12 +181,12 @@ function EmptyCatalogState({
   description: string;
 }) {
   return (
-    <section className="mx-auto w-full max-w-site px-6 py-16 text-center xl:px-[100px]">
-      <h2 className="text-3xl font-extrabold uppercase text-black md:text-5xl">
+    <section className="catalog-shell py-16 text-center">
+      <h2 className="text-display-section font-extrabold uppercase text-black md:text-display-page">
         {title}
       </h2>
       {description ? (
-        <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-black/65">
+        <p className="mx-auto mt-4 max-w-2xl text-body-lg leading-8 text-black/65">
           {description}
         </p>
       ) : null}
@@ -208,8 +208,8 @@ function FilterPill({
       href={href}
       className={
         active
-          ? "shrink-0 whitespace-nowrap rounded-pill bg-black px-6 py-3 text-lg font-medium text-white"
-          : "shrink-0 whitespace-nowrap rounded-pill border border-black px-6 py-3 text-lg font-medium transition-colors hover:bg-black hover:text-white"
+          ? "shrink-0 whitespace-nowrap rounded-pill bg-black px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button text-white"
+          : "shrink-0 whitespace-nowrap rounded-pill border border-black px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button transition-colors hover:bg-black hover:text-white"
       }
     >
       {children}

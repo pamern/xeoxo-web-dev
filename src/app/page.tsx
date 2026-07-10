@@ -83,7 +83,7 @@ export default async function HomePage() {
           className="object-cover"
           aria-hidden
         />
-        <div className="no-scrollbar relative mx-auto flex w-full max-w-site gap-5 overflow-x-auto px-6 py-10 xl:px-[100px]">
+        <div className="homepage-shell no-scrollbar relative flex gap-[var(--homepage-collection-gap)] overflow-x-auto py-10">
           {homepageCollections.map((collection) => (
             <CollectionCard
               key={collection.slug}
@@ -97,7 +97,7 @@ export default async function HomePage() {
 
       <GenderSelect />
 
-      <section className="mx-auto w-full max-w-site px-6 pb-12 xl:px-[100px]">
+      <section className="homepage-shell pb-12">
         <Link
           href={ROUTES.PERSONAL_COLOR}
           className="group relative flex min-h-[260px] overflow-hidden rounded-lg md:min-h-[420px] lg:min-h-[615px]"

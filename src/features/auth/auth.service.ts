@@ -14,6 +14,15 @@ export function isAuthSessionMissing(error: unknown) {
   );
 }
 
+export function isRefreshTokenNotFound(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "refresh_token_not_found"
+  );
+}
+
 export function isAuthUserMissing(error: unknown) {
   return (
     error instanceof Error &&
@@ -25,7 +34,11 @@ export async function getAuthenticatedUser(supabase: SupabaseClient) {
   const { data, error } = await supabase.auth.getUser();
 
   if (error) {
-    if (isAuthSessionMissing(error) || isAuthUserMissing(error)) {
+    if (
+      isAuthSessionMissing(error) ||
+      isAuthUserMissing(error) ||
+      isRefreshTokenNotFound(error)
+    ) {
       return null;
     }
 

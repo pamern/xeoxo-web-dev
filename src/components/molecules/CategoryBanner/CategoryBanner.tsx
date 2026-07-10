@@ -19,7 +19,7 @@ export function CategoryBanner({
   return (
     <section
       className={cn(
-        "group relative flex min-h-[280px] items-center overflow-hidden md:min-h-[410px]",
+        "group category-banner-shell",
         className
       )}
     >
@@ -34,13 +34,13 @@ export function CategoryBanner({
         className="absolute inset-0 bg-black/25 transition-colors duration-700 group-hover:bg-black/35"
         aria-hidden
       />
-      <div className="relative mx-auto flex w-full max-w-site flex-col items-start gap-5 px-6 xl:px-[100px]">
-        <h2 className="max-w-2xl text-shadow text-3xl font-medium text-white md:text-4xl">
+      <div className="category-banner-content">
+        <h2 className="category-banner-title">
           {title}
         </h2>
         <Link
           href={href}
-          className="inline-flex items-center rounded-pill border border-white px-6 py-3 text-lg font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
+          className="category-banner-cta"
         >
           {ctaLabel}
         </Link>

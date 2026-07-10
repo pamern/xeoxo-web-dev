@@ -68,15 +68,15 @@ export function ReviewsSection({
   }
 
   return (
-    <section className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
+    <section className="reviews-shell">
       <div className="flex flex-col gap-6">
         <div>
-          <h2 className="text-[30px] font-bold uppercase">Đánh giá sản phẩm</h2>
+          <h2 className="reviews-title">Đánh giá sản phẩm</h2>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="text-[44px] font-bold leading-none">
+            <span className="reviews-score">
               {avgRating.toFixed(1)}
             </span>
-            <span className="pb-1 text-xl">trên 5</span>
+            <span className="pb-1 text-body-xl">trên 5</span>
             <StarRating rating={avgRating} size={24} className="pb-0.5" />
           </div>
         </div>
@@ -121,11 +121,11 @@ export function ReviewsSection({
 
       {modalOpen && (
         <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/45 p-4">
-          <div className="max-h-[86vh] w-full max-w-[980px] overflow-hidden rounded-[24px] bg-white shadow-[0_24px_80px_rgba(0,0,0,0.25)]">
+          <div className="max-h-[86vh] w-full max-w-[980px] overflow-hidden rounded-lg bg-white shadow-[0_24px_80px_rgba(0,0,0,0.25)]">
             <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
               <div>
-                <h3 className="text-2xl font-bold uppercase">Tất cả đánh giá</h3>
-                <p className="mt-1 text-sm text-foreground/60">
+                <h3 className="text-heading-section font-bold uppercase">Tất cả đánh giá</h3>
+                <p className="mt-1 text-body-sm text-foreground/60">
                   Sắp xếp theo đánh giá cao và mới nhất.
                 </p>
               </div>
@@ -192,25 +192,22 @@ function ReviewList({
   if (!reviews.length) return null;
 
   return (
-    <div className={["mx-auto flex max-w-[1387px] flex-col gap-5", className].filter(Boolean).join(" ")}>
+    <div className={["review-list-shell", className].filter(Boolean).join(" ")}>
       {reviews.map((review) => (
-        <article
-          key={review.review_id}
-          className="rounded-[20px] bg-[#f3f3f3] px-8 py-7"
-        >
+        <article key={review.review_id} className="review-card">
           <div className="flex gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-foreground/10 bg-secondary text-lg font-bold text-foreground/75">
               {review.customer_name.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-sm font-bold">{review.customer_name}</h3>
+              <h3 className="text-body-sm font-bold">{review.customer_name}</h3>
               <StarRating rating={review.rating} size={16} className="mt-1" />
-              <p className="mt-1 text-xs font-light text-foreground/70">
+              <p className="mt-1 text-caption font-light text-foreground/70">
                 {new Date(review.created_at).toLocaleString("vi-VN")}
                 {review.classification ? ` | ${review.classification}` : ""}
               </p>
               {review.review_content && (
-                <p className="mt-3 text-sm font-light leading-relaxed text-foreground/90">
+                <p className="mt-3 text-body-sm font-light leading-relaxed text-foreground/90">
                   {review.review_content}
                 </p>
               )}

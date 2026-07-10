@@ -33,7 +33,7 @@ export function ProductListingPage({
 }) {
   return (
     <SiteLayout>
-      <section className="mx-auto w-full max-w-site px-6 pb-12 pt-10 xl:px-[100px]">
+      <section className="listing-shell pb-12 pt-10">
         <Breadcrumbs
           items={
             breadcrumbs ?? [
@@ -43,7 +43,7 @@ export function ProductListingPage({
           }
           className="mb-5"
         />
-        <h1 className="text-3xl font-extrabold uppercase leading-tight md:text-4xl">
+        <h1 className="page-heading leading-tight">
           {title}
         </h1>
 
@@ -53,11 +53,17 @@ export function ProductListingPage({
       <FloralStrip />
 
       {recentlyViewedProducts.length > 0 && (
-        <section className="mx-auto w-full max-w-site px-6 py-12 xl:px-[100px]">
-          <h2 className="mb-6 text-3xl font-extrabold uppercase">
+        <section className="listing-shell py-12">
+          <h2 className="mb-6 text-display-section font-extrabold uppercase">
             Sản phẩm bạn đã xem
           </h2>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-4">
+          <div
+            className="grid grid-cols-2 md:grid-cols-4"
+            style={{
+              columnGap: "var(--product-grid-gap-x)",
+              rowGap: "var(--product-grid-gap-y)",
+            }}
+          >
             {recentlyViewedProducts.map((product, index) => (
               <ProductCard
                 key={`${product.id}-viewed-${index}`}

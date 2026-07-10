@@ -18,13 +18,13 @@ export function FilterBar({
   className?: string;
 }) {
   return (
-    <section className={cn("mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]", className)}>
+    <section className={cn("catalog-shell py-8", className)}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        {title && <h2 className="text-xl font-medium uppercase">{title}</h2>}
-        <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
+        {title && <h2 className="text-heading-section font-medium uppercase">{title}</h2>}
+        <div className="no-scrollbar flex gap-[var(--filter-bar-gap)] overflow-x-auto pb-1">
           {options.map((option) => {
             const classes = cn(
-              "shrink-0 whitespace-nowrap rounded-pill border px-5 py-2.5 text-base font-medium transition-colors",
+              "shrink-0 whitespace-nowrap rounded-pill border px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button font-medium transition-colors",
               option.active
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border hover:border-primary hover:bg-primary hover:text-primary-foreground"

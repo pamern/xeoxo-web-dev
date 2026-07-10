@@ -13,7 +13,7 @@ export function CatalogHero({
   ctaHref: string;
 }) {
   return (
-    <section className="group relative flex h-[320px] items-end overflow-hidden md:h-[450px]">
+    <section className="group catalog-hero-shell">
       <Image
         src={image}
         alt={label}
@@ -27,14 +27,14 @@ export function CatalogHero({
         aria-hidden
       />
 
-      <div className="relative mx-auto flex w-full max-w-site flex-col gap-3 px-6 pb-8 md:pb-12 xl:px-[100px]">
+      <div className="catalog-hero-content">
         <div className="flex flex-col gap-[13px]">
-          <h1 className="text-shadow text-5xl font-extrabold uppercase text-white md:text-[64px]">
+          <h1 className="catalog-hero-title">
             {label}
           </h1>
           <Link
             href={ctaHref}
-            className="inline-flex w-fit items-center justify-center rounded-[30px] border border-white px-8 py-3 text-lg font-medium text-white shadow-[0px_4px_4px_0px_rgba(0,0,0,1)] text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] md:text-heading-section"
+            className="catalog-hero-cta"
           >
             Khám phá
           </Link>

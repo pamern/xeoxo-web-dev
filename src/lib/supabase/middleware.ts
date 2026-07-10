@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import { isAuthSessionMissing, isAuthUserMissing, isRefreshTokenNotFound } from "@/features/auth/auth.service";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -48,7 +49,19 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  const { error } = await supabase.auth.getUser();
+
+  if (error) {
+    if (
+      isAuthSessionMissing(error) ||
+      isAuthUserMissing(error) ||
+      isRefreshTokenNotFound(error)
+    ) {
+      return response;
+    }
+
+    throw new Error(error.message);
+  }
 
   return response;
 }
