@@ -83,11 +83,11 @@ export function StarsBanner() {
         </h2>
 
         <div className="stars-marquee overflow-hidden pb-2">
-          <div className="stars-marquee-track flex w-max gap-6">
+          <div className="stars-marquee-track flex w-max gap-4">
             {[0, 1].map((groupIndex) => (
               <div
                 key={groupIndex}
-                className="flex gap-6"
+                className="flex gap-4"
                 aria-hidden={groupIndex === 1}
               >
                 {STARS_DATA.map((star) => (
