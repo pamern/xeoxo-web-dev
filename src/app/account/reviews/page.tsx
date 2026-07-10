@@ -92,7 +92,7 @@ export default async function AccountReviewsRoute() {
             />
 
             <div className="account-page-grid">
-              <aside className="lg:sticky lg:top-[180px]">
+              <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
                   activeHref={ROUTES.ACCOUNT_REVIEWS}
