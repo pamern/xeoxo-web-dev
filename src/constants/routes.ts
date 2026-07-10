@@ -37,8 +37,6 @@ export const ROUTES = {
   ACCOUNT_ORDERS: "/account/orders",
   ACCOUNT_APPOINTMENTS: "/account/appointments",
   ACCOUNT_REVIEWS: "/account/reviews",
-  ACCOUNT_APPOINTMENTS: "/account/appointments",
-  ACCOUNT_REVIEWS: "/account/reviews",
   ACCOUNT_ORDER: (orderId: string) =>
     `/account/orders/${encodeURIComponent(orderId)}`,
 

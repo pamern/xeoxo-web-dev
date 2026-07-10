@@ -111,7 +111,6 @@ export function AccountOrderHistory({
         </div>
       ) : orders.length ? (
         <div className="mt-8 space-y-6">
-        <div className="mt-8 space-y-6">
           {orders.map((order) => {
             const status = getOrderStatusPresentation(order.order_status);
 
