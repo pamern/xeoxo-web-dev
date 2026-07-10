@@ -10,9 +10,11 @@ function normalizeRequiredText(value: unknown) {
 }
 
 export const appointmentLookupSchema = z.object({
-  appointment_id: z
-    .preprocess((value) => Number(value),
-      z.number().int().positive({ message: "Mã lịch hẹn không hợp lệ." }),
+  appointment_code: z
+    .preprocess(normalizeRequiredText, z.string().min(1, "Vui lòng nhập mã lịch hẹn và SĐT/email."))
+    .refine(
+      (value: string) => /^[A-Z0-9-]+$/i.test(value),
+      "Mã lịch hẹn không hợp lệ.",
     ),
   contact: z
     .preprocess(normalizeRequiredText, z.string().min(1, "Vui lòng nhập mã lịch hẹn và SĐT/email."))

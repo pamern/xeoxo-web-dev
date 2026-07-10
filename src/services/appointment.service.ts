@@ -20,7 +20,7 @@ async function readApi<T>(response: Response, fallback: string) {
 export const appointmentService = {
   async lookupAppointment(values: AppointmentLookupValues) {
     const query = new URLSearchParams({
-      appointment_id: values.appointment_id,
+      appointment_code: values.appointment_code,
       contact: values.contact,
     });
 

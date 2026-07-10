@@ -15,6 +15,7 @@ type AppointmentLookupExperienceProps = {
 
 type AppointmentLookupCardData = {
   appointment_id: number;
+  appointment_code: string;
   branch_address: string;
   branch_name: string;
   date_label: string;
@@ -57,6 +58,7 @@ function formatTimeLabel(startTime: string, endTime: string) {
 function normalizeAppointmentResult(result: any): AppointmentLookupCardData {
   return {
     appointment_id: Number(result.appointment_id),
+    appointment_code: result.appointment_code ?? "",
     branch_address: result.address ?? "Chưa cập nhật địa chỉ chi nhánh.",
     branch_name: result.branch_name ?? "Xéo Xọ",
     date_label: formatAppointmentDate(result.appointment_date),
@@ -84,7 +86,7 @@ export function AppointmentLookupExperience({
 }: AppointmentLookupExperienceProps) {
   const router = useRouter();
   const [formValues, setFormValues] = useState<AppointmentLookupValues>({
-    appointment_id: initialValues?.appointment_id ?? "",
+    appointment_code: initialValues?.appointment_code ?? "",
     contact: initialValues?.contact ?? "",
   });
   const { errorMessage, isLoading, lookup, reset, result } =
@@ -103,7 +105,7 @@ export function AppointmentLookupExperience({
     event.preventDefault();
 
     const nextValues = {
-      appointment_id: formValues.appointment_id.trim(),
+      appointment_code: formValues.appointment_code.trim(),
       contact: formValues.contact.trim(),
     };
 
@@ -117,7 +119,7 @@ export function AppointmentLookupExperience({
 
   const handleReset = () => {
     setFormValues({
-      appointment_id: "",
+      appointment_code: "",
       contact: "",
     });
     reset();
@@ -150,17 +152,17 @@ export function AppointmentLookupExperience({
                   Mã lịch hẹn:
                 </span>
                 <input
-                  id="appointment_id"
-                  name="appointment_id"
+                  id="appointment_code"
+                  name="appointment_code"
                   type="text"
-                  value={formValues.appointment_id}
+                  value={formValues.appointment_code}
                   onChange={(event) =>
                     setFormValues((prev) => ({
                       ...prev,
-                      appointment_id: event.target.value,
+                      appointment_code: event.target.value.toUpperCase(),
                     }))
                   }
-                  placeholder="Mã lịch hẹn của bạn"
+                  placeholder="Ví dụ: APT00000013"
                   className={inputBaseClass}
                 />
               </label>
@@ -241,7 +243,7 @@ export function AppointmentLookupExperience({
                     {normalizedResult.branch_address}
                   </p>
                   <p className="text-[12px] leading-[1.4] tracking-[-0.01em] text-black/60">
-                    {normalizedResult.duration_label}
+                    Mã lịch hẹn: {normalizedResult.appointment_code || normalizedResult.appointment_id}
                   </p>
                 </div>
 

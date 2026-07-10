@@ -43,18 +43,18 @@ export function useAppointmentLookup(
   }, []);
 
   useEffect(() => {
-    const appointmentId = initialValues?.appointment_id?.trim();
+    const appointmentCode = initialValues?.appointment_code?.trim();
     const contact = initialValues?.contact?.trim();
 
-    if (!appointmentId || !contact) {
+    if (!appointmentCode || !contact) {
       return;
     }
 
     void lookup({
-      appointment_id: appointmentId,
+      appointment_code: appointmentCode,
       contact,
     });
-  }, [initialValues?.appointment_id, initialValues?.contact, lookup]);
+  }, [initialValues?.appointment_code, initialValues?.contact, lookup]);
 
   return {
     errorMessage,

@@ -421,7 +421,7 @@
 - order_code (VARCHAR(50), UNIQUE, NOT NULL): Mã đơn hàng nghiệp vụ
 - customer_id (BIGINT, FK, NULL): Mã khách hàng
 - order_date (TIMESTAMPTZ, NOT NULL): Thời gian đặt hàng
-- reward_dicount_amount (NUMERIC(14,2), NOT NULL, DEFAULT 0): Tổng số tiền giảm từ quyền lợi thành viên
+- reward_discount_amount (NUMERIC(14,2), NOT NULL, DEFAULT 0): Tổng số tiền giảm từ quyền lợi thành viên
 - shipping_fee (NUMERIC(14,2), NOT NULL): Phí vận chuyển
 - total_amount (NUMERIC(14,2), NOT NULL): Tổng số tiền thanh toán
 - order_status (VARCHAR(30), NOT NULL): Trạng thái đơn hàng

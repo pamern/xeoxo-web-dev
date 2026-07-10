@@ -35,6 +35,7 @@
   --font-serif: var(--font-crimson), Georgia, serif;
 
   --site-max-width: 1728px;
+  --site-header-height: 0px;
 }
 
 * {
@@ -103,5 +104,16 @@ select {
   .form-control {
     @apply w-full rounded-md border border-input bg-background px-4 py-3 text-base text-foreground outline-none transition-colors;
     @apply placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-1;
+  }
+
+  .account-sticky-rail {
+    @apply self-start;
+  }
+
+  @media (min-width: 1024px) {
+    .account-sticky-rail {
+      position: sticky;
+      top: calc(var(--site-header-height, 0px) + 24px);
+    }
   }
 }

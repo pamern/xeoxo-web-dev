@@ -15,7 +15,7 @@ type SalesOrderRecord = {
   order_id: number;
   order_status: string;
   payment_status: string;
-  reward_dicount_amount: number | string;
+  reward_discount_amount: number | string;
   shipping_fee: number | string;
   total_amount: number | string;
 };
@@ -382,7 +382,7 @@ export async function lookupOrderByContact(
     .schema("sales")
     .from("sales_order")
     .select(
-      "order_id, order_code, customer_id, order_status, payment_status, total_amount, created_at, shipping_fee, reward_dicount_amount",
+      "order_id, order_code, customer_id, order_status, payment_status, total_amount, created_at, shipping_fee, reward_discount_amount",
     )
     .eq("order_code", input.order_code)
     .maybeSingle();
@@ -442,7 +442,7 @@ export async function lookupOrderByContact(
     order_status: safeOrder.order_status,
     payment_status: safeOrder.payment_status,
     refund_status: refundStatus,
-    reward_discount_amount: toNumber(safeOrder.reward_dicount_amount),
+    reward_discount_amount: toNumber(safeOrder.reward_discount_amount),
     shipping,
     shipping_fee: toNumber(safeOrder.shipping_fee),
     total_amount: toNumber(safeOrder.total_amount),

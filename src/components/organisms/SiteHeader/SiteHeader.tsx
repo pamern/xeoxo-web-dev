@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -55,6 +55,7 @@ export function SiteHeader({
   menCategories?: CategoryNavItem[];
   aoDaiCategories?: CategoryNavItem[];
 }) {
+  const headerRef = useRef<HTMLElement | null>(null);
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -79,6 +80,37 @@ export function SiteHeader({
   const authMode = searchParams.get("auth");
   const activeAuthMode =
     authMode === "login" || authMode === "register" ? authMode : null;
+
+  useEffect(() => {
+    function syncHeaderHeight() {
+      const nextHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
+      document.documentElement.style.setProperty(
+        "--site-header-height",
+        `${Math.round(nextHeight)}px`,
+      );
+    }
+
+    syncHeaderHeight();
+
+    const headerElement = headerRef.current;
+    const observer =
+      typeof ResizeObserver !== "undefined" && headerElement
+        ? new ResizeObserver(() => {
+            syncHeaderHeight();
+          })
+        : null;
+
+    if (headerElement && observer) {
+      observer.observe(headerElement);
+    }
+
+    window.addEventListener("resize", syncHeaderHeight);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", syncHeaderHeight);
+    };
+  }, []);
 
   useEffect(() => {
     setModalMode(activeAuthMode);
@@ -172,7 +204,10 @@ export function SiteHeader({
 
   return (
     <>
-      <header className="sticky top-0 z-[140] w-full bg-background">
+      <header
+        ref={headerRef}
+        className="sticky top-0 z-[140] w-full bg-background"
+      >
         <div
           className="relative bg-black bg-[length:100%_auto] bg-top text-white"
           style={{ backgroundImage: "url(/images/header-line-up.png)" }}

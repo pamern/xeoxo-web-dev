@@ -10,6 +10,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { AuthModalLink } from "@/components/atoms/AuthModalLink";
+import { ActionSuccessModal } from "@/components/organisms/ActionSuccessModal";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAuth } from "@/hooks/useAuth";
 import { useCheckout } from "@/hooks/useCheckout";
@@ -193,6 +194,7 @@ export function CheckoutForm() {
   const [acceptedPolicy, setAcceptedPolicy] = useState(true);
   const [otherReceiver, setOtherReceiver] = useState(false);
   const [policiesOpen, setPoliciesOpen] = useState(false);
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [dbProvinces, setDbProvinces] = useState<
@@ -366,6 +368,7 @@ export function CheckoutForm() {
 
     if (result.ok) {
       setSubmitted(true);
+      setSuccessModalOpen(true);
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
     }
   }
@@ -689,18 +692,32 @@ export function CheckoutForm() {
         </p>
       )}
 
-      {submitted && createdOrder && (
-        <p className="mt-5 text-sm font-semibold text-black">
-          Đã tạo đơn {createdOrder.order_code}. Order ID:{" "}
-          {createdOrder.order_id}.
-        </p>
-      )}
-
       {(isSubmitting || isSavingAddress) && (
         <p className="mt-5 text-sm font-semibold text-black/70">
           {isSavingAddress ? "Đang lưu địa chỉ..." : "Đang tạo đơn hàng..."}
         </p>
       )}
+
+      {successModalOpen && submitted && createdOrder ? (
+        <ActionSuccessModal
+          title="Đặt Hàng Thành Công"
+          eyebrow="Xéo Xọ xác nhận đơn hàng"
+          message="Đơn hàng của bạn đã được tạo thành công. Xéo Xọ sẽ tiếp nhận, xử lý và cập nhật trạng thái sớm nhất để bạn tiện theo dõi."
+          codeLabel="Mã đơn hàng"
+          codeValue={createdOrder.order_code}
+          primaryLabel={isMember ? "Xem đơn hàng" : "Tiếp tục mua sắm"}
+          primaryHref={
+            isMember
+              ? ROUTES.ACCOUNT_ORDER(String(createdOrder.order_id))
+              : ROUTES.PRODUCTS
+          }
+          primaryAction={() => setSuccessModalOpen(false)}
+          secondaryLabel={isMember ? "Tiếp tục mua sắm" : "Đóng"}
+          secondaryHref={isMember ? ROUTES.PRODUCTS : undefined}
+          secondaryAction={() => setSuccessModalOpen(false)}
+          onClose={() => setSuccessModalOpen(false)}
+        />
+      ) : null}
     </form>
   );
 }

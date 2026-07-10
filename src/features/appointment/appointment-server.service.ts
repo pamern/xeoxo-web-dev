@@ -1,5 +1,10 @@
+import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { AppointmentDto, CreateAppointmentValues } from "@/types/appointment.types";
+
+function buildAppointmentCode() {
+  return `APT${randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
+}
 
 export async function createAppointment(
   customerId: number | null,
@@ -28,6 +33,7 @@ export async function createAppointment(
   const endTimeStr = `${startDate.getUTCHours().toString().padStart(2, '0')}:${startDate.getUTCMinutes().toString().padStart(2, '0')}`;
 
   const appointmentData = {
+    appointment_code: buildAppointmentCode(),
     customer_id: customerId,
     product_line_id: values.product_line_id || null,
     branch_id: values.branch_id,
@@ -35,6 +41,9 @@ export async function createAppointment(
     start_time: startTimeStr,
     end_time: endTimeStr,
     appointment_status: 'PENDING',
+    contact_name: values.full_name.trim(),
+    contact_phone: values.phone.trim(),
+    contact_email: values.email?.trim().toLowerCase() || null,
     customer_note: values.customer_note || null,
     created_at: now,
     updated_at: now,
@@ -53,6 +62,7 @@ export async function createAppointment(
 
   return {
     appointment_id: appointment.appointment_id,
+    appointment_code: appointment.appointment_code,
     customer_id: appointment.customer_id,
     product_line_id: appointment.product_line_id,
     branch_id: appointment.branch_id,

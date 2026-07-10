@@ -143,7 +143,7 @@ function AccountFaqPage() {
             />
 
             <div className="mt-8 grid gap-8 xl:grid-cols-[290px_minmax(0,1fr)] xl:items-start">
-              <aside className="xl:sticky xl:top-[180px]">
+              <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={FAQ_NAV_ITEMS}
                   activeHref={ROUTES.FAQ_ACCOUNT}

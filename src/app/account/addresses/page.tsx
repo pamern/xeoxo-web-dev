@@ -80,7 +80,7 @@ export default async function AccountAddressesRoute() {
             />
 
             <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
-              <aside className="lg:sticky lg:top-[180px]">
+              <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}
                   activeHref={ROUTES.ACCOUNT_ADDRESSES}

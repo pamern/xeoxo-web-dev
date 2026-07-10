@@ -22,8 +22,10 @@ async function getHeaderCategoryMenus() {
 // Khung dùng chung cho mọi trang public của website (header + footer).
 export async function SiteLayout({
   children,
+  fixedHeader: _fixedHeader,
 }: {
   children: React.ReactNode;
+  fixedHeader?: boolean;
 }) {
   const { womenCategories, menCategories, aoDaiCategories } =
     await getHeaderCategoryMenus();

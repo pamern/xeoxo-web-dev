@@ -6,11 +6,14 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const rawInput = {
-      appointment_id: searchParams.get("appointment_id") ?? "",
+      appointment_code:
+        searchParams.get("appointment_code") ??
+        searchParams.get("appointment_id") ??
+        "",
       contact: searchParams.get("contact") ?? "",
     };
 
-    if (!rawInput.appointment_id || !rawInput.contact) {
+    if (!rawInput.appointment_code || !rawInput.contact) {
       return fail("Vui lòng nhập mã lịch hẹn và SĐT/email.", 400);
     }
 

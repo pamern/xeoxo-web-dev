@@ -1,6 +1,7 @@
 export type AppointmentDto = {
   appointment_id: number;
-  customer_id: number;
+  appointment_code: string;
+  customer_id: number | null;
   product_line_id: number | null;
   branch_id: number;
   appointment_date: string;

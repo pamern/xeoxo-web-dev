@@ -14,6 +14,7 @@ import {
   getVariantStock,
   isVariantPurchasableStatus,
 } from "@/features/cart/cart-server.service";
+import { assertCustomizationCheckoutReady } from "@/features/customization/customization-server.service";
 
 type AddressRecord = {
   address_id: number;
@@ -27,12 +28,24 @@ type PaymentMethodRecord = {
   is_active: boolean;
 };
 
+type RewardRecord = {
+  reward_id: number;
+  reward_type: string;
+  reward_value: number | string | null;
+};
+
 type CreatedOrderRecord = {
   order_id: number;
   order_code: string;
   order_status: string;
   payment_status: string;
   total_amount: number;
+};
+
+type CheckoutBenefit = {
+  discountAmount: number;
+  rewardDiscountAmount: number;
+  freeShipping: boolean;
 };
 
 export type PreparedCheckout = CheckoutPreviewDto & {
@@ -63,10 +76,10 @@ function buildPreview(
   cart: CartDto,
   selectedIds: number[],
   discountAmount = 0,
+  rewardDiscountAmount = 0,
   shippingFee = 30000,
 ) {
   const subtotal = items.reduce((sum, item) => sum + toNumber(item.line_total), 0);
-  const rewardDiscountAmount = 0;
 
   return {
     cart,
@@ -108,7 +121,22 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
   const validatedItems = await Promise.all(
     selectedItems.map(async (item) => {
       if (item.item_type === "CUSTOMIZED") {
-        return item;
+        if (!item.customization_id) {
+          throw new Error(`${item.name || "San pham"} khong co yeu cau may do hop le.`);
+        }
+
+        const customization = await assertCustomizationCheckoutReady(item.customization_id);
+        const currentUnitPrice = toNumber(customization.custom_price);
+
+        return {
+          ...item,
+          unit_price: currentUnitPrice,
+          line_total: currentUnitPrice * item.quantity,
+          custom_price: currentUnitPrice,
+          surcharge_amount: toNumber(customization.surcharge_amount),
+          customization_snapshot:
+            item.customization_snapshot ?? customization.measurement_snapshot ?? null,
+        };
       }
 
       const variantId = item.variant_id ?? 0;
@@ -135,10 +163,24 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
   );
 
   const subtotal = validatedItems.reduce((sum, item) => sum + item.line_total, 0);
+  const hasCustomizedItems = validatedItems.some(
+    (item) => item.item_type === "CUSTOMIZED",
+  );
+  const customSurchargeTotal = validatedItems.reduce((sum, item) => {
+    if (item.item_type !== "CUSTOMIZED") {
+      return sum;
+    }
+
+    return sum + toNumber(item.surcharge_amount) * item.quantity;
+  }, 0);
   const benefit = await resolveCheckoutBenefit(
     typeof voucherCode === "string" ? voucherCode.trim() : "",
     subtotal,
     owner.customerId,
+    {
+      hasCustomizedItems,
+      customSurchargeTotal,
+    },
   );
 
   return buildPreview(
@@ -146,6 +188,7 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
     cart,
     selectedIds,
     benefit.discountAmount,
+    benefit.rewardDiscountAmount,
     benefit.freeShipping ? 0 : 30000,
   );
 }
@@ -154,8 +197,14 @@ async function resolveCheckoutBenefit(
   voucherCode: string,
   subtotal: number,
   customerId: number | null,
-) {
-  if (!voucherCode) return { discountAmount: 0, freeShipping: false };
+  options: {
+    hasCustomizedItems: boolean;
+    customSurchargeTotal: number;
+  },
+): Promise<CheckoutBenefit> {
+  if (!voucherCode) {
+    return { discountAmount: 0, rewardDiscountAmount: 0, freeShipping: false };
+  }
 
   if (!customerId) {
     throw new Error("Ma quyen loi chi danh cho thanh vien.");
@@ -177,13 +226,25 @@ async function resolveCheckoutBenefit(
     throw new Error("Ma quyen loi khong hop le, khong thuoc tai khoan hoac da het han.");
   }
   if (reward.reward_type === "FREE_SHIPPING") {
-    return { discountAmount: 0, freeShipping: true };
+    return { discountAmount: 0, rewardDiscountAmount: 0, freeShipping: true };
+  }
+  if (reward.reward_type === "FREE_TAILOR") {
+    if (!options.hasCustomizedItems || options.customSurchargeTotal <= 0) {
+      throw new Error("Quyen loi FREE_TAILOR chi ap dung cho san pham customize.");
+    }
+
+    return {
+      discountAmount: 0,
+      rewardDiscountAmount: Math.min(options.customSurchargeTotal, subtotal),
+      freeShipping: false,
+    };
   }
   if (!["BIRTHDAY_VOUCHER", "TIER_VOUCHER"].includes(reward.reward_type)) {
-    throw new Error("Quyen loi nay khong ap dung cho don hang standard.");
+    throw new Error("Quyen loi nay khong ap dung cho don hang nay.");
   }
   return {
-    discountAmount: Math.min(Number(reward.reward_value ?? 0), subtotal),
+    discountAmount: 0,
+    rewardDiscountAmount: Math.min(Number(reward.reward_value ?? 0), subtotal),
     freeShipping: false,
   };
 }
@@ -392,6 +453,40 @@ async function attachGuestCartToCustomer(
   }
 }
 
+async function backfillGuestCustomizationOwner(
+  customerId: number,
+  currentCustomerId: number | null,
+  prepared: PreparedCheckout,
+) {
+  if (currentCustomerId) {
+    return;
+  }
+
+  const customizationIds = prepared.items
+    .filter((item) => item.item_type === "CUSTOMIZED" && item.customization_id)
+    .map((item) => Number(item.customization_id))
+    .filter((id) => Number.isInteger(id) && id > 0);
+
+  if (!customizationIds.length) {
+    return;
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin
+    .schema("customization")
+    .from("customization_request")
+    .update({
+      customer_id: customerId,
+      updated_at: new Date().toISOString(),
+    })
+    .in("customization_id", customizationIds)
+    .is("customer_id", null);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
 export async function createCheckoutOrder(values: CreateOrderValues) {
   const customerNote = values.customer_note?.trim();
   if (customerNote && customerNote.length > 200) {
@@ -401,7 +496,7 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
   const admin = createAdminClient();
   const currentCustomerId = await getCurrentCustomerId();
   const prepared = await prepareCheckout(values.cart_item_ids, values.voucher_code);
-  await getActivePaymentMethod(values.payment_method_id);
+  const paymentMethod = await getActivePaymentMethod(values.payment_method_id);
   const { customerId, addressId } = await resolveCheckoutAddress(
     currentCustomerId,
     values.address_id,
@@ -417,6 +512,33 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
     customerId,
     currentCustomerId,
   );
+  await backfillGuestCustomizationOwner(customerId, currentCustomerId, prepared);
+
+  await Promise.all(
+    prepared.items
+      .filter((item) => item.item_type === "CUSTOMIZED" && item.customization_id)
+      .map((item) =>
+        assertCustomizationCheckoutReady(item.customization_id!, customerId),
+      ),
+  );
+
+  const hasCustomizedItems = prepared.items.some(
+    (item) => item.item_type === "CUSTOMIZED",
+  );
+  const hasStandardItems = prepared.items.some(
+    (item) => item.item_type === "STANDARD",
+  );
+
+  if (hasCustomizedItems && !hasStandardItems) {
+    return createCustomizedCheckoutOrder({
+      prepared,
+      customerId,
+      addressId,
+      paymentMethod,
+      customerNote: customerNote || null,
+      voucherCode: values.voucher_code?.trim() || null,
+    });
+  }
 
   const { data, error } = await admin.schema("sales").rpc("checkout_order", {
     p_cart_id: prepared.cart.cart_id,
@@ -441,6 +563,272 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
     shipping_id: number;
     payment_id: number;
   };
+}
+
+async function consumeCheckoutReward(
+  customerId: number,
+  voucherCode: string | null,
+  orderId: number,
+  rewardDiscountAmount: number,
+  shippingFee: number,
+) {
+  if (!voucherCode) {
+    return null;
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .schema("iam")
+    .from("loyalty_reward")
+    .select("reward_id, reward_type, reward_value")
+    .eq("customer_id", customerId)
+    .ilike("voucher_code", voucherCode)
+    .eq("status", "AVAILABLE")
+    .or(`expired_at.is.null,expired_at.gt.${new Date().toISOString()}`)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  if (!data) {
+    throw new Error("Ma quyen loi khong hop le, khong thuoc tai khoan hoac da het han.");
+  }
+
+  const reward = data as RewardRecord;
+  const { error: updateRewardError } = await admin
+    .schema("iam")
+    .from("loyalty_reward")
+    .update({
+      status: "USED",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("reward_id", reward.reward_id)
+    .eq("status", "AVAILABLE");
+
+  if (updateRewardError) {
+    throw new Error(updateRewardError.message);
+  }
+
+  const usedAmount =
+    reward.reward_type === "FREE_SHIPPING" ? shippingFee : rewardDiscountAmount;
+  const { error: rewardUsageError } = await admin
+    .schema("iam")
+    .from("reward_usage")
+    .insert({
+      reward_id: reward.reward_id,
+      order_id: orderId,
+      used_amount: usedAmount,
+      used_at: new Date().toISOString(),
+    });
+
+  if (rewardUsageError) {
+    throw new Error(rewardUsageError.message);
+  }
+
+  return reward.reward_id;
+}
+
+async function createCustomizedCheckoutOrder({
+  prepared,
+  customerId,
+  addressId,
+  paymentMethod,
+  customerNote,
+  voucherCode,
+}: {
+  prepared: PreparedCheckout;
+  customerId: number;
+  addressId: number;
+  paymentMethod: PaymentMethodRecord;
+  customerNote: string | null;
+  voucherCode: string | null;
+}) {
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+  const orderCode = `XX${Date.now()}`;
+  let orderId: number | null = null;
+  let shippingId: number | null = null;
+  let paymentId: number | null = null;
+  let orderItemIds: number[] = [];
+  let rewardId: number | null = null;
+
+  try {
+    const { data: order, error: orderError } = await admin
+      .schema("sales")
+      .from("sales_order")
+      .insert({
+        order_code: orderCode,
+        customer_id: customerId,
+        order_date: now,
+        reward_discount_amount: prepared.reward_discount_amount,
+        shipping_fee: prepared.shipping_fee,
+        total_amount: prepared.total_amount,
+        order_status: "PENDING",
+        payment_status: "PENDING",
+        customer_note: customerNote,
+        created_at: now,
+        updated_at: now,
+      })
+      .select("order_id, order_code, order_status, payment_status, total_amount")
+      .single();
+
+    if (orderError) {
+      throw new Error(orderError.message);
+    }
+
+    const createdOrder = order as CreatedOrderRecord;
+    orderId = Number(createdOrder.order_id);
+
+    const orderItemsPayload = prepared.items.map((item) => ({
+      order_id: orderId,
+      variant_id: null,
+      customization_id: item.customization_id ?? null,
+      customization_snapshot: item.customization_snapshot ?? null,
+      item_type: "CUSTOMIZED",
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      discount_amount: 0,
+      line_total: item.line_total,
+      created_at: now,
+    }));
+
+    const { data: orderItems, error: orderItemsError } = await admin
+      .schema("sales")
+      .from("order_item")
+      .insert(orderItemsPayload)
+      .select("order_item_id");
+
+    if (orderItemsError) {
+      throw new Error(orderItemsError.message);
+    }
+
+    orderItemIds = (orderItems ?? []).map((item) => Number(item.order_item_id));
+
+    const { data: shipping, error: shippingError } = await admin
+      .schema("sales")
+      .from("shipping")
+      .insert({
+        order_id: orderId,
+        address_id: addressId,
+        shipping_provider: "PENDING",
+        tracking_code: null,
+        shipping_status: "PENDING",
+        shipped_at: null,
+        delivered_at: null,
+        created_at: now,
+        updated_at: now,
+      })
+      .select("shipping_id")
+      .single();
+
+    if (shippingError) {
+      throw new Error(shippingError.message);
+    }
+
+    shippingId = Number(shipping.shipping_id);
+
+    const transactionCode = `${paymentMethod.method_code}-${orderCode}`;
+    const { data: payment, error: paymentError } = await admin
+      .schema("sales")
+      .from("payment")
+      .insert({
+        order_id: orderId,
+        method_id: paymentMethod.method_id,
+        amount: prepared.total_amount,
+        payment_status: "PENDING",
+        transaction_code: transactionCode,
+        paid_at: now,
+        created_at: now,
+        updated_at: now,
+      })
+      .select("payment_id")
+      .single();
+
+    if (paymentError) {
+      throw new Error(paymentError.message);
+    }
+
+    paymentId = Number(payment.payment_id);
+
+    rewardId = await consumeCheckoutReward(
+      customerId,
+      voucherCode,
+      orderId,
+      prepared.reward_discount_amount,
+      prepared.shipping_fee,
+    );
+
+    const { error: deleteCartItemsError } = await admin
+      .schema("sales")
+      .from("cart_item")
+      .delete()
+      .in("cart_item_id", prepared.selected_ids);
+
+    if (deleteCartItemsError) {
+      throw new Error(deleteCartItemsError.message);
+    }
+
+    const { count: remainingItemCount, error: remainingItemsError } = await admin
+      .schema("sales")
+      .from("cart_item")
+      .select("cart_item_id", { count: "exact", head: true })
+      .eq("cart_id", prepared.cart.cart_id!);
+
+    if (remainingItemsError) {
+      console.error("[checkout] Khong the dem cart item con lai", remainingItemsError);
+    } else if ((remainingItemCount ?? 0) === 0) {
+      const { error: checkoutCartError } = await admin
+        .schema("sales")
+        .from("cart")
+        .update({ cart_status: "CHECKOUT", updated_at: now })
+        .eq("cart_id", prepared.cart.cart_id!);
+
+      if (checkoutCartError) {
+        console.error("[checkout] Khong the chuyen cart sang CHECKOUT", checkoutCartError);
+      }
+    }
+
+    const customizableIds = prepared.items
+      .map((item) => item.customization_id)
+      .filter((value): value is number => Number.isInteger(value) && Number(value) > 0);
+
+    if (customizableIds.length) {
+      const { error: updateCustomizationError } = await admin
+        .schema("customization")
+        .from("customization_request")
+        .update({
+          customization_status: "CONFIRMED",
+          updated_at: now,
+        })
+        .in("customization_id", customizableIds)
+        .in("customization_status", ["REQUESTED", "MEASUREMENT_PENDING", "MEASURED"]);
+
+      if (updateCustomizationError) {
+        throw new Error(updateCustomizationError.message);
+      }
+    }
+
+    return {
+      order_id: orderId,
+      order_code: createdOrder.order_code,
+      order_status: createdOrder.order_status,
+      payment_status: createdOrder.payment_status,
+      total_amount: toNumber(createdOrder.total_amount),
+      shipping_id: shippingId,
+      payment_id: paymentId,
+      payment_url: undefined,
+    };
+  } catch (error) {
+    await rollbackCreatedCheckout({
+      orderId,
+      shippingId,
+      paymentId,
+      orderItemIds,
+      rewardId,
+    });
+    throw error;
+  }
 }
 
 async function createCheckoutOrderLegacy(values: CreateOrderValues) {
@@ -469,7 +857,7 @@ async function createCheckoutOrderLegacy(values: CreateOrderValues) {
         order_code: orderCode,
         customer_id: customerId,
         order_date: now,
-        reward_dicount_amount: prepared.reward_discount_amount,
+        reward_discount_amount: prepared.reward_discount_amount,
         shipping_fee: prepared.shipping_fee,
         total_amount: prepared.total_amount,
         order_status: "PENDING",
@@ -604,6 +992,7 @@ async function createCheckoutOrderLegacy(values: CreateOrderValues) {
       shippingId,
       paymentId,
       orderItemIds,
+      rewardId: null,
     });
     throw error;
   }
@@ -614,13 +1003,30 @@ async function rollbackCreatedCheckout({
   shippingId,
   paymentId,
   orderItemIds,
+  rewardId,
 }: {
   orderId: number | null;
   shippingId: number | null;
   paymentId: number | null;
   orderItemIds: number[];
+  rewardId: number | null;
 }) {
   const admin = createAdminClient();
+
+  if (rewardId && orderId) {
+    await admin
+      .schema("iam")
+      .from("reward_usage")
+      .delete()
+      .eq("reward_id", rewardId)
+      .eq("order_id", orderId);
+
+    await admin
+      .schema("iam")
+      .from("loyalty_reward")
+      .update({ status: "AVAILABLE", updated_at: new Date().toISOString() })
+      .eq("reward_id", rewardId);
+  }
 
   if (paymentId) {
     await admin.schema("sales").from("payment").delete().eq("payment_id", paymentId);

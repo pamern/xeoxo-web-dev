@@ -42,10 +42,12 @@ export function AppointmentForm({
   branches,
   timeSlots,
   onSubmit,
+  showInlineSuccessMessage = true,
 }: {
   branches: SelectOption[];
   timeSlots: TimeSlot[];
   onSubmit?: (values: AppointmentValues) => void | Promise<void>;
+  showInlineSuccessMessage?: boolean;
 }) {
   const timeOptions = timeSlots.map((slot) => ({
     label: slot.label,
@@ -193,7 +195,7 @@ export function AppointmentForm({
         className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-[14px] bg-cover bg-center px-5 py-4 text-center"
         style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
       >
-        {submitted && (
+        {submitted && showInlineSuccessMessage && (
           <p className="text-body-sm font-medium text-white">
             Đã ghi nhận thông tin đặt lịch.
           </p>

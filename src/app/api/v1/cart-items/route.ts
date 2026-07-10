@@ -7,6 +7,11 @@ import {
   getVariantStock,
   isVariantPurchasableStatus,
 } from "@/features/cart/cart-server.service";
+import { getCurrentCustomerId } from "@/features/cart/cart-server.service";
+import {
+  assertCustomizationCheckoutReady,
+  getCustomizationForCheckout,
+} from "@/features/customization/customization-server.service";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(request: Request) {
@@ -78,14 +83,12 @@ export async function POST(request: Request) {
       }
       finalCustomizationId = customizationId;
 
-      const { data: request, error: requestError } = await admin
-        .schema("customization")
-        .from("customization_request")
-        .select("custom_price, component_id, customization_status, measurement_snapshot")
-        .eq("customization_id", finalCustomizationId)
-        .maybeSingle();
-
-      if (requestError) throw new Error(requestError.message);
+      const currentCustomerId = await getCurrentCustomerId();
+      await assertCustomizationCheckoutReady(
+        finalCustomizationId,
+        currentCustomerId,
+      );
+      const request = await getCustomizationForCheckout(finalCustomizationId);
       if (!request) return fail("Khong tim thay yeu cau may do.", 404);
 
       // We don't check stock for customized items currently as they are made to order

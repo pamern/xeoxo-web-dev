@@ -87,26 +87,26 @@ export default async function OrderDetailPage({
           />
         </section>
 
-        <section className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
-          <div className="flex flex-col lg:flex-row gap-10">
-            {/* Left Column: Sidebar (20%) */}
-            <div className="w-full lg:w-1/5 shrink-0">
-              <AccountNavigation
-                items={ACCOUNT_NAV_ITEMS}
-                activeHref={ROUTES.ACCOUNT_ORDERS}
-                variant="account"
-              />
-            </div>
+        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
+          <div className="mx-auto max-w-site">
+            <div className="mt-2 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+              <aside className="account-sticky-rail">
+                <AccountNavigation
+                  items={ACCOUNT_NAV_ITEMS}
+                  activeHref={ROUTES.ACCOUNT_ORDERS}
+                  variant="account"
+                />
+              </aside>
 
-            {/* Right Column: Main Content (80%) */}
-            <div className="flex-1">
-              <OrderDetailContent
-                allowCancel
-                backHref={ROUTES.ACCOUNT_ORDERS}
-                customerName={customer.customer_name}
-                customerPhone={customer.phone}
-                order={order}
-              />
+              <section>
+                <OrderDetailContent
+                  allowCancel
+                  backHref={ROUTES.ACCOUNT_ORDERS}
+                  customerName={customer.customer_name}
+                  customerPhone={customer.phone}
+                  order={order}
+                />
+              </section>
             </div>
           </div>
         </section>

@@ -10,6 +10,7 @@ export const metadata: Metadata = {
 
 type AppointmentPageProps = {
   searchParams?: Promise<{
+    appointment_code?: string;
     appointment_id?: string;
     contact?: string;
   }>;
@@ -26,7 +27,9 @@ export default async function AppointmentPage({
         <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px] xl:py-10">
           <AppointmentLookupExperience
             initialValues={{
-              appointment_id: resolvedSearchParams?.appointment_id,
+              appointment_code:
+                resolvedSearchParams?.appointment_code ??
+                resolvedSearchParams?.appointment_id,
               contact: resolvedSearchParams?.contact,
             }}
           />
