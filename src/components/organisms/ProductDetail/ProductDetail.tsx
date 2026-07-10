@@ -47,6 +47,25 @@ type ComponentSelection = {
   variantId?: number;
 };
 
+function getReadableTextColor(hex: string) {
+  const normalized = hex.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return "#ffffff";
+  }
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luminance > 0.58 ? "#111111" : "#ffffff";
+}
+
+function getDisplaySizeName(option: ProductSizeOptionDto) {
+  const sizeName = option.size_name?.trim();
+  return sizeName ? sizeName : "Freesize";
+}
+
 export function ProductDetail({
   product,
   apiProduct,
@@ -99,7 +118,7 @@ export function ProductDetail({
   const components = apiProduct.components ?? [];
   const isMultiComponent = components.length > 1;
   const selectedVariant = apiProduct.sizes.find(
-    (option) => option.size_name === size,
+    (option) => getDisplaySizeName(option) === size,
   );
   const defaultComponent = components[0];
   const activeCustomizeComponent =
@@ -148,7 +167,7 @@ export function ProductDetail({
       }
 
       const rect = descriptionSection.getBoundingClientRect();
-      const shouldShow = rect.top <= window.innerHeight;
+      const shouldShow = rect.top <= 0;
       setShowPurchasePanel(shouldShow);
       document.body.classList.toggle("pdp-follow-bar-active", shouldShow);
     }
@@ -383,7 +402,7 @@ export function ProductDetail({
         sizeName:
           current[component.component_id]?.variantId === option.variant_id
             ? undefined
-            : option.size_name,
+            : getDisplaySizeName(option),
         customizationId: undefined,
       },
     }));
@@ -419,6 +438,12 @@ export function ProductDetail({
     }
     setActiveCustomizeComponentId(componentId);
     setIsCustomizeOpen(true);
+  }
+
+  function scrollToDescription() {
+    document
+      .getElementById("product-description-section")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -650,7 +675,11 @@ export function ProductDetail({
         )}
 
         <div className="flex justify-center">
-          <TextActionButton type="button" className="mt-5 text-base">
+          <TextActionButton
+            type="button"
+            className="mt-5 text-base"
+            onClick={scrollToDescription}
+          >
             Mô tả sản phẩm
           </TextActionButton>
         </div>
@@ -740,29 +769,26 @@ function SingleComponentPurchasePanel({
   sizes: ProductSizeOptionDto[];
 }) {
   const regularSizes = sizes.filter(
-    (option) => option.size_name.trim().toUpperCase() !== "CUSTOM",
+    (option) => getDisplaySizeName(option).toUpperCase() !== "CUSTOM",
   );
   const hasAvailableVariant = regularSizes.some((option) => option.is_available);
   const customSelected = selectedSize === "CUSTOM";
   const selectedVariant = regularSizes.find(
-    (option) => option.size_name === selectedSize,
+    (option) => getDisplaySizeName(option) === selectedSize,
   );
-  const selectedSizeLabel = customSelected
-    ? "Custom"
-    : selectedSize || "Chưa chọn";
   const addDisabled =
     isAdding || (!customSelected && !selectedVariant?.is_available);
 
   return (
     <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:block">
-      <div className="mx-auto grid min-h-[88px] max-w-site grid-cols-[minmax(240px,1.1fr)_minmax(280px,1fr)_minmax(130px,0.52fr)_minmax(220px,0.82fr)] items-start gap-4 px-3 py-3 xl:px-[80px]">
+      <div className="mx-auto grid min-h-[96px] max-w-site grid-cols-[minmax(240px,1.1fr)_minmax(280px,1fr)_minmax(130px,0.52fr)_minmax(220px,0.82fr)] items-start gap-4 px-3 py-3 xl:px-[80px]">
         <div className="flex min-w-0 items-start gap-3 self-start">
-          <div className="relative h-[58px] w-[44px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
+          <div className="relative h-[72px] w-[56px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
             <Image
               src={image}
               alt={productName}
               fill
-              sizes="44px"
+              sizes="56px"
               className="object-cover"
             />
           </div>
@@ -774,48 +800,56 @@ function SingleComponentPurchasePanel({
 
         <div className="min-w-0 self-start pl-4">
           <div className="flex items-center gap-2 text-[13px]">
-            <span className="text-black/55">Kích thước:</span>
-            <span className="font-bold">{selectedSizeLabel}</span>
+            <span className="text-black">Kích thước</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {regularSizes.map((option) => (
               <button
                 key={option.variant_id}
                 type="button"
-                onClick={() => onSelectSize(option.size_name)}
+                onClick={() => onSelectSize(getDisplaySizeName(option))}
                 disabled={!option.is_available}
-                aria-pressed={selectedSize === option.size_name}
+                aria-pressed={selectedSize === getDisplaySizeName(option)}
                 className={cn(
-                  "h-[30px] min-w-[44px] rounded-pill border px-3 text-[11px] font-bold transition-colors",
+                  "h-[30px] min-w-[44px] rounded-[4px] border border-black px-3 text-[11px] font-bold transition-colors",
                   !option.is_available &&
-                    "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-                  selectedSize === option.size_name && option.is_available
-                    ? "border-black bg-black text-white"
+                    "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
+                  selectedSize === getDisplaySizeName(option) && option.is_available
+                    ? "bg-black text-white"
                     : option.is_available &&
-                      "border-black/40 bg-white text-black hover:border-black",
+                      "bg-white text-black hover:bg-black hover:text-white",
                 )}
               >
-                {option.size_name}
+                {getDisplaySizeName(option)}
               </button>
             ))}
-            <Button
+            <button
               type="button"
               onClick={onOpenCustomize}
               disabled={!hasAvailableVariant}
-              variant="customPill"
-              size="xs"
               aria-label="Customize"
-              iconSrc="/icons/custom.svg"
-              iconSize={14}
-              iconClassName={cn("h-3.5 w-4 object-contain", customSelected && "invert")}
+              aria-pressed={customSelected}
               className={cn(
-                "h-[30px] min-w-[30px] gap-0 border px-2",
+                "group inline-flex h-[30px] min-w-[30px] items-center justify-center rounded-[4px] border border-black bg-white px-2 transition-colors hover:bg-black disabled:pointer-events-none disabled:opacity-50",
                 customSelected &&
-                  "border-black bg-black text-white",
+                  "bg-black",
                 !hasAvailableVariant &&
-                  "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                  "cursor-not-allowed bg-[#ededed]",
               )}
-            />
+            >
+              <Image
+                src="/icons/custom.svg"
+                alt=""
+                width={14}
+                height={14}
+                aria-hidden
+                className={cn(
+                  "h-3.5 w-4 object-contain transition group-hover:invert",
+                  customSelected && "invert",
+                  hasAvailableVariant && !customSelected && "group-hover:invert",
+                )}
+              />
+            </button>
           </div>
           <button
             type="button"
@@ -828,14 +862,13 @@ function SingleComponentPurchasePanel({
 
         <div className="min-w-0 self-start border-l border-[#d9d9d9] pl-4">
           <div className="flex flex-nowrap items-center gap-2 text-[13px] whitespace-nowrap">
-            <span className="whitespace-nowrap text-black/55">Màu sắc:</span>
+            <span className="whitespace-nowrap text-black">Màu sắc</span>
           </div>
           <span
-            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-pill border border-black/10 px-4 text-[11px] font-bold text-white"
+            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-[4px] border border-black px-4 text-[11px] font-bold text-white"
             style={{
               backgroundColor: color.hex,
-              backgroundImage:
-                "radial-gradient(circle at 18% 50%, rgba(255,255,255,0.18), transparent 18%), radial-gradient(circle at 75% 45%, rgba(255,215,140,0.22), transparent 20%)",
+              color: getReadableTextColor(color.hex),
             }}
           >
             <span className="max-w-[120px] truncate">{color.name}</span>
@@ -848,6 +881,8 @@ function SingleComponentPurchasePanel({
               type="button"
               aria-label="Giảm số lượng"
               onClick={() => onQuantityChange(Math.max(1, quantity - 1))}
+              disabled={quantity <= 1}
+              className="disabled:cursor-not-allowed disabled:opacity-30"
             >
               −
             </button>
@@ -907,13 +942,13 @@ function MultiComponentPurchaseCompact({
 
   return (
     <div className="mt-5 flex flex-col gap-4">
-      <div className="border-y-2 border-primary/80 bg-white py-3">
+      <div className="bg-white py-3">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-bold text-black/55">Màu sắc: {color.name}</p>
+            <p className="text-xs font-bold text-black">Màu sắc</p>
             <span
-              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-full border-[3px] border-input px-5 text-sm font-bold text-white"
-              style={{ backgroundColor: color.hex }}
+              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-[4px] border border-black px-5 text-sm font-bold"
+              style={{ backgroundColor: color.hex, color: getReadableTextColor(color.hex) }}
             >
               {color.name}
             </span>
@@ -929,17 +964,20 @@ function MultiComponentPurchaseCompact({
 
         <div className="flex flex-col">
           {components.map((component) => (
-            <ComponentPurchaseCardCompact
-              key={component.component_id}
-              component={component}
-              selection={selections[component.component_id]}
-              onOpenCustomize={() => onOpenCustomize(component.component_id)}
-              onQuantityChange={(quantity) =>
-                onQuantityChange(component.component_id, quantity)
-              }
-              onSelectVariant={(option) => onSelectVariant(component, option)}
-            />
+            <div key={component.component_id}>
+              <DecorativeComponentDivider />
+              <ComponentPurchaseCardCompact
+                component={component}
+                selection={selections[component.component_id]}
+                onOpenCustomize={() => onOpenCustomize(component.component_id)}
+                onQuantityChange={(quantity) =>
+                  onQuantityChange(component.component_id, quantity)
+                }
+                onSelectVariant={(option) => onSelectVariant(component, option)}
+              />
+            </div>
           ))}
+          <DecorativeComponentDivider />
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-4">
@@ -955,6 +993,7 @@ function MultiComponentPurchaseCompact({
           >
             Đặt lịch may đo
           </button>
+          <span className="text-sm font-bold text-black/60">&gt;</span>
           <button
             type="button"
             onClick={onOpenSizeRecommendation}
@@ -1012,75 +1051,82 @@ function ComponentPurchaseCardCompact({
   const title = component.component_name || component.component_type;
 
   return (
-    <section className="grid gap-3 border-t-2 border-primary/80 py-3 last:border-b-2 sm:grid-cols-[104px_minmax(0,1fr)_96px] sm:items-center">
+    <section className="py-3">
       <div className="min-w-0">
-        <p className="line-clamp-1 text-sm font-bold">{title}</p>
-        <p className="mt-0.5 text-sm font-bold">
+        <p className="truncate text-sm font-bold leading-tight">{title}</p>
+        <p className="mt-1 text-sm font-bold leading-tight">
           {formatPrice(
             isCustomSelected
               ? component.min_price * 1.2
-              : selectedVariant?.price ?? component.min_price,
+            : selectedVariant?.price ?? component.min_price,
           )}
         </p>
-        <p className="mt-1 text-[11px] font-semibold text-black/45">
-          {isCustomSelected
-            ? "Customize"
-            : selectedSize
-              ? `Size ${selectedSize}`
-              : "Chọn size"}
-        </p>
-      </div>
-
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-bold text-black/55">Chọn size</span>
-        {component.variants.map((option) => (
-          <button
-            key={option.variant_id}
-            type="button"
-            onClick={() => onSelectVariant(option)}
-            disabled={!option.is_available}
-            aria-pressed={selection?.variantId === option.variant_id}
-            className={cn(
-              "h-[26px] min-w-[42px] rounded-pill border-[2px] px-3 text-[11px] font-bold transition-colors",
-              !option.is_available &&
-                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-              selection?.variantId === option.variant_id && option.is_available
-                ? "border-primary bg-primary text-primary-foreground"
-                : option.is_available &&
-                  "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
-            )}
-          >
-            {option.size_name}
-          </button>
-        ))}
-        <Button
-          type="button"
-          onClick={onOpenCustomize}
-          disabled={!hasAvailableVariant}
-          variant="customPill"
-          size="custom"
-          iconSrc="/icons/custom.svg"
-          iconSize={22}
-          iconClassName={cn("h-5 w-5 object-contain", isCustomSelected && "invert")}
-          className={cn(
-            "h-[26px] min-w-[96px] gap-1 border-[2px] px-2 text-[11px]",
-            isCustomSelected && "border-primary bg-primary text-primary-foreground",
-            !hasAvailableVariant &&
-              "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-          )}
-        >
-          Custom
-        </Button>
-      </div>
-
-      <div className="justify-self-start sm:justify-self-end">
-        <QuantityPill
-          value={quantity}
-          max={maxQuantity}
-          onChange={onQuantityChange}
-        />
+        <p className="mt-3 text-xs font-bold text-black">Kích thước</p>
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_88px] sm:items-center">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            {component.variants.map((option) => (
+              <button
+                key={option.variant_id}
+                type="button"
+                onClick={() => onSelectVariant(option)}
+                disabled={!option.is_available}
+                aria-pressed={selection?.variantId === option.variant_id}
+                className={cn(
+                  "h-[26px] min-w-[42px] rounded-[4px] border border-black px-3 text-[11px] font-bold transition-colors",
+                  !option.is_available &&
+                    "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
+                  selection?.variantId === option.variant_id && option.is_available
+                    ? "bg-black text-white"
+                    : option.is_available &&
+                      "bg-white hover:bg-black hover:text-white",
+                )}
+              >
+                {getDisplaySizeName(option)}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={onOpenCustomize}
+              disabled={!hasAvailableVariant}
+              aria-label="Custom"
+              aria-pressed={isCustomSelected}
+              className={cn(
+                "h-[26px] min-w-[96px] rounded-[4px] border border-black px-2 text-[11px] font-bold transition-colors",
+                isCustomSelected && "bg-black text-white",
+                !hasAvailableVariant &&
+                  "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
+                hasAvailableVariant && !isCustomSelected &&
+                  "bg-white hover:bg-black hover:text-white",
+              )}
+            >
+              Custom
+            </button>
+          </div>
+          <div className="justify-self-start sm:justify-self-end">
+            <QuantityPill
+              value={quantity}
+              max={maxQuantity}
+              onChange={onQuantityChange}
+              compact
+            />
+          </div>
+        </div>
       </div>
     </section>
+  );
+}
+
+function DecorativeComponentDivider() {
+  return (
+    <div
+      aria-hidden
+      className="h-[4px] w-full bg-[#f15a42]"
+      style={{
+        backgroundImage: "url(/images/bg-gia-nhap-btn.png)",
+        backgroundPosition: "center",
+        backgroundSize: "220px auto",
+      }}
+    />
   );
 }
 
@@ -1110,7 +1156,7 @@ function MultiComponentPurchase({
   onSelectVariant: (component: ProductComponentDto, option: ProductSizeOptionDto) => void;
 }) {
   const selectedCount = Object.values(selections).filter(
-    (selection) => selection.variantId || selection.customizationId,
+    (selection) => selection.variantId || selection.customizationId || selection.sizeName === "CUSTOM",
   ).length;
   const selectedTotal = useMemo(
     () =>
@@ -1142,10 +1188,10 @@ function MultiComponentPurchase({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs font-bold text-black/50">Màu sắc:</p>
+            <p className="text-xs font-bold text-black">Màu sắc</p>
             <span
-              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-full border-[3px] border-input px-5 text-sm font-bold text-white"
-              style={{ backgroundColor: color.hex }}
+              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-[4px] border border-black px-5 text-sm font-bold"
+              style={{ backgroundColor: color.hex, color: getReadableTextColor(color.hex) }}
             >
               {color.name}
             </span>
@@ -1245,7 +1291,7 @@ function ComponentPurchaseCard({
     (option) => option.variant_id === selection?.variantId,
   );
   const selectedSize = selection?.sizeName ?? "";
-  const isCustomSelected = selection?.customizationId != null;
+  const isCustomSelected = selection?.sizeName === "CUSTOM";
   const hasAvailableVariant = component.variants.some((option) => option.is_available);
   const quantity = selection?.quantity ?? 1;
   const maxQuantity = isCustomSelected
@@ -1285,37 +1331,36 @@ function ComponentPurchaseCard({
               disabled={!option.is_available}
               aria-pressed={selection?.variantId === option.variant_id}
               className={cn(
-                "h-[40px] min-w-[78px] rounded-pill border-[3px] px-4 text-sm font-bold transition-colors",
+                "h-[40px] min-w-[78px] rounded-[4px] border border-black px-4 text-sm font-bold transition-colors",
                 !option.is_available &&
-                  "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                  "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
                 selection?.variantId === option.variant_id && option.is_available
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "bg-black text-white"
                   : option.is_available &&
-                    "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
+                    "bg-white hover:bg-black hover:text-white",
               )}
             >
-              {option.size_name}
+              {getDisplaySizeName(option)}
             </button>
           ))}
-          <Button
+          <button
             type="button"
             onClick={onOpenCustomize}
             disabled={!hasAvailableVariant}
-            variant="customPill"
-            size="custom"
-            iconSrc="/icons/custom.svg"
-            iconSize={34}
-            iconClassName={cn("h-7 w-8 object-contain", isCustomSelected && "invert")}
+            aria-label="Customize"
+            aria-pressed={isCustomSelected}
             className={cn(
-              "min-w-[148px] gap-1.5",
+              "h-[40px] min-w-[148px] rounded-[4px] border border-black px-4 text-sm font-bold transition-colors",
               isCustomSelected &&
-                "border-primary bg-primary text-primary-foreground",
+                "bg-black text-white",
               !hasAvailableVariant &&
-                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
+              hasAvailableVariant && !isCustomSelected &&
+                "bg-white hover:bg-black hover:text-white",
             )}
           >
             Customize
-          </Button>
+          </button>
         </div>
       </div>
 
@@ -1329,8 +1374,8 @@ function ComponentPurchaseCard({
           {isCustomSelected
             ? "Đã lưu yêu cầu Customize cho thành phần này."
             : selectedVariant
-              ? `Tồn kho size ${selectedVariant.size_name}: ${selectedVariant.stock_quantity ?? 0}`
-              : "Chọn size hoặc Customize nếu muốn thêm thành phần này."}
+              ? `Tồn kho size ${getDisplaySizeName(selectedVariant)}: ${selectedVariant.stock_quantity ?? 0}`
+              : ""}
         </p>
       </div>
     </section>
@@ -1361,21 +1406,32 @@ function QuantityPill({
   value,
   max,
   onChange,
+  compact = false,
 }: {
   value: number;
   max: number;
   onChange: (value: number) => void;
+  compact?: boolean;
 }) {
   return (
-    <div className="flex h-[54px] items-center justify-between px-1 text-lg">
+    <div
+      className={cn(
+        "flex items-center justify-between px-1 leading-none",
+        compact ? "h-[26px] min-w-[72px] gap-3 text-[20px]" : "h-[54px] text-lg",
+      )}
+    >
       <button
         type="button"
         aria-label="Giảm số lượng"
         onClick={() => onChange(Math.max(1, value - 1))}
+        disabled={value <= 1}
+        className="disabled:cursor-not-allowed disabled:opacity-30"
       >
         −
       </button>
-      <span className="font-medium">{value}</span>
+      <span className={cn("text-center font-medium", compact ? "min-w-[16px]" : "min-w-[18px]")}>
+        {value}
+      </span>
       <button
         type="button"
         aria-label="Tăng số lượng"

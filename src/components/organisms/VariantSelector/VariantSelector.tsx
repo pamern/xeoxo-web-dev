@@ -1,7 +1,25 @@
-import { Button } from "@/components/atoms/Button";
 import { cn } from "@/lib/utils";
 import type { ProductSizeOptionDto } from "@/types/product-api.types";
 import type { ProductColor } from "@/types/product.types";
+
+function getReadableTextColor(hex: string) {
+  const normalized = hex.replace("#", "");
+  if (!/^[0-9a-fA-F]{6}$/.test(normalized)) {
+    return "#ffffff";
+  }
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luminance > 0.58 ? "#111111" : "#ffffff";
+}
+
+function getDisplaySizeName(option: ProductSizeOptionDto) {
+  const sizeName = option.size_name?.trim();
+  return sizeName ? sizeName : "Freesize";
+}
 
 export function VariantSelector({
   colors,
@@ -27,7 +45,7 @@ export function VariantSelector({
   onOpenCustomize: () => void;
 }) {
   const regularSizes = sizes.filter(
-    (size) => size.size_name.trim().toUpperCase() !== "CUSTOM",
+    (size) => getDisplaySizeName(size).toUpperCase() !== "CUSTOM",
   );
   const customSelected = selectedSize.trim().toUpperCase() === "CUSTOM";
   const hasAvailableVariant = regularSizes.some((size) => size.is_available);
@@ -36,7 +54,7 @@ export function VariantSelector({
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3">
         <div className="text-sm font-bold">
-          Màu sắc: <span className="font-bold">{selectedColor.name}</span>
+          Màu sắc
         </div>
         <div className="flex flex-wrap gap-2">
           {colors.map((option) => (
@@ -48,24 +66,20 @@ export function VariantSelector({
               aria-label={option.name}
               aria-pressed={option.name === selectedColor.name}
               className={cn(
-                "inline-flex h-10 min-w-[120px] items-center justify-center gap-2 rounded-pill border-[3px] px-4 text-sm font-bold text-white transition-colors",
+                "inline-flex h-10 min-w-[120px] items-center justify-center rounded-[4px] border border-black px-5 text-sm font-bold transition-colors hover:opacity-90",
                 option.name === selectedColor.name
-                  ? "border-input"
-                  : "border-border hover:border-primary hover:bg-primary",
+                  ? "border-black"
+                  : "border-black",
                 !hasAvailableVariant &&
-                  "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                  "cursor-not-allowed border-black bg-[#ededed] text-[#a3a3a3]",
               )}
-              style={{ backgroundColor: option.hex }}
+              style={{
+                backgroundColor: hasAvailableVariant ? option.hex : "#ededed",
+                color: hasAvailableVariant
+                  ? getReadableTextColor(option.hex)
+                  : "#a3a3a3",
+              }}
             >
-              <span
-                className={cn(
-                  "h-5 w-5 rounded-full border",
-                  option.name === selectedColor.name
-                    ? "border-white/40"
-                    : "border-white/60",
-                )}
-                style={{ backgroundColor: option.hex }}
-              />
               {option.name}
             </button>
           ))}
@@ -82,51 +96,61 @@ export function VariantSelector({
           </span>
         </div>
         <div className="flex flex-wrap gap-2">
-          {regularSizes.map((option) => (
-            <button
-              key={option.variant_id}
-              type="button"
-              onClick={() => onSizeChange(option.size_name)}
-              disabled={!option.is_available}
-              aria-pressed={option.size_name === selectedSize}
-              aria-label={`${option.size_name}${option.is_available ? "" : " - het hang"}`}
-              className={cn(
-                "relative h-[43px] w-[72px] rounded-pill border-[3px] text-base transition-colors",
-                !option.is_available &&
-                  "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-                option.size_name === selectedSize && option.is_available
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : option.is_available &&
-                    "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
-              )}
-            >
-              {option.size_name}
-            </button>
-          ))}
-          <Button
+          {regularSizes.map((option) => {
+            const sizeName = getDisplaySizeName(option);
+
+            return (
+              <button
+                key={option.variant_id}
+                type="button"
+                onClick={() => {
+                  if (selectedSize === sizeName) {
+                    onSizeChange("");
+                  } else {
+                    onSizeChange(sizeName);
+                  }
+                }}
+                disabled={!option.is_available}
+                aria-pressed={sizeName === selectedSize}
+                aria-label={`${sizeName}${option.is_available ? "" : " - het hang"}`}
+                className={cn(
+                  "relative h-[28px] min-w-[42px] rounded-[4px] border border-black px-3 text-sm font-bold leading-none transition-colors",
+                  !option.is_available &&
+                    "cursor-not-allowed border-black bg-[#ededed] text-[#a3a3a3]",
+                  sizeName === selectedSize && option.is_available
+                    ? "bg-black text-white"
+                    : option.is_available &&
+                      "bg-white hover:bg-black hover:text-white",
+                )}
+              >
+                {sizeName}
+              </button>
+            );
+          })}
+          <button
             type="button"
-            onClick={onOpenCustomize}
+            onClick={() => {
+              if (selectedSize === "CUSTOM") {
+                onSizeChange("");
+              } else {
+                onOpenCustomize();
+              }
+            }}
             disabled={!hasAvailableVariant}
-            variant="customPill"
-            size="custom"
-            iconSrc="/icons/custom.svg"
-            iconSize={38}
-            iconClassName={cn(
-              "h-8 w-9 object-contain transition group-hover:invert group-active:invert",
-              customSelected && "invert",
-            )}
             aria-label="Customize size"
             aria-pressed={customSelected}
             className={cn(
-              "group gap-1.5",
+              "relative h-[28px] min-w-[92px] rounded-[4px] border border-black px-3 text-sm font-bold leading-none transition-colors",
               customSelected &&
-                "border-primary bg-primary text-primary-foreground",
+                "bg-black text-white",
               !hasAvailableVariant &&
-                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+                "cursor-not-allowed border-black bg-[#ededed] text-[#a3a3a3]",
+              hasAvailableVariant && !customSelected &&
+                "bg-white hover:bg-black hover:text-white",
             )}
           >
             Customize
-          </Button>
+          </button>
         </div>
 
         <div className="mt-2 flex items-center gap-4">

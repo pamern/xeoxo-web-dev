@@ -7,6 +7,7 @@ import type {
   ProductReviewsPageDto,
   SizeChartDto,
 } from "@/types/product-api.types";
+import type { Product } from "@/types/product.types";
 
 const PRODUCT_DETAIL_TTL_MS = 30_000;
 const SIZE_CHART_TTL_MS = 5 * 60_000;
@@ -73,18 +74,60 @@ export const productService = {
     );
   },
 
-  async getReviews(slug: string, page = 1, limit = 5) {
-    const params = new URLSearchParams({
-      page: String(page),
-      limit: String(limit),
-    });
-    const response = await fetch(`${API.PRODUCT_REVIEWS(slug)}?${params}`, {
+  async getReviews(
+    slug: string,
+    page = 1,
+    limit = 5,
+    filters?: { rating?: number | null; has_image?: boolean; component_id?: number | null }
+  ) {
+    try {
+      const queryParams: Record<string, string> = {
+        page: String(page),
+        limit: String(limit),
+      };
+      if (filters?.rating != null) {
+        queryParams.rating = String(filters.rating);
+      }
+      if (filters?.has_image) {
+        queryParams.has_image = "true";
+      }
+      if (filters?.component_id != null) {
+        queryParams.component_id = String(filters.component_id);
+      }
+
+      const params = new URLSearchParams(queryParams);
+      const response = await fetch(`${API.PRODUCT_REVIEWS(slug)}?${params}`, {
+        credentials: "include",
+      });
+
+      return await readApi<ProductReviewsPageDto & { total_all?: number; total_images?: number; avg_rating?: number; components?: { component_id: number; component_name: string }[] }>(
+        response,
+        "Khong the tai danh sach danh gia.",
+      );
+    } catch (err) {
+      console.error("Error fetching reviews from API, using fallback empty state:", err);
+      return {
+        reviews: [],
+        total: 0,
+        total_all: 0,
+        total_images: 0,
+        avg_rating: 0,
+        page,
+        limit,
+        has_more: false,
+        components: []
+      };
+    }
+  },
+
+  async getRelatedProducts(slug: string) {
+    const response = await fetch(`/api/v1/product-lines/${encodeURIComponent(slug)}/related`, {
       credentials: "include",
     });
 
-    return readApi<ProductReviewsPageDto>(
+    return readApi<Product[]>(
       response,
-      "Khong the tai danh sach danh gia.",
+      "Khong the tai san pham lien quan.",
     );
   },
 };
