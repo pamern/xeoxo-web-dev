@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { headers } from "next/headers";
+import { CACHE_TAGS, CACHE_TTL_SECONDS } from "@/lib/cache-policy";
 import type { Collection, Product } from "@/types/product.types";
 
 const IMAGE_PLACEHOLDER = "/images/placeholder.png";
@@ -86,11 +88,22 @@ async function getBaseUrl() {
   return "http://localhost:3000";
 }
 
-async function fetchJson<T>(path: string): Promise<T | null> {
+async function fetchJson<T>(
+  path: string,
+  options?: {
+    revalidate?: number;
+    tags?: string[];
+  },
+): Promise<T | null> {
   try {
     const baseUrl = await getBaseUrl();
     const response = await fetch(`${baseUrl}${path}`, {
-      cache: "no-store",
+      next: options
+        ? {
+            revalidate: options.revalidate,
+            tags: options.tags,
+          }
+        : undefined,
     });
 
     if (!response.ok) {
@@ -103,17 +116,26 @@ async function fetchJson<T>(path: string): Promise<T | null> {
   }
 }
 
-export async function fetchCollectionsFromApi() {
-  const response = await fetchJson<ApiListResponse>("/api/collections");
+export const fetchCollectionsFromApi = cache(async function fetchCollectionsFromApi() {
+  const response = await fetchJson<ApiListResponse>("/api/collections", {
+    revalidate: CACHE_TTL_SECONDS.publicCollectionPages,
+    tags: [CACHE_TAGS.collections],
+  });
   return response?.ok ? response.data ?? [] : [];
-}
+});
 
-export async function fetchCollectionBySlugFromApi(slug: string) {
-  const response = await fetchJson<ApiDetailResponse>(
-    `/api/collections/${encodeURIComponent(slug)}`,
-  );
-  return response?.ok ? response.data ?? null : null;
-}
+export const fetchCollectionBySlugFromApi = cache(
+  async function fetchCollectionBySlugFromApi(slug: string) {
+    const response = await fetchJson<ApiDetailResponse>(
+      `/api/collections/${encodeURIComponent(slug)}`,
+      {
+        revalidate: CACHE_TTL_SECONDS.publicCollectionPages,
+        tags: [CACHE_TAGS.collections, CACHE_TAGS.collection(slug)],
+      },
+    );
+    return response?.ok ? response.data ?? null : null;
+  },
+);
 
 export function mapApiCollectionToCollection(
   collection: ApiCollection,

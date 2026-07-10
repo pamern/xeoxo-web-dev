@@ -1,8 +1,10 @@
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS, CACHE_TTL_SECONDS } from "@/lib/cache-policy";
 import { fail, ok } from "@/lib/api-response";
 import { createAdminClient } from "@/lib/supabase/admin";
 
-export async function GET() {
-  try {
+const getCachedPaymentMethods = unstable_cache(
+  async () => {
     const admin = createAdminClient();
     const { data, error } = await admin
       .schema("sales")
@@ -15,14 +17,22 @@ export async function GET() {
       throw new Error(error.message);
     }
 
-    return ok(
-      (data ?? []).map((method) => ({
-        ...method,
-        provider: method.method_code,
-        is_online: method.method_code !== "COD",
-      })),
-      "Lay phuong thuc thanh toan thanh cong.",
-    );
+    return (data ?? []).map((method) => ({
+      ...method,
+      provider: method.method_code,
+      is_online: method.method_code !== "COD",
+    }));
+  },
+  ["payment-methods"],
+  {
+    revalidate: CACHE_TTL_SECONDS.paymentMethods,
+    tags: [CACHE_TAGS.paymentMethods],
+  },
+);
+
+export async function GET() {
+  try {
+    return ok(await getCachedPaymentMethods(), "Lay phuong thuc thanh toan thanh cong.");
   } catch (error) {
     console.error("[payment-methods/GET]", error);
     return fail(
@@ -32,4 +42,3 @@ export async function GET() {
     );
   }
 }
-

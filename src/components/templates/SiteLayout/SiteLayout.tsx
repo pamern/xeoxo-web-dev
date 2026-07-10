@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { SiteFooter } from "@/components/organisms/SiteFooter";
 import { SiteHeader } from "@/components/organisms/SiteHeader";
 import { getCategoriesByDepartment } from "@/features/homepage/homepage.service";
@@ -33,14 +34,18 @@ export async function SiteLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <div className="site-layout-header">
-        <SiteHeader
-          womenCategories={womenCategories}
-          menCategories={menCategories}
-          aoDaiCategories={aoDaiCategories}
-        />
+        <Suspense fallback={<div className="min-h-[120px] w-full bg-background" />}>
+          <SiteHeader
+            womenCategories={womenCategories}
+            menCategories={menCategories}
+            aoDaiCategories={aoDaiCategories}
+          />
+        </Suspense>
       </div>
       <main className="flex-1">{children}</main>
-      <SiteFooter />
+      <Suspense fallback={null}>
+        <SiteFooter />
+      </Suspense>
     </div>
   );
 }

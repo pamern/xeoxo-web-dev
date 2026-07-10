@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { ProductDetail } from "@/components/organisms/ProductDetail";
@@ -18,7 +19,7 @@ type Params = { slug: string };
 
 export const dynamic = "force-dynamic";
 
-async function getApiProduct(slug: string) {
+const getApiProduct = cache(async function getApiProduct(slug: string) {
   const headerStore = await headers();
   const host = headerStore.get("host");
   const forwardedProtocol = headerStore
@@ -50,7 +51,7 @@ async function getApiProduct(slug: string) {
   } catch {
     return null;
   }
-}
+});
 
 function safeImageSrc(src?: string | null) {
   if (!src) {

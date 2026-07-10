@@ -1,11 +1,21 @@
+import { unstable_cache } from "next/cache";
+import { CACHE_TAGS, CACHE_TTL_SECONDS } from "@/lib/cache-policy";
 import { ok, fail } from "@/lib/api-response";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getLatestCollectionHighlight } from "@/features/collections/collection-highlight.service";
+
+const getCachedLatestCollectionHighlight = unstable_cache(
+  async () => getLatestCollectionHighlight(createAdminClient()),
+  ["latest-collection-highlight"],
+  {
+    revalidate: CACHE_TTL_SECONDS.latestCollectionHighlight,
+    tags: [CACHE_TAGS.homepage, CACHE_TAGS.collections],
+  },
+);
 
 export async function GET() {
   try {
-    const supabase = await createClient();
-    const highlight = await getLatestCollectionHighlight(supabase);
+    const highlight = await getCachedLatestCollectionHighlight();
 
     if (!highlight) {
       return fail("Không tìm thấy bộ sưu tập nào.", 404);
