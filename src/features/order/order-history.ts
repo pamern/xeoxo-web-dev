@@ -137,13 +137,13 @@ export function getOrderActions(
         label: "Đánh giá",
         variant: "secondary",
       });
+    } else {
+      actions.push({
+        href: "#",
+        label: "Xem đánh giá",
+        variant: "secondary",
+      });
     }
-
-    actions.push({
-      href: routes.customerPolicy,
-      label: "Liên hệ hỗ trợ",
-      variant: "secondary",
-    });
 
     return actions;
   }
@@ -153,11 +153,6 @@ export function getOrderActions(
       {
         href: routes.orderDetail(order.order_id.toString()),
         label: "Theo dõi đơn",
-        variant: "secondary",
-      },
-      {
-        href: routes.customerPolicy,
-        label: "Liên hệ hỗ trợ",
         variant: "secondary",
       },
     ];
@@ -175,7 +170,7 @@ export function getOrderActions(
     }
 
     actions.push({
-      href: isPaid ? routes.paymentPolicy : routes.customerPolicy,
+      href: isPaid ? routes.paymentPolicy : routes.orderDetail(order.order_id.toString()),
       label: isPaid ? "Xem thông tin hoàn tiền" : "Xem chi tiết đơn hủy",
       variant: "secondary",
     });
@@ -184,30 +179,24 @@ export function getOrderActions(
   }
 
   if (status === "returned") {
-    const actions: OrderActionPresentation[] = [
-      {
-        href: routes.customerPolicy,
-        label: "Liên hệ hỗ trợ",
-        variant: "secondary",
-      },
-    ];
+    const actions: OrderActionPresentation[] = [];
 
     if (firstProductSlug) {
-      actions.unshift({
+      actions.push({
         href: routes.product(firstProductSlug),
         label: "Mua lại",
         variant: "primary",
       });
     }
 
+    actions.push({
+      href: routes.orderDetail(order.order_id.toString()),
+      label: "Xem chi tiết đơn hoàn trả",
+      variant: "secondary",
+    });
+
     return actions;
   }
 
-  return [
-    {
-      href: routes.customerPolicy,
-      label: "Liên hệ hỗ trợ",
-      variant: "secondary",
-    },
-  ];
+  return [];
 }

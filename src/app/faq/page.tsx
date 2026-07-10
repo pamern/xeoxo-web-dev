@@ -19,7 +19,7 @@ const FAQ_NAV_ITEMS: AccountNavItem[] = [
   { label: "Lịch sử mua hàng", href: ROUTES.ACCOUNT_ORDERS },
   { label: "Quản lý lịch hẹn", href: ROUTES.APPOINTMENT },
   { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
-  { label: "Đánh giá và phản hồi" },
+  { label: "Đánh giá và phản hồi", href: ROUTES.ACCOUNT_REVIEWS },
   { label: "Câu hỏi thường gặp", href: ROUTES.FAQ_ACCOUNT },
   { label: "Đăng xuất", action: "logout" },
 ];

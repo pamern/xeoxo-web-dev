@@ -41,7 +41,7 @@ export function OrderCard({
   return (
     <article
       className={cn(
-        "relative border border-black bg-white py-6 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#ff593d] hover:shadow-[0_12px_36px_rgba(255,89,61,0.1)]",
+        "relative border border-black bg-white py-4 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#ff593d] hover:shadow-[0_10px_28px_rgba(255,89,61,0.08)]",
         className,
       )}
     >
@@ -56,13 +56,13 @@ export function OrderCard({
 
       {/* Card Content - relative z-10 pointer-events-none so click bubbles down to Link overlay */}
       <div className="relative z-0 pointer-events-none">
-        <div className="flex items-center justify-between gap-4 px-[30px] pb-4">
-          <p className="text-[13px] font-normal leading-[1.4] text-black">
+        <div className="flex items-center justify-between gap-4 px-6 pb-3">
+          <p className="text-[12px] font-normal leading-[1.4] text-black">
             Mã đơn hàng: {orderCode}
           </p>
           <span
             className={cn(
-              "rounded-[10px] px-[15px] py-[6px] text-[13px] font-bold leading-[1.3]",
+              "rounded-[8px] px-3 py-1.5 text-[12px] font-bold leading-[1.3]",
               badgeClassName,
             )}
           >
@@ -70,26 +70,26 @@ export function OrderCard({
           </span>
         </div>
 
-        <div className="space-y-4 px-[30px] py-4 border-t border-black/10">
+        <div className="space-y-3 border-t border-black/10 px-6 py-3">
           {items.map((item, index) => (
             <OrderLineItem key={`${item.title}-${index}`} {...item} />
           ))}
         </div>
 
-        <div className="border-t border-black/10 mt-4 mx-[30px]" />
+        <div className="mx-6 mt-3 border-t border-black/10" />
 
-        <div className="flex items-center justify-end gap-[30px] px-[30px] pt-5">
-          <span className="text-[18px] font-light leading-[1.4] text-black underline">
+        <div className="flex items-center justify-end gap-6 px-6 pt-4">
+          <span className="text-[15px] font-light leading-[1.4] text-black underline">
             Thành tiền:
           </span>
-          <span className="text-[33px] font-bold leading-[1.2] text-black">
+          <span className="text-[25px] font-bold leading-[1.2] text-black">
             {totalLabel}
           </span>
         </div>
       </div>
 
       {/* Actions container - relative z-10 to stay clickable above the overlay */}
-      <div className="relative z-10 px-[30px] pt-5">
+      <div className="relative z-10 px-6 pt-4">
         <OrderActions actions={actions} />
       </div>
     </article>

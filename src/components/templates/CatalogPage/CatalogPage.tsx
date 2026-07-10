@@ -132,9 +132,9 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
           >
             Sản phẩm mới
           </FilterPill>
-          {productSections.map((section) => (
-            <FilterPill key={section.categorySlug} href={ROUTES.CATEGORY(section.categorySlug)}>
-              {section.categoryName}
+          {heroCollections.map((collection) => (
+            <FilterPill key={collection.slug} href={ROUTES.COLLECTION(collection.slug)}>
+              {collection.name}
             </FilterPill>
           ))}
         </div>
