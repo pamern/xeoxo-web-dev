@@ -99,7 +99,7 @@ export function StarsBanner() {
                       src={star.image}
                       alt=""
                       fill
-                      sizes="280px"
+                      sizes="400px"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
 

@@ -313,8 +313,10 @@ select {
   }
 
   .stars-shell {
-    @apply relative w-full overflow-hidden bg-cover bg-center;
-    padding-block: clamp(24px, 18px + 0.5vw, 36px);
+    @apply relative w-full overflow-hidden;
+    background-repeat: repeat;
+    background-size: 360px; /* Small, sharp tile size for repeating pattern */
+    padding-block: 14px md:18px;
   }
 
   .stars-title {
