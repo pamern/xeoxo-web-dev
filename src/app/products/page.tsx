@@ -8,6 +8,7 @@ import {
   mapApiProductLinesToProducts,
 } from "@/data/collections.api";
 import { deriveFilterOptionsFromProducts } from "@/features/homepage/homepage.service";
+import { searchProductCatalog } from "@/features/product/product-search.service";
 
 export const metadata: Metadata = {
   title: "San pham",
@@ -17,13 +18,16 @@ export const metadata: Metadata = {
 type ProductsPageProps = {
   searchParams?: Promise<{
     collection?: string;
+    q?: string;
   }>;
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const collectionSlug = (await searchParams)?.collection;
+  const resolvedSearchParams = await searchParams;
+  const collectionSlug = resolvedSearchParams?.collection;
+  const searchQuery = resolvedSearchParams?.q?.trim() ?? "";
 
   if (collectionSlug) {
     const apiCollection = await fetchCollectionBySlugFromApi(collectionSlug);
@@ -52,6 +56,27 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           { label: "Sản phẩm" },
         ]}
         filterOptions={deriveFilterOptionsFromProducts(products)}
+      />
+    );
+  }
+
+  if (searchQuery.length >= 2) {
+    const result = await searchProductCatalog({
+      q: searchQuery,
+      page: 1,
+      limit: 50,
+    });
+
+    return (
+      <ProductListingPage
+        title={`Kết quả tìm kiếm cho "${searchQuery}"`}
+        products={result.products}
+        breadcrumbs={[
+          { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },
+          { label: "Sản phẩm", href: ROUTES.PRODUCTS },
+          { label: `Tìm kiếm: ${searchQuery}` },
+        ]}
+        filterOptions={deriveFilterOptionsFromProducts(result.products)}
       />
     );
   }

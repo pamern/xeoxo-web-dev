@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AppointmentCancelConfirmModal } from "@/components/organisms/AppointmentCancelConfirmModal";
 import { ROUTES } from "@/constants/routes";
 import { useAppointmentLookup } from "@/hooks/useAppointmentLookup";
 import type {
@@ -85,11 +86,22 @@ export function AppointmentLookupExperience({
   initialValues,
 }: AppointmentLookupExperienceProps) {
   const router = useRouter();
+  const [cancelSuccessMessage, setCancelSuccessMessage] = useState<string>();
+  const [appointmentToConfirm, setAppointmentToConfirm] =
+    useState<AppointmentLookupCardData | null>(null);
   const [formValues, setFormValues] = useState<AppointmentLookupValues>({
     appointment_code: initialValues?.appointment_code ?? "",
     contact: initialValues?.contact ?? "",
   });
-  const { errorMessage, isLoading, lookup, reset, result } =
+  const {
+    cancel,
+    errorMessage,
+    isCancelling,
+    isLoading,
+    lookup,
+    reset,
+    result,
+  } =
     useAppointmentLookup(initialValues);
 
   const normalizedResult = result ? normalizeAppointmentResult(result) : null;
@@ -114,6 +126,7 @@ export function AppointmentLookupExperience({
       scroll: false,
     });
 
+    setCancelSuccessMessage(undefined);
     await lookup(nextValues);
   };
 
@@ -122,10 +135,27 @@ export function AppointmentLookupExperience({
       appointment_code: "",
       contact: "",
     });
+    setAppointmentToConfirm(null);
+    setCancelSuccessMessage(undefined);
     reset();
     router.replace(ROUTES.APPOINTMENT, {
       scroll: false,
     });
+  };
+
+  const handleCancelAppointment = async () => {
+    if (!result) {
+      return;
+    }
+
+    setAppointmentToConfirm(null);
+    const cancelled = await cancel(result.appointment_id, {
+      contact: formValues.contact.trim(),
+    });
+
+    if (cancelled) {
+      setCancelSuccessMessage("Hủy lịch hẹn thành công.");
+    }
   };
 
   return (
@@ -212,6 +242,12 @@ export function AppointmentLookupExperience({
         </section>
       ) : null}
 
+      {cancelSuccessMessage ? (
+        <section className="mx-auto max-w-[1529px] border border-[#cf5c43]/25 bg-[#fff2ee] px-6 py-5 text-[#b14f3d] md:px-[40px]">
+          <p className="text-[18px] font-medium">{cancelSuccessMessage}</p>
+        </section>
+      ) : null}
+
       {normalizedResult ? (
         <article className="overflow-hidden border border-black/40 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.03)]">
           <div className="flex flex-col gap-4 px-4 py-5 md:px-6 md:py-6">
@@ -259,12 +295,16 @@ export function AppointmentLookupExperience({
             </div>
 
             <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black/20 bg-white px-6 text-sm font-medium text-black transition-colors duration-200 hover:border-black hover:bg-black/5"
-              >
-                Huỷ lịch
-              </button>
+              {normalizedResult.status === "upcoming" ? (
+                <button
+                  type="button"
+                  onClick={() => setAppointmentToConfirm(normalizedResult)}
+                  disabled={isCancelling}
+                  className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black/20 bg-white px-6 text-sm font-medium text-black transition-colors duration-200 hover:border-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isCancelling ? "Đang hủy..." : "Huỷ lịch"}
+                </button>
+              ) : null}
               <Link
                 href={ROUTES.FAQ_ACCOUNT}
                 className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black bg-black px-6 text-sm font-bold text-white transition-colors duration-200 hover:bg-white hover:text-black"
@@ -274,6 +314,15 @@ export function AppointmentLookupExperience({
             </div>
           </div>
         </article>
+      ) : null}
+
+      {appointmentToConfirm ? (
+        <AppointmentCancelConfirmModal
+          appointment={appointmentToConfirm}
+          isSubmitting={isCancelling}
+          onClose={() => setAppointmentToConfirm(null)}
+          onConfirm={() => void handleCancelAppointment()}
+        />
       ) : null}
     </div>
   );

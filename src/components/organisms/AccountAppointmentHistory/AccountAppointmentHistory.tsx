@@ -1,9 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { AppointmentCancelConfirmModal } from "@/components/organisms/AppointmentCancelConfirmModal";
 import { OrderStatusTabs, type OrderStatusTab } from "@/components/molecules/OrderStatusTabs";
 import { ROUTES } from "@/constants/routes";
 import { ACCOUNT_APPOINTMENT_FILTERS } from "@/features/appointment/account-appointment-history";
+import { appointmentService } from "@/services/appointment.service";
 import type {
   AccountAppointment,
   AccountAppointmentStatus,
@@ -35,8 +38,12 @@ function getAppointmentStatusClass(status: AccountAppointment["status"]) {
 
 function AppointmentCard({
   appointment,
+  isCancelling,
+  onCancel,
 }: {
   appointment: AccountAppointment;
+  isCancelling: boolean;
+  onCancel: (appointment: AccountAppointment) => void;
 }) {
   return (
     <article className="overflow-hidden border border-black/40 bg-white shadow-[0_8px_24px_rgba(0,0,0,0.03)]">
@@ -83,12 +90,16 @@ function AppointmentCard({
         </div>
 
         <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <button
-            type="button"
-            className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black/20 bg-white px-6 text-sm font-medium text-black transition-colors duration-200 hover:border-black hover:bg-black/5"
-          >
-            Huỷ lịch
-          </button>
+          {appointment.status === "upcoming" ? (
+            <button
+              type="button"
+              onClick={() => onCancel(appointment)}
+              disabled={isCancelling}
+              className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black/20 bg-white px-6 text-sm font-medium text-black transition-colors duration-200 hover:border-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isCancelling ? "Đang hủy..." : "Huỷ lịch"}
+            </button>
+          ) : null}
           <Link
             href={ROUTES.FAQ_ACCOUNT}
             className="inline-flex h-12 items-center justify-center rounded-[8px] border border-black bg-black px-6 text-sm font-bold text-white transition-colors duration-200 hover:bg-white hover:text-black"
@@ -111,6 +122,65 @@ export function AccountAppointmentHistory({
   statusGroup: AccountAppointmentStatus;
 }) {
   const statusTabs = buildAppointmentStatusTabs();
+  const [appointments, setAppointments] = useState(initialAppointments);
+  const [isCancellingId, setIsCancellingId] = useState<number | null>(null);
+  const [appointmentToConfirm, setAppointmentToConfirm] =
+    useState<AccountAppointment | null>(null);
+  const [feedback, setFeedback] = useState<{
+    tone: "success" | "error";
+    message: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!feedback) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setFeedback(null);
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [feedback]);
+
+  async function handleCancelAppointment(appointment: AccountAppointment) {
+    setIsCancellingId(appointment.appointment_id);
+    setFeedback(null);
+    setAppointmentToConfirm(null);
+
+    try {
+      await appointmentService.cancelAppointment(appointment.appointment_id);
+      setAppointments((current) => {
+        if (statusGroup === "upcoming") {
+          return current.filter(
+            (item) => item.appointment_id !== appointment.appointment_id,
+          );
+        }
+
+        return current.map((item) =>
+          item.appointment_id === appointment.appointment_id
+            ? { ...item, status: "cancelled", status_label: "Đã hủy" }
+            : item,
+        );
+      });
+      setFeedback({
+        tone: "success",
+        message: "Hủy lịch hẹn thành công.",
+      });
+    } catch (error) {
+      setFeedback({
+        tone: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Không thể hủy lịch hẹn lúc này.",
+      });
+    } finally {
+      setIsCancellingId(null);
+    }
+  }
 
   if (!isAuthenticated) {
     return (
@@ -138,12 +208,27 @@ export function AccountAppointmentHistory({
     <div className="mt-8">
       <OrderStatusTabs items={statusTabs} value={statusGroup} />
 
-      {initialAppointments.length ? (
+      {feedback ? (
+        <div
+          className={cn(
+            "mt-6 rounded-[16px] border px-5 py-4 text-sm font-medium",
+            feedback.tone === "success"
+              ? "border-[#cf5c43]/25 bg-[#fff2ee] text-[#b14f3d]"
+              : "border-destructive/25 bg-[hsl(var(--destructive)/0.08)] text-destructive",
+          )}
+        >
+          {feedback.message}
+        </div>
+      ) : null}
+
+      {appointments.length ? (
         <div className="mt-8 space-y-6">
-          {initialAppointments.map((appointment) => (
+          {appointments.map((appointment) => (
             <AppointmentCard
               key={appointment.appointment_id}
               appointment={appointment}
+              isCancelling={isCancellingId === appointment.appointment_id}
+              onCancel={setAppointmentToConfirm}
             />
           ))}
         </div>
@@ -169,6 +254,15 @@ export function AccountAppointmentHistory({
           </div>
         </div>
       )}
+
+      {appointmentToConfirm ? (
+        <AppointmentCancelConfirmModal
+          appointment={appointmentToConfirm}
+          isSubmitting={isCancellingId === appointmentToConfirm.appointment_id}
+          onClose={() => setAppointmentToConfirm(null)}
+          onConfirm={() => void handleCancelAppointment(appointmentToConfirm)}
+        />
+      ) : null}
     </div>
   );
 }

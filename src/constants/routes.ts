@@ -70,6 +70,8 @@ export const API = {
 
   PRODUCT_LINE: (slug: string) =>
     `/api/v1/product-lines/${encodeURIComponent(slug)}`,
+  PRODUCT_LINES: "/api/v1/product-lines",
+  PRODUCT_LINE_SEARCH_SUGGESTIONS: "/api/v1/product-lines/search-suggestions",
   PRODUCT_LINE_SIZES: (slug: string) =>
     `/api/v1/product-lines/${encodeURIComponent(slug)}/sizes`,
   PRODUCT_SIZE_CHART: (slug: string) =>
@@ -83,10 +85,14 @@ export const API = {
   CHECKOUT_PREVIEW: "/api/v1/cart/checkout-preview",
 
   ADDRESSES: "/api/v1/addresses",
+  ADDRESS: (addressId: number) => `/api/v1/addresses/${addressId}`,
+  PROVINCES: "/api/v1/provinces",
   PAYMENT_METHODS: "/api/v1/payment-methods",
   ORDERS: "/api/v1/orders",
   ORDER_LOOKUP: "/api/v1/orders/lookup",
   APPOINTMENT_LOOKUP: "/api/v1/measurement-appointments/lookup",
+  APPOINTMENT_CANCEL: (appointmentId: number) =>
+    `/api/v1/measurement-appointments/${appointmentId}/cancel`,
   ORDER_PAYMENTS: (orderId: number) => `/api/v1/orders/${orderId}/payments`,
 
   POSTS: "/api/posts",

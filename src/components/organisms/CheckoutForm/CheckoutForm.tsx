@@ -692,12 +692,6 @@ export function CheckoutForm() {
         </p>
       )}
 
-      {(isSubmitting || isSavingAddress) && (
-        <p className="mt-5 text-sm font-semibold text-black/70">
-          {isSavingAddress ? "Đang lưu địa chỉ..." : "Đang tạo đơn hàng..."}
-        </p>
-      )}
-
       {successModalOpen && submitted && createdOrder ? (
         <ActionSuccessModal
           title="Đặt Hàng Thành Công"
@@ -705,15 +699,15 @@ export function CheckoutForm() {
           message="Đơn hàng của bạn đã được tạo thành công. Xéo Xọ sẽ tiếp nhận, xử lý và cập nhật trạng thái sớm nhất để bạn tiện theo dõi."
           codeLabel="Mã đơn hàng"
           codeValue={createdOrder.order_code}
-          primaryLabel={isMember ? "Xem đơn hàng" : "Tiếp tục mua sắm"}
+          primaryLabel="Xem đơn hàng"
           primaryHref={
             isMember
-              ? ROUTES.ACCOUNT_ORDER(String(createdOrder.order_id))
-              : ROUTES.PRODUCTS
+              ? ROUTES.ACCOUNT_ORDERS
+              : ROUTES.ORDER_LOOKUP
           }
           primaryAction={() => setSuccessModalOpen(false)}
-          secondaryLabel={isMember ? "Tiếp tục mua sắm" : "Đóng"}
-          secondaryHref={isMember ? ROUTES.PRODUCTS : undefined}
+          secondaryLabel="Tiếp tục mua sắm"
+          secondaryHref={ROUTES.HOME}
           secondaryAction={() => setSuccessModalOpen(false)}
           onClose={() => setSuccessModalOpen(false)}
         />

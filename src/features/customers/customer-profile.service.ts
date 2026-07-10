@@ -8,10 +8,6 @@ function toNullable(value: string) {
   return value.trim() ? value.trim() : null;
 }
 
-function normalizeEmail(value: string) {
-  return value.trim() ? value.trim().toLowerCase() : null;
-}
-
 function normalizePhone(value: string) {
   if (!value.trim()) {
     return null;
@@ -32,7 +28,6 @@ export async function updateCustomerProfileByAccountId(
   const admin = createAdminClient();
   const payload = {
     customer_name: toNullable(values.customer_name),
-    email: normalizeEmail(values.email),
     phone: normalizePhone(values.phone),
     gender: values.gender || null,
     birthday: values.birthday || null,

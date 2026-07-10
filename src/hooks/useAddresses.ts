@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   addressService,
   type CreateAddressValues,
+  type UpdateAddressValues,
 } from "@/services/address.service";
 import type { CustomerAddress } from "@/types/customer.types";
 
@@ -84,6 +85,42 @@ export function useAddresses(
     }
   }
 
+  async function updateAddress(addressId: number, values: UpdateAddressValues) {
+    setIsMutating(true);
+    setErrorMessage(undefined);
+
+    try {
+      const address = await addressService.updateAddress(addressId, values);
+      await refetch();
+      return { ok: true, address };
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Không thể cập nhật địa chỉ.",
+      );
+      return { ok: false };
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  async function deleteAddress(addressId: number) {
+    setIsMutating(true);
+    setErrorMessage(undefined);
+
+    try {
+      const result = await addressService.deleteAddress(addressId);
+      await refetch();
+      return { ok: true, result };
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "Không thể xóa địa chỉ.",
+      );
+      return { ok: false };
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
   return {
     addresses,
     isLoading,
@@ -91,5 +128,7 @@ export function useAddresses(
     errorMessage,
     refetch,
     createAddress,
+    updateAddress,
+    deleteAddress,
   };
 }

@@ -4,6 +4,8 @@ import { getApiErrorMessage, type ApiResponse } from "@/types/api.types";
 import type {
   ProductQuickAddDto,
   ProductDetailDto,
+  ProductSearchResultsDto,
+  ProductSearchSuggestionDto,
   ProductReviewsPageDto,
   SizeChartDto,
 } from "@/types/product-api.types";
@@ -128,6 +130,40 @@ export const productService = {
     return readApi<Product[]>(
       response,
       "Khong the tai san pham lien quan.",
+    );
+  },
+
+  async getSearchSuggestions(query: string, limit = 4) {
+    const params = new URLSearchParams({
+      q: query.trim(),
+      limit: String(limit),
+    });
+    const response = await fetch(
+      `${API.PRODUCT_LINE_SEARCH_SUGGESTIONS}?${params.toString()}`,
+      {
+        credentials: "include",
+      },
+    );
+
+    return readApi<ProductSearchSuggestionDto[]>(
+      response,
+      "Khong the tai goi y tim kiem san pham.",
+    );
+  },
+
+  async getSearchResults(query: string, page = 1, limit = 20) {
+    const params = new URLSearchParams({
+      q: query.trim(),
+      page: String(page),
+      limit: String(limit),
+    });
+    const response = await fetch(`${API.PRODUCT_LINES}?${params.toString()}`, {
+      credentials: "include",
+    });
+
+    return readApi<ProductSearchResultsDto>(
+      response,
+      "Khong the tai ket qua tim kiem san pham.",
     );
   },
 };

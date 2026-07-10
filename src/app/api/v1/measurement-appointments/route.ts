@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     }
 
     const appointment = await createAppointment(customerId, result.data);
-    return ok(appointment, "Dat lich tu van may do thanh cong.", 201);
+    return ok(appointment, "Đặt lịch tư vấn may đo thành công.", 201);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Loi he thong.";
     console.error("[measurement-appointments/POST]", error);

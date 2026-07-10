@@ -5,14 +5,15 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { cn } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 import { AuthModal } from "@/components/organisms/AuthModal";
 import { useCartDrawer } from "@/components/providers/CartDrawerProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/hooks/useCart";
 import { useLatestCollectionHighlight } from "@/hooks/useLatestCollectionHighlight";
+import { useProductSearchSuggestions } from "@/hooks/useProductSearchSuggestions";
 import type { CategoryNavItem } from "@/features/homepage/homepage.service";
+import { cn, formatPrice } from "@/lib/utils";
 import type { LatestCollectionHighlight } from "@/types/collection-highlight.types";
 
 type AuthMode = "login" | "register";
@@ -68,6 +69,9 @@ export function SiteHeader({
   const [modalMode, setModalMode] = useState<AuthMode | null>(null);
   const { openDrawer: openCartDrawer } = useCartDrawer();
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLFormElement | null>(null);
   const CATEGORY_MENU_BY_HREF: Record<string, CategoryNavItem[]> = {
     [ROUTES.CATALOG_WOMEN]: womenCategories,
     [ROUTES.CATALOG_MEN]: menCategories,
@@ -80,6 +84,8 @@ export function SiteHeader({
   const authMode = searchParams.get("auth");
   const activeAuthMode =
     authMode === "login" || authMode === "register" ? authMode : null;
+  const { suggestions, isLoading: searchSuggestionsLoading } =
+    useProductSearchSuggestions(searchQuery);
 
   useEffect(() => {
     function syncHeaderHeight() {
@@ -115,6 +121,24 @@ export function SiteHeader({
   useEffect(() => {
     setModalMode(activeAuthMode);
   }, [activeAuthMode]);
+
+  useEffect(() => {
+    setSearchQuery(searchParams.get("q") ?? "");
+  }, [searchParams]);
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (!searchRef.current?.contains(event.target as Node)) {
+        setSearchOpen(false);
+      }
+    }
+
+    window.addEventListener("mousedown", handlePointerDown);
+
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
 
   useEffect(() => {
     if (!accountSidebarOpen) {
@@ -200,6 +224,20 @@ export function SiteHeader({
 
   function openAccountSidebar() {
     setAccountSidebarOpen(true);
+  }
+
+  function submitSearch(rawValue: string) {
+    const normalizedQuery = rawValue.trim();
+
+    if (normalizedQuery.length < 2) {
+      setSearchOpen(false);
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.set("q", normalizedQuery);
+    setSearchOpen(false);
+    router.push(`${ROUTES.PRODUCTS}?${params.toString()}`);
   }
 
   return (
@@ -361,21 +399,108 @@ export function SiteHeader({
             </nav>
 
             <div className="flex items-center gap-4 justify-self-end">
-              <label className="header-search">
-                <span className="sr-only">Tìm kiếm sản phẩm</span>
-                <input
-                  type="search"
-                  placeholder="Tìm kiếm..."
-                  className="min-w-0 flex-1 bg-transparent text-field font-light text-foreground outline-none placeholder:text-muted-foreground"
-                />
-                <Image
-                  src="/icons/search.svg"
-                  alt=""
-                  width={18}
-                  height={18}
-                  aria-hidden
-                />
-              </label>
+              <form
+                ref={searchRef}
+                className="relative hidden md:block"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  submitSearch(searchQuery);
+                }}
+              >
+                <label className="header-search">
+                  <span className="sr-only">Tìm kiếm sản phẩm</span>
+                  <input
+                    type="search"
+                    placeholder="Tìm kiếm..."
+                    value={searchQuery}
+                    onChange={(event) => {
+                      setSearchQuery(event.target.value);
+                      setSearchOpen(true);
+                    }}
+                    onFocus={() => {
+                      if (searchQuery.trim().length >= 2) {
+                        setSearchOpen(true);
+                      }
+                    }}
+                    className="min-w-0 flex-1 bg-transparent text-field font-light text-foreground outline-none placeholder:text-muted-foreground"
+                  />
+                  <button
+                    type="submit"
+                    aria-label="Tìm kiếm sản phẩm"
+                    className="shrink-0 transition-opacity hover:opacity-70"
+                  >
+                    <Image
+                      src="/icons/search.svg"
+                      alt=""
+                      width={18}
+                      height={18}
+                      aria-hidden
+                    />
+                  </button>
+                </label>
+
+                {searchOpen && searchQuery.trim().length >= 2 && (
+                  <div className="absolute right-0 top-[calc(100%+10px)] z-[160] w-[380px] overflow-hidden rounded-[24px] border border-border bg-background shadow-[0_18px_38px_rgba(0,0,0,0.14)]">
+                    <div className="border-b border-border px-5 py-4">
+                      <p className="text-caption font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+                        Tìm kiếm sản phẩm
+                      </p>
+                    </div>
+
+                    <div className="max-h-[420px] overflow-y-auto py-2">
+                      {searchSuggestionsLoading ? (
+                        <p className="px-5 py-4 text-sm text-muted-foreground">
+                          Đang tìm sản phẩm...
+                        </p>
+                      ) : suggestions.length > 0 ? (
+                        suggestions.map((item) => (
+                          <button
+                            key={item.product_line_id}
+                            type="button"
+                            onClick={() => {
+                              setSearchOpen(false);
+                              router.push(ROUTES.PRODUCT(item.slug));
+                            }}
+                            className="flex w-full items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-black/[0.03]"
+                          >
+                            <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-[14px] bg-[#f5f1ea]">
+                              <Image
+                                src={item.thumbnail}
+                                alt={item.name}
+                                fill
+                                sizes="56px"
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-semibold text-foreground">
+                                {item.name}
+                              </p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {formatPrice(item.price)}
+                              </p>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <p className="px-5 py-4 text-sm text-muted-foreground">
+                          Chưa tìm thấy sản phẩm phù hợp.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="border-t border-border p-3">
+                      <button
+                        type="button"
+                        onClick={() => submitSearch(searchQuery)}
+                        className="w-full rounded-full border border-foreground px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
+                      >
+                        Xem tất cả kết quả
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </form>
               <div className="relative">
                 <button
                   type="button"
@@ -661,7 +786,7 @@ function AccountSidebar({
               imageSrc={latestProductImage}
               imageAlt={latestProductImageAlt}
               imageClassName="object-cover [object-position:center_28%]"
-              className="mt-5 min-h-[336px]"
+              className="mt-5 min-h-[336px] !rounded-none"
               overlayClassName="bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.12)_42%,rgba(0,0,0,0.64)_100%)]"
               contentClassName="px-6 pb-10 pt-8"
               title={
@@ -758,10 +883,10 @@ function SidebarPromoCard({
         src={imageSrc}
         alt={imageAlt}
         fill
-        className={cn("object-cover", imageClassName)}
+        className={cn("rounded-[inherit] object-cover", imageClassName)}
       />
       <div
-        className={cn("absolute inset-0", overlayClassName)}
+        className={cn("absolute inset-0 rounded-[inherit]", overlayClassName)}
         aria-hidden="true"
       />
       <div
@@ -817,7 +942,7 @@ function SidebarPillAction({
   onClick?: () => void;
 }) {
   const actionClassName =
-    "flex min-h-[56px] w-full items-center justify-start rounded-full border border-black bg-white px-8 text-left text-[18px] font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white";
+    "ml-[50px] flex min-h-[56px] w-[calc(100%-50px)] items-center justify-start rounded-full border border-black bg-white px-8 text-left text-[18px] font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white";
 
   if (href) {
     return (
