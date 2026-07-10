@@ -34,13 +34,13 @@ export function CategoryBanner({
         className="absolute inset-0 bg-black/25 transition-colors duration-700 group-hover:bg-black/35"
         aria-hidden
       />
-      <div className="site-container relative flex flex-col items-start gap-5">
-        <h2 className="max-w-2xl text-shadow text-display-section font-medium text-white">
+      <div className="relative mx-auto flex w-full max-w-site flex-col items-start gap-5 px-6 xl:px-[100px]">
+        <h2 className="max-w-2xl text-shadow text-3xl font-medium text-white md:text-4xl">
           {title}
         </h2>
         <Link
           href={href}
-          className="inline-flex items-center rounded-pill border border-white px-6 py-3 text-button font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
+          className="inline-flex items-center rounded-pill border border-white px-6 py-3 text-lg font-medium text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]"
         >
           {ctaLabel}
         </Link>

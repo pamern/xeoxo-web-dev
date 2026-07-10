@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Suspense, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type AuthMode = "login" | "register";
 
-function AuthModalLinkInner({
+export function AuthModalLink({
   mode,
   children,
   className,
@@ -27,17 +27,5 @@ function AuthModalLinkInner({
     <Link href={href} scroll={false} className={className}>
       {children}
     </Link>
-  );
-}
-
-export function AuthModalLink(props: {
-  mode: AuthMode;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <Suspense fallback={<span className={props.className}>{props.children}</span>}>
-      <AuthModalLinkInner {...props} />
-    </Suspense>
   );
 }

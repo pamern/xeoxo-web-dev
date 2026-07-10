@@ -18,13 +18,13 @@ export function FilterBar({
   className?: string;
 }) {
   return (
-    <section className={cn("product-page-shell py-8", className)}>
+    <section className={cn("mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]", className)}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        {title && <h2 className="text-heading-card font-medium uppercase">{title}</h2>}
-        <div className="no-scrollbar flex overflow-x-auto pb-1" style={{ gap: "var(--filter-bar-gap)" }}>
+        {title && <h2 className="text-xl font-medium uppercase">{title}</h2>}
+        <div className="no-scrollbar flex gap-3 overflow-x-auto pb-1">
           {options.map((option) => {
             const classes = cn(
-              "shrink-0 whitespace-nowrap rounded-pill border text-body font-medium transition-colors",
+              "shrink-0 whitespace-nowrap rounded-pill border px-5 py-2.5 text-base font-medium transition-colors",
               option.active
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border hover:border-primary hover:bg-primary hover:text-primary-foreground"
@@ -32,30 +32,14 @@ export function FilterBar({
 
             if (option.href) {
               return (
-                <Link
-                  key={option.label}
-                  href={option.href}
-                  className={classes}
-                  style={{
-                    paddingInline: "var(--filter-chip-px)",
-                    paddingBlock: "var(--filter-chip-py)",
-                  }}
-                >
+                <Link key={option.label} href={option.href} className={classes}>
                   {option.label}
                 </Link>
               );
             }
 
             return (
-              <button
-                key={option.label}
-                type="button"
-                className={classes}
-                style={{
-                  paddingInline: "var(--filter-chip-px)",
-                  paddingBlock: "var(--filter-chip-py)",
-                }}
-              >
+              <button key={option.label} type="button" className={classes}>
                 {option.label}
               </button>
             );

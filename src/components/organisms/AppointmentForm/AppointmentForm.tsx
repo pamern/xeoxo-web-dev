@@ -102,7 +102,7 @@ export function AppointmentForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="bg-white pt-6">
-      <div className="mx-auto flex w-full max-w-form flex-col gap-4 px-0 pb-7">
+      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 px-0 pb-7">
         <FieldRow label="Họ và tên:">
           <FieldControl error={errors.fullName}>
             <input name="fullName" value={values.fullName} onChange={(event) => update("fullName", event.target.value)} onBlur={() => handleBlur("fullName")} placeholder="Nhập họ và tên" aria-invalid={Boolean(errors.fullName)} className={fieldInputClass(compactFieldClassName, errors.fullName)} />
@@ -192,7 +192,7 @@ export function AppointmentForm({
       </div>
 
       <div
-        className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-card bg-cover bg-center px-5 py-4 text-center"
+        className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-[14px] bg-cover bg-center px-5 py-4 text-center"
         style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
       >
         {submitted && showInlineSuccessMessage && (
@@ -208,7 +208,7 @@ export function AppointmentForm({
           variant="outline"
           size="md"
           disabled={isSubmitting}
-          className="h-control w-full max-w-[300px] rounded-pill border border-white bg-transparent px-6 text-button font-bold normal-case text-white hover:bg-white hover:text-black"
+          className="h-11 w-full max-w-[300px] rounded-pill border border-white bg-transparent px-6 text-lg font-bold normal-case text-white hover:bg-white hover:text-black"
         >
           Lưu Biểu mẫu
         </Button>
@@ -232,7 +232,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       {children}
-      {error && <span className="text-caption font-medium text-destructive">{error}</span>}
+      {error && <span className="text-xs font-medium text-red-600">{error}</span>}
     </div>
   );
 }
@@ -240,7 +240,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
 function fieldInputClass(base: string, error?: string) {
   return cn(
     base,
-    error && "border-destructive text-destructive focus:border-destructive focus:ring-destructive/20",
+    error && "border-red-500 text-red-700 focus:border-red-500 focus:ring-red-100",
   );
 }
 

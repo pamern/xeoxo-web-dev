@@ -137,7 +137,7 @@ export function CartItem({
           aria-label={`Chọn ${item.name}`}
           className="sr-only"
         />
-        <span className={selected ? "h-[15px] w-[15px] rounded-xs bg-black" : "h-[15px] w-[15px] rounded-xs bg-white"} />
+        <span className={selected ? "h-[15px] w-[15px] rounded-[3px] bg-black" : "h-[15px] w-[15px] rounded-[3px] bg-white"} />
       </label>
 
       <div className="flex flex-col gap-2">
@@ -167,7 +167,7 @@ export function CartItem({
       <div className="flex min-w-0 flex-col gap-4">
         <Link
           href={productHref}
-          className="line-clamp-2 text-heading-content-sm font-semibold uppercase leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline"
+          className="line-clamp-2 text-base font-semibold uppercase leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline sm:text-lg"
         >
           {item.name}
         </Link>
@@ -192,7 +192,7 @@ export function CartItem({
             />
           )}
           <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
-          <span className="ml-auto text-right text-heading-content-sm font-bold uppercase text-black">
+          <span className="ml-auto text-right text-base font-bold uppercase text-black sm:text-lg">
             {formatPrice(item.line_total)}
           </span>
         </div>

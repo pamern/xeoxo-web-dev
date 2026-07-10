@@ -176,23 +176,19 @@ export function ProductListingResults({
   }, [products, selected, priceBuckets]);
 
   return (
-    <div
-      className="mt-10 grid lg:grid-cols-[minmax(250px,clamp(250px,18vw,320px))_minmax(0,1fr)]"
-      style={{ gap: "var(--product-page-block-y)" }}
-    >
+    <div className="mt-10 grid gap-10 lg:grid-cols-[346px_minmax(0,1fr)]">
       <ProductFilterSidebar
         groups={filterGroups}
         resultCount={filteredProducts.length}
         selected={selected}
         onToggle={toggleOption}
         onClear={() => setSelected({})}
-        className="lg:w-[clamp(250px,18vw,320px)]"
       />
       <div>
         <ProductGrid
           products={filteredProducts}
-          className="lg:grid-cols-4"
-          cardClassName="gap-[var(--product-card-gap)]"
+          className="gap-x-7 gap-y-12"
+          cardClassName="gap-2"
           cardImageClassName="aspect-[351/430]"
           quickAddOnHover
         />

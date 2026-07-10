@@ -17,7 +17,7 @@ export function ValueProposition({ values }: { values: string[] }) {
         />
       </div>
 
-      <div className="relative mx-auto flex max-w-site flex-col items-center gap-10 px-6 py-16 lg:flex-row lg:justify-center xl:px-gutter">
+      <div className="relative mx-auto flex max-w-site flex-col items-center gap-10 px-6 py-16 lg:flex-row lg:justify-center xl:px-[100px]">
         {/* Cột ảnh */}
         <div className="relative h-[400px] w-full max-w-[788px] overflow-hidden rounded-md bg-secondary lg:h-[515px]">
           <Image
@@ -38,10 +38,10 @@ export function ValueProposition({ values }: { values: string[] }) {
             height={128}
             className="h-auto w-[240px] object-contain"
           />
-          <h2 className="text-display-section font-semibold">ĐỊNH VỊ GIÁ TRỊ</h2>
+          <h2 className="text-3xl font-semibold md:text-display-section">ĐỊNH VỊ GIÁ TRỊ</h2>
           <ul className="flex flex-col gap-[15px] px-5">
             {values.map((value) => (
-              <li key={value} className="text-body-xl font-light md:text-quote-lg">
+              <li key={value} className="text-xl font-light md:text-[28px]">
                 {value}
               </li>
             ))}

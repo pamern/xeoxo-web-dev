@@ -68,14 +68,16 @@ function safeImageSrc(src?: string | null) {
 }
 
 function mapApiProduct(product: ProductDetailDto): Product {
+  const images = product.media
+    .filter((media) => media.media_type === "IMAGE")
+    .map((media) => safeImageSrc(media.url));
+
   return {
     id: String(product.product_line_id),
     slug: product.slug,
     name: product.name,
     price: product.price,
-    images: product.media.length
-      ? product.media.map((media) => safeImageSrc(media.url))
-      : ["/images/placeholder.png"],
+    images: images.length ? images : ["/images/placeholder.png"],
     categorySlug: "api",
     gender: "nu",
     description: product.description ?? "",
@@ -83,6 +85,30 @@ function mapApiProduct(product: ProductDetailDto): Product {
     colors: product.color
       ? [{ name: product.color.color_name, hex: product.color.color_code }]
       : [{ name: "Mặc định", hex: "#111111" }],
+  };
+}
+
+function mergeProductDetailImageData(
+  apiProduct: ProductDetailDto,
+  fallbackProduct?: Product | null,
+): Product {
+  const apiMappedProduct = mapApiProduct(apiProduct);
+
+  if (!fallbackProduct) {
+    return apiMappedProduct;
+  }
+
+  return {
+    ...fallbackProduct,
+    id: apiMappedProduct.id,
+    slug: apiMappedProduct.slug,
+    name: apiMappedProduct.name,
+    price: apiMappedProduct.price,
+    salePrice: apiMappedProduct.salePrice,
+    description: apiMappedProduct.description,
+    images: apiMappedProduct.images,
+    sizes: apiMappedProduct.sizes,
+    colors: apiMappedProduct.colors,
   };
 }
 
@@ -97,7 +123,7 @@ export async function generateMetadata({
     fetchProductBySlugFromApi(slug),
   ]);
   const product =
-    result?.product ?? (apiProduct ? mapApiProduct(apiProduct) : null);
+    apiProduct ? mergeProductDetailImageData(apiProduct, result?.product) : null;
 
   if (!product) {
     return { title: "Không tìm thấy sản phẩm" };
@@ -124,16 +150,13 @@ export default async function ProductPage({
     notFound();
   }
 
-  const product = result?.product ?? mapApiProduct(apiProduct);
+  const product = mergeProductDetailImageData(apiProduct, result?.product);
   const relatedProducts = result?.relatedProducts ?? [];
   const recommendedProducts = relatedProducts.slice(0, 4);
 
   return (
-    <SiteLayout>
-      <div
-        className="product-page-shell pb-12"
-        style={{ paddingBlockStart: "var(--product-page-top-offset)" }}
-      >
+    <SiteLayout fixedHeader={false}>
+      <div className="mx-auto w-full max-w-site px-6 pb-12 pt-5 xl:px-[100px]">
         <Breadcrumbs
           items={[
             { label: "Trang chủ", href: ROUTES.HOME },
@@ -156,6 +179,7 @@ export default async function ProductPage({
       <StripDivider />
       <ProductDescription
         product={product}
+        apiProduct={apiProduct}
         collectionName={result?.collection?.collection_name ?? null}
         materialName={apiProduct.material?.material_name ?? null}
         careInstruction={apiProduct.material?.care_instruction ?? null}
@@ -171,22 +195,21 @@ function StripDivider() {
   return (
     <div
       aria-hidden
-      className="w-full bg-cover bg-center"
-      style={{
-        backgroundImage: "url(/images/strip-section-divider.png)",
-        height: "var(--product-divider-height)",
-      }}
+      className="h-[25px] w-full bg-cover bg-center"
+      style={{ backgroundImage: "url(/images/strip-section-divider.png)" }}
     />
   );
 }
 
 function ProductDescription({
   product,
+  apiProduct,
   collectionName,
   materialName,
   careInstruction,
 }: {
   product: Product;
+  apiProduct: ProductDetailDto;
   collectionName: string | null;
   materialName: string | null;
   careInstruction: string | null;
@@ -198,12 +221,12 @@ function ProductDescription({
       materialName ??
         "Thông tin chất liệu sẽ được đồng bộ từ dữ liệu sản phẩm.",
     ],
-    ["Kiểu dáng", "Thông tin kiểu dáng sẽ được đồng bộ từ dữ liệu sản phẩm."],
+    ["Kiểu dáng", apiProduct.design_style ?? "Thông tin kiểu dáng sẽ được cập nhật."],
     [
       "Phù hợp với",
-      "Thông tin usage context sẽ được đồng bộ từ dữ liệu sản phẩm.",
+      apiProduct.usage_context ?? "Thông tin phù hợp với sẽ được cập nhật.",
     ],
-    ["Tính năng", "Thông tin features sẽ được đồng bộ từ dữ liệu sản phẩm."],
+    ["Tính năng", apiProduct.features?.join(", ") || "Đang cập nhật"],
     [
       "Bảo quản",
       careInstruction ??
@@ -212,16 +235,16 @@ function ProductDescription({
   ];
 
   return (
-    <section className="product-page-shell pb-10 pt-8">
-      <h2 className="mb-5 text-center text-heading-section uppercase">
+    <section
+      id="product-description-section"
+      className="mx-auto w-full max-w-site px-6 pb-10 pt-8 xl:px-[100px]"
+    >
+      <h2 className="mb-5 text-center text-heading-section font-bold uppercase">
         Mô tả sản phẩm
       </h2>
-      <div
-        className="grid lg:grid-cols-[minmax(0,clamp(340px,28vw,420px))_minmax(0,1fr)] lg:items-center"
-        style={{ gap: "var(--product-description-gap)" }}
-      >
+      <div className="grid gap-8 lg:grid-cols-[420px_minmax(0,1fr)] lg:items-center">
         <div>
-          <h3 className="mb-3 text-heading-card">{product.name}</h3>
+          <h3 className="mb-3 text-2xl font-bold">{product.name}</h3>
           <p className="mb-6 text-body-sm font-light leading-relaxed text-foreground/80">
             {product.description}
           </p>
@@ -229,11 +252,7 @@ function ProductDescription({
             {detailRows.map(([label, value]) => (
               <div
                 key={label}
-                className="grid border-b border-[#d9d9d9] py-3 last:border-b-0"
-                style={{
-                  gridTemplateColumns:
-                    "minmax(var(--product-description-table-label), var(--product-description-table-label)) minmax(0,1fr)",
-                }}
+                className="grid grid-cols-[120px_minmax(0,1fr)] border-b border-[#d9d9d9] py-3 last:border-b-0"
               >
                 <span className="text-body-sm font-bold">{label}</span>
                 <span className="text-body-sm font-light leading-relaxed text-foreground/75">
@@ -242,12 +261,12 @@ function ProductDescription({
               </div>
             ))}
           </div>
-          <p className="mt-4 text-center text-body-lg font-bold">
+          <p className="mt-4 text-center text-lg font-bold">
             * Proudly Made In Vietnam
           </p>
         </div>
 
-        <div className="grid overflow-hidden rounded-lg shadow-lg md:grid-cols-2">
+        <div className="grid overflow-hidden rounded-[20px] shadow-lg md:grid-cols-2">
           <div className="relative aspect-[4/3] md:aspect-[3/4]">
             <Image
               src={product.images[0]}
@@ -276,23 +295,13 @@ function RecommendationSection({ products }: { products: Product[] }) {
   if (products.length === 0) return null;
 
   return (
-    <section className="product-page-shell pb-10 pt-7">
-      <h2 className="mb-6 text-center text-heading-section uppercase">
+    <section className="mx-auto w-full max-w-site px-6 pb-10 pt-7 xl:px-[100px]">
+      <h2 className="mb-6 text-center text-heading-section font-bold uppercase">
         Có thể bạn cũng thích
       </h2>
-      <div
-        className="grid sm:grid-cols-2 lg:grid-cols-4"
-        style={{
-          columnGap: "var(--product-grid-gap-x)",
-          rowGap: "var(--product-grid-gap-y)",
-        }}
-      >
+      <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
         {products.map((item) => (
-          <ProductCard
-            key={item.id}
-            product={item}
-            className="gap-[var(--product-card-gap)]"
-          />
+          <ProductCard key={item.id} product={item} />
         ))}
       </div>
     </section>

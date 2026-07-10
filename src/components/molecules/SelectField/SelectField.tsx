@@ -24,12 +24,12 @@ export function SelectField({
   ...props
 }: SelectFieldProps) {
   return (
-    <label className={cn("flex w-full flex-col gap-2 text-heading-content-sm font-medium", wrapperClassName)}>
+    <label className={cn("flex w-full flex-col gap-2 text-base font-medium", wrapperClassName)}>
       {label && <span className={labelClassName}>{label}</span>}
       <span className="relative block w-full">
         <select
           className={cn(
-            "h-12 w-full appearance-none rounded-md border border-input bg-background px-4 pr-11 text-body-lg font-light outline-none transition-colors focus:border-primary",
+            "h-12 w-full appearance-none rounded-md border border-input bg-background px-4 pr-11 text-base font-light outline-none transition-colors focus:border-primary",
             error && "border-destructive",
             className
           )}

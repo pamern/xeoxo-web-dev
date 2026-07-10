@@ -8,7 +8,7 @@ import { ROUTES } from "@/constants/routes";
 import { useQuickAddProduct } from "@/hooks/useQuickAddProduct";
 import type { Product } from "@/types/product.types";
 
-// Card san pham dung trong moi luoi/carousel. Anh ti le 4:5 + ten + gia.
+// Card san pham dung trong moi luoi/carousel. Anh ti le ~3:4 + ten + gia.
 export function ProductCard({
   product,
   className,
@@ -92,7 +92,7 @@ export function ProductCard({
     >
       <div
         className={cn(
-          "relative aspect-[4/5] w-full overflow-hidden rounded-sm bg-secondary",
+          "relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-secondary",
           imageClassName,
         )}
       >
@@ -137,7 +137,7 @@ export function ProductCard({
           </span>
         )}
         {quickAddOnHover && quickAddSizes.length > 0 && (
-          <div className="absolute inset-x-5 bottom-0 translate-y-3 overflow-hidden rounded-t-card border border-white/30 bg-[#2D2A2A]/20 px-4 pb-2.5 pt-1.5 text-white opacity-0 shadow-[0_14px_36px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.45),inset_1px_0_0_rgba(255,255,255,0.18),inset_-1px_0_0_rgba(255,255,255,0.12),inset_0_-18px_32px_rgba(0,0,0,0.12)] ring-1 ring-white/20 backdrop-blur-[10px] backdrop-saturate-150 backdrop-contrast-125 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <div className="absolute inset-x-5 bottom-0 translate-y-3 overflow-hidden rounded-t-[14px] border border-white/30 bg-[#2D2A2A]/20 px-4 pb-2.5 pt-1.5 text-white opacity-0 shadow-[0_14px_36px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.45),inset_1px_0_0_rgba(255,255,255,0.18),inset_-1px_0_0_rgba(255,255,255,0.12),inset_0_-18px_32px_rgba(0,0,0,0.12)] ring-1 ring-white/20 backdrop-blur-[10px] backdrop-saturate-150 backdrop-contrast-125 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/45"

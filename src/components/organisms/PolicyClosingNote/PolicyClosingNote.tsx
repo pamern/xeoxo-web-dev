@@ -3,7 +3,7 @@ import Image from "next/image";
 export function PolicyClosingNote() {
   return (
     <section className="site-container py-12 md:py-14">
-      <div className="w-full max-w-narrow">
+      <div className="w-full max-w-[438px]">
         <Image
           src="/images/strip-title-underline.png"
           alt=""
@@ -26,7 +26,7 @@ export function PolicyClosingNote() {
         </p>
       </div>
 
-      <div className="w-full max-w-narrow">
+      <div className="w-full max-w-[438px]">
         <Image
           src="/images/strip-title-underline.png"
           alt=""

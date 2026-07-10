@@ -60,7 +60,7 @@ export function AppointmentModal({
     <>
       <section
         className={cn(
-          "relative mx-auto w-full max-w-[860px] rounded-lg bg-white px-5 pb-7 pt-6 sm:px-9 sm:pt-8",
+          "relative mx-auto w-full max-w-[860px] rounded-[20px] bg-white px-5 pb-7 pt-6 sm:px-9 sm:pt-8",
           className,
         )}
       >
@@ -74,16 +74,16 @@ export function AppointmentModal({
         </button>
 
         <header className="mb-2 border-b border-black/20 pb-5 pr-12 text-left">
-          <p className="text-body-sm font-bold uppercase tracking-[0.14em] text-accent">
+          <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#f15a42]">
             Xéo Xọ tư vấn may đo
           </p>
-          <h1 className="mt-1 text-heading-section font-bold leading-tight text-black sm:text-display-section">
+          <h1 className="mt-1 text-2xl font-bold leading-tight text-black sm:text-[32px]">
             Đặt lịch may đo
           </h1>
-          <p className="mt-2 text-body-sm leading-relaxed text-black/60">
+          <p className="mt-2 text-sm leading-relaxed text-black/60">
             Chọn thời gian và chi nhánh phù hợp để được tư vấn số đo trực tiếp.
           </p>
-          <span className="mt-3 inline-flex rounded-pill bg-accent-muted px-4 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-accent">
+          <span className="mt-3 inline-flex rounded-pill bg-[#fff0e8] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#f15a42]">
             Miễn phí may đo
           </span>
         </header>

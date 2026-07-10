@@ -53,7 +53,7 @@ const variantClasses: Record<Variant, string> = {
   underline:
     "h-auto rounded-none bg-transparent px-0 py-0 font-bold underline underline-offset-4 hover:opacity-70",
   heroOutline:
-    "border border-white bg-primary text-primary-foreground shadow-card hover:bg-primary/85",
+    "border border-white bg-primary text-primary-foreground shadow-[0_4px_4px_rgba(0,0,0,0.25)] hover:bg-primary/85",
   primaryPill:
     "border border-primary bg-primary text-primary-foreground hover:bg-primary/85",
   secondaryPill:

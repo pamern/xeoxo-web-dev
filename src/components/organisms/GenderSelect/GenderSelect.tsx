@@ -18,7 +18,7 @@ const GENDERS = [
 // Khối chọn giới tính ở trang chủ: 2 thẻ ảnh lớn dẫn tới catalog tương ứng.
 export function GenderSelect() {
   return (
-    <section className="homepage-shell grid gap-6 py-12 md:grid-cols-2 md:gap-8">
+    <section className="mx-auto grid w-full max-w-site gap-8 px-6 py-12 md:grid-cols-2 xl:px-[100px]">
       {GENDERS.map((gender) => (
         <Link
           key={gender.label}

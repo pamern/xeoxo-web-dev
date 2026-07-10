@@ -124,7 +124,7 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
 
       {slug !== "tre-em" && <CatalogHeroGrid collections={heroCollections} />}
 
-      <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-gutter">
+      <section className="mx-auto w-full max-w-site px-6 py-8 xl:px-[100px]">
         <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2">
           <FilterPill
             href={productSections[0] ? ROUTES.CATEGORY(productSections[0].categorySlug) : "#"}
@@ -181,7 +181,7 @@ function EmptyCatalogState({
   description: string;
 }) {
   return (
-    <section className="mx-auto w-full max-w-site px-6 py-16 text-center xl:px-gutter">
+    <section className="mx-auto w-full max-w-site px-6 py-16 text-center xl:px-[100px]">
       <h2 className="text-3xl font-extrabold uppercase text-black md:text-5xl">
         {title}
       </h2>

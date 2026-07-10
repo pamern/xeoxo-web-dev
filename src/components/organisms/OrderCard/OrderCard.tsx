@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { OrderActions, type OrderActionLink } from "@/components/molecules/OrderActions";
 import {
   OrderLineItem,
@@ -13,6 +14,7 @@ export type OrderCardProps = {
   statusLabel: string;
   statusTone?: "default" | "shipping" | "completed" | "cancelled" | "returned";
   totalLabel: string;
+  href?: string;
 };
 
 export function OrderCard({
@@ -23,54 +25,71 @@ export function OrderCard({
   statusLabel,
   statusTone = "default",
   totalLabel,
+  href,
 }: OrderCardProps) {
   const badgeClassName =
     statusTone === "completed"
       ? "bg-black text-white"
       : statusTone === "shipping"
-        ? "border border-accent bg-accent-muted text-accent"
+        ? "border border-[#ff593d] bg-[#fff2ee] text-[#ff593d]"
         : statusTone === "cancelled"
-          ? "border border-black/20 bg-black/[0.06] text-black/65"
+          ? "border border-black/15 bg-black/[0.04] text-black/50"
           : statusTone === "returned"
             ? "border border-[#d88c2f] bg-[#fff7ea] text-[#b46d1f]"
             : "bg-black text-white";
 
   return (
-    <article className={cn("border border-black bg-white py-5", className)}>
-      <div className="flex items-center justify-between gap-4 px-[30px] pb-[10px]">
-        <p className="text-body-sm font-normal text-black">
-          Mã đơn hàng: {orderCode}
-        </p>
-        <span
-          className={cn(
-            "rounded-[5px] px-[10px] py-[5px] text-body-sm font-bold",
-            badgeClassName,
-          )}
-        >
-          {statusLabel}
-        </span>
-      </div>
+    <article
+      className={cn(
+        "relative border border-black bg-white py-6 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#ff593d] hover:shadow-[0_12px_36px_rgba(255,89,61,0.1)]",
+        className,
+      )}
+    >
+      {/* Invisible link overlay for the entire card */}
+      {href && (
+        <Link
+          href={href}
+          className="absolute inset-0 z-0"
+          aria-label={`Xem chi tiết đơn hàng ${orderCode}`}
+        />
+      )}
 
-      <div className="space-y-[10px] px-[30px] py-[10px] shadow-[0_4px_15px_rgba(0,0,0,0.05)]">
-        {items.map((item, index) => (
-          <OrderLineItem key={`${item.title}-${index}`} {...item} />
-        ))}
+      {/* Card Content - relative z-10 pointer-events-none so click bubbles down to Link overlay */}
+      <div className="relative z-0 pointer-events-none">
+        <div className="flex items-center justify-between gap-4 px-[30px] pb-4">
+          <p className="text-[13px] font-normal leading-[1.4] text-black">
+            Mã đơn hàng: {orderCode}
+          </p>
+          <span
+            className={cn(
+              "rounded-[10px] px-[15px] py-[6px] text-[13px] font-bold leading-[1.3]",
+              badgeClassName,
+            )}
+          >
+            {statusLabel}
+          </span>
+        </div>
 
-        <div className="py-[10px]">
-          <div className="h-[2px] w-full bg-black/15" />
+        <div className="space-y-4 px-[30px] py-4 border-t border-black/10">
+          {items.map((item, index) => (
+            <OrderLineItem key={`${item.title}-${index}`} {...item} />
+          ))}
+        </div>
+
+        <div className="border-t border-black/10 mt-4 mx-[30px]" />
+
+        <div className="flex items-center justify-end gap-[30px] px-[30px] pt-5">
+          <span className="text-[18px] font-light leading-[1.4] text-black underline">
+            Thành tiền:
+          </span>
+          <span className="text-[33px] font-bold leading-[1.2] text-black">
+            {totalLabel}
+          </span>
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-[30px] px-[30px] pb-[30px] pt-[20px]">
-        <span className="text-body-lg font-light text-black underline">
-          Thành tiền:
-        </span>
-        <span className="text-display-section text-black">
-          {totalLabel}
-        </span>
-      </div>
-
-      <div className="px-[30px] pt-[10px]">
+      {/* Actions container - relative z-10 to stay clickable above the overlay */}
+      <div className="relative z-10 px-[30px] pt-5">
         <OrderActions actions={actions} />
       </div>
     </article>

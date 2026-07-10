@@ -23,25 +23,25 @@ function AddressCard({ address }: { address: CustomerAddress }) {
         <div className="flex flex-col gap-3 border-b border-black/10 pb-4 md:flex-row md:items-start md:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <h3 className="text-heading-card leading-none text-foreground">
+              <h3 className="text-[22px] font-extrabold leading-none text-foreground">
                 {address.recipient_name}
               </h3>
               <span className="hidden text-[28px] font-light leading-none text-foreground/35 md:inline">
                 |
               </span>
-              <p className="text-body font-medium text-foreground/58">
+              <p className="text-[17px] font-medium text-foreground/58">
                 {address.recipient_phone}
               </p>
             </div>
-            <p className="text-body-lg font-medium leading-relaxed text-foreground/82">
+            <p className="text-base font-medium leading-relaxed text-foreground/82">
               {formatAddress(address)}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start text-body-sm font-semibold">
+          <div className="flex items-center gap-2 self-start text-sm font-semibold">
             <button
               type="button"
-              className="text-accent transition-opacity hover:opacity-80"
+              className="text-[#f0644a] transition-opacity hover:opacity-80"
               disabled
               aria-disabled="true"
               title="Chức năng này sẽ được nối khi API địa chỉ được chốt."
@@ -53,7 +53,7 @@ function AddressCard({ address }: { address: CustomerAddress }) {
                 <span className="text-foreground/28">|</span>
                 <button
                   type="button"
-                  className="text-accent transition-opacity hover:opacity-80"
+                  className="text-[#f0644a] transition-opacity hover:opacity-80"
                   disabled
                   aria-disabled="true"
                   title="Chức năng này sẽ được nối khi API địa chỉ được chốt."
@@ -67,11 +67,11 @@ function AddressCard({ address }: { address: CustomerAddress }) {
 
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {isDefault ? (
-            <span className="inline-flex min-h-11 items-center justify-center rounded-sm border border-accent px-5 text-heading-content-sm font-semibold text-accent">
+            <span className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[#f0644a] px-5 text-base font-semibold text-[#f0644a]">
               Mặc định
             </span>
           ) : (
-            <span className="inline-flex min-h-11 items-center justify-center rounded-sm border border-transparent px-5 text-heading-content-sm font-semibold text-transparent">
+            <span className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-transparent px-5 text-base font-semibold text-transparent">
               Mặc định
             </span>
           )}
@@ -81,7 +81,7 @@ function AddressCard({ address }: { address: CustomerAddress }) {
               type="button"
               title="Chức năng này sẽ được nối khi API địa chỉ được chốt."
               className={cn(
-                "inline-flex min-h-11 min-w-[220px] items-center justify-center rounded-sm border px-6 text-heading-content-sm font-medium transition-colors",
+                "inline-flex min-h-11 min-w-[220px] items-center justify-center rounded-[8px] border px-6 text-base font-medium transition-colors",
                 "border-black/55 bg-white text-foreground",
               )}
             >
@@ -108,9 +108,9 @@ export function AccountAddressBook({
 
   if (!isAuthenticated) {
     return (
-      <div className="mt-8 rounded-lg border border-border bg-secondary px-6 py-8">
-        <p className="text-body-lg font-medium">Bạn cần đăng nhập để xem sổ địa chỉ.</p>
-        <p className="mt-2 text-body-sm font-light text-foreground/72">
+      <div className="mt-8 rounded-[20px] border border-border bg-secondary px-6 py-8">
+        <p className="text-lg font-medium">Bạn cần đăng nhập để xem sổ địa chỉ.</p>
+        <p className="mt-2 text-sm font-light text-foreground/72">
           Sau khi đăng nhập, trang này sẽ hiển thị các địa chỉ giao hàng gắn với
           tài khoản của bạn trong hệ thống.
         </p>
@@ -120,8 +120,8 @@ export function AccountAddressBook({
 
   if (isLoading) {
     return (
-      <div className="mt-8 rounded-lg border border-black/12 bg-secondary px-6 py-10">
-        <p className="text-body-lg font-medium text-foreground/72">
+      <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
+        <p className="text-base font-medium text-foreground/72">
           Đang tải sổ địa chỉ...
         </p>
       </div>
@@ -130,8 +130,8 @@ export function AccountAddressBook({
 
   if (errorMessage) {
     return (
-      <div className="mt-8 rounded-lg border border-accent-strong/25 bg-accent-muted px-6 py-8">
-        <p className="text-body-lg font-semibold text-accent-strong">{errorMessage}</p>
+      <div className="mt-8 rounded-[20px] border border-[#d76a54]/25 bg-[#fff2ee] px-6 py-8">
+        <p className="text-lg font-semibold text-[#b14f3d]">{errorMessage}</p>
       </div>
     );
   }
@@ -143,11 +143,11 @@ export function AccountAddressBook({
           <AddressCard key={address.address_id} address={address} />
         ))
       ) : (
-        <div className="rounded-lg border border-black/12 bg-secondary px-6 py-10">
-          <p className="text-heading-card font-bold text-foreground">
+        <div className="rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
+          <p className="text-xl font-bold text-foreground">
             Bạn chưa có địa chỉ giao hàng nào.
           </p>
-          <p className="mt-3 max-w-[620px] text-body-lg font-light leading-relaxed text-foreground/72">
+          <p className="mt-3 max-w-[620px] text-sm font-light leading-relaxed text-foreground/72 md:text-base">
             Khi API địa chỉ được chốt theo docs, phần thêm và cập nhật địa chỉ sẽ
             được nối vào ngay tại màn hình này.
           </p>
@@ -160,7 +160,7 @@ export function AccountAddressBook({
           disabled
           aria-disabled="true"
           title="Chức năng này sẽ được nối khi API địa chỉ được chốt."
-          className="inline-flex min-h-control min-w-[196px] items-center justify-center rounded-sm border border-accent-strong bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-button font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] disabled:cursor-not-allowed disabled:opacity-100"
+          className="inline-flex min-h-[50px] min-w-[196px] items-center justify-center rounded-[8px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-lg font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] disabled:cursor-not-allowed disabled:opacity-100"
         >
           Thêm địa điểm
         </button>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { registerSchema } from "@/validations/auth/register.schema";
 
 const inputClassName =
-  "h-12 w-full rounded-pill border border-input bg-background px-6 text-body-lg font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
+  "h-12 w-full rounded-pill border border-input bg-background px-6 text-base font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
 const passwordHintMessage =
   "Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
 
@@ -134,7 +134,7 @@ export function RegisterForm({
             )}
           />
           {touched.fullName && fieldErrors.fullName ? (
-            <p className="px-2 text-body-sm font-light text-destructive">
+            <p className="px-2 text-sm font-light text-destructive">
               {fieldErrors.fullName}
             </p>
           ) : null}
@@ -155,7 +155,7 @@ export function RegisterForm({
             )}
           />
           {touched.account && fieldErrors.account ? (
-            <p className="px-2 text-body-sm font-light text-destructive">
+            <p className="px-2 text-sm font-light text-destructive">
               {fieldErrors.account}
             </p>
           ) : null}
@@ -186,7 +186,7 @@ export function RegisterForm({
           />
         </div>
         {fieldErrors.password ? (
-          <p className="px-2 text-body-sm font-light text-foreground/58">
+          <p className="px-2 text-sm font-light text-foreground/58">
             {passwordHintMessage}
           </p>
         ) : null}
@@ -225,17 +225,17 @@ export function RegisterForm({
       </div>
 
       {errorMessage && (
-        <p className="text-body-sm font-light text-destructive">{errorMessage}</p>
+        <p className="text-sm font-light text-destructive">{errorMessage}</p>
       )}
       {noticeMessage && !errorMessage && (
-        <p className="text-body-sm font-light text-foreground/70">{noticeMessage}</p>
+        <p className="text-sm font-light text-foreground/70">{noticeMessage}</p>
       )}
 
       <Button
         type="submit"
         size="lg"
         isLoading={isLoading}
-        className="mt-1 h-control w-full rounded-pill border-2 border-white/50 text-button font-bold"
+        className="mt-1 h-[54px] w-full rounded-pill border-2 border-white/50 text-lg font-bold"
       >
         Đăng ký
       </Button>

@@ -39,7 +39,7 @@ export function CollectionCard({
         />
         <span
           className={cn(
-            "absolute inset-0 flex items-end px-5 pb-5 text-heading-card font-bold text-white transition duration-300",
+            "absolute inset-0 flex items-end px-5 pb-5 text-lg font-bold text-white transition duration-300",
             revealOnHover
               ? "bg-black/10 opacity-0 group-hover:bg-black/20 group-hover:opacity-100"
               : "items-center justify-center bg-black/25 font-medium opacity-100"

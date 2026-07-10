@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { IconButton } from "@/components/atoms/IconButton";
 import { cn } from "@/lib/utils";
@@ -13,14 +13,46 @@ export function ProductImageGallery({
   alt: string;
 }) {
   const [activeImage, setActiveImage] = useState(0);
+  const [galleryHeight, setGalleryHeight] = useState<number | null>(null);
+  const mainImageRef = useRef<HTMLDivElement | null>(null);
   const current = images[activeImage] ?? images[0];
 
+  useEffect(() => {
+    function updateHeight() {
+      const element = mainImageRef.current;
+      if (!element) {
+        return;
+      }
+
+      setGalleryHeight(element.getBoundingClientRect().height);
+    }
+
+    const element = mainImageRef.current;
+    if (!element) {
+      return;
+    }
+
+    updateHeight();
+
+    const observer = new ResizeObserver(() => {
+      updateHeight();
+    });
+
+    observer.observe(element);
+    window.addEventListener("resize", updateHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateHeight);
+    };
+  }, []);
+
   return (
-    <div
-      className="grid lg:grid-cols-[var(--product-gallery-thumb-width)_minmax(0,var(--product-gallery-main-width))]"
-      style={{ gap: "var(--product-card-gap)" }}
-    >
-      <div className="order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:max-h-[clamp(760px,60vw,975px)] lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0">
+    <div className="grid gap-3 lg:grid-cols-[65px_minmax(0,650px)]">
+      <div
+        className="no-scrollbar order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:self-start lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0"
+        style={galleryHeight ? { maxHeight: `${galleryHeight}px` } : undefined}
+      >
         {images.map((image, index) => (
           <button
             key={`${image}-${index}`}
@@ -28,20 +60,19 @@ export function ProductImageGallery({
             onClick={() => setActiveImage(index)}
             aria-label={`Anh san pham ${index + 1}`}
             className={cn(
-              "relative shrink-0 overflow-hidden border bg-secondary transition-colors",
+              "relative h-[98px] w-[65px] shrink-0 overflow-hidden border bg-secondary transition-colors",
               index === activeImage ? "border-primary" : "border-transparent hover:border-primary/60"
             )}
-            style={{
-              width: "var(--product-gallery-thumb-width)",
-              height: "var(--product-gallery-thumb-height)",
-            }}
           >
             <Image src={image} alt="" fill sizes="65px" className="object-cover" />
           </button>
         ))}
       </div>
 
-      <div className="relative order-1 aspect-[2/3] w-full overflow-hidden bg-secondary lg:order-2 lg:max-w-[var(--product-gallery-main-width)]">
+      <div
+        ref={mainImageRef}
+        className="relative order-1 aspect-[2/3] w-full overflow-hidden bg-secondary lg:order-2 lg:max-w-[650px]"
+      >
         {current && (
           <Image
             src={current}
@@ -60,7 +91,7 @@ export function ProductImageGallery({
           iconSize={16}
           iconClassName="rotate-180"
           variant="circleLight"
-          className="absolute bottom-[clamp(18px,2.1vw,30px)] right-[clamp(70px,6.3vw,90px)]"
+          className="absolute bottom-[30px] right-[90px]"
         />
         <IconButton
           type="button"
@@ -69,7 +100,7 @@ export function ProductImageGallery({
           iconSrc="/icons/arrow-right.svg"
           iconSize={16}
           variant="circleLight"
-          className="absolute bottom-[clamp(18px,2.1vw,30px)] right-[clamp(18px,2.1vw,30px)]"
+          className="absolute bottom-[30px] right-[30px]"
         />
       </div>
     </div>

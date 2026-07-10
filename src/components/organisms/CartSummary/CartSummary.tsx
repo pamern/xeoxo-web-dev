@@ -221,7 +221,7 @@ export function CartSummary() {
 
   return (
     <aside className="w-full text-black">
-      <h2 className="text-heading-section font-bold uppercase md:leading-tight">
+      <h2 className="text-2xl font-bold uppercase md:text-heading-section md:leading-tight">
         Giỏ hàng
       </h2>
 
@@ -257,18 +257,18 @@ export function CartSummary() {
             <span
               className={
                 allSelected
-                  ? "h-[15px] w-[15px] rounded-xs bg-black"
-                  : "h-[15px] w-[15px] rounded-xs bg-white"
+                  ? "h-[15px] w-[15px] rounded-[3px] bg-black"
+                  : "h-[15px] w-[15px] rounded-[3px] bg-white"
               }
             />
           </span>
-          <span className="text-body font-medium">Tất cả sản phẩm</span>
+          <span className="text-base font-medium">Tất cả sản phẩm</span>
         </label>
         <button
           type="button"
           onClick={() => void clearCart()}
           disabled={cart.items.length === 0 || isMutating}
-          className="text-body-sm font-medium text-black/60 underline underline-offset-4 transition hover:text-black disabled:opacity-40"
+          className="text-sm font-medium text-black/60 underline underline-offset-4 transition hover:text-black disabled:opacity-40"
         >
           Xoá tất cả
         </button>
@@ -282,11 +282,11 @@ export function CartSummary() {
 
       {isLoading ? (
         <div className="border-y border-black/50 py-12 text-center">
-          <p className="text-body font-medium">Đang tải giỏ hàng...</p>
+          <p className="text-base font-medium">Đang tải giỏ hàng...</p>
         </div>
       ) : cart.items.length === 0 ? (
         <div className="border-y border-black/50 py-12 text-center">
-          <p className="text-body font-medium">Giỏ hàng của bạn đang trống.</p>
+          <p className="text-base font-medium">Giỏ hàng của bạn đang trống.</p>
         </div>
       ) : (
         <div className="flex flex-col">
@@ -316,7 +316,7 @@ export function CartSummary() {
         aria-hidden
       />
 
-      <h3 className="mt-12 text-heading-section font-bold uppercase">
+      <h3 className="mt-12 text-2xl font-bold uppercase md:text-[28px]">
         Chi tiết thanh toán
       </h3>
 
@@ -391,7 +391,6 @@ export function CartSummary() {
       )}
 
       <div className="mt-6 divide-y divide-black/50 border-y border-black/50 text-base">
-      <div className="mt-6 divide-y divide-black/50 border-y border-black/50 text-body">
         <div className="flex items-center justify-between py-4">
           <span>Tạm tính</span>
           <span className="font-semibold">{formatPrice(subtotal)}</span>
@@ -406,14 +405,14 @@ export function CartSummary() {
             {shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}
           </span>
         </div>
-        <div className="flex items-center justify-between py-5 text-body-lg font-bold uppercase">
+        <div className="flex items-center justify-between py-5 text-lg font-bold uppercase">
           <span>Thành tiền</span>
           <span>{formatPrice(total)}</span>
         </div>
       </div>
 
       <fieldset className="mt-10 space-y-0">
-        <legend className="mb-4 text-body-lg font-bold uppercase">
+        <legend className="mb-4 text-lg font-bold uppercase">
           Phương thức thanh toán
         </legend>
         {options.map((option) => {
@@ -423,7 +422,7 @@ export function CartSummary() {
               key={option.method_id}
               className="flex cursor-pointer items-center gap-4 border-b border-black/50 py-4 first:border-t"
             >
-              <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border-2 border-action bg-white">
+              <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border-2 border-[#2E54FF] bg-white">
                 <input
                   type="radio"
                   name="paymentMethodPreview"
@@ -435,12 +434,12 @@ export function CartSummary() {
                 <span
                   className={
                     checked
-                      ? "h-[15px] w-[15px] rounded-full bg-action"
+                      ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]"
                       : "h-[15px] w-[15px] rounded-full bg-white"
                   }
                 />
               </span>
-              <span className="text-body font-medium">
+              <span className="text-base font-medium">
                 {option.method_name}
               </span>
             </label>
@@ -459,8 +458,8 @@ export function CartSummary() {
           <span
             className={
               acceptedTerms
-                ? "h-[15px] w-[15px] rounded-xs bg-black"
-                : "h-[15px] w-[15px] rounded-xs bg-white"
+                ? "h-[15px] w-[15px] rounded-[3px] bg-black"
+                : "h-[15px] w-[15px] rounded-[3px] bg-white"
             }
           />
         </span>
@@ -470,7 +469,7 @@ export function CartSummary() {
       </label>
 
       {errorMessage && (
-        <p className="mt-4 text-body-sm font-semibold text-destructive">
+        <p className="mt-4 text-sm font-semibold text-red-600">
           {errorMessage}
         </p>
       )}
@@ -481,7 +480,7 @@ export function CartSummary() {
         variant="primaryPill"
         size="pill"
         disabled={!acceptedTerms || selectedIds.length === 0 || isMutating}
-        className="mt-8 h-[58px] w-full min-w-0 text-button font-bold uppercase"
+        className="mt-8 h-[58px] w-full min-w-0 text-base font-bold uppercase"
       >
         Thanh toán ngay
       </Button>

@@ -87,10 +87,7 @@ export default async function AccountOrdersRoute({
   return (
     <SiteLayout>
       <div className="bg-background">
-        <section
-          className="px-6 pb-16 xl:px-gutter xl:pb-24"
-          style={{ paddingTop: "var(--product-page-top-offset)" }}
-        >
+        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -115,8 +112,8 @@ export default async function AccountOrdersRoute({
               </aside>
 
               <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
-                <div className="flex flex-col gap-5">
-                  <h1 className="text-display-section font-extrabold leading-none md:text-display-page">
+                <div className="flex flex-col gap-5 border-b border-black/10 pb-6">
+                  <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
                     Lịch sử đơn hàng
                   </h1>
 

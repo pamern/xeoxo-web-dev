@@ -206,40 +206,43 @@ export function SiteHeader({
     <>
       <header
         ref={headerRef}
-        className="sticky top-0 z-[140] w-full bg-background"
+        className={cn(
+          "z-[140] w-full bg-background",
+          isProductDetailPage ? "relative" : "fixed inset-x-0 top-0",
+        )}
       >
         <div
           className="relative bg-black bg-[length:100%_auto] bg-top text-white"
           style={{ backgroundImage: "url(/images/header-line-up.png)" }}
         >
-          <div className="header-utility-shell">
+          <div className="mx-auto flex h-10 max-w-site items-center justify-between px-6 text-base xl:px-[100px]">
             <UtilityGroup links={UTILITY_LEFT} />
-            <div className="header-utility-group">
+            <div className="flex items-center gap-3">
               <UtilityGroup
                 links={utilityRightLinks}
                 onOpenAuthModal={openAuthModal}
               />
               {hasAccountMenu && (
                 <>
-                  <span aria-hidden className="header-utility-divider" />
+                  <span aria-hidden className="h-[22px] w-px bg-white/60" />
                   <div className="relative">
                     <button
                       type="button"
                       onClick={openAccountSidebar}
-                      className="header-utility-item flex max-w-[220px] items-center gap-2 font-bold"
+                      className="flex max-w-[220px] items-center gap-2 font-bold transition-opacity hover:opacity-70"
                     >
                       <span className="truncate">{accountLabel}</span>
-                      <span aria-hidden className="text-caption">
+                      <span aria-hidden className="text-[10px]">
                         ▾
                       </span>
                     </button>
                   </div>
                 </>
               )}
-              <span aria-hidden className="header-utility-divider" />
+              <span aria-hidden className="h-[22px] w-px bg-white/60" />
               <button
                 type="button"
-                className="header-utility-item flex items-center gap-2 font-bold"
+                className="flex items-center gap-2 font-bold"
               >
                 <Image
                   src="/icons/flag-vn.svg"
@@ -249,7 +252,7 @@ export function SiteHeader({
                   aria-hidden
                 />
                 VN
-                <span aria-hidden className="text-caption">
+                <span aria-hidden className="text-[10px]">
                   ▾
                 </span>
               </button>
@@ -258,8 +261,8 @@ export function SiteHeader({
         </div>
 
         <div>
-          <div className="header-main-shell py-1">
-            <div className="flex items-center gap-3 justify-self-start">
+          <div className="mx-auto flex max-w-site items-center justify-between gap-4 px-6 py-[10px] xl:px-[100px]">
+            <div className="flex items-center gap-3">
               <button
                 type="button"
                 aria-label="Mở menu"
@@ -279,14 +282,14 @@ export function SiteHeader({
                   width={206}
                   height={84}
                   priority
-                  className="header-logo w-auto object-contain"
+                  className="h-[88px] w-auto object-contain lg:h-[110px]"
                 />
               </Link>
             </div>
 
             <nav
               aria-label="Danh mục chính"
-              className="header-main-nav"
+              className="hidden items-center gap-10 lg:flex"
             >
               {MAIN_NAV.map((item) => {
                 const active = pathname === item.href;
@@ -312,7 +315,7 @@ export function SiteHeader({
                     <Link
                       href={item.href!}
                       className={cn(
-                        "header-nav-link",
+                        "text-[22px] transition-colors hover:text-foreground/60",
                         active && "underline underline-offset-8",
                       )}
                     >
@@ -342,7 +345,7 @@ export function SiteHeader({
                               <Link
                                 key={category.categoryId}
                                 href={ROUTES.CATEGORY(category.categorySlug)}
-                                className="header-dropdown-link"
+                                className="block min-w-0 whitespace-nowrap text-[18px] leading-[1.25] transition-colors hover:text-foreground/60"
                                 onClick={() => setHoveredNav(null)}
                               >
                                 {category.categoryName}
@@ -357,13 +360,13 @@ export function SiteHeader({
               })}
             </nav>
 
-            <div className="flex items-center gap-4 justify-self-end">
-              <label className="header-search">
+            <div className="flex items-center gap-4">
+              <label className="hidden items-center gap-3 rounded-[30px] border-2 border-[#8f8f8f] py-2.5 pl-5 pr-2.5 md:flex">
                 <span className="sr-only">Tìm kiếm sản phẩm</span>
                 <input
                   type="search"
                   placeholder="Tìm kiếm..."
-                  className="min-w-0 flex-1 bg-transparent text-field font-light text-foreground outline-none placeholder:text-muted-foreground"
+                  className="w-32 bg-transparent text-base font-light text-foreground outline-none placeholder:text-[#8f8f8f]"
                 />
                 <Image
                   src="/icons/search.svg"
@@ -416,7 +419,7 @@ export function SiteHeader({
                   aria-hidden
                 />
                 {cartCount > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-caption text-primary-foreground">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-xs text-primary-foreground">
                     {cartCount}
                   </span>
                 )}
@@ -441,14 +444,14 @@ export function SiteHeader({
                       <button
                         type="button"
                         onClick={() => openAuthModal(item.authMode!)}
-                        className="block w-full py-4 text-left text-nav"
+                        className="block w-full py-4 text-left text-base"
                       >
                         {item.label}
                       </button>
                     ) : (
                       <Link
                         href={item.href!}
-                        className="block py-4 text-nav"
+                        className="block py-4 text-base"
                         onClick={() => setMobileOpen(false)}
                       >
                         {item.label}
@@ -462,7 +465,7 @@ export function SiteHeader({
                   <li className="border-b border-border">
                     <Link
                       href={ROUTES.ACCOUNT_PROFILE}
-                      className="block py-4 text-nav"
+                      className="block py-4 text-base"
                       onClick={() => setMobileOpen(false)}
                     >
                       Hồ sơ tài khoản
@@ -471,7 +474,7 @@ export function SiteHeader({
                   <li className="border-b border-border">
                     <Link
                       href={ROUTES.ACCOUNT_ORDERS}
-                      className="block py-4 text-nav"
+                      className="block py-4 text-base"
                       onClick={() => setMobileOpen(false)}
                     >
                       Đơn hàng của tôi
@@ -508,21 +511,19 @@ export function SiteHeader({
 function UtilityGroup({
   links,
   onOpenAuthModal,
-  className,
 }: {
   links: UtilityLink[];
   onOpenAuthModal?: (mode: AuthMode) => void;
-  className?: string;
 }) {
   return (
-    <div className={cn("header-utility-group", className)}>
+    <div className="flex items-center gap-3">
       {links.map((link, index) => (
-        <span key={link.label} className="flex items-center">
+        <span key={link.label} className="flex items-center gap-3">
           {link.authMode ? (
             <button
               type="button"
               onClick={() => onOpenAuthModal?.(link.authMode!)}
-              className="header-utility-item flex items-center gap-2"
+              className="flex items-center gap-2 transition-opacity hover:opacity-70"
             >
               {link.icon && (
                 <Image
@@ -538,7 +539,7 @@ function UtilityGroup({
           ) : (
             <Link
               href={link.href!}
-              className="header-utility-item flex items-center gap-2"
+              className="flex items-center gap-2 transition-opacity hover:opacity-70"
             >
               {link.icon && (
                 <Image
@@ -553,7 +554,7 @@ function UtilityGroup({
             </Link>
           )}
           {index < links.length - 1 && (
-            <span aria-hidden className="header-utility-divider" />
+            <span aria-hidden className="h-[22px] w-px bg-white/60" />
           )}
         </span>
       ))}
@@ -603,10 +604,10 @@ function AccountSidebar({
         <div className="flex-1 overflow-y-auto px-[30px] pb-12 pt-[68px]">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <p className="text-heading-section font-medium leading-[1] text-foreground">
+              <p className="text-[30px] font-medium leading-[1] text-foreground">
                 xin chào,
               </p>
-              <h2 className="mt-1 text-display-page leading-[0.95] text-foreground [overflow-wrap:anywhere]">
+              <h2 className="mt-1 text-[48px] font-bold leading-[0.95] text-foreground [overflow-wrap:anywhere]">
                 {accountLabel}
               </h2>
             </div>
@@ -618,7 +619,7 @@ function AccountSidebar({
             >
               <span
                 aria-hidden
-                className="text-display-section leading-none text-foreground"
+                className="text-[30px] leading-none text-foreground"
               >
                 ×
               </span>
@@ -641,16 +642,16 @@ function AccountSidebar({
               contentClassName="px-5 pb-3 pt-6"
               title={
                 <>
-                  <span className="block text-body font-light leading-none text-white">
+                  <span className="block text-[16px] font-light leading-none text-white">
                     Bộ sưu tập
                   </span>
-                  <span className="mt-2 block text-heading-section leading-none text-white">
+                  <span className="mt-2 block text-[28px] font-bold leading-none text-white">
                     {latestCollectionHighlight?.name || "Thanh Xuân"}
                   </span>
                 </>
               }
               actionLabel="Khám phá"
-              actionClassName="min-h-[58px] min-w-[196px] border-white/90 bg-black/20 px-6 text-button-lg font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-[10px] transition-colors hover:bg-black hover:text-white"
+              actionClassName="min-h-[58px] min-w-[196px] border-white/90 bg-black/20 px-6 text-[20px] font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-[10px] transition-colors hover:bg-black hover:text-white"
               onClick={onClose}
             />
 
@@ -663,10 +664,10 @@ function AccountSidebar({
               contentClassName="px-6 pb-10 pt-8"
               title={
                 <>
-                  <span className="block text-body font-light leading-[1.2] text-white">
+                  <span className="block text-[15px] font-light leading-[1.2] text-white">
                     Sống với tinh thần thanh lịch
                   </span>
-                  <span className="mt-2 block text-heading-section font-light leading-none text-white">
+                  <span className="mt-2 block text-[27px] font-light leading-none text-white">
                     Tham gia <span className="font-bold">Xéo Hội</span>
                   </span>
                 </>
@@ -676,14 +677,14 @@ function AccountSidebar({
                   <Link
                     href={ROUTES.MEMBERSHIP}
                     onClick={onClose}
-                    className="flex min-h-[58px] w-full items-center justify-center rounded-full border border-white/80 bg-[url('/images/bg-tham-gia-sidebar-account-btn.png')] bg-cover bg-center bg-no-repeat px-6 text-center text-button-lg font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hover:scale-[0.99] hover:opacity-85"
+                    className="flex min-h-[58px] w-full items-center justify-center rounded-full border border-white/80 bg-[url('/images/bg-tham-gia-sidebar-account-btn.png')] bg-cover bg-center bg-no-repeat px-6 text-center text-[20px] font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hover:scale-[0.99] hover:opacity-85"
                   >
                     Tham gia
                   </Link>
                   <Link
                     href={ROUTES.BENEFITS}
                     onClick={onClose}
-                    className="flex min-h-[58px] w-full items-center justify-center whitespace-nowrap rounded-full border border-white/80 bg-transparent px-6 text-center text-button-lg font-medium text-white transition-colors hover:bg-black hover:text-white"
+                    className="flex min-h-[58px] w-full items-center justify-center whitespace-nowrap rounded-full border border-white/80 bg-transparent px-6 text-center text-[20px] font-medium text-white transition-colors hover:bg-black hover:text-white"
                   >
                     Tìm hiểu thêm
                   </Link>
@@ -711,7 +712,7 @@ function AccountSidebar({
         <div className="bg-black px-[30px] py-7 md:py-8">
           <Link
             href={ROUTES.ACCOUNT_PROFILE}
-            className="flex items-center justify-center text-center text-display-section leading-none text-white"
+            className="flex items-center justify-center text-center text-[34px] font-bold leading-none text-white md:text-[38px]"
             onClick={onClose}
           >
             Đến Hồ sơ
@@ -814,7 +815,7 @@ function SidebarPillAction({
   onClick?: () => void;
 }) {
   const actionClassName =
-    "flex min-h-[56px] w-full items-center justify-start rounded-full border border-black bg-white px-8 text-left text-button font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white";
+    "flex min-h-[56px] w-full items-center justify-start rounded-full border border-black bg-white px-8 text-left text-[18px] font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white";
 
   if (href) {
     return (
@@ -839,27 +840,27 @@ function SidebarPillAction({
       <button
         type="button"
         onClick={onOpenLogin}
-        className="block w-full rounded-[12px] px-4 py-3 text-left text-body-sm font-medium transition-colors hover:bg-muted"
+        className="block w-full rounded-[12px] px-4 py-3 text-left text-sm font-medium transition-colors hover:bg-muted"
       >
         Đăng nhập
       </button>
       <Link
         href={ROUTES.ORDER_LOOKUP}
-        className="block rounded-[12px] px-4 py-3 text-body-sm font-medium transition-colors hover:bg-muted"
+        className="block rounded-[12px] px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
         onClick={onClose}
       >
         Tra cứu đơn hàng
       </Link>
       <Link
         href={ROUTES.APPOINTMENT}
-        className="block rounded-[12px] px-4 py-3 text-body-sm font-medium transition-colors hover:bg-muted"
+        className="block rounded-[12px] px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
         onClick={onClose}
       >
         Tra cứu lịch hẹn
       </Link>
       <Link
         href={ROUTES.FAQ}
-        className="block rounded-[12px] px-4 py-3 text-body-sm font-medium transition-colors hover:bg-muted"
+        className="block rounded-[12px] px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
         onClick={onClose}
       >
         Câu hỏi thường gặp

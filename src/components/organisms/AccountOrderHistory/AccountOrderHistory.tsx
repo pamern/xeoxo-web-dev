@@ -50,18 +50,18 @@ export function AccountOrderHistory({
 
   if (!isAuthenticated) {
     return (
-      <div className="mt-8 rounded-lg border border-border bg-secondary px-6 py-8">
-        <p className="text-body-lg font-medium">
+      <div className="mt-8 rounded-[20px] border border-border bg-secondary px-6 py-8">
+        <p className="text-lg font-medium">
           Bạn cần đăng nhập để xem lịch sử đơn hàng.
         </p>
-        <p className="mt-2 text-body-sm font-light text-foreground/72">
+        <p className="mt-2 text-sm font-light text-foreground/72">
           Sau khi đăng nhập, trang này sẽ hiển thị các đơn hàng gắn với tài khoản
           của bạn trong hệ thống.
         </p>
         <div className="mt-6">
           <Link
             href={`${ROUTES.HOME}?auth=login`}
-            className="inline-flex h-12 items-center justify-center rounded-pill bg-black px-8 text-button-sm uppercase tracking-[0.03em] text-white"
+            className="inline-flex h-12 items-center justify-center rounded-pill bg-black px-8 text-sm font-bold uppercase tracking-[0.03em] text-white"
           >
             Đăng nhập ngay
           </Link>
@@ -97,14 +97,14 @@ export function AccountOrderHistory({
       </div>
 
       {isLoading ? (
-        <div className="mt-8 rounded-lg border border-black/12 bg-secondary px-6 py-10">
-          <p className="text-body-lg font-medium text-foreground/72">
+        <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
+          <p className="text-base font-medium text-foreground/72">
             Đang tải lịch sử đơn hàng...
           </p>
         </div>
       ) : errorMessage ? (
-        <div className="mt-8 rounded-lg border border-accent-strong/25 bg-accent-muted px-6 py-8">
-          <p className="text-body-lg font-semibold text-accent-strong">{errorMessage}</p>
+        <div className="mt-8 rounded-[20px] border border-[#d76a54]/25 bg-[#fff2ee] px-6 py-8">
+          <p className="text-lg font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : orders.length ? (
         <div className="mt-8 space-y-6">
@@ -140,13 +140,13 @@ export function AccountOrderHistory({
           })}
         </div>
       ) : (
-        <div className="mt-8 rounded-lg border border-black/12 bg-secondary px-6 py-10">
-          <p className="text-heading-card font-bold text-foreground">
+        <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
+          <p className="text-xl font-bold text-foreground">
             {statusGroup === "all"
               ? "Bạn chưa có đơn hàng nào."
               : "Chưa có đơn hàng ở trạng thái này."}
           </p>
-          <p className="mt-3 max-w-[620px] text-body-lg font-light leading-relaxed text-foreground/72">
+          <p className="mt-3 max-w-[620px] text-sm font-light leading-relaxed text-foreground/72 md:text-base">
             {statusGroup === "all"
               ? "Khi bạn đặt hàng thành công, lịch sử đơn hàng sẽ hiển thị tại đây để bạn theo dõi trạng thái và thao tác nhanh."
               : "Hãy thử chuyển sang trạng thái khác để xem những đơn hàng tương ứng trong tài khoản của bạn."}
@@ -154,7 +154,7 @@ export function AccountOrderHistory({
           <div className="mt-6">
             <Link
               href={ROUTES.COLLECTIONS}
-              className="inline-flex min-h-control items-center justify-center rounded-sm border border-accent-strong bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-button font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)]"
+              className="inline-flex min-h-[50px] items-center justify-center rounded-[8px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-lg font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)]"
             >
               Khám phá bộ sưu tập
             </Link>

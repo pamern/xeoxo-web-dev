@@ -156,6 +156,10 @@ select {
     padding-inline: var(--site-gutter-x);
   }
 
+  .site-layout-header {
+    min-height: var(--site-header-height, 0px);
+  }
+
   @media (min-width: 1280px) {
     .site-container {
       padding-inline: var(--site-gutter-x-lg);
