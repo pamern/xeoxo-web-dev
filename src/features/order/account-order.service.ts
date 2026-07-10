@@ -300,12 +300,12 @@ export async function getCustomerOrderDetail(
   const { data: salesOrderRaw, error: salesOrderError } = await admin
     .schema("sales")
     .from("sales_order")
-    .select("shipping_fee, reward_dicount_amount")
+    .select("shipping_fee, reward_discount_amount")
     .eq("order_id", orderId)
     .maybeSingle();
 
   const shippingFee = salesOrderRaw ? Number(salesOrderRaw.shipping_fee) : 0;
-  const rewardDiscount = salesOrderRaw ? Number(salesOrderRaw.reward_dicount_amount) : 0;
+  const rewardDiscount = salesOrderRaw ? Number(salesOrderRaw.reward_discount_amount) : 0;
 
   // Load shipping info
   const { data: shipping, error: shippingError } = await admin
