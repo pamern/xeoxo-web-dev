@@ -185,15 +185,15 @@ export function ReviewsSection({
   };
 
   return (
-    <section className="reviews-shell">
+    <section className="site-container py-8 md:py-10">
       <div className="flex flex-col gap-6">
         <div>
-          <h2 className="reviews-title">Đánh giá sản phẩm</h2>
+          <h2 className="text-display-section font-bold uppercase">Đánh giá sản phẩm</h2>
           <div className="mt-2 flex flex-wrap items-center gap-3">
-            <span className="reviews-score">
+            <span className="text-[38px] font-bold leading-none xl:text-[44px]">
               {avgRating.toFixed(1)}
             </span>
-            <span className="pb-1 text-body-xl">trên 5</span>
+            <span className="pb-1 text-2xl font-normal leading-[1.5]">trên 5</span>
             <StarRating rating={avgRating} size={24} className="pb-0.5" />
           </div>
         </div>
@@ -383,9 +383,9 @@ function ReviewList({
   if (!reviews.length) return null;
 
   return (
-    <div className={cn("review-list-shell flex flex-col gap-4", className)}>
+    <div className={["mx-auto flex max-w-[1387px] flex-col gap-4 xl:gap-5", className].filter(Boolean).join(" ")}>
       {reviews.map((review) => (
-        <article key={review.review_id} className="review-card">
+        <article key={review.review_id} className="rounded-[20px] bg-[#f3f3f3] px-6 py-6 xl:px-8 xl:py-7">
           <div className="flex gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-foreground/10 bg-secondary text-lg font-bold text-foreground/75">
               {review.customer_name.charAt(0).toUpperCase()}

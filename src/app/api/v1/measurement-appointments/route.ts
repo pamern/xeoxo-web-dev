@@ -2,7 +2,10 @@ import { fail, ok } from "@/lib/api-response";
 import { getCurrentCustomerId } from "@/features/cart/cart-server.service";
 import { getMeasurementAppointmentsByCustomerId } from "@/features/appointment/account-appointment-history";
 import { accountAppointmentQuerySchema } from "@/validations/appointment/account-appointment-query.schema";
-import { createAppointment } from "@/features/appointment/appointment-server.service";
+import {
+  createAppointment,
+  isAppointmentError,
+} from "@/features/appointment/appointment-server.service";
 import { createAppointmentSchema } from "@/validations/appointment.schema";
 
 export async function GET(request: Request) {
@@ -50,14 +53,18 @@ export async function POST(request: Request) {
     const result = createAppointmentSchema.safeParse(body);
 
     if (!result.success) {
-      return fail("Du lieu khong hop le.", 422, result.error.errors);
+      return fail("Dữ liệu không hợp lệ.", 422, result.error.errors);
     }
 
     const appointment = await createAppointment(customerId, result.data);
     return ok(appointment, "Đặt lịch tư vấn may đo thành công.", 201);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Loi he thong.";
+    if (isAppointmentError(error)) {
+      return fail(error.message, error.status, error.details);
+    }
+
+    const message = error instanceof Error ? error.message : "Lỗi hệ thống.";
     console.error("[measurement-appointments/POST]", error);
-    return fail("Loi he thong.", 500, message);
+    return fail("Lỗi hệ thống.", 500, message);
   }
 }

@@ -89,11 +89,11 @@ export default async function AccountAddressesRoute() {
               </aside>
 
               <section className="account-content-panel">
-                <div className="flex flex-col gap-2">
-                  <h1 className="account-panel-title">
+                <div className="flex flex-col gap-1.5">
+                  <h1 className="text-display-section font-extrabold leading-none">
                     Sổ địa chỉ
                   </h1>
-                  <p className="account-panel-subtitle">
+                  <p className="text-sm font-medium text-foreground/72">
                     Địa chỉ đã được cập nhật theo thông tin hành chính mới.
                   </p>
                 </div>

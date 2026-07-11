@@ -58,7 +58,7 @@ export function CollectionStoryCard({
       >
         <div>
           <div className="mb-5 flex items-center gap-5">
-            <h2 className="whitespace-nowrap text-heading-section font-bold leading-none text-black transition-opacity group-hover:opacity-75">
+            <h2 className="min-w-0 flex-1 truncate text-heading-section font-bold leading-none text-black transition-opacity group-hover:opacity-75">
               {title}
             </h2>
             <div className="h-px flex-1 bg-[#3b3b3b]" />
@@ -73,13 +73,13 @@ export function CollectionStoryCard({
           {(date || quote) && (
             <div className="mb-6 flex items-center gap-5">
               {date && (
-                <div className="flex h-[34px] w-[230px] shrink-0 items-center justify-center rounded-full border border-black text-body-lg font-normal leading-none text-black">
+                <div className="flex h-[34px] w-[230px] shrink-0 items-center justify-center rounded-full border border-black text-lg font-normal leading-none text-black">
                   {date}
                 </div>
               )}
 
               {quote && (
-                <p className="font-serif text-quote font-light italic leading-tight text-left text-black">
+                <p className="text-left font-serif text-base font-light italic leading-tight text-black">
                   “{quote}”
                 </p>
               )}
@@ -89,7 +89,7 @@ export function CollectionStoryCard({
           {body.length > 0 && (
             <div className="space-y-4 px-0 lg:px-5">
               {body.map((paragraph) => (
-                <p key={paragraph} className="text-justify text-body font-light leading-relaxed text-black">
+                <p key={paragraph} className="text-justify text-base font-light leading-relaxed text-black">
                   {paragraph}
                 </p>
               ))}

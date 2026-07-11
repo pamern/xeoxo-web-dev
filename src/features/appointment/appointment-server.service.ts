@@ -1,50 +1,151 @@
 import { randomUUID } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import type { AppointmentDto, CreateAppointmentValues } from "@/types/appointment.types";
+
+class AppointmentError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly details?: unknown,
+  ) {
+    super(message);
+  }
+}
 
 function buildAppointmentCode() {
   return `APT${randomUUID().replace(/-/g, "").slice(0, 10).toUpperCase()}`;
 }
 
+function addMinutesToTime(time: string, minutes: number) {
+  const [hours, mins] = time.split(":").map(Number);
+  const date = new Date(Date.UTC(2000, 0, 1, hours, mins));
+  date.setUTCMinutes(date.getUTCMinutes() + minutes);
+  return `${date.getUTCHours().toString().padStart(2, "0")}:${date
+    .getUTCMinutes()
+    .toString()
+    .padStart(2, "0")}`;
+}
+
+function buildAppointmentDateTime(date: string, time: string) {
+  return new Date(`${date}T${time}:00+07:00`);
+}
+
+async function ensureGuestCustomer(
+  fullName: string,
+  phone: string,
+  email?: string,
+) {
+  const admin = createAdminClient();
+  const now = new Date().toISOString();
+
+  const normalizedPhone = parseAuthIdentifier(phone);
+  if (!normalizedPhone || normalizedPhone.type !== "phone") {
+    throw new AppointmentError("Số điện thoại không hợp lệ.", 422);
+  }
+
+  const normalizedEmail = email?.trim().toLowerCase() || null;
+
+  const { data: existing, error: existingError } = await admin
+    .schema("iam")
+    .from("customer")
+    .select("customer_id")
+    .eq("phone", normalizedPhone.value)
+    .eq("customer_type", "GUEST")
+    .limit(1)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new Error(existingError.message);
+  }
+
+  if (existing?.customer_id) {
+    return Number(existing.customer_id);
+  }
+
+  const { data, error } = await admin
+    .schema("iam")
+    .from("customer")
+    .insert({
+      customer_name: fullName.trim(),
+      phone: normalizedPhone.value,
+      email: normalizedEmail,
+      customer_type: "GUEST",
+      total_spent: 0,
+      spent_in_year: 0,
+      created_at: now,
+      updated_at: now,
+    })
+    .select("customer_id")
+    .single();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return Number(data.customer_id);
+}
+
 export async function createAppointment(
   customerId: number | null,
-  values: CreateAppointmentValues
+  values: CreateAppointmentValues,
 ): Promise<AppointmentDto> {
   const admin = createAdminClient();
   const now = new Date().toISOString();
 
-  // Validate product_line_id if provided
+  const appointmentAt = buildAppointmentDateTime(
+    values.appointment_date,
+    values.start_time,
+  );
+
+  if (Number.isNaN(appointmentAt.getTime())) {
+    throw new AppointmentError("Ngày hẹn không hợp lệ.", 422);
+  }
+
+  const nowDate = new Date();
+  if (appointmentAt.getTime() < nowDate.getTime()) {
+    throw new AppointmentError("Không thể đặt lịch trong quá khứ.", 422);
+  }
+
+  if (appointmentAt.getTime() - nowDate.getTime() < 60 * 60 * 1000) {
+    throw new AppointmentError("Lịch hẹn phải được đặt trước ít nhất 1 giờ.", 422);
+  }
+
   if (values.product_line_id) {
     const { data: productLine, error: productLineError } = await admin
       .schema("catalog")
       .from("product_line")
       .select("product_line_id")
       .eq("product_line_id", values.product_line_id)
+      .eq("status", "ACTIVE")
       .maybeSingle();
 
     if (productLineError) throw new Error(productLineError.message);
-    if (!productLine) throw new Error("Khong tim thay san pham.");
+    if (!productLine) {
+      throw new AppointmentError("Không tìm thấy sản phẩm.", 404);
+    }
   }
 
-  const startTimeStr = values.start_time;
-  const [hours, minutes] = startTimeStr.split(':').map(Number);
-  const startDate = new Date(Date.UTC(2000, 0, 1, hours, minutes));
-  startDate.setUTCMinutes(startDate.getUTCMinutes() + 30);
-  const endTimeStr = `${startDate.getUTCHours().toString().padStart(2, '0')}:${startDate.getUTCMinutes().toString().padStart(2, '0')}`;
+  const effectiveCustomerId =
+    customerId ??
+    (await ensureGuestCustomer(values.full_name, values.phone, values.email));
 
   const appointmentData = {
     appointment_code: buildAppointmentCode(),
-    customer_id: customerId,
+    customer_id: effectiveCustomerId,
     product_line_id: values.product_line_id || null,
     branch_id: values.branch_id,
     appointment_date: values.appointment_date,
-    start_time: startTimeStr,
-    end_time: endTimeStr,
-    appointment_status: 'CONFIRMED',
+    start_time: values.start_time,
+    end_time: addMinutesToTime(values.start_time, 60),
+    appointment_status: "CONFIRMED",
     contact_name: values.full_name.trim(),
-    contact_phone: values.phone.trim(),
+    contact_phone:
+      parseAuthIdentifier(values.phone)?.type === "phone"
+        ? parseAuthIdentifier(values.phone)?.value
+        : values.phone.trim(),
     contact_email: values.email?.trim().toLowerCase() || null,
-    customer_note: values.customer_note || null,
+    customer_note: values.customer_note?.trim() || null,
     created_at: now,
     updated_at: now,
   };
@@ -73,4 +174,8 @@ export async function createAppointment(
     customer_note: appointment.customer_note,
     created_at: appointment.created_at,
   };
+}
+
+export function isAppointmentError(error: unknown): error is AppointmentError {
+  return error instanceof AppointmentError;
 }

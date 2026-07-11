@@ -61,7 +61,7 @@ function CartAddedToast({
       aria-live="polite"
     >
       <div className="flex items-center justify-between gap-4">
-        <p className="text-body-lg font-semibold">Thêm vào giỏ hàng thành công</p>
+        <p className="text-lg font-semibold leading-[1.5]">Thêm vào giỏ hàng thành công</p>
         <button
           type="button"
           onClick={onClose}

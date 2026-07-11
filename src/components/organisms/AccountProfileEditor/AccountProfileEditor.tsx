@@ -204,10 +204,10 @@ export function AccountProfileEditor({
   }
 
   return (
-    <div className="mt-8">
+    <div className="mt-6">
       {isEditing ? (
-        <form onSubmit={handleSubmit} className="max-w-[760px]">
-          <div className="grid gap-5 md:grid-cols-2 md:gap-x-8">
+        <form onSubmit={handleSubmit} className="max-w-[680px]">
+          <div className="grid gap-4 md:grid-cols-2 md:gap-x-6">
             <Field label="Họ và tên">
               <input
                 value={values.customer_name}
@@ -273,13 +273,13 @@ export function AccountProfileEditor({
             </p>
           ) : null}
 
-          <div className="mt-8 flex flex-col gap-3 md:flex-row">
+          <div className="mt-6 flex flex-col gap-3 md:flex-row">
             <Button
               type="submit"
               variant="solid"
               size="lg"
               isLoading={isSubmitting}
-              className="h-[54px] w-full max-w-[360px] text-base font-extrabold uppercase md:text-[18px]"
+              className="h-11 w-full max-w-[300px] text-sm font-extrabold uppercase md:text-base"
             >
               Lưu thông tin
             </Button>
@@ -288,7 +288,7 @@ export function AccountProfileEditor({
               variant="secondaryPill"
               size="lg"
               disabled={isSubmitting}
-              className="h-[54px] w-full max-w-[240px] text-base font-bold md:text-[18px]"
+              className="h-11 w-full max-w-[200px] text-sm font-bold md:text-base"
               onClick={handleCancel}
             >
               Hủy
@@ -297,7 +297,7 @@ export function AccountProfileEditor({
         </form>
       ) : (
         <>
-          <dl className="grid gap-y-4 md:max-w-[760px] md:grid-cols-[190px_minmax(0,1fr)] md:gap-x-12">
+          <dl className="grid gap-y-3 md:max-w-[680px] md:grid-cols-[160px_minmax(0,1fr)] md:gap-x-8">
             <ProfileRow
               label="Họ và tên:"
               value={getDisplayValue(displayValues.customer_name)}
@@ -326,12 +326,12 @@ export function AccountProfileEditor({
             </p>
           ) : null}
 
-          <div className="mt-10">
+          <div className="mt-8">
             <Button
               type="button"
               variant="solid"
               size="lg"
-              className="h-[54px] w-full max-w-[560px] text-base font-extrabold uppercase md:text-[18px]"
+              className="h-11 w-full max-w-[460px] text-sm font-extrabold uppercase md:text-base"
               onClick={() => setIsEditing(true)}
             >
               Cập nhật thông tin cá nhân
@@ -351,8 +351,8 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex flex-col gap-2">
-      <span className="text-base font-extrabold">{label}</span>
+    <label className="flex flex-col gap-1.5">
+      <span className="text-sm font-extrabold">{label}</span>
       {children}
     </label>
   );
@@ -366,8 +366,8 @@ function ReadOnlyFieldValue({
   helperText?: string;
 }) {
   return (
-    <div className="rounded-[14px] border border-black/10 bg-secondary px-4 py-3">
-      <p className="text-base font-medium text-black">{value}</p>
+    <div className="rounded-[12px] border border-black/10 bg-secondary px-4 py-2.5">
+      <p className="text-sm font-medium text-black">{value}</p>
       {helperText ? (
         <p className="mt-1 text-xs font-medium text-black/55">{helperText}</p>
       ) : null}
@@ -492,34 +492,34 @@ function BirthdayPicker({
 
   return (
     <div ref={pickerRef} className="relative">
-      <div className="flex gap-3">
+      <div className="flex gap-2.5">
         <input
           value={inputValue}
           onChange={(event) => handleManualInput(event.target.value)}
           onBlur={commitManualInput}
           placeholder="YYYY-MM-DD"
           inputMode="numeric"
-          className="form-control h-[54px] rounded-[14px]"
+          className="form-control h-11 rounded-[12px] text-sm"
         />
         <button
           type="button"
           onClick={handleToggle}
-          className="form-control flex h-[54px] w-[60px] shrink-0 items-center justify-center rounded-[14px] px-0 text-left"
+          className="form-control flex h-11 w-12 shrink-0 items-center justify-center rounded-[12px] px-0 text-left"
           aria-label="Mở lịch chọn ngày sinh"
         >
-          <span className="text-lg text-foreground/60">{isOpen ? "−" : "+"}</span>
+          <span className="text-base text-foreground/60">{isOpen ? "−" : "+"}</span>
         </button>
       </div>
 
       {isOpen ? (
-        <div className="absolute left-0 top-[calc(100%+12px)] z-20 w-[340px] rounded-[24px] border border-black/8 bg-white p-5 shadow-[0_22px_60px_rgba(0,0,0,0.16)]">
+        <div className="absolute left-0 top-[calc(100%+10px)] z-20 w-[300px] rounded-[20px] border border-black/8 bg-white p-4 shadow-[0_22px_60px_rgba(0,0,0,0.16)]">
           <div className="flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() =>
                 viewMode === "days" ? moveMonth(-1) : moveYearRange(-1)
               }
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-xl transition-colors hover:bg-secondary"
+              className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-lg transition-colors hover:bg-secondary"
               aria-label={viewMode === "days" ? "Tháng trước" : "Nhóm năm trước"}
             >
               ‹
@@ -535,7 +535,7 @@ function BirthdayPicker({
                     current === "days" ? "months" : "years",
                   )
                 }
-                className="mt-1 text-base font-extrabold transition-opacity hover:opacity-70"
+                className="mt-1 text-sm font-extrabold transition-opacity hover:opacity-70"
               >
                 {viewMode === "years"
                   ? `${yearRangeStart} - ${yearRangeStart + 11}`
@@ -555,11 +555,11 @@ function BirthdayPicker({
           </div>
 
           {viewMode === "days" ? (
-            <div className="mt-5 grid grid-cols-7 gap-2 text-center">
+            <div className="mt-4 grid grid-cols-7 gap-1.5 text-center">
               {WEEKDAY_LABELS.map((label) => (
                 <span
                   key={label}
-                  className="text-[11px] font-bold uppercase tracking-[0.12em] text-foreground/45"
+                  className="text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/45"
                 >
                   {label}
                 </span>
@@ -574,7 +574,7 @@ function BirthdayPicker({
                     type="button"
                     onClick={() => handleSelect(date)}
                     className={[
-                      "flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium transition-colors",
+                      "flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors",
                       isSelected
                         ? "bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
                         : isCurrentMonth
@@ -591,7 +591,7 @@ function BirthdayPicker({
           ) : null}
 
           {viewMode === "months" ? (
-            <div className="mt-5 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-3 gap-2.5">
               {MONTH_SHORT_LABELS.map((label, monthIndex) => {
                 const isSelected =
                   selectedDate &&
@@ -614,7 +614,7 @@ function BirthdayPicker({
                       setViewMode("days");
                     }}
                     className={[
-                      "rounded-[14px] px-3 py-3 text-sm font-semibold transition-colors",
+                      "rounded-[12px] px-3 py-2.5 text-xs font-semibold transition-colors",
                       isSelected
                         ? "bg-black text-white"
                         : "border border-black/10 bg-white text-black hover:bg-secondary",
@@ -628,7 +628,7 @@ function BirthdayPicker({
           ) : null}
 
           {viewMode === "years" ? (
-            <div className="mt-5 grid grid-cols-3 gap-3">
+            <div className="mt-4 grid grid-cols-3 gap-2.5">
               {yearOptions.map((year) => {
                 const isSelected = selectedDate?.getFullYear() === year;
 
@@ -644,7 +644,7 @@ function BirthdayPicker({
                       setViewMode("months");
                     }}
                     className={[
-                      "rounded-[14px] px-3 py-3 text-sm font-semibold transition-colors",
+                      "rounded-[12px] px-3 py-2.5 text-xs font-semibold transition-colors",
                       isSelected
                         ? "bg-black text-white"
                         : "border border-black/10 bg-white text-black hover:bg-secondary",
@@ -657,7 +657,7 @@ function BirthdayPicker({
             </div>
           ) : null}
 
-          <div className="mt-5 flex items-center justify-between gap-3">
+          <div className="mt-4 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => {
@@ -666,14 +666,14 @@ function BirthdayPicker({
                 setViewMode("days");
                 setIsOpen(false);
               }}
-              className="text-sm font-medium text-foreground/62 transition-colors hover:text-foreground"
+              className="text-xs font-medium text-foreground/62 transition-colors hover:text-foreground"
             >
               Xóa ngày
             </button>
             <button
               type="button"
               onClick={() => handleSelect(today)}
-              className="rounded-full border border-black px-4 py-2 text-sm font-bold transition-colors hover:bg-black hover:text-white"
+              className="rounded-full border border-black px-4 py-2 text-xs font-bold transition-colors hover:bg-black hover:text-white"
             >
               Hôm nay
             </button>
@@ -687,8 +687,8 @@ function BirthdayPicker({
 function ProfileRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="contents">
-      <dt className="text-lg font-extrabold md:text-[18px]">{label}</dt>
-      <dd className="text-lg font-medium text-foreground/88 md:text-[18px]">
+      <dt className="text-base font-extrabold">{label}</dt>
+      <dd className="text-base font-medium text-foreground/88">
         {value}
       </dd>
     </div>

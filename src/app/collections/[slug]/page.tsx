@@ -60,7 +60,7 @@ export default async function CollectionDetailPage({
     <SiteLayout>
       <div className="bg-white">
         <div className="mx-auto w-full max-w-site">
-          <section className="flex h-20 items-start bg-white px-6 pb-5 pt-12 xl:h-[86px] xl:pl-[100px] xl:pr-[50px] xl:pt-[50px]">
+          <section className="breadcrumb-shell flex items-start bg-white">
             <Breadcrumbs
               items={[
                 {
@@ -72,7 +72,7 @@ export default async function CollectionDetailPage({
                 { label: "Bộ sưu tập", href: ROUTES.COLLECTIONS },
                 { label: collection.name },
               ]}
-              className="text-body-sm leading-none text-black"
+              className="text-sm leading-none text-black"
             />
           </section>
 
@@ -113,7 +113,7 @@ function CollectionHero({
   const description = hero?.description ?? collection.description;
 
   return (
-    <section className="relative flex h-[620px] items-center justify-center overflow-hidden bg-black text-white md:h-[975px]">
+    <section className="relative isolate flex aspect-[1920/787] min-h-[320px] w-full items-center justify-center overflow-hidden bg-black text-white sm:min-h-[400px] lg:min-h-[520px]">
       <Image
         src={collection.coverImage}
         alt={collection.name}
@@ -124,22 +124,22 @@ function CollectionHero({
       />
       <div className="absolute inset-0 bg-black/10" />
 
-      <div className="relative z-10 flex w-full max-w-[1427px] translate-y-12 flex-col items-center px-6 text-center text-white md:translate-y-[115px]">
+      <div className="relative z-10 flex w-full max-w-[1427px] flex-col items-center justify-center px-6 py-10 text-center text-white sm:px-8 md:px-10 lg:px-12">
         {eyebrow ? (
-          <p className="text-heading-section font-bold uppercase leading-[1.1] [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-[38px]">
+          <p className="text-2xl font-bold uppercase leading-[1.1] [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-[2.375rem]">
             {eyebrow}
           </p>
         ) : null}
         {subtitle ? (
-          <p className="mt-2 text-button font-bold uppercase leading-[1.1] [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-[18px]">
+          <p className="mt-2 text-base font-bold uppercase leading-[1.1] [text-shadow:0px_4px_10px_rgba(0,0,0,0.65)] md:text-[1.125rem]">
             {subtitle}
           </p>
         ) : null}
-        <h1 className="mt-2 text-display-section font-extrabold uppercase leading-none [text-shadow:0px_5px_14px_rgba(0,0,0,0.75)] md:text-[56px]">
+        <h1 className="mt-2 text-4xl font-extrabold uppercase leading-none [text-shadow:0px_5px_14px_rgba(0,0,0,0.75)] md:text-[3.5rem]">
           {title}
         </h1>
         {description ? (
-          <p className="mt-10 max-w-[1427px] text-center text-body-lg font-light leading-[1.55] [text-shadow:0px_3px_8px_rgba(0,0,0,0.65)] md:text-[20px]">
+          <p className="mt-10 max-w-[1427px] text-center text-lg font-light leading-[1.55] [text-shadow:0px_3px_8px_rgba(0,0,0,0.65)] md:text-[1.25rem]">
             {description}
           </p>
         ) : null}
@@ -173,16 +173,8 @@ function JsonTextBlock({
 }) {
   return (
     <article className="mx-auto flex w-full max-w-[1479px] flex-col gap-3 text-black">
-      {heading && (
-        <h2 className="content-heading">
-          {heading}
-        </h2>
-      )}
-      {body && (
-        <p className="content-body text-justify">
-          {body}
-        </p>
-      )}
+      {heading && <h2 className="text-lg font-bold text-black md:text-[1.375rem]">{heading}</h2>}
+      {body && <p className="text-justify text-lg font-light leading-relaxed text-black">{body}</p>}
     </article>
   );
 }

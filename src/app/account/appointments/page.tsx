@@ -121,8 +121,8 @@ export default async function AccountAppointmentsPage({
               </aside>
 
               <section className="account-content-panel">
-                <div className="flex flex-col gap-5">
-                  <h1 className="account-panel-title">
+                <div className="flex flex-col gap-4">
+                  <h1 className="text-display-section font-extrabold leading-none">
                     Quản lý lịch hẹn
                   </h1>
 

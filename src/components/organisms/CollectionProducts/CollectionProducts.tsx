@@ -25,8 +25,8 @@ export function CollectionProducts({
   const hasMore = products.length > INITIAL_VISIBLE_COUNT && !showAll;
 
   return (
-    <section className="mx-auto w-full max-w-site px-6 py-[50px] xl:px-[100px]">
-      <div className="mb-5 flex items-center justify-between gap-6">
+    <section className="mx-auto w-full max-w-site px-5 py-10 md:px-8 md:py-12 xl:px-10 2xl:px-20">
+      <div className="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center sm:gap-6">
         <h2 className="text-heading-section font-medium uppercase text-black">
           Sản phẩm {collectionName}
         </h2>
@@ -40,38 +40,38 @@ export function CollectionProducts({
 
       {products.length > 0 ? (
         <>
-          <div className="grid gap-x-[42px] gap-y-[21px] sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 sm:grid-cols-2 md:gap-x-5 md:gap-y-8 lg:grid-cols-4 lg:gap-x-4 lg:gap-y-7">
             {visibleProducts.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
-                className="gap-[13px]"
-                imageClassName="aspect-auto h-[430px] rounded-none"
+                className="min-w-0 w-full"
+                quickAddOnHover
               />
             ))}
           </div>
 
-          <div className="flex h-[194px] flex-col items-center justify-center gap-5 px-6">
+          <div className="flex min-h-[160px] flex-col items-center justify-center gap-5 px-5 py-8 md:min-h-[194px]">
             {hasMore ? (
               <button
                 type="button"
                 onClick={() => setShowAll(true)}
-                className="inline-flex h-[47px] w-[294px] items-center justify-center gap-[10px] rounded-full bg-black text-button font-medium uppercase leading-none text-white transition-opacity hover:opacity-80"
+                className="inline-flex min-h-[47px] w-full max-w-[294px] items-center justify-center gap-[10px] rounded-full bg-black px-6 text-base font-medium uppercase leading-none text-white transition-opacity hover:opacity-80"
               >
                 <span>Xem thêm</span>
-                <span aria-hidden className="text-[30px] leading-none">
+                <span aria-hidden className="text-[1.875rem] leading-none">
                   →
                 </span>
               </button>
             ) : null}
 
-            <p className="text-center text-button font-extralight text-black">
+            <p className="text-center text-base font-extralight text-black">
               Hiển thị {visibleCount} trên tổng số {products.length} sản phẩm
             </p>
           </div>
         </>
       ) : (
-        <p className="py-12 text-center text-body-lg text-black">
+        <p className="py-12 text-center text-lg text-black">
           Chưa có sản phẩm trong bộ sưu tập.
         </p>
       )}

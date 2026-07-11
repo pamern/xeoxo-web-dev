@@ -52,7 +52,7 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
 
   return (
     <section
-      className="relative h-[70vh] min-h-[480px] w-full overflow-hidden"
+      className="relative h-[62vh] min-h-[420px] w-full overflow-hidden md:h-[68vh] md:min-h-[480px] xl:h-[70vh]"
       onMouseEnter={() => (isPausedRef.current = true)}
       onMouseLeave={() => (isPausedRef.current = false)}
     >
@@ -82,9 +82,9 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
       })}
       <div className="absolute inset-0 bg-black/30" aria-hidden />
 
-      <div className="relative mx-auto flex h-full max-w-site flex-col justify-end gap-4 px-6 pb-16 xl:px-[100px]">
-        <p className="text-shadow text-2xl font-medium text-white md:text-4xl">{current.subtitle}</p>
-        <h1 className="text-shadow text-5xl font-extrabold uppercase text-white md:text-7xl">
+      <div className="relative mx-auto flex h-full w-full max-w-site flex-col justify-end gap-3 px-5 pb-12 md:px-8 md:pb-14 xl:px-10 2xl:px-20">
+        <p className="text-shadow text-2xl font-medium text-white">{current.subtitle}</p>
+        <h1 className="text-shadow text-5xl font-extrabold uppercase text-white">
           {current.name}
         </h1>
         <Link
@@ -98,7 +98,7 @@ export function HeroCarousel({ slides }: { slides: Collection[] }) {
       <CarouselButton direction="prev" onClick={() => go(-1)} />
       <CarouselButton direction="next" onClick={() => go(1)} />
 
-      <div className="absolute bottom-6 left-1/2 flex -translate-x-1/2 gap-2">
+      <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-2 md:bottom-6">
         {slides.map((slide, i) => (
           <button
             key={slide.slug}

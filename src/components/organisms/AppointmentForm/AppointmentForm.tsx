@@ -1,8 +1,15 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/atoms/Button";
-import { SelectField, type SelectOption } from "@/components/molecules/SelectField";
+import type { SelectOption } from "@/components/molecules/SelectField";
 import type { TimeSlot } from "@/components/molecules/TimeSlotPicker";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +25,28 @@ export type AppointmentValues = {
 };
 
 const TODAY = getLocalDateValue(new Date());
+const CURRENT_YEAR = parseValueAsDate(TODAY).getFullYear();
+const YEAR_OPTIONS = Array.from({ length: 4 }, (_, index) => CURRENT_YEAR + index);
+const MONTH_OPTIONS = [
+  "Tháng 1",
+  "Tháng 2",
+  "Tháng 3",
+  "Tháng 4",
+  "Tháng 5",
+  "Tháng 6",
+  "Tháng 7",
+  "Tháng 8",
+  "Tháng 9",
+  "Tháng 10",
+  "Tháng 11",
+  "Tháng 12",
+];
+const WEEKDAY_LABELS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const INPUT_DATE_FORMATTER = new Intl.DateTimeFormat("vi-VN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
 
 const DEFAULT_VALUES: AppointmentValues = {
   fullName: "",
@@ -31,10 +60,7 @@ const DEFAULT_VALUES: AppointmentValues = {
 };
 
 const fieldClassName =
-  "h-11 w-full rounded-[22px] border border-black/30 bg-white px-5 text-body font-light text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10";
-
-const compactFieldClassName =
-  "h-11 w-full rounded-[22px] border border-black/30 bg-white px-5 text-body font-light text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-9 w-full rounded-pill border border-black/40 bg-white px-3.5 text-sm font-light text-black outline-none transition-colors placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10";
 
 type AppointmentErrors = Partial<Record<keyof AppointmentValues, string>>;
 
@@ -43,16 +69,24 @@ export function AppointmentForm({
   timeSlots,
   onSubmit,
   showInlineSuccessMessage = true,
+  showGenderField = true,
 }: {
   branches: SelectOption[];
   timeSlots: TimeSlot[];
   onSubmit?: (values: AppointmentValues) => void | Promise<void>;
   showInlineSuccessMessage?: boolean;
+  showGenderField?: boolean;
 }) {
-  const timeOptions = timeSlots.map((slot) => ({
-    label: slot.label,
-    value: slot.id,
-  }));
+  const initialDate = useMemo(() => parseValueAsDate(TODAY), []);
+  const [isBranchOpen, setIsBranchOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(
+    () => new Date(initialDate.getFullYear(), initialDate.getMonth(), 1),
+  );
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const [isTimeOpen, setIsTimeOpen] = useState(false);
+  const branchRef = useRef<HTMLDivElement | null>(null);
+  const dateRef = useRef<HTMLDivElement | null>(null);
+  const timeRef = useRef<HTMLDivElement | null>(null);
 
   const [values, setValues] = useState<AppointmentValues>({
     ...DEFAULT_VALUES,
@@ -64,20 +98,121 @@ export function AppointmentForm({
   const [submitError, setSubmitError] = useState<string>();
   const [errors, setErrors] = useState<AppointmentErrors>({});
 
+  const calendarDays = useMemo(
+    () => buildCalendarDays(visibleMonth, TODAY),
+    [visibleMonth],
+  );
+  const selectedDate = useMemo(() => parseValueAsDate(values.date), [values.date]);
+  const selectedTimeLabel =
+    timeSlots.find((slot) => slot.id === values.timeSlot)?.label ?? "";
+  const timeSlotsWithAvailability = useMemo(
+    () =>
+      timeSlots.map((slot) => ({
+        ...slot,
+        isDisabled: isTimeSlotDisabled(values.date, slot.id),
+      })),
+    [timeSlots, values.date],
+  );
+  const orderedTimeSlots = useMemo(() => {
+    const morningSlots = timeSlotsWithAvailability.filter((slot) => {
+      const hour = Number(slot.id.split(":")[0]);
+      return hour < 12;
+    });
+    const afternoonSlots = timeSlotsWithAvailability.filter((slot) => {
+      const hour = Number(slot.id.split(":")[0]);
+      return hour >= 12;
+    });
+
+    return [...morningSlots, ...afternoonSlots];
+  }, [timeSlotsWithAvailability]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Node;
+
+      if (branchRef.current && !branchRef.current.contains(target)) {
+        setIsBranchOpen(false);
+      }
+
+      if (dateRef.current && !dateRef.current.contains(target)) {
+        setIsDateOpen(false);
+      }
+
+      if (timeRef.current && !timeRef.current.contains(target)) {
+        setIsTimeOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const selectedSlot = timeSlotsWithAvailability.find(
+      (slot) => slot.id === values.timeSlot,
+    );
+
+    if (selectedSlot && !selectedSlot.isDisabled) {
+      return;
+    }
+
+    const firstAvailableSlot = timeSlotsWithAvailability.find(
+      (slot) => !slot.isDisabled,
+    );
+
+    setValues((current) => ({
+      ...current,
+      timeSlot: firstAvailableSlot?.id ?? "",
+    }));
+  }, [timeSlotsWithAvailability, values.timeSlot]);
+
   function update<K extends keyof AppointmentValues>(key: K, value: AppointmentValues[K]) {
-    setValues((current) => ({ ...current, [key]: value }));
+    setValues((current) => {
+      const nextValues = { ...current, [key]: value };
+
+      if (errors[key]) {
+        setErrors((existing) => ({
+          ...existing,
+          [key]: validateField(key, value, nextValues),
+        }));
+      }
+
+      return nextValues;
+    });
     setSubmitted(false);
     setSubmitError(undefined);
-    if (errors[key]) {
-      setErrors((current) => ({ ...current, [key]: validateField(key, value) }));
-    }
   }
 
   function handleBlur<K extends keyof AppointmentValues>(key: K) {
     setErrors((current) => ({
       ...current,
-      [key]: validateField(key, values[key]),
+      [key]: validateField(key, values[key], values),
     }));
+  }
+
+  function handleDateSelect(value: string) {
+    const nextDate = parseValueAsDate(value);
+    update("date", value);
+    setVisibleMonth(new Date(nextDate.getFullYear(), nextDate.getMonth(), 1));
+    setIsDateOpen(false);
+  }
+
+  function handleTimeSelect(value: string) {
+    update("timeSlot", value);
+    setIsTimeOpen(false);
+  }
+
+  function handleBranchSelect(value: string) {
+    update("branch", value);
+    setIsBranchOpen(false);
+  }
+
+  function handleMonthChange(monthIndex: number) {
+    setVisibleMonth((current) => new Date(current.getFullYear(), monthIndex, 1));
+  }
+
+  function handleYearChange(year: number) {
+    setVisibleMonth((current) => new Date(year, current.getMonth(), 1));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -87,6 +222,7 @@ export function AppointmentForm({
     if (Object.keys(nextErrors).length > 0) return;
     setIsSubmitting(true);
     setSubmitError(undefined);
+
     try {
       await onSubmit?.(values);
       setSubmitted(true);
@@ -101,117 +237,278 @@ export function AppointmentForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="bg-white pt-6">
-      <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 px-0 pb-7">
-        <FieldRow label="Họ và tên:">
+    <form onSubmit={handleSubmit} noValidate className="bg-transparent">
+      <div className="mx-auto flex w-full flex-col gap-3 pb-5">
+        <FieldRow label="Họ và tên">
           <FieldControl error={errors.fullName}>
-            <input name="fullName" value={values.fullName} onChange={(event) => update("fullName", event.target.value)} onBlur={() => handleBlur("fullName")} placeholder="Nhập họ và tên" aria-invalid={Boolean(errors.fullName)} className={fieldInputClass(compactFieldClassName, errors.fullName)} />
+            <input
+              name="fullName"
+              value={values.fullName}
+              onChange={(event) => update("fullName", event.target.value)}
+              onBlur={() => handleBlur("fullName")}
+              placeholder="Nguyễn Văn A"
+              aria-invalid={Boolean(errors.fullName)}
+              className={fieldInputClass(fieldClassName, errors.fullName)}
+            />
           </FieldControl>
         </FieldRow>
 
-        <FieldRow label="Số điện thoại:">
+        <FieldRow label="Số điện thoại">
           <FieldControl error={errors.phone}>
-            <input name="phone" inputMode="tel" value={values.phone} onChange={(event) => update("phone", event.target.value)} onBlur={() => handleBlur("phone")} placeholder="Nhập số điện thoại" aria-invalid={Boolean(errors.phone)} className={fieldInputClass(compactFieldClassName, errors.phone)} />
+            <input
+              name="phone"
+              inputMode="tel"
+              value={values.phone}
+              onChange={(event) => update("phone", event.target.value)}
+              onBlur={() => handleBlur("phone")}
+              placeholder="09xxxxxxxx"
+              aria-invalid={Boolean(errors.phone)}
+              className={fieldInputClass(fieldClassName, errors.phone)}
+            />
           </FieldControl>
         </FieldRow>
 
-        <FieldRow label="Email cá nhân:">
+        <FieldRow label="Email cá nhân">
           <FieldControl error={errors.email}>
-            <input name="email" type="email" value={values.email} onChange={(event) => update("email", event.target.value)} onBlur={() => handleBlur("email")} placeholder="Nhập email (không bắt buộc)" aria-invalid={Boolean(errors.email)} className={fieldInputClass(compactFieldClassName, errors.email)} />
+            <input
+              name="email"
+              type="email"
+              value={values.email}
+              onChange={(event) => update("email", event.target.value)}
+              onBlur={() => handleBlur("email")}
+              placeholder="Nhập email (không bắt buộc)"
+              aria-invalid={Boolean(errors.email)}
+              className={fieldInputClass(fieldClassName, errors.email)}
+            />
           </FieldControl>
         </FieldRow>
 
-        <FieldRow label="Giới tính">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <GenderPill
-              active={values.gender === "nam"}
-              onClick={() => update("gender", "nam")}
-            >
-              Nam
-            </GenderPill>
-            <GenderPill
-              active={values.gender === "nu"}
-              onClick={() => update("gender", "nu")}
-            >
-              Nữ
-            </GenderPill>
-          </div>
+        {showGenderField ? (
+          <FieldRow label="Giới tính">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <GenderPill
+                active={values.gender === "nam"}
+                onClick={() => update("gender", "nam")}
+              >
+                Nam
+              </GenderPill>
+              <GenderPill
+                active={values.gender === "nu"}
+                onClick={() => update("gender", "nu")}
+              >
+                Nữ
+              </GenderPill>
+            </div>
+          </FieldRow>
+        ) : null}
+
+        <FieldRow label="Chi nhánh">
+          <FieldControl error={errors.branch}>
+            <div ref={branchRef} className="relative">
+              <DropdownTrigger
+                value={branches.find((branch) => branch.value === values.branch)?.label ?? ""}
+                placeholder="Chá»n chi nhÃ¡nh"
+                isOpen={isBranchOpen}
+                onClick={() => {
+                  setIsBranchOpen((current) => !current);
+                  setIsDateOpen(false);
+                  setIsTimeOpen(false);
+                }}
+              />
+
+              {isBranchOpen ? (
+                <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full overflow-hidden rounded-[18px] border border-black/10 bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+                  <div className="flex flex-col gap-2.5">
+                    {branches.map((branch) => {
+                      const isSelected = values.branch === branch.value;
+
+                      return (
+                        <button
+                          key={branch.value}
+                          type="button"
+                          onClick={() => handleBranchSelect(branch.value)}
+                          className="flex items-center gap-3 text-left text-sm text-black transition-colors"
+                        >
+                          <span
+                            className={cn(
+                              "h-5 w-5 rounded-full border border-black/80",
+                              isSelected && "border-[6px] border-[#f15a42]",
+                            )}
+                          />
+                          <span className={cn("leading-snug", isSelected && "font-medium")}>
+                            {branch.label}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </FieldControl>
         </FieldRow>
 
-        <FieldRow label="Chi nhánh:">
-          <FieldControl error={errors.branch}><SelectField
-            label=""
-            name="branch"
-            value={values.branch}
-            options={branches}
-            onChange={(event) => update("branch", event.target.value)}
-            className={cn(fieldInputClass(fieldClassName, errors.branch), "px-5 pr-12")}
-            wrapperClassName="gap-0"
-          /></FieldControl>
+        <FieldRow label="Ngày hẹn">
+          <FieldControl error={errors.date}>
+            <div ref={dateRef} className="relative">
+              <DropdownTrigger
+                value={formatDateInputLabel(selectedDate)}
+                placeholder="Chọn ngày hẹn"
+                isOpen={isDateOpen}
+                onClick={() => {
+                  setIsDateOpen((current) => !current);
+                  setIsTimeOpen(false);
+                }}
+              />
+
+              {isDateOpen ? (
+                <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full max-w-[380px] overflow-hidden rounded-[18px] border border-black/10 bg-white p-3.5 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+                  <div className="mb-3 grid grid-cols-[1fr_1fr] gap-2">
+                    <SelectMini
+                      value={String(visibleMonth.getMonth())}
+                      onChange={(event) => handleMonthChange(Number(event.target.value))}
+                    >
+                      {MONTH_OPTIONS.map((label, index) => (
+                        <option key={label} value={index}>
+                          {label}
+                        </option>
+                      ))}
+                    </SelectMini>
+                    <SelectMini
+                      value={String(visibleMonth.getFullYear())}
+                      onChange={(event) => handleYearChange(Number(event.target.value))}
+                    >
+                      {YEAR_OPTIONS.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </SelectMini>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-y-2 text-center">
+                    {WEEKDAY_LABELS.map((label) => (
+                      <div key={label} className="text-xs font-bold">
+                        {label}
+                      </div>
+                    ))}
+
+                    {calendarDays.map((day) => {
+                      const isSelected = day.value === values.date;
+
+                      return (
+                        <button
+                          key={`${day.value}-${day.isCurrentMonth}`}
+                          type="button"
+                          disabled={day.isDisabled}
+                          onClick={() => handleDateSelect(day.value)}
+                          className={cn(
+                            "mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs transition-colors",
+                            day.isCurrentMonth ? "text-black" : "text-black/28",
+                            day.isDisabled &&
+                              "cursor-not-allowed bg-black/[0.04] text-black/20",
+                            isSelected && "bg-[#f15a42] font-bold text-white",
+                          )}
+                        >
+                          {day.dayNumber}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </FieldControl>
         </FieldRow>
 
-        <FieldRow label="Ngày hẹn:">
-          <FieldControl error={errors.date}><input
-            name="date"
-            type="date"
-            value={values.date}
-            min={TODAY}
-            onChange={(event) => update("date", event.target.value)}
-            onBlur={() => handleBlur("date")}
-            aria-invalid={Boolean(errors.date)}
-            className={cn(
-              fieldInputClass(fieldClassName, errors.date),
-              "cursor-pointer px-5 [color-scheme:light]",
-            )}
-          /></FieldControl>
+        <FieldRow label="Giờ hẹn">
+          <FieldControl error={errors.timeSlot}>
+            <div ref={timeRef} className="relative">
+              <DropdownTrigger
+                value={selectedTimeLabel}
+                placeholder="Chọn giờ hẹn"
+                isOpen={isTimeOpen}
+                onClick={() => {
+                  setIsTimeOpen((current) => !current);
+                  setIsDateOpen(false);
+                }}
+              />
+
+              {isTimeOpen ? (
+                <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full max-w-[500px] overflow-hidden rounded-[18px] border border-black/10 bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+                  <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                    {orderedTimeSlots.map((slot) => {
+                      const isSelected = values.timeSlot === slot.id;
+
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={slot.isDisabled}
+                          onClick={() => handleTimeSelect(slot.id)}
+                          className={cn(
+                            "flex items-center gap-2.5 text-left text-sm text-black transition-colors",
+                            slot.isDisabled && "cursor-not-allowed text-black/25",
+                            isSelected && "font-bold text-[#f15a42]",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "h-5 w-5 rounded-full border border-black/80",
+                              slot.isDisabled && "border-black/20",
+                              isSelected && "border-[6px] border-[#f15a42]",
+                            )}
+                          />
+                          <span>{slot.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </FieldControl>
         </FieldRow>
 
-        <FieldRow label="Giờ hẹn:">
-          <FieldControl error={errors.timeSlot}><SelectField
-            label=""
-            name="timeSlot"
-            value={values.timeSlot}
-            options={timeOptions}
-            onChange={(event) => update("timeSlot", event.target.value)}
-            className={cn(fieldInputClass(fieldClassName, errors.timeSlot), "px-5 pr-12")}
-            wrapperClassName="gap-0"
-          /></FieldControl>
-        </FieldRow>
-
-        <FieldRow label="Ghi chú:">
-          <textarea
-            name="note"
-            value={values.note}
-            onChange={(event) => update("note", event.target.value)}
-            maxLength={500}
-            placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 500 ký tự)"
-            rows={3}
-            className="w-full resize-none rounded-[12px] border border-black/30 bg-white px-4 py-3 text-body font-light text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10"
-          />
+        <FieldRow label="Ghi chú">
+          <FieldControl error={errors.note}>
+            <textarea
+              name="note"
+              value={values.note}
+              onChange={(event) => update("note", event.target.value)}
+              maxLength={500}
+              placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 500 ký tự)"
+              rows={2}
+              className="min-h-[3.125rem] w-full resize-none rounded-[18px] border border-black/40 bg-white px-3.5 py-2 text-sm font-light text-black outline-none transition-colors placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10"
+            />
+          </FieldControl>
         </FieldRow>
       </div>
 
-      <div
-        className="flex min-h-[84px] flex-col items-center justify-center gap-2 rounded-[14px] bg-cover bg-center px-5 py-4 text-center"
-        style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
-      >
-        {submitted && showInlineSuccessMessage && (
-          <p className="text-body-sm font-medium text-white">
-            Đã ghi nhận thông tin đặt lịch.
-          </p>
-        )}
-        {submitError && (
-          <p className="text-body-sm font-medium text-white">{submitError}</p>
-        )}
-        <Button
-          type="submit"
-          variant="outline"
-          size="md"
-          disabled={isSubmitting}
-          className="h-11 w-full max-w-[300px] rounded-pill border border-white bg-transparent px-6 text-lg font-bold normal-case text-white hover:bg-white hover:text-black"
-        >
-          Lưu Biểu mẫu
-        </Button>
+      <div className="-mx-6 -mb-4 mt-6 px-2 pb-4 sm:-mx-8">
+        <div className="relative flex min-h-[96px] flex-col items-center justify-center gap-2 overflow-visible rounded-none px-4 py-4 text-center sm:min-h-[108px]">
+          <div className="pointer-events-none absolute inset-x-0 top-[-22px] z-0 h-11 bg-white" />
+          {submitted && showInlineSuccessMessage ? (
+            <p className="text-body-sm font-medium text-white">Đã ghi nhận thông tin đặt lịch.</p>
+          ) : null}
+          {submitError ? (
+            <p className="text-body-sm font-medium text-white">{submitError}</p>
+          ) : null}
+          <div
+            className="relative z-10 flex w-[calc(100%+36px)] max-w-none justify-center rounded-none bg-cover bg-center px-10 py-5 sm:w-[calc(100%+48px)]"
+            style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
+          >
+            <Button
+              type="submit"
+              variant="outline"
+              size="md"
+              disabled={isSubmitting}
+              className="h-9 w-full max-w-[260px] rounded-pill border-2 border-white bg-transparent px-5 text-base font-bold normal-case text-white hover:bg-white hover:text-black"
+            >
+              Đặt lịch
+            </Button>
+          </div>
+        </div>
       </div>
     </form>
   );
@@ -219,8 +516,8 @@ export function AppointmentForm({
 
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid gap-2.5 md:grid-cols-[185px_minmax(0,1fr)] md:items-center">
-      <span className="whitespace-nowrap text-body-lg font-bold leading-tight text-black md:pl-1 md:text-[20px]">
+    <div className="grid items-start gap-2 md:grid-cols-[11.5rem_minmax(0,1fr)] md:gap-3">
+      <span className="pt-2 text-base font-bold leading-tight text-black">
         {label}
       </span>
       {children}
@@ -232,7 +529,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       {children}
-      {error && <span className="text-xs font-medium text-red-600">{error}</span>}
+      {error ? <span className="text-xs font-medium text-red-600">{error}</span> : null}
     </div>
   );
 }
@@ -241,6 +538,60 @@ function fieldInputClass(base: string, error?: string) {
   return cn(
     base,
     error && "border-red-500 text-red-700 focus:border-red-500 focus:ring-red-100",
+  );
+}
+
+function DropdownTrigger({
+  value,
+  placeholder,
+  isOpen,
+  onClick,
+}: {
+  value: string;
+  placeholder: string;
+  isOpen: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex h-9 w-full items-center justify-between rounded-pill border border-black/40 bg-white px-4 text-left text-sm transition-colors",
+        isOpen && "border-black",
+      )}
+    >
+      <span className={cn(value ? "text-black" : "text-black/35")}>
+        {value || placeholder}
+      </span>
+      <span
+        aria-hidden
+        className={cn(
+          "mb-[2px] mr-1 inline-block h-3 w-3 rotate-45 border-b-2 border-r-2 border-[#f15a42] transition-transform",
+          isOpen && "translate-y-[1px] rotate-[225deg]",
+        )}
+      />
+    </button>
+  );
+}
+
+function SelectMini({
+  value,
+  onChange,
+  children,
+}: {
+  value: string;
+  onChange: React.ChangeEventHandler<HTMLSelectElement>;
+  children: ReactNode;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={onChange}
+      className="h-9 rounded-[14px] border border-black/20 bg-white px-3 text-sm outline-none focus:border-black"
+    >
+      {children}
+    </select>
   );
 }
 
@@ -259,8 +610,8 @@ function GenderPill({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "h-11 rounded-[22px] border border-black/30 bg-white px-6 text-[20px] font-bold leading-none text-black transition-colors md:text-button",
-        active && "bg-black text-white"
+        "h-9 rounded-pill border border-black/30 bg-white px-4 text-sm font-bold leading-none text-black transition-colors",
+        active && "bg-black text-white",
       )}
     >
       {children}
@@ -273,30 +624,84 @@ function getLocalDateValue(date: Date) {
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
 }
 
+function parseValueAsDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function formatDateInputLabel(date: Date) {
+  return INPUT_DATE_FORMATTER.format(date);
+}
+
+function buildCalendarDays(month: Date, minValue: string) {
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
+  const lastDay = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+  const startOffset = firstDay.getDay();
+  const totalCells = Math.ceil((startOffset + lastDay.getDate()) / 7) * 7;
+  const minDate = parseValueAsDate(minValue);
+
+  return Array.from({ length: totalCells }, (_, index) => {
+    const dayDate = new Date(firstDay);
+    dayDate.setDate(index - startOffset + 1);
+    const value = getLocalDateValue(dayDate);
+
+    return {
+      value,
+      dayNumber: dayDate.getDate(),
+      isCurrentMonth: dayDate.getMonth() === month.getMonth(),
+      isDisabled: dayDate < minDate,
+    };
+  });
+}
+
 function validateField(
   key: keyof AppointmentValues,
   value: AppointmentValues[keyof AppointmentValues],
+  formValues: AppointmentValues,
 ) {
   const text = String(value).trim();
   if (["fullName", "phone", "branch", "date", "timeSlot"].includes(key) && !text) {
     return "Vui lòng nhập thông tin này";
   }
-  if (key === "fullName" && text.length < 2) return "Họ và tên phải có ít nhất 2 ký tự";
+  if (key === "fullName" && text.length < 2) {
+    return "Họ và tên phải có ít nhất 2 ký tự";
+  }
   if (key === "phone" && !/^(?:\+?84|0)\d{9}$/.test(text.replace(/\s/g, ""))) {
     return "Số điện thoại không hợp lệ";
   }
   if (key === "email" && text && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
     return "Email không hợp lệ";
   }
-  if (key === "date" && text && text < TODAY) return "Ngày hẹn không được ở trong quá khứ";
+  if (key === "date" && text && text < TODAY) {
+    return "Ngày hẹn không được ở trong quá khứ";
+  }
+  if (key === "timeSlot" && text && isTimeSlotDisabled(formValues.date, text)) {
+    return "Khung giá» nÃ y pháº£i Ä‘Æ°á»£c Ä‘áº·t trÆ°á»›c Ã­t nháº¥t 1 giá»";
+  }
   return undefined;
 }
 
 function validateAppointment(values: AppointmentValues): AppointmentErrors {
   const errors: AppointmentErrors = {};
   (Object.keys(values) as Array<keyof AppointmentValues>).forEach((key) => {
-    const error = validateField(key, values[key]);
+    const error = validateField(key, values[key], values);
     if (error) errors[key] = error;
   });
   return errors;
+}
+
+function isTimeSlotDisabled(dateValue: string, timeValue: string, now = new Date()) {
+  const appointmentDateTime = buildAppointmentDateTime(dateValue, timeValue);
+
+  if (Number.isNaN(appointmentDateTime.getTime())) {
+    return true;
+  }
+
+  return appointmentDateTime.getTime() - now.getTime() < 60 * 60 * 1000;
+}
+
+function buildAppointmentDateTime(dateValue: string, timeValue: string) {
+  const [year, month, day] = dateValue.split("-").map(Number);
+  const [hours, minutes] = timeValue.split(":").map(Number);
+  return new Date(year, month - 1, day, hours, minutes, 0, 0);
 }

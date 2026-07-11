@@ -26,7 +26,7 @@ export function PolicyFaqItem({
         className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left md:gap-6 md:px-10"
         aria-expanded={isOpen}
       >
-        <span className="content-heading flex-1 pr-2">
+        <span className="flex-1 pr-2 text-lg font-bold text-black md:text-[1.375rem]">
           {question}
         </span>
         <Image
@@ -44,7 +44,7 @@ export function PolicyFaqItem({
 
       {isOpen && answer ? (
         <div className="border-t border-black px-6 py-5 md:px-10">
-          <p className="content-body">{answer}</p>
+          <p className="text-lg font-light leading-relaxed text-black">{answer}</p>
         </div>
       ) : null}
     </div>

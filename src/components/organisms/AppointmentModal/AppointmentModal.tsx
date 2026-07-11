@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   AppointmentForm,
@@ -31,6 +31,33 @@ export function AppointmentModal({
   const [createdAppointment, setCreatedAppointment] =
     useState<AppointmentDto | null>(null);
   const auth = useAuth();
+  const [shouldTopAlign, setShouldTopAlign] = useState(false);
+  const modalRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  useEffect(() => {
+    function syncModalAlignment() {
+      const modalHeight = modalRef.current?.offsetHeight ?? 0;
+      const availableHeight = window.innerHeight - 40;
+      setShouldTopAlign(modalHeight > availableHeight);
+    }
+
+    syncModalAlignment();
+    window.addEventListener("resize", syncModalAlignment);
+
+    return () => {
+      window.removeEventListener("resize", syncModalAlignment);
+    };
+  }, []);
+
   const handleSuccessClose = () => {
     setCreatedAppointment(null);
     onClose?.();
@@ -60,49 +87,52 @@ export function AppointmentModal({
 
   return (
     <>
-      <section
+      <div
         className={cn(
-          "relative mx-auto w-full max-w-[860px] rounded-[20px] bg-white px-5 pb-7 pt-6 sm:px-9 sm:pt-8",
-          className,
+          "flex w-full justify-center",
+          shouldTopAlign
+            ? "items-start"
+            : "min-h-[calc(100dvh-40px)] items-center",
         )}
       >
-        <button
-          type="button"
-          aria-label="Đóng"
-          onClick={onClose}
-          className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white transition hover:bg-black/5 sm:right-5 sm:top-5"
+        <section
+          ref={modalRef}
+          className={cn(
+            "relative mx-auto flex w-full max-w-[860px] shrink-0 flex-col overflow-visible rounded-[22px] bg-white px-5 pb-0 pt-5 shadow-[0_18px_54px_rgba(0,0,0,0.28)] sm:px-6 sm:pt-6",
+            className,
+          )}
         >
-          <Image src="/icons/close-black.svg" alt="" width={44} height={44} aria-hidden />
-        </button>
+          <button
+            type="button"
+            aria-label="Đóng"
+            onClick={onClose}
+            className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white transition hover:bg-black/5"
+          >
+            <Image src="/icons/close-black.svg" alt="" width={36} height={36} aria-hidden />
+          </button>
 
-        <header className="mb-2 border-b border-black/20 pb-5 pr-12 text-left">
-          <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#f15a42]">
-            Xéo Xọ tư vấn may đo
-          </p>
-          <h1 className="mt-1 text-2xl font-bold leading-tight text-black sm:text-[32px]">
-            Đặt lịch may đo
-          </h1>
-          <p className="mt-2 text-sm leading-relaxed text-black/60">
-            Chọn thời gian và chi nhánh phù hợp để được tư vấn số đo trực tiếp.
-          </p>
-          <span className="mt-3 inline-flex rounded-pill bg-[#fff0e8] px-4 py-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[#f15a42]">
-            Miễn phí may đo
-          </span>
-        </header>
+          <header className="pb-3 text-center">
+            <h1 className="text-xl font-bold uppercase leading-none text-black">
+              Đặt lịch may đo
+            </h1>
+            <div className="mx-auto mt-2 h-[5px] w-[min(100%,300px)] overflow-hidden bg-[url('/images/bg-gia-nhap-btn.png')] bg-cover bg-center" />
+          </header>
 
-        <div className="mx-auto w-full max-w-[960px] overflow-visible bg-white">
-          <AppointmentForm
-            branches={branches}
-            timeSlots={timeSlots}
-            onSubmit={handleSubmit}
-            showInlineSuccessMessage={false}
-          />
-        </div>
-      </section>
+          <div className="relative mx-auto flex min-h-0 w-full max-w-[720px] flex-1 flex-col overflow-visible rounded-[24px] border border-black/40 bg-white px-4 pb-0 pt-5 sm:px-6 sm:pt-6">
+            <AppointmentForm
+              branches={branches}
+              timeSlots={timeSlots}
+              onSubmit={handleSubmit}
+              showInlineSuccessMessage={false}
+              showGenderField={false}
+            />
+          </div>
+        </section>
+      </div>
 
       {createdAppointment ? (
         <ActionSuccessModal
-          title="Đặt Lịch Hẹn Thành Công"
+          title="Đặt lịch thành công"
           eyebrow="Xéo Xọ đã ghi nhận"
           message="Lịch hẹn của bạn đã được lưu thành công. Xéo Xọ đã sẵn sàng đón tiếp và tư vấn số đo cho bạn tại chi nhánh đã chọn."
           codeLabel="Mã lịch hẹn"

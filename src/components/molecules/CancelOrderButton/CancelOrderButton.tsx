@@ -59,7 +59,7 @@ export function CancelOrderButton({
           setIsOpen(true);
           setErrorMsg(null);
         }}
-        className="flex min-h-[44px] items-center justify-center rounded-pill border-2 border-[#ff593d] bg-white text-[15px] font-bold text-[#ff593d] transition-colors hover:bg-[#ff593d] hover:text-white"
+        className="flex min-h-[44px] items-center justify-center rounded-pill border-2 border-[#ff593d] bg-white text-[0.9375rem] font-bold text-[#ff593d] transition-colors hover:bg-[#ff593d] hover:text-white"
       >
         Hủy Đơn Hàng
       </button>
@@ -72,8 +72,6 @@ export function CancelOrderButton({
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={() => !isLoading && setIsOpen(false)}
           />
-
-          {/* Modal Content */}
           <div className="relative z-10 w-full max-w-[440px] border-2 border-black bg-white p-[30px] shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
             <h3 className="text-center text-xl font-extrabold uppercase tracking-tight text-black">
               Xác nhận hủy đơn hàng

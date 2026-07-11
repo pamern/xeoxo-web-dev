@@ -18,7 +18,7 @@ export function CollectionCard({
     <Link
       href={ROUTES.COLLECTION(collection.slug)}
       className={cn(
-        "group relative block aspect-[16/9]",
+        "group relative block min-w-0 w-full aspect-[16/9]",
         revealOnHover &&
           "z-0 transition-transform duration-500 ease-out hover:z-20 hover:scale-105 hover:shadow-xl",
         className

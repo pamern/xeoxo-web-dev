@@ -156,7 +156,7 @@ export default async function ProductPage({
 
   return (
     <SiteLayout fixedHeader={false}>
-      <div className="mx-auto w-full max-w-site px-6 pb-12 pt-5 xl:px-[100px]">
+      <section className="breadcrumb-shell">
         <Breadcrumbs
           items={[
             { label: "Trang chủ", href: ROUTES.HOME },
@@ -168,8 +168,9 @@ export default async function ProductPage({
             },
             { label: product.name },
           ]}
-          className="mb-6"
         />
+      </section>
+      <div className="mx-auto w-full max-w-site px-6 pb-12 pt-0 xl:px-[100px]">
         <ProductDetail
           product={product}
           apiProduct={apiProduct}
@@ -263,7 +264,7 @@ function ProductDescription({
       <div className="grid gap-8 lg:grid-cols-[420px_minmax(0,1fr)] lg:items-center">
         <div>
           <h3 className="mb-3 text-2xl font-bold">{product.name}</h3>
-          <p className="mb-6 text-body-sm font-light leading-relaxed text-foreground/80">
+          <p className="mb-6 text-sm font-light leading-relaxed text-foreground/80">
             {product.description}
           </p>
           <div className="flex flex-col border-y border-[#d9d9d9]">
@@ -272,8 +273,8 @@ function ProductDescription({
                 key={label}
                 className="grid grid-cols-[120px_minmax(0,1fr)] border-b border-[#d9d9d9] py-3 last:border-b-0"
               >
-                <span className="text-body-sm font-bold">{label}</span>
-                <span className="text-body-sm font-light leading-relaxed text-foreground/75">
+                <span className="text-sm font-bold">{label}</span>
+                <span className="text-sm font-light leading-relaxed text-foreground/75">
                   {value}
                 </span>
               </div>
@@ -304,6 +305,23 @@ function ProductDescription({
             />
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function RecommendationSection({ products }: { products: Product[] }) {
+  if (products.length === 0) return null;
+
+  return (
+    <section className="mx-auto w-full max-w-site px-6 pb-10 pt-7 xl:px-[100px]">
+      <h2 className="mb-6 text-center text-heading-section font-bold uppercase">
+        Có thể bạn cũng thích
+      </h2>
+      <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-4">
+        {products.map((item) => (
+          <ProductCard key={item.id} product={item} quickAddOnHover />
+        ))}
       </div>
     </section>
   );

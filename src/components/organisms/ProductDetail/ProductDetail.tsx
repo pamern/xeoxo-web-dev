@@ -29,15 +29,19 @@ import type {
 import type { Product, ProductColor } from "@/types/product.types";
 
 const APPOINTMENT_BRANCHES = [
-  { label: "XEOXO Test Branch", value: "1" },
+  { label: "06 Nam Ngư, Phường Hoàn Kiếm, Hà Nội.", value: "1" },
+  { label: "43 Đặng Thị Nhu, Phường Sài Gòn, TP. Hồ Chí Minh.", value: "2" },
 ];
 
 const APPOINTMENT_TIME_SLOTS = [
-  { id: "09:00", label: "09:00" },
-  { id: "10:30", label: "10:30" },
-  { id: "14:00", label: "14:00" },
-  { id: "15:30", label: "15:30" },
-  { id: "17:00", label: "17:00" },
+  { id: "08:00", label: "8h00 - 9h00" },
+  { id: "09:00", label: "9h00 - 10h00" },
+  { id: "10:00", label: "10h00 - 11h00" },
+  { id: "11:00", label: "11h00 - 12h00" },
+  { id: "13:00", label: "13h00 - 14h00" },
+  { id: "14:00", label: "14h00 - 15h00" },
+  { id: "15:00", label: "15h00 - 16h00" },
+  { id: "16:00", label: "16h00 - 17h00" },
 ];
 
 type ComponentSelection = {
@@ -115,6 +119,10 @@ export function ProductDetail({
   } = useSharedMeasurements(product.gender);
   const canPersistMeasurements = isAuthenticated;
 
+  function openAppointmentModal() {
+    setIsAppointmentOpen(true);
+  }
+
   const components = apiProduct.components ?? [];
   const isMultiComponent = components.length > 1;
   const selectedVariant = apiProduct.sizes.find(
@@ -128,6 +136,11 @@ export function ProductDetail({
           (component) => component.component_id === activeCustomizeComponentId,
         );
   const isCustomized = size === "CUSTOM";
+  const isAnyOverlayOpen =
+    isSizeGuideOpen ||
+    isSizeRecommendationOpen ||
+    isAppointmentOpen ||
+    isCustomizeOpen;
   const customBasePrice =
     defaultComponent?.min_price ?? apiProduct.price ?? product.salePrice ?? product.price;
   const customPrice = customBasePrice * 1.2;
@@ -167,7 +180,7 @@ export function ProductDetail({
       }
 
       const rect = descriptionSection.getBoundingClientRect();
-      const shouldShow = rect.top <= 0;
+      const shouldShow = !isAnyOverlayOpen && rect.top <= window.innerHeight;
       setShowPurchasePanel(shouldShow);
       document.body.classList.toggle("pdp-follow-bar-active", shouldShow);
     }
@@ -181,7 +194,15 @@ export function ProductDetail({
       window.removeEventListener("scroll", syncFollowBarState);
       window.removeEventListener("resize", syncFollowBarState);
     };
-  }, [isMultiComponent]);
+  }, [isAnyOverlayOpen, isMultiComponent]);
+
+  useEffect(() => {
+    document.body.classList.toggle("pdp-overlay-open", isAnyOverlayOpen);
+
+    return () => {
+      document.body.classList.remove("pdp-overlay-open");
+    };
+  }, [isAnyOverlayOpen]);
 
   async function handleAdd() {
     if (isCustomized) {
@@ -447,7 +468,7 @@ export function ProductDetail({
   }
 
   return (
-    <div className="relative grid gap-8 lg:grid-cols-[minmax(0,728px)_minmax(0,714px)] lg:items-start lg:justify-between xl:gap-20">
+    <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)] lg:items-start xl:gap-12 2xl:gap-16">
       {isSizeGuideOpen && (
         <SizeGuideModal
           gender={product.gender}
@@ -467,7 +488,7 @@ export function ProductDetail({
           onValuesChange={updateSharedMeasurementValues}
           onOpenAppointment={() => {
             setIsSizeRecommendationOpen(false);
-            setIsAppointmentOpen(true);
+            openAppointmentModal();
           }}
           onOpenCustomize={() => {
             setIsSizeRecommendationOpen(false);
@@ -478,18 +499,17 @@ export function ProductDetail({
       )}
       {isAppointmentOpen && (
         <div
-          className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto bg-black/50 p-3 backdrop-blur-[1px] sm:p-5"
+          className="fixed inset-0 z-[160] flex min-h-dvh items-start justify-center overflow-y-auto bg-black/40 px-3 py-5 backdrop-blur-md sm:px-4 sm:py-5"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setIsAppointmentOpen(false);
           }}
         >
-          <div className="w-full max-w-[1240px]">
+          <div className="flex w-full justify-center">
             <AppointmentModal
               branches={APPOINTMENT_BRANCHES}
               timeSlots={APPOINTMENT_TIME_SLOTS}
               productLineId={apiProduct.product_line_id}
               onClose={() => setIsAppointmentOpen(false)}
-              className="max-w-[1240px]"
             />
           </div>
         </div>
@@ -515,7 +535,7 @@ export function ProductDetail({
           onSubmit={handleCustomizeSubmit}
         />
       )}
-      {!isMultiComponent && showPurchasePanel && (
+      {!isMultiComponent && showPurchasePanel && !isAnyOverlayOpen && (
         <SingleComponentPurchasePanel
           color={color}
           image={product.images[0]}
@@ -555,9 +575,9 @@ export function ProductDetail({
 
       <ProductImageGallery images={product.images} alt={product.name} />
 
-      <aside className="flex flex-col lg:min-h-[650px] lg:justify-between">
+      <aside className="flex min-w-0 flex-col gap-5 lg:gap-6">
         <section className="border-b border-black pb-5">
-          <h1 className="text-[28px] font-bold leading-tight md:text-[36px]">
+          <h1 className="text-[2.25rem] font-bold leading-tight">
             {product.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
@@ -571,7 +591,7 @@ export function ProductDetail({
 
         <div className="py-5">
           <div className="flex flex-wrap items-end gap-3">
-            <span className="text-heading-section font-bold leading-none md:text-[36px]">
+            <span className="text-[2.25rem] font-bold leading-none">
               {formatPrice(price)}
             </span>
             {product.salePrice && (
@@ -604,7 +624,7 @@ export function ProductDetail({
             isAdding={isAdding}
             selections={componentSelections}
             onAdd={handleMultiAdd}
-            onOpenAppointment={() => setIsAppointmentOpen(true)}
+            onOpenAppointment={openAppointmentModal}
             onOpenCustomize={openComponentCustomize}
             onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
             onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
@@ -625,7 +645,7 @@ export function ProductDetail({
                 }
                 onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
                 onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
-                onOpenAppointment={() => setIsAppointmentOpen(true)}
+                onOpenAppointment={openAppointmentModal}
                 onOpenCustomize={() => {
                   if (size === "CUSTOM") {
                     setSize("");
@@ -685,7 +705,7 @@ export function ProductDetail({
         </div>
 
         <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
-          <div className="grid gap-x-10 gap-y-3 rounded-[10px] bg-[#ededed] px-7 py-4 sm:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-3 rounded-[10px] bg-[#ededed] px-6 py-4 sm:grid-cols-2">
             <ProductService
               icon="/icons/freeship.svg"
               title="Freeship"
@@ -714,7 +734,7 @@ export function ProductDetail({
             <h2 className="mb-3 text-lg font-bold uppercase">
               Có thể phù hợp với bạn
             </h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
               {relatedProducts.slice(0, 3).map((item) => (
                 <CompactProduct key={item.id} product={item} />
               ))}
@@ -773,6 +793,9 @@ function SingleComponentPurchasePanel({
   );
   const hasAvailableVariant = regularSizes.some((option) => option.is_available);
   const customSelected = selectedSize === "CUSTOM";
+  const selectedSizeLabel = customSelected
+  ? "Customize"
+  : selectedSize || "Chưa chọn";
   const selectedVariant = regularSizes.find(
     (option) => getDisplaySizeName(option) === selectedSize,
   );
@@ -780,10 +803,10 @@ function SingleComponentPurchasePanel({
     isAdding || (!customSelected && !selectedVariant?.is_available);
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:block">
-      <div className="mx-auto grid min-h-[96px] max-w-site grid-cols-[minmax(240px,1.1fr)_minmax(280px,1fr)_minmax(130px,0.52fr)_minmax(220px,0.82fr)] items-start gap-4 px-3 py-3 xl:px-[80px]">
-        <div className="flex min-w-0 items-start gap-3 self-start">
-          <div className="relative h-[72px] w-[56px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
+    <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_6px_18px_rgba(0,0,0,0.06)] lg:block">
+      <div className="mx-auto grid min-h-[72px] max-w-site grid-cols-[minmax(180px,0.95fr)_minmax(220px,1fr)_minmax(120px,auto)_minmax(200px,auto)] items-center gap-3 px-4 py-2 md:px-6 xl:grid-cols-[minmax(220px,1fr)_minmax(280px,1fr)_minmax(140px,auto)_minmax(260px,auto)] xl:px-10">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="relative h-[58px] w-[44px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
             <Image
               src={image}
               alt={productName}
@@ -793,14 +816,15 @@ function SingleComponentPurchasePanel({
             />
           </div>
           <div className="min-w-0">
-            <h3 className="line-clamp-1 text-[16px] font-bold leading-tight">{productName}</h3>
-            <p className="mt-0.5 text-[14px] font-bold leading-none">{formatPrice(price)}</p>
+            <h3 className="line-clamp-1 text-[1rem] font-bold leading-tight">{productName}</h3>
+            <p className="mt-0.5 text-[0.875rem] font-bold leading-none">{formatPrice(price)}</p>
           </div>
         </div>
 
-        <div className="min-w-0 self-start pl-4">
-          <div className="flex items-center gap-2 text-[13px]">
-            <span className="text-black">Kích thước</span>
+        <div className="min-w-0 border-l border-[#d9d9d9] pl-4">
+          <div className="flex items-center gap-2 text-[0.8125rem]">
+            <span className="text-black/55">Kích thước:</span>
+            <span className="font-bold">{selectedSizeLabel}</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {regularSizes.map((option) => (
@@ -811,7 +835,7 @@ function SingleComponentPurchasePanel({
                 disabled={!option.is_available}
                 aria-pressed={selectedSize === getDisplaySizeName(option)}
                 className={cn(
-                  "h-[30px] min-w-[44px] rounded-[4px] border border-black px-3 text-[11px] font-bold transition-colors",
+                  "h-[30px] min-w-[44px] rounded-pill border px-3 text-[0.6875rem] font-bold transition-colors",
                   !option.is_available &&
                     "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
                   selectedSize === getDisplaySizeName(option) && option.is_available
@@ -854,18 +878,18 @@ function SingleComponentPurchasePanel({
           <button
             type="button"
             onClick={onOpenSizeRecommendation}
-            className="mt-1.5 text-[10px] font-bold text-[#2748d9] underline underline-offset-2"
+            className="mt-1.5 text-[0.6875rem] font-bold text-[#2748d9] underline underline-offset-2"
           >
             Hướng dẫn chọn size
           </button>
         </div>
 
-        <div className="min-w-0 self-start border-l border-[#d9d9d9] pl-4">
-          <div className="flex flex-nowrap items-center gap-2 text-[13px] whitespace-nowrap">
-            <span className="whitespace-nowrap text-black">Màu sắc</span>
+        <div className="min-w-0 border-l border-[#d9d9d9] pl-4">
+          <div className="flex flex-nowrap items-center gap-2 text-[0.8125rem] whitespace-nowrap">
+            <span className="whitespace-nowrap text-black/55">Màu sắc:</span>
           </div>
           <span
-            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-[4px] border border-black px-4 text-[11px] font-bold text-white"
+            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-pill border border-black/10 px-4 text-[0.6875rem] font-bold text-white"
             style={{
               backgroundColor: color.hex,
               color: getReadableTextColor(color.hex),
@@ -875,8 +899,8 @@ function SingleComponentPurchasePanel({
           </span>
         </div>
 
-        <div className="flex self-start items-start justify-end gap-4 border-l border-[#d9d9d9] pl-5 pt-[22px]">
-          <div className="flex h-[30px] items-center gap-4 rounded-full px-1 text-[20px] leading-none">
+        <div className="flex min-w-0 items-center justify-end gap-3 border-l border-[#d9d9d9] pl-4">
+          <div className="flex h-[30px] items-center gap-4 rounded-full px-1 text-[1.25rem] leading-none">
             <button
               type="button"
               aria-label="Giảm số lượng"
@@ -901,7 +925,7 @@ function SingleComponentPurchasePanel({
             onClick={onAdd}
             variant="cart"
             disabled={addDisabled}
-            className="h-[30px] min-w-[150px] self-center rounded-full bg-black px-6 text-[14px] font-bold text-white hover:bg-black/85"
+            className="h-12 min-w-[220px] rounded-full bg-black px-8 text-[1rem] font-bold text-white hover:bg-black/85"
           >
             Thêm vào giỏ
           </Button>
@@ -1051,7 +1075,7 @@ function ComponentPurchaseCardCompact({
   const title = component.component_name || component.component_type;
 
   return (
-    <section className="py-3">
+    <section className="grid gap-3 border-t-2 border-primary/80 py-3 last:border-b-2 sm:grid-cols-[minmax(88px,104px)_minmax(0,1fr)_auto] sm:items-center">
       <div className="min-w-0">
         <p className="truncate text-sm font-bold leading-tight">{title}</p>
         <p className="mt-1 text-sm font-bold leading-tight">
@@ -1061,56 +1085,63 @@ function ComponentPurchaseCardCompact({
             : selectedVariant?.price ?? component.min_price,
           )}
         </p>
-        <p className="mt-3 text-xs font-bold text-black">Kích thước</p>
-        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_88px] sm:items-center">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            {component.variants.map((option) => (
-              <button
-                key={option.variant_id}
-                type="button"
-                onClick={() => onSelectVariant(option)}
-                disabled={!option.is_available}
-                aria-pressed={selection?.variantId === option.variant_id}
-                className={cn(
-                  "h-[26px] min-w-[42px] rounded-[4px] border border-black px-3 text-[11px] font-bold transition-colors",
-                  !option.is_available &&
-                    "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
-                  selection?.variantId === option.variant_id && option.is_available
-                    ? "bg-black text-white"
-                    : option.is_available &&
-                      "bg-white hover:bg-black hover:text-white",
-                )}
-              >
-                {getDisplaySizeName(option)}
-              </button>
-            ))}
-            <button
-              type="button"
-              onClick={onOpenCustomize}
-              disabled={!hasAvailableVariant}
-              aria-label="Custom"
-              aria-pressed={isCustomSelected}
-              className={cn(
-                "h-[26px] min-w-[96px] rounded-[4px] border border-black px-2 text-[11px] font-bold transition-colors",
-                isCustomSelected && "bg-black text-white",
-                !hasAvailableVariant &&
-                  "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
-                hasAvailableVariant && !isCustomSelected &&
-                  "bg-white hover:bg-black hover:text-white",
-              )}
-            >
-              Custom
-            </button>
-          </div>
-          <div className="justify-self-start sm:justify-self-end">
-            <QuantityPill
-              value={quantity}
-              max={maxQuantity}
-              onChange={onQuantityChange}
-              compact
-            />
-          </div>
-        </div>
+        <p className="mt-1 text-[0.6875rem] font-semibold text-black/45">
+          {isCustomSelected
+            ? "Customize"
+            : selectedSize
+              ? `Size ${selectedSize}`
+              : "Chọn size"}
+        </p>
+      </div>
+
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span className="mr-1 text-xs font-bold text-black/55">Chọn size</span>
+        {component.variants.map((option) => (
+          <button
+            key={option.variant_id}
+            type="button"
+            onClick={() => onSelectVariant(option)}
+            disabled={!option.is_available}
+            aria-pressed={selection?.variantId === option.variant_id}
+            className={cn(
+              "h-9 min-w-[42px] rounded-pill border-[2px] px-3 text-[0.6875rem] font-bold transition-colors",
+              !option.is_available &&
+                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+              selection?.variantId === option.variant_id && option.is_available
+                ? "border-primary bg-primary text-primary-foreground"
+                : option.is_available &&
+                  "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
+            )}
+          >
+            {option.size_name}
+          </button>
+        ))}
+        <Button
+          type="button"
+          onClick={onOpenCustomize}
+          disabled={!hasAvailableVariant}
+          variant="customPill"
+          size="custom"
+          iconSrc="/icons/custom.svg"
+          iconSize={22}
+          iconClassName={cn("h-5 w-5 object-contain", isCustomSelected && "invert")}
+          className={cn(
+            "h-9 min-w-[96px] gap-1 border-[2px] px-2 text-[0.6875rem]",
+            isCustomSelected && "border-primary bg-primary text-primary-foreground",
+            !hasAvailableVariant &&
+              "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
+          )}
+        >
+          Custom
+        </Button>
+      </div>
+
+      <div className="justify-self-start sm:justify-self-end">
+        <QuantityPill
+          value={quantity}
+          max={maxQuantity}
+          onChange={onQuantityChange}
+        />
       </div>
     </section>
   );
@@ -1384,7 +1415,7 @@ function ComponentPurchaseCard({
 
 function ProductNotice({ icon, title }: { icon: string; title: string }) {
   return (
-    <div className="flex h-[60px] items-center justify-between gap-4 rounded-[10px] border border-border bg-[#fffdfd] px-5">
+    <div className="flex min-h-[60px] items-center justify-between gap-4 rounded-[10px] border border-border bg-[#fffdfd] px-5 py-3">
       <span className="flex items-center gap-4">
         <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d]">
           <Image src={icon} alt="" width={22} height={22} aria-hidden />
@@ -1468,7 +1499,7 @@ function ProductService({
       </span>
       <span className="flex flex-col gap-1">
         <span className="text-caption font-bold">{title}</span>
-        <span className="text-[11px] font-light leading-relaxed text-foreground/80">
+        <span className="text-[0.6875rem] font-light leading-relaxed text-foreground/80">
           {text}
         </span>
       </span>

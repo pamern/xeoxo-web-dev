@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
+import { PublicPageHeader } from "@/components/molecules/PublicPageHeader/PublicPageHeader";
 import {
   AccountNavigation,
   type AccountNavItem,
@@ -153,7 +153,7 @@ function AccountFaqPage() {
 
               <section className="account-content-panel">
                 <div className="flex flex-col gap-5">
-                  <h1 className="account-panel-title">
+                  <h1 className="text-display-section font-extrabold leading-none">
                     Câu hỏi thường gặp
                   </h1>
                   <FloralDivider />
@@ -181,7 +181,8 @@ function PublicFaqPage() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <div className="site-container pb-5 pt-12">
+        <section className="breadcrumb-shell">
+          <div className="mx-auto w-full max-w-content">
           <Breadcrumbs
             items={[
               {
@@ -193,29 +194,20 @@ function PublicFaqPage() {
               { label: "Câu hỏi thường gặp" },
             ]}
           />
-        </div>
-
-        <section className="site-container flex flex-col items-center pb-8 pt-3 text-center md:pb-10">
-          <h1 className="page-heading text-foreground">Câu hỏi thường gặp</h1>
-          <Image
-            src="/images/strip-title-underline.png"
-            alt=""
-            width={438}
-            height={5}
-            className="mt-[10px] h-[5px] w-full max-w-[438px]"
-            aria-hidden
-          />
+          </div>
         </section>
 
-        <section className="site-container pb-14 md:pb-16">
-          <div className="mx-auto w-full max-w-[1320px]">
+        <PublicPageHeader title="Câu hỏi thường gặp" titleClassName="text-foreground" />
+
+        <article className="site-container pb-12 pt-6 text-foreground md:pb-14 md:pt-8">
+          <div className="mx-auto w-full max-w-content">
             <PolicyFaqAccordion
               items={FAQ_ITEMS}
               defaultOpenId={FAQ_ITEMS[0]?.id ?? null}
               className="space-y-7 md:space-y-[26px]"
             />
           </div>
-        </section>
+        </article>
 
         <PolicyClosingNote />
       </div>

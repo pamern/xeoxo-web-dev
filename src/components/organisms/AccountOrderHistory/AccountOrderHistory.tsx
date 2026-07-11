@@ -60,18 +60,18 @@ export function AccountOrderHistory({
 
   if (!isAuthenticated) {
     return (
-      <div className="mt-8 rounded-[20px] border border-border bg-secondary px-6 py-8">
-        <p className="text-lg font-medium">
+      <div className="mt-6 rounded-[18px] border border-border bg-secondary px-5 py-6">
+        <p className="text-base font-medium">
           Bạn cần đăng nhập để xem lịch sử đơn hàng.
         </p>
         <p className="mt-2 text-sm font-light text-foreground/72">
           Sau khi đăng nhập, trang này sẽ hiển thị các đơn hàng gắn với tài khoản
           của bạn trong hệ thống.
         </p>
-        <div className="mt-6">
+        <div className="mt-5">
           <Link
             href={`${ROUTES.HOME}?auth=login`}
-            className="inline-flex h-12 items-center justify-center rounded-pill bg-black px-8 text-sm font-bold uppercase tracking-[0.03em] text-white"
+            className="inline-flex h-10 items-center justify-center rounded-pill bg-black px-7 text-xs font-bold uppercase tracking-[0.03em] text-white"
           >
             Đăng nhập ngay
           </Link>
@@ -81,9 +81,22 @@ export function AccountOrderHistory({
   }
 
   return (
-    <div className="mt-2 md:mt-3">
-      <div className="-mx-2 rounded-[18px] bg-white px-2 pb-1.5 pt-1 md:pb-2">
-        <div className="flex flex-col gap-2 md:gap-3">
+    <div className="mt-6">
+      <div className="rounded-[18px] bg-white px-2 pb-1.5 pt-1 md:pb-2">
+        <div className="flex flex-col gap-2 border-b border-black/10 pb-3.5">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="text-[0.5625rem] font-bold uppercase tracking-[0.15em] text-[#cf5c43]">
+                Quản lý đơn hàng
+              </p>
+              <p className="mt-1 text-sm font-semibold text-foreground md:text-base">
+                {summaryLabel}
+              </p>
+            </div>
+            <p className="max-w-[260px] text-[10px] font-light leading-relaxed text-foreground/68 md:text-[11px]">
+              Bộ lọc luôn được giữ trong tầm nhìn để bạn đổi trạng thái mà không mất vị trí đang đọc.
+            </p>
+          </div>
           <OrderStatusTabs
             items={statusTabs}
             value={statusGroup}
@@ -103,7 +116,7 @@ export function AccountOrderHistory({
           <p className="text-base font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : orders.length ? (
-        <div className="mt-8 space-y-6">
+        <div className="mt-4 space-y-3.5">
           {orders.map((order) => {
             const status = getOrderStatusPresentation(order.order_status);
 
@@ -147,7 +160,28 @@ export function AccountOrderHistory({
             );
           })}
         </div>
-      ) : null}
+      ) : (
+        <div className="mt-6 rounded-[16px] border border-black/12 bg-secondary px-5 py-8">
+          <p className="text-lg font-bold text-foreground">
+            {statusGroup === "all"
+              ? "Bạn chưa có đơn hàng nào."
+              : "Chưa có đơn hàng ở trạng thái này."}
+          </p>
+          <p className="mt-2.5 max-w-[440px] text-xs font-light leading-relaxed text-foreground/72 md:text-sm">
+            {statusGroup === "all"
+              ? "Khi bạn đặt hàng thành công, lịch sử đơn hàng sẽ hiển thị tại đây để bạn theo dõi trạng thái và thao tác nhanh."
+              : "Hãy thử chuyển sang trạng thái khác để xem những đơn hàng tương ứng trong tài khoản của bạn."}
+          </p>
+          <div className="mt-4">
+            <Link
+              href={ROUTES.COLLECTIONS}
+              className="inline-flex min-h-10 items-center justify-center rounded-[8px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-4 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] md:text-base"
+            >
+              Khám phá bộ sưu tập
+            </Link>
+          </div>
+        </div>
+      )}
 
       {!isLoading && !errorMessage && orders.length > 0 && (
         <Pagination
@@ -155,29 +189,6 @@ export function AccountOrderHistory({
           totalPages={totalPages}
           onPageChange={goToPage}
         />
-      )}
-
-      {!isLoading && !errorMessage && orders.length === 0 && (
-        <div className="mt-6 rounded-[16px] border border-black/12 bg-secondary px-5 py-8">
-          <p className="text-lg font-bold text-foreground">
-            {statusGroup === "all"
-              ? "Bạn chưa có đơn hàng nào."
-              : "Chưa có đơn hàng ở trạng thái này."}
-          </p>
-          <p className="mt-3 max-w-[620px] text-sm font-light leading-relaxed text-foreground/72 md:text-base">
-            {statusGroup === "all"
-              ? "Khi bạn đặt hàng thành công, lịch sử đơn hàng sẽ hiển thị tại đây để bạn theo dõi trạng thái và thao tác nhanh."
-              : "Hãy thử chuyển sang trạng thái khác để xem những đơn hàng tương ứng trong tài khoản của bạn."}
-          </p>
-          <div className="mt-6">
-            <Link
-              href={ROUTES.COLLECTIONS}
-              className="inline-flex min-h-[50px] items-center justify-center rounded-[8px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-lg font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)]"
-            >
-              Khám phá bộ sưu tập
-            </Link>
-          </div>
-        </div>
       )}
 
       {activeReviewOrder && (

@@ -30,7 +30,7 @@ export function ProductRow({
             key={product.id}
             product={product}
             className={
-              cardClassName ?? "w-[240px] shrink-0 md:w-[300px] lg:w-auto xl:w-auto"
+              cardClassName ?? "min-w-0 w-full"
             }
             quickAddOnHover={quickAddOnHover}
           />

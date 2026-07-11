@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export default function PersonalColorPage() {
   return (
     <SiteLayout>
-      <section className="mx-auto w-full max-w-site px-6 pt-6 xl:px-[100px]">
+      <section className="breadcrumb-shell">
         <Breadcrumbs
           items={[
             { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },

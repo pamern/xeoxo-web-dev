@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn, formatPrice } from "@/lib/utils";
@@ -25,12 +25,12 @@ export function ProductCard({
   const quickAdd = useQuickAddProduct(product.slug);
   const productHref = ROUTES.PRODUCT(product.slug);
   const cardRef = useRef<HTMLElement | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
   const { isDetailLoading, prefetchDetail, productDetail } = quickAdd;
   const prefetchHandlers = quickAddOnHover
     ? {
         onMouseEnter: prefetchDetail,
         onFocus: prefetchDetail,
-        onTouchStart: prefetchDetail,
       }
     : undefined;
 
@@ -87,7 +87,7 @@ export function ProductCard({
   return (
     <article
       ref={cardRef}
-      className={cn("group flex flex-col gap-3", className)}
+      className={cn("group flex flex-col gap-2.5 sm:gap-3", className)}
       {...prefetchHandlers}
     >
       <div
@@ -105,7 +105,7 @@ export function ProductCard({
             quality={60}
             className={cn(
               "object-cover transition duration-500",
-              quickAddOnHover ? "group-hover:scale-110" : "group-hover:scale-105",
+              quickAddOnHover ? "lg:group-hover:scale-110" : "lg:group-hover:scale-105",
             )}
           />
           {quickAddOnHover && hoverImage !== product.images[0] && (
@@ -116,7 +116,7 @@ export function ProductCard({
               sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
               quality={60}
               aria-hidden
-              className="object-cover opacity-0 transition duration-500 group-hover:scale-110 group-hover:opacity-100"
+              className="object-cover opacity-0 transition duration-500 lg:group-hover:scale-110 lg:group-hover:opacity-100"
             />
           )}
         </Link>
@@ -134,7 +134,35 @@ export function ProductCard({
           </span>
         )}
         {quickAddOnHover && quickAddSizes.length > 0 && (
-          <div className="absolute inset-x-5 bottom-0 translate-y-3 overflow-hidden rounded-t-[14px] border border-white/30 bg-[#2D2A2A]/20 px-4 pb-2.5 pt-1.5 text-white opacity-0 shadow-[0_14px_36px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.45),inset_1px_0_0_rgba(255,255,255,0.18),inset_-1px_0_0_rgba(255,255,255,0.12),inset_0_-18px_32px_rgba(0,0,0,0.12)] ring-1 ring-white/20 backdrop-blur-[10px] backdrop-saturate-150 backdrop-contrast-125 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          <button
+            type="button"
+            aria-label={panelOpen ? "Đóng chọn size" : "Thêm nhanh vào giỏ hàng"}
+            aria-expanded={panelOpen}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setPanelOpen((open) => !open);
+            }}
+            className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black/70 text-white shadow-[0_2px_8px_rgba(0,0,0,0.28)] backdrop-blur-sm transition-transform duration-200 hover:bg-black lg:hidden"
+          >
+            <span
+              aria-hidden
+              className={cn(
+                "text-2xl leading-none transition-transform duration-200",
+                panelOpen && "rotate-45",
+              )}
+            >
+              +
+            </span>
+          </button>
+        )}
+        {quickAddOnHover && quickAddSizes.length > 0 && (
+          <div
+            className={cn(
+              "pointer-events-none absolute inset-x-5 bottom-0 translate-y-3 overflow-hidden rounded-t-[14px] border border-white/30 bg-[#2D2A2A]/20 px-4 pb-2.5 pt-1.5 text-white opacity-0 shadow-[0_14px_36px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.45),inset_1px_0_0_rgba(255,255,255,0.18),inset_-1px_0_0_rgba(255,255,255,0.12),inset_0_-18px_32px_rgba(0,0,0,0.12)] ring-1 ring-white/20 backdrop-blur-[10px] backdrop-saturate-150 backdrop-contrast-125 transition duration-300 lg:group-hover:pointer-events-auto lg:group-hover:translate-y-0 lg:group-hover:opacity-100",
+              panelOpen && "pointer-events-auto translate-y-0 opacity-100",
+            )}
+          >
             <span
               aria-hidden
               className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/45"
@@ -154,7 +182,7 @@ export function ProductCard({
             <div className="relative">
               <p
                 className={cn(
-                  "mb-1.5 text-center text-[12px] font-light leading-none",
+                  "mb-1.5 text-center text-[0.75rem] font-light leading-none",
                   quickAdd.status === "error" && "font-medium text-red-100",
                 )}
                 aria-live="polite"
@@ -170,7 +198,7 @@ export function ProductCard({
                   onAdd={() => void quickAdd.addSize(singleSize.size)}
                 />
               ) : (
-                <div className="grid grid-cols-3 gap-x-2 gap-y-1">
+                <div className="grid grid-cols-3 gap-x-2 gap-y-1.5">
                   {quickAddSizes.map(({ size, isAvailable }, index) => {
                     const isActiveSize = quickAdd.selectedSize === size;
                     const isLoadingSize =
@@ -194,11 +222,11 @@ export function ProductCard({
                           void quickAdd.addSize(size);
                         }}
                         className={cn(
-                          "relative flex h-[18px] items-center justify-center overflow-hidden rounded-[6px] text-[12px] font-medium leading-none transition-colors duration-200",
+                          "relative flex h-8 items-center justify-center overflow-hidden text-xs font-medium leading-none transition-colors duration-200",
                           isLocked
-                            ? "cursor-not-allowed border border-gray-300 bg-gray-300 text-gray-500 opacity-50"
+                            ? "cursor-not-allowed rounded-[30px] border border-gray-300 bg-gray-300 text-gray-500 opacity-50"
                             : cn(
-                                "rounded-[6px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
+                                "rounded-[30px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
                                 isActiveSize &&
                                   quickAdd.status === "success" &&
                                   "bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]",
@@ -217,13 +245,13 @@ export function ProductCard({
       </div>
 
       <Link href={productHref} className="transition-opacity hover:opacity-75">
-        <h3 className="text-body-lg font-light leading-snug">{product.name}</h3>
+        <h3 className="text-sm font-light leading-snug sm:text-base">{product.name}</h3>
       </Link>
       <Link
         href={productHref}
-        className="flex items-center gap-3 transition-opacity hover:opacity-75"
+        className="flex items-center gap-2.5 transition-opacity hover:opacity-75 sm:gap-3"
       >
-        <span className={cn("text-body-lg font-bold", onSale && "text-destructive")}>
+        <span className={cn("text-sm font-bold leading-[1.5] sm:text-base", onSale && "text-destructive")}>
           {formatPrice(onSale ? product.salePrice! : product.price)}
         </span>
         {onSale && (
@@ -273,7 +301,7 @@ function SingleSizeAddButton({
         onAdd();
       }}
       className={cn(
-        "flex h-[26px] w-full items-center justify-center gap-1.5 rounded-[6px] text-[12px] font-medium leading-none transition-colors duration-200",
+        "flex h-9 w-full items-center justify-center gap-1.5 rounded-full text-xs font-medium leading-none transition-colors duration-200",
         isLocked
           ? "cursor-not-allowed bg-gray-300 text-gray-500 opacity-50"
           : cn(

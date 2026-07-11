@@ -278,11 +278,11 @@ function EmptyCatalogState({
 }) {
   return (
     <section className="catalog-shell py-16 text-center">
-      <h2 className="text-display-section font-extrabold uppercase text-black md:text-display-page">
+      <h2 className="text-4xl font-extrabold uppercase text-black md:text-5xl">
         {title}
       </h2>
       {description ? (
-        <p className="mx-auto mt-4 max-w-2xl text-body-lg leading-8 text-black/65">
+        <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-black/65">
           {description}
         </p>
       ) : null}
@@ -304,8 +304,8 @@ function FilterPill({
       href={href}
       className={
         active
-          ? "shrink-0 whitespace-nowrap rounded-pill bg-black px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button text-white"
-          : "shrink-0 whitespace-nowrap rounded-pill border border-black px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button transition-colors hover:bg-black hover:text-white"
+          ? "shrink-0 whitespace-nowrap rounded-pill bg-black px-4 py-2 text-base font-medium text-white xl:px-[18px] xl:py-[9px]"
+          : "shrink-0 whitespace-nowrap rounded-pill border border-black px-4 py-2 text-base font-medium transition-colors hover:bg-black hover:text-white xl:px-[18px] xl:py-[9px]"
       }
     >
       {children}

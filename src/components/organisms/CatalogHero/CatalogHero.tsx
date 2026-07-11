@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 
-// Khối đầu trang catalog (Figma node 1:142): ảnh nền lớn, tiêu đề ĐỒ NAM/NỮ,
-// nút "Khám phá" và dòng giới thiệu bộ sưu tập ở góc phải.
+// Khối đầu trang catalog: ảnh nền lớn, tiêu đề và CTA nổi trên ảnh.
 export function CatalogHero({
   label,
   image,
@@ -27,9 +26,9 @@ export function CatalogHero({
         aria-hidden
       />
 
-      <div className="catalog-hero-content">
+      <div className="catalog-shell relative flex flex-col gap-2.5 pb-8 xl:gap-[18px] xl:pb-12">
         <div className="flex flex-col gap-[13px]">
-          <h1 className="catalog-hero-title">
+          <h1 className="text-shadow text-5xl font-extrabold uppercase leading-none text-white">
             {label}
           </h1>
           <span className="catalog-hero-cta inline-flex items-center">

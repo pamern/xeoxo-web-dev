@@ -80,7 +80,7 @@ function PatternSection({
       style={{ backgroundImage: "url('/images/story-section-background.png')" }}
     >
       <div className="mx-auto max-w-site px-4 py-6 sm:px-6 sm:py-8 xl:px-[100px]">
-        <h2 className="text-center text-[28px] font-black uppercase leading-[0.96] tracking-[-0.02em] text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.18)] sm:text-[46px]">
+        <h2 className="text-center text-[1.75rem] font-black uppercase leading-[0.96] tracking-[-0.02em] text-white drop-shadow-[0_3px_10px_rgba(0,0,0,0.18)] sm:text-[2.875rem]">
           {title}
         </h2>
         {children}
@@ -105,7 +105,7 @@ export default function AboutPage() {
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.12)_0%,rgba(0,0,0,0.18)_42%,rgba(0,0,0,0.56)_100%)]" />
             <div className="relative z-[1] flex min-h-[290px] flex-col items-center justify-center px-6 text-center sm:min-h-[420px]">
-              <h1 className="text-[46px] font-black uppercase leading-[0.94] tracking-[-0.03em] text-white drop-shadow-[0_5px_14px_rgba(0,0,0,0.38)] sm:text-[78px]">
+              <h1 className="text-[2.875rem] font-black uppercase leading-[0.94] tracking-[-0.03em] text-white drop-shadow-[0_5px_14px_rgba(0,0,0,0.38)] sm:text-[4.875rem]">
                 XÉO XỌ
               </h1>
               <p className="mt-2 text-sm font-light text-white sm:text-lg">
@@ -113,10 +113,10 @@ export default function AboutPage() {
               </p>
               <Link
                 href={ROUTES.COLLECTIONS}
-                className="group mt-5 inline-flex w-fit items-center justify-center rounded-pill border border-white/90 bg-black/10 px-6 py-3 text-[16px] font-medium text-white text-shadow shadow-[0_8px_18px_rgba(0,0,0,0.18)] transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] sm:px-8 sm:py-4 sm:text-xl"
+                className="group mt-5 inline-flex w-fit items-center justify-center rounded-pill border border-white/90 bg-black/10 px-6 py-3 text-[1rem] font-medium text-white text-shadow shadow-[0_8px_18px_rgba(0,0,0,0.18)] transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] sm:px-8 sm:py-4 sm:text-xl"
               >
                 Khám phá bộ sưu tập
-                <span className="ml-2 text-[22px] leading-none transition-transform group-hover:translate-x-1 sm:text-[28px]">
+                <span className="ml-2 text-[1.375rem] leading-none transition-transform group-hover:translate-x-1 sm:text-[1.75rem]">
                   →
                 </span>
               </Link>
@@ -127,7 +127,7 @@ export default function AboutPage() {
 
       <section className="bg-white px-4 pb-14 pt-10 sm:px-6 sm:pb-16 sm:pt-14 xl:px-[100px]">
         <div className="mx-auto max-w-site text-center">
-          <h2 className="mx-auto max-w-[980px] text-[20px] font-black leading-[1.06] tracking-[-0.02em] text-foreground sm:text-[34px]">
+          <h2 className="mx-auto max-w-[980px] text-[1.25rem] font-black leading-[1.06] tracking-[-0.02em] text-foreground sm:text-[2.125rem]">
             <span className="block whitespace-normal sm:whitespace-nowrap">
               “Chúng tôi chỉ đơn giản muốn làm ra
             </span>
@@ -135,7 +135,7 @@ export default function AboutPage() {
               những bộ quần áo đẹp để mặc”
             </span>
           </h2>
-          <div className="mx-auto mt-5 max-w-[980px] space-y-1 text-[13px] font-light leading-[1.6] text-foreground/80 sm:text-[17px]">
+          <div className="mx-auto mt-5 max-w-[980px] space-y-1 text-[0.8125rem] font-light leading-[1.6] text-foreground/80 sm:text-[1.0625rem]">
             <p>
               Nhiều người hỏi “XÉO XỌ” có nghĩa là gì. Thật ra, nó không mang một ý nghĩa cụ thể
               nào cả.
@@ -177,13 +177,13 @@ export default function AboutPage() {
           </div>
 
           <div className="rounded-[12px] bg-white px-6 py-6 shadow-[0_12px_28px_rgba(96,28,14,0.08)] sm:px-8 sm:py-7 lg:min-h-[376px]">
-            <h3 className="max-w-[350px] text-[22px] font-black leading-[1.06] tracking-[-0.02em] text-foreground sm:text-[34px]">
+            <h3 className="max-w-[350px] text-[1.375rem] font-black leading-[1.06] tracking-[-0.02em] text-foreground sm:text-[2.125rem]">
               <span className="block whitespace-normal sm:whitespace-nowrap">Mọi thứ bắt đầu từ</span>
               <span className="block whitespace-normal sm:whitespace-nowrap">
                 một căn phòng nhỏ ...
               </span>
             </h3>
-            <div className="mt-5 max-w-[500px] space-y-5 text-[13px] font-light leading-[1.72] text-foreground/82 sm:text-[16px]">
+            <div className="mt-5 max-w-[500px] space-y-5 text-[0.8125rem] font-light leading-[1.72] text-foreground/82 sm:text-[1rem]">
               <p>
                 Được thành lập bởi Hương và Hằng, XÉO XỌ bắt đầu từ tình yêu với chất liệu tự
                 nhiên và niềm yêu thích dành cho những thiết kế mềm mại và gần gũi với đời sống
@@ -202,7 +202,7 @@ export default function AboutPage() {
 
       <section className="bg-white px-4 pb-24 pt-10 sm:px-6 sm:pb-20 sm:pt-10 xl:px-[100px]">
         <div className="mx-auto max-w-site">
-          <h2 className="text-center text-[28px] font-black uppercase leading-[0.96] tracking-[-0.02em] text-foreground sm:text-[48px]">
+          <h2 className="text-center text-[1.75rem] font-black uppercase leading-[0.96] tracking-[-0.02em] text-foreground sm:text-[3rem]">
             NHỮNG ĐIỀU XÉO XỌ LUÔN GIỮ
           </h2>
           <div className="mt-9 grid gap-x-8 gap-y-10 sm:grid-cols-2 xl:grid-cols-4 xl:gap-x-10">
@@ -213,13 +213,13 @@ export default function AboutPage() {
                   index % 2 === 1 ? "xl:translate-y-9" : ""
                 }`}
               >
-                <span className="text-[52px] font-black leading-[0.9] tracking-[-0.03em] sm:text-[64px]">
+                <span className="text-[3.25rem] font-black leading-[0.9] tracking-[-0.03em] sm:text-[4rem]">
                   {principle.number}
                 </span>
-                <h3 className="mt-3 whitespace-pre-line text-[17px] font-black uppercase leading-[1.02] sm:text-[20px]">
+                <h3 className="mt-3 whitespace-pre-line text-[1.0625rem] font-black uppercase leading-[1.02] sm:text-[1.25rem]">
                   {principle.title}
                 </h3>
-                <p className="mt-5 text-[11px] font-light leading-[1.34] text-white/95 sm:text-[14px]">
+                <p className="mt-5 text-body-sm font-light leading-[1.34] text-white/95 sm:text-[0.875rem]">
                   {principle.description}
                 </p>
               </article>
@@ -235,7 +235,7 @@ export default function AboutPage() {
             style={{ backgroundImage: "url('/images/story-section-background.png')" }}
           />
           <div className="px-5 pb-8 pt-3 sm:px-8 sm:pb-10">
-            <h2 className="text-center text-[28px] font-black uppercase leading-[0.96] tracking-[-0.02em] text-foreground sm:text-[48px]">
+            <h2 className="text-center text-[1.75rem] font-black uppercase leading-[0.96] tracking-[-0.02em] text-foreground sm:text-[3rem]">
               PHÍA SAU MỘT THIẾT KẾ
             </h2>
             <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-4 xl:gap-8">
@@ -250,10 +250,10 @@ export default function AboutPage() {
                       className="object-cover"
                     />
                   </div>
-                  <h3 className="mt-4 text-[20px] font-black leading-[1.05] text-foreground sm:text-[24px]">
+                  <h3 className="mt-4 text-[1.25rem] font-black leading-[1.05] text-foreground sm:text-[1.5rem]">
                     {step.title}
                   </h3>
-                  <p className="mt-2.5 text-[13px] font-light leading-[1.45] text-foreground/82 sm:text-[15px]">
+                  <p className="mt-2.5 text-[0.8125rem] font-light leading-[1.45] text-foreground/82 sm:text-[0.9375rem]">
                     {step.description}
                   </p>
                 </article>
@@ -272,13 +272,13 @@ export default function AboutPage() {
         <div className="absolute inset-y-0 right-0 w-12 bg-[linear-gradient(270deg,rgba(39,15,10,0.28)_0%,rgba(39,15,10,0)_100%)] sm:w-20" />
         <div className="relative mx-auto flex max-w-site flex-col items-center px-4 py-8 text-center sm:px-6 sm:py-12 xl:px-[100px]">
           <div className="relative z-[1] mx-auto w-full text-center">
-            <h2 className="mx-auto max-w-[620px] text-[22px] font-black leading-[1] tracking-[-0.03em] text-white sm:text-[36px]">
+            <h2 className="mx-auto max-w-[620px] text-[1.375rem] font-black leading-[1] tracking-[-0.03em] text-white sm:text-[2.25rem]">
               <span className="block whitespace-normal sm:whitespace-nowrap">
                 XÉO XỌ vẫn đang tiếp tục lớn lên
               </span>
               <span className="block whitespace-normal sm:whitespace-nowrap">mỗi ngày.</span>
             </h2>
-            <p className="mx-auto mt-3 max-w-[460px] text-[10px] font-light leading-[1.3] text-white/90 sm:text-[13px]">
+            <p className="mx-auto mt-3 max-w-[460px] text-body-sm font-light leading-[1.3] text-white/90">
               <span className="block whitespace-normal sm:whitespace-nowrap">
                 Cảm ơn bạn đã là một phần trong câu chuyện của chúng mình.
               </span>
@@ -288,10 +288,10 @@ export default function AboutPage() {
             </p>
             <AuthModalLink
               mode="register"
-              className="group mx-auto mt-4 inline-flex w-fit items-center justify-center rounded-pill border border-white/90 bg-black/10 px-5 py-2 text-[14px] font-semibold text-white text-shadow shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] sm:px-6 sm:py-2.5 sm:text-[16px]"
+              className="group mx-auto mt-4 inline-flex w-fit items-center justify-center rounded-pill border border-white/90 bg-black/10 px-5 py-2 text-[0.875rem] font-semibold text-white text-shadow shadow-[0_6px_14px_rgba(0,0,0,0.18)] transition-colors hover:bg-white hover:text-black hover:[text-shadow:none] sm:px-6 sm:py-2.5 sm:text-[1rem]"
             >
               Gia nhập Hội Xéo
-              <span className="ml-1.5 text-[18px] leading-none transition-transform group-hover:translate-x-1 sm:text-[20px]">
+              <span className="ml-1.5 text-[1.125rem] leading-none transition-transform group-hover:translate-x-1 sm:text-[1.25rem]">
                 →
               </span>
             </AuthModalLink>

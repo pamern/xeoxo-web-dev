@@ -54,68 +54,39 @@
 
   --site-max-width: 1728px;
   --site-header-height: 0px;
-  --desktop-viewport-min: 1280;
-  --desktop-viewport-max: 1728;
 
-  /* Layout / spacing - fluid: co gian tuyen tinh tu viewport 375px -> 1728px, max = Figma */
+
   --site-gutter-x: 1.5rem;
   --site-gutter-x-lg: clamp(32px, -105.14px + 10.71vw, 80px);
   --control-height: clamp(44px, 41.2px + 0.74vw, 54px);
-  --section-gap-y: clamp(28px, 11.54px + 1.29vw, 46px);
-  --header-utility-height: clamp(30px, 18.57px + 0.89vw, 34px);
-  --header-main-gap: clamp(10px, -1.43px + 0.89vw, 14px);
-  --header-utility-px: clamp(32px, 9.14px + 1.79vw, 40px);
-  --header-main-px: clamp(32px, 9.14px + 1.79vw, 40px);
-  --header-utility-gap: clamp(5px, 2.14px + 0.22vw, 6px);
-  --header-utility-divider: clamp(6px, 0.29px + 0.45vw, 8px);
-  --header-nav-gap: clamp(12px, -5.14px + 1.34vw, 18px);
-  --header-search-width: clamp(164px, 72.57px + 7.14vw, 196px);
-  --header-search-gap: clamp(8px, -0.57px + 0.67vw, 11px);
-  --header-logo-height: clamp(52px, 29.14px + 1.79vw, 60px);
-  --hero-min-height: clamp(420px, 294.29px + 9.82vw, 464px);
-  --hero-block-padding: clamp(36px, 7.43px + 2.23vw, 46px);
-  --homepage-card-gap-x: clamp(14px, 8.29px + 0.45vw, 16px);
-  --homepage-card-gap-y: clamp(20px, 8.57px + 0.89vw, 24px);
-  --homepage-collection-gap: clamp(10px, 4.29px + 0.45vw, 12px);
-  --product-page-block-y: clamp(32px, 15.43px + 1.29vw, 50px);
-  --product-page-top-offset: clamp(16px, 6.86px + 0.71vw, 26px);
-  --product-grid-gap-x: clamp(14px, 8.29px + 0.45vw, 16px);
-  --product-grid-gap-y: clamp(24px, 12.57px + 0.89vw, 28px);
-  --product-card-gap: clamp(8px, 2.29px + 0.45vw, 10px);
-  --product-gallery-main-width: clamp(520px, 257.14px + 20.54vw, 612px);
-  --product-gallery-thumb-width: clamp(56px, 30.29px + 2.01vw, 65px);
-  --product-gallery-thumb-height: clamp(84px, 44px + 3.13vw, 98px);
-  --product-detail-side-min-height: clamp(540px, 225.71px + 24.55vw, 650px);
-  --product-detail-grid-gap: clamp(28px, -0.57px + 2.23vw, 38px);
-  --product-detail-services-gap-x: clamp(20px, -8.57px + 2.23vw, 30px);
-  --product-detail-services-gap-y: clamp(10px, 4.29px + 0.45vw, 12px);
-  --catalog-hero-min-height: clamp(420px, 294.29px + 9.82vw, 464px);
-  --catalog-hero-band-height: clamp(28px, 12px + 1.25vw, 39px);
-  --catalog-hero-grid-gap: clamp(12px, 2.86px + 0.71vw, 16px);
-  --catalog-hero-grid-py: clamp(24px, 2.29px + 1.70vw, 39px);
-  --filter-bar-gap: clamp(10px, 4.29px + 0.45vw, 12px);
-  --filter-chip-px: clamp(16px, 10.29px + 0.45vw, 18px);
-  --filter-chip-py: clamp(8px, 5.14px + 0.22vw, 9px);
-  --variant-pill-width: clamp(84px, 32.57px + 4.02vw, 102px);
-  --review-card-px: clamp(20px, 8.57px + 0.89vw, 24px);
-  --review-card-py: clamp(18px, 9.43px + 0.67vw, 21px);
-  --product-divider-height: clamp(16px, 3.43px + 0.98vw, 25px);
-  --product-description-gap: clamp(24px, 1.14px + 1.79vw, 32px);
-  --product-description-table-label: clamp(100px, 42.86px + 4.46vw, 120px);
-
-  /* Footer - fluid, max = desktop hien tai. Chinh spacing/size footer tap trung tai day. */
-  --footer-block-py: clamp(24px, 21.78px + 0.59vw, 32px);
-  --footer-gap: clamp(12px, 10.89px + 0.30vw, 16px);
-  --footer-contact-icon-size: clamp(48px, 43.56px + 1.18vw, 64px);
-  --footer-social-icon-size: clamp(40px, 37.23px + 0.74vw, 50px);
 }
 
 * {
   border-color: hsl(var(--color-border));
 }
 
+:focus-visible {
+  outline: 2px solid hsl(var(--color-ring));
+  outline-offset: 2px;
+}
+
 html {
   scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 body {
@@ -166,26 +137,8 @@ select {
     }
   }
 
-  .page-heading {
-    @apply text-display-page font-bold uppercase text-black;
-  }
-
-  .eyebrow-text {
-    @apply font-serif text-body-lg font-normal italic text-black md:text-eyebrow;
-  }
-
-  /* Dung cho heading noi dung 1-2 dong trong policy, collection, editorial block. */
-  .content-heading {
-    @apply text-heading-content-sm font-bold text-black md:text-heading-content;
-  }
-
-  /* Dung cho doan noi dung dai can nhip doc de, thuong di kem content-heading. */
-  .content-body {
-    @apply text-body-lg font-light leading-relaxed text-black;
-  }
-
   .form-control {
-    @apply w-full rounded-md border border-input bg-background px-4 py-3 text-field text-foreground outline-none transition-colors;
+    @apply w-full rounded-md border border-input bg-background px-4 py-3 text-base text-foreground outline-none transition-colors;
     @apply placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring focus:ring-offset-1;
   }
 
