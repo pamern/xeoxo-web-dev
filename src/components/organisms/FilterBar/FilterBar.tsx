@@ -21,10 +21,10 @@ export function FilterBar({
     <section className={cn("catalog-shell py-8", className)}>
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         {title && <h2 className="text-heading-section font-medium uppercase">{title}</h2>}
-        <div className="no-scrollbar flex gap-[var(--filter-bar-gap)] overflow-x-auto pb-1">
+        <div className="no-scrollbar flex gap-2.5 overflow-x-auto pb-1 xl:gap-3">
           {options.map((option) => {
             const classes = cn(
-              "shrink-0 whitespace-nowrap rounded-pill border px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button font-medium transition-colors",
+              "shrink-0 whitespace-nowrap rounded-pill border px-4 py-2 text-base font-medium leading-[1.12] transition-colors xl:px-[18px] xl:py-[9px]",
               option.active
                 ? "border-primary bg-primary text-primary-foreground"
                 : "border-border hover:border-primary hover:bg-primary hover:text-primary-foreground"

@@ -76,22 +76,22 @@ const SOCIAL_LINKS = [
 export function SiteFooter() {
   return (
     <footer className="bg-black text-white">
-      <div className="footer-shell footer-hero-grid">
-        <div className="flex max-w-[1040px] flex-col gap-[clamp(18px,9.43px+0.67vw,27px)]">
-          <div className="flex flex-col gap-[10px]">
-            <p className="text-heading-section font-medium leading-tight">
-              <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á
-              Đông trong từng thiết kế
+      <div className="mx-auto grid w-full max-w-site gap-8 px-4 py-10 sm:px-6 md:py-12 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,430px)] lg:items-start lg:gap-10 xl:px-10 2xl:px-20">
+        <div className="flex max-w-[1040px] flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <p className="text-[1.25rem] font-medium leading-tight md:text-[1.625rem]">
+              <span className="font-extrabold">XÉO XỌ</span> lưu giữ vẻ đẹp Á Đông trong từng
+              thiết kế
             </p>
-            <p className="text-body-lg font-light text-white/80">
-              Theo dõi Xéo Xọ để cập nhật bộ sưu tập mới, câu chuyện thiết kế và
-              ưu đãi dành riêng cho khách hàng thân thiết.
+            <p className="max-w-4xl text-sm font-light leading-5 text-white/80">
+              Theo dõi Xéo Xọ để cập nhật bộ sưu tập mới, câu chuyện thiết kế và ưu đãi dành
+              riêng cho khách hàng thân thiết.
             </p>
           </div>
 
           <Link
             href={ROUTES.COLLECTIONS}
-            className="inline-flex min-h-control w-fit items-center gap-[10px] rounded-pill border border-white px-6 text-button font-medium transition-colors hover:bg-white hover:text-black"
+            className="inline-flex min-h-[48px] w-fit items-center gap-[10px] rounded-full border border-white px-5 text-sm font-medium transition-colors hover:bg-white hover:text-black"
           >
             Khám phá bộ sưu tập
             <Image
@@ -104,7 +104,7 @@ export function SiteFooter() {
             />
           </Link>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             {SOCIAL_LINKS.map((social) => (
               <a
                 key={social.label}
@@ -119,67 +119,57 @@ export function SiteFooter() {
                   alt={social.label}
                   width={50}
                   height={50}
-                  className="footer-social-icon"
+                  className="h-[50px] w-[50px] object-contain"
                 />
               </a>
             ))}
           </div>
         </div>
 
-        <div className="flex w-full max-w-[430px] flex-col gap-[clamp(24px,12.57px+0.89vw,36px)] lg:justify-self-end">
-          <ContactRow
-            icon="/icons/phone.svg"
-            label="Hotline"
-            value="039 412 6556"
-          />
-          <ContactRow
-            icon="/icons/email.svg"
-            label="Email"
-            value="info@xeoxo.com"
-          />
+        <div className="flex w-full max-w-[430px] flex-col gap-5 self-start lg:justify-self-end">
+          <ContactRow icon="/icons/phone.svg" label="Hotline" value="039 412 6556" />
+          <ContactRow icon="/icons/email.svg" label="Email" value="info@xeoxo.com" />
         </div>
       </div>
 
-      <div className="footer-shell h-px bg-white/20" />
+      <div className="mx-auto h-px w-full max-w-site bg-white/20" />
 
-      <div className="footer-shell footer-link-grid">
-        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-[auto_auto]">
+      <div className="mx-auto grid w-full max-w-site gap-8 px-4 py-8 sm:px-6 md:py-10 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.9fr)_minmax(0,1fr)] xl:px-10 2xl:px-20">
+        <div className="grid gap-x-10 gap-y-6 sm:grid-cols-2">
           {LINK_COLUMNS.map((column) => (
             <FooterLinkColumn key={column.title} column={column} />
           ))}
         </div>
 
-        <div className="footer-link-stack">
-          <h3 className="text-nav font-bold">Chính sách</h3>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-[13px] font-bold uppercase tracking-[0.06em]">Chính sách</h3>
           {POLICY_LINKS.map((policy) => (
             <Link
               key={policy.label}
               href={policy.href}
-              className="text-body-lg font-light text-white/80 transition-colors hover:text-white"
+              className="text-[13px] font-light leading-5 text-white/80 transition-colors hover:text-white"
             >
               {policy.label}
             </Link>
           ))}
         </div>
 
-        <div className="footer-link-stack">
-          <h3 className="text-nav font-bold">Hệ thống cửa hàng</h3>
+        <div className="flex flex-col gap-3">
+          <h3 className="text-[13px] font-bold uppercase tracking-[0.06em]">Hệ thống cửa hàng</h3>
           {STORES.map((address) => (
-            <p key={address} className="text-body-lg font-light text-white/80">
+            <p key={address} className="text-[13px] font-light leading-5 text-white/80">
               {address}
             </p>
           ))}
         </div>
       </div>
 
-      <div className="footer-shell footer-meta-grid">
-        <div className="footer-link-stack lg:col-span-2">
-          <p className="text-body-lg font-extrabold">
-            © CÔNG TY TNHH MAI AN KIM VIỆT NAM
-          </p>
-          <p className="max-w-2xl text-body-lg font-light text-white/70">
-            Mã số doanh nghiệp: 0110169383. Giấy chứng nhận đăng ký doanh nghiệp
-            do Sở Kế hoạch và Đầu tư TP Hà Nội cấp lần đầu ngày 02/11/2022.
+      <div className="mx-auto grid w-full max-w-site gap-4 px-4 pb-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end xl:px-10 2xl:px-20">
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] font-extrabold">© CÔNG TY TNHH MAI AN KIM VIỆT NAM</p>
+          <p className="max-w-2xl text-[13px] font-light leading-5 text-white/70">
+            Mã số doanh nghiệp: 0110169383. Giấy chứng nhận đăng ký doanh nghiệp do Sở Kế hoạch
+            và Đầu tư TP Hà Nội cấp lần đầu ngày 02/11/2022.
           </p>
         </div>
 
@@ -205,18 +195,18 @@ function ContactRow({
   value: string;
 }) {
   return (
-    <div className="footer-contact-row">
+    <div className="flex items-center gap-5">
       <Image
         src={icon}
         alt=""
-        width={80}
-        height={80}
+        width={64}
+        height={64}
         aria-hidden
-        className="footer-contact-icon brightness-0 invert"
+        className="h-16 w-16 shrink-0 object-contain brightness-0 invert"
       />
-      <div className="flex flex-col gap-[5px]">
-        <span className="text-body-lg font-medium text-white/80">{label}</span>
-        <span className="text-heading-section font-medium">
+      <div className="flex flex-col gap-1">
+        <span className="text-[13px] font-medium text-white/80">{label}</span>
+        <span className="text-[1rem] font-semibold leading-none md:text-[1.25rem]">
           {value}
         </span>
       </div>
@@ -226,14 +216,14 @@ function ContactRow({
 
 function FooterLinkColumn({ column }: { column: FooterColumn }) {
   return (
-    <div className="footer-link-stack">
-      <h3 className="text-nav font-bold">{column.title}</h3>
+    <div className="flex flex-col gap-3">
+      <h3 className="text-[13px] font-bold uppercase tracking-[0.06em]">{column.title}</h3>
       {column.links.map((link) =>
         link.href === ROUTES.REGISTER ? (
           <AuthModalLink
             key={link.label}
             mode="register"
-            className="text-body-lg font-light text-white/80 transition-colors hover:text-white"
+            className="text-[13px] font-light leading-5 text-white/80 transition-colors hover:text-white"
           >
             {link.label}
           </AuthModalLink>
@@ -241,7 +231,7 @@ function FooterLinkColumn({ column }: { column: FooterColumn }) {
           <Link
             key={link.label}
             href={link.href}
-            className="text-body-lg font-light text-white/80 transition-colors hover:text-white"
+            className="text-[13px] font-light leading-5 text-white/80 transition-colors hover:text-white"
           >
             {link.label}
           </Link>

@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
 import { ProductRow } from "@/components/organisms/ProductRow/ProductRow";
 import type { Product } from "@/types/product.types";
 import { cn } from "@/lib/utils";
@@ -25,19 +24,21 @@ export function CatalogTabs({
 
   const activeProducts = activeTab === "newest" ? newestProducts : bestSellingProducts;
   const activeHref = activeTab === "newest" ? newestHref : bestSellingHref;
+  const tabClassName =
+    "shrink-0 whitespace-nowrap rounded-pill border border-black px-4 py-2 text-base font-medium transition-colors xl:px-[18px] xl:py-[9px]";
 
   return (
     <div>
-      <section className="catalog-shell flex items-center justify-between gap-4 pt-5 pb-0">
-        <div className="no-scrollbar flex gap-[var(--filter-bar-gap)] overflow-x-auto pb-1">
+      <section className="catalog-shell pt-5 pb-0">
+        <div className="no-scrollbar flex w-fit max-w-full gap-4 overflow-x-auto pb-0">
           <button
             type="button"
             onClick={() => setActiveTab("newest")}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-pill px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-[12px] md:text-[13px] font-bold transition-all",
+              tabClassName,
               activeTab === "newest"
                 ? "bg-black text-white"
-                : "border border-black text-black hover:bg-black hover:text-white"
+                : "text-black hover:bg-black hover:text-white"
             )}
           >
             Sản phẩm mới
@@ -46,21 +47,15 @@ export function CatalogTabs({
             type="button"
             onClick={() => setActiveTab("best")}
             className={cn(
-              "shrink-0 whitespace-nowrap rounded-pill px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-[12px] md:text-[13px] font-bold transition-all",
+              tabClassName,
               activeTab === "best"
                 ? "bg-black text-white"
-                : "border border-black text-black hover:bg-black hover:text-white"
+                : "text-black hover:bg-black hover:text-white"
             )}
           >
             Bán chạy nhất
           </button>
         </div>
-        <Link
-          href={activeHref}
-          className="shrink-0 text-body-sm underline underline-offset-4 transition-opacity hover:opacity-70 text-black font-normal"
-        >
-          Xem đầy đủ
-        </Link>
       </section>
 
       <div className="mb-0">
@@ -69,7 +64,7 @@ export function CatalogTabs({
             products={activeProducts}
             actionHref={activeHref}
             quickAddOnHover
-            className="!pt-2 !pb-0"
+            className="!pt-0 !pb-0"
           />
         ) : (
           <div className="catalog-shell py-12 text-center text-gray-500 font-light text-body-sm">

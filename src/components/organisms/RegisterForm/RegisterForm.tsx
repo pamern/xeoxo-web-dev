@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { registerSchema } from "@/validations/auth/register.schema";
 
 const inputClassName =
-  "h-12 w-full rounded-pill border border-input bg-background px-6 text-base font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
+  "h-10 w-full rounded-pill border border-input bg-background px-4 text-sm font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
 const passwordHintMessage =
   "Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
 
@@ -116,9 +116,9 @@ export function RegisterForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div className="flex flex-col gap-2">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+      <div className="grid gap-2.5 sm:grid-cols-2">
+        <div className="flex flex-col gap-1.5">
           <input
             name="fullName"
             value={values.fullName}
@@ -134,12 +134,12 @@ export function RegisterForm({
             )}
           />
           {touched.fullName && fieldErrors.fullName ? (
-            <p className="px-2 text-sm font-light text-destructive">
+            <p className="px-2 text-xs font-light text-destructive">
               {fieldErrors.fullName}
             </p>
           ) : null}
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-1.5">
           <input
             name="account"
             value={values.account}
@@ -155,14 +155,14 @@ export function RegisterForm({
             )}
           />
           {touched.account && fieldErrors.account ? (
-            <p className="px-2 text-sm font-light text-destructive">
+            <p className="px-2 text-xs font-light text-destructive">
               {fieldErrors.account}
             </p>
           ) : null}
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="relative">
           <input
             name="password"
@@ -176,7 +176,7 @@ export function RegisterForm({
             disabled={isLoading}
             className={cn(
               inputClassName,
-              "pr-14",
+              "pr-11",
               touched.password && fieldErrors.password && "border-destructive",
             )}
           />
@@ -186,13 +186,13 @@ export function RegisterForm({
           />
         </div>
         {fieldErrors.password ? (
-          <p className="px-2 text-sm font-light text-foreground/58">
+          <p className="px-2 text-xs font-light text-foreground/58">
             {passwordHintMessage}
           </p>
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5">
         <div className="relative">
           <input
             name="confirmPassword"
@@ -206,7 +206,7 @@ export function RegisterForm({
             disabled={isLoading}
             className={cn(
               inputClassName,
-              "pr-14",
+              "pr-11",
               touched.confirmPassword &&
                 fieldErrors.confirmPassword &&
                 "border-destructive",
@@ -218,24 +218,24 @@ export function RegisterForm({
           />
         </div>
         {touched.confirmPassword && fieldErrors.confirmPassword ? (
-          <p className="px-2 text-sm font-light text-destructive">
+          <p className="px-2 text-xs font-light text-destructive">
             {fieldErrors.confirmPassword}
           </p>
         ) : null}
       </div>
 
       {errorMessage && (
-        <p className="text-sm font-light text-destructive">{errorMessage}</p>
+        <p className="text-xs font-light text-destructive">{errorMessage}</p>
       )}
       {noticeMessage && !errorMessage && (
-        <p className="text-sm font-light text-foreground/70">{noticeMessage}</p>
+        <p className="text-xs font-light text-foreground/70">{noticeMessage}</p>
       )}
 
       <Button
         type="submit"
         size="lg"
         isLoading={isLoading}
-        className="mt-1 h-[54px] w-full rounded-pill border-2 border-white/50 text-lg font-bold"
+        className="mt-1 h-[40px] w-full rounded-pill border-2 border-white/50 text-sm font-bold"
       >
         Đăng ký
       </Button>
@@ -255,9 +255,9 @@ function PasswordToggle({
       type="button"
       onClick={onToggle}
       aria-label={shown ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-      className="absolute right-5 top-1/2 -translate-y-1/2 opacity-60 transition-opacity hover:opacity-100"
+      className="absolute right-4 top-1/2 -translate-y-1/2 opacity-60 transition-opacity hover:opacity-100"
     >
-      <Image src="/icons/eye.svg" alt="" width={22} height={22} aria-hidden />
+      <Image src="/icons/eye.svg" alt="" width={16} height={16} aria-hidden />
     </button>
   );
 }

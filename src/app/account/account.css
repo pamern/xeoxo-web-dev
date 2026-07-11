@@ -1,0 +1,60 @@
+@tailwind components;
+
+@layer components {
+  .account-page-shell {
+    @apply bg-background;
+  }
+
+  .account-page-section {
+    padding-inline: var(--site-gutter-x);
+    padding-top: clamp(24px, 16px + 0.7vw, 36px);
+    padding-bottom: clamp(48px, 34px + 1vw, 64px);
+  }
+
+  .account-page-grid {
+    @apply mt-6 grid gap-6 lg:items-start;
+    grid-template-columns: 1fr;
+  }
+
+  .account-content-panel {
+    @apply bg-white px-4 py-5 shadow-[0_14px_40px_rgba(0,0,0,0.12)] xl:px-5 xl:py-7;
+    border-radius: var(--radius-panel);
+  }
+
+  .account-empty-panel {
+    @apply rounded-[18px] border border-border bg-secondary px-4 py-5 xl:px-5 xl:py-6;
+  }
+
+  .account-panel-title {
+    @apply text-xl font-extrabold leading-none md:text-3xl;
+  }
+
+  .account-panel-subtitle {
+    @apply text-sm font-medium text-foreground;
+    opacity: 0.72;
+  }
+
+  .account-sticky-rail {
+    @apply self-start;
+  }
+
+  @media (min-width: 1024px) {
+    .account-sticky-rail {
+      position: sticky;
+      top: calc(var(--site-header-height, 0px) + 20px);
+      max-height: calc(100vh - var(--site-header-height, 0px) - 20px);
+      overflow-y: auto;
+      scrollbar-gutter: stable;
+    }
+
+    .account-page-grid {
+      grid-template-columns: minmax(220px, 0.18fr) minmax(0, 1fr);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .account-page-section {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+  }
+}

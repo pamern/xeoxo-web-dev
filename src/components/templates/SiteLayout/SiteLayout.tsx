@@ -34,7 +34,9 @@ export async function SiteLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <div className="site-layout-header">
-        <Suspense fallback={<div className="min-h-[120px] w-full bg-background" />}>
+        <Suspense
+          fallback={<div className="min-h-[120px] w-full bg-background" />}
+        >
           <SiteHeader
             womenCategories={womenCategories}
             menCategories={menCategories}
@@ -42,7 +44,9 @@ export async function SiteLayout({
           />
         </Suspense>
       </div>
+
       <main className="flex-1">{children}</main>
+
       <Suspense fallback={null}>
         <SiteFooter />
       </Suspense>

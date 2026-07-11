@@ -158,13 +158,13 @@ export function ActionSuccessModal({
           <div className="mx-auto flex w-full max-w-[620px] flex-col items-center">
             {icon ?? <DefaultSuccessIcon />}
 
-            <p className="mt-5 text-xs font-bold uppercase tracking-[0.22em] text-[#f15a42]">
+            <p className="mt-5 text-sm font-bold uppercase tracking-[0.18em] text-[#f15a42]">
               {eyebrow}
             </p>
-            <h2 className="mt-2 text-[28px] font-bold leading-tight text-black sm:text-[34px]">
+            <h2 className="mt-2 text-xl font-bold leading-tight text-black">
               {title}
             </h2>
-            <p className="mt-3 text-sm leading-7 text-black/65 sm:text-base">
+            <p className="mt-3 text-sm leading-6 text-black/65">
               {message}
             </p>
 
@@ -181,7 +181,7 @@ export function ActionSuccessModal({
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-black/45">
                   {codeLabel}
                 </p>
-                <p className="mt-2 whitespace-nowrap pr-12 text-[18px] font-bold tracking-[0.04em] text-black sm:text-[22px] md:text-[26px]">
+                <p className="mt-2 break-words pr-10 text-lg font-bold tracking-[0.04em] text-black sm:text-xl md:text-2xl">
                   {codeValue}
                 </p>
                 {isCodeCopied ? (
@@ -205,7 +205,7 @@ export function ActionSuccessModal({
                 variant="floralPill"
                 size="md"
                 backgroundImage="/images/bg-gia-nhap-btn.png"
-                className="h-12 w-full border-0 text-base font-bold text-white"
+                className="h-12 w-full border-0 text-sm font-bold text-white"
               >
                 {primaryLabel}
               </Button>
@@ -222,7 +222,7 @@ export function ActionSuccessModal({
                   variant="secondaryPill"
                   size="md"
                   className={cn(
-                    "h-12 w-full border-black text-base font-bold text-black hover:bg-black hover:text-white",
+                    "h-12 w-full border-black text-sm font-bold text-black hover:bg-black hover:text-white",
                     !secondaryHref && "cursor-pointer",
                   )}
                 >

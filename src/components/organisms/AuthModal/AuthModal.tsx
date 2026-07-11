@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, type MouseEvent } from "react";
 import { AuthExperience } from "@/components/organisms/AuthExperience";
 
@@ -44,27 +45,30 @@ export function AuthModal({
       aria-modal="true"
       aria-label={mode === "login" ? "Đăng nhập" : "Đăng ký"}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-[80] overflow-y-auto bg-black/45 px-4 py-5 sm:px-6 sm:py-8"
+      className="fixed inset-0 z-[200] overflow-y-auto bg-black/45 px-3 py-4 backdrop-blur-md sm:px-5 sm:py-6"
     >
-      <div className="mx-auto flex min-h-full w-full max-w-[1100px] items-start justify-center">
-        <div className="relative w-full px-5 pt-10 sm:px-9 sm:pt-12">
+      <div className="mx-auto flex min-h-full w-full max-w-[820px] items-start justify-center">
+        <div className="relative w-full px-4 pt-7 sm:px-6 sm:pt-9">
           <button
             type="button"
             aria-label="Đóng"
             onClick={onClose}
-            className="absolute right-0 top-0 z-10 flex h-[56px] w-[56px] translate-x-[-30%] translate-y-[30%] items-center justify-center rounded-full border-[5px] border-white bg-black shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition-transform hover:scale-[1.03] sm:h-[70px] sm:w-[70px]"
+            className="absolute right-7 top-10 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white transition hover:bg-black/5 sm:right-9 sm:top-12"
           >
-            <span aria-hidden className="relative h-6 w-6 sm:h-7 sm:w-7">
-              <span className="absolute left-1/2 top-1/2 h-1 w-full -translate-x-1/2 -translate-y-1/2 rotate-45 rounded-full bg-white" />
-              <span className="absolute left-1/2 top-1/2 h-1 w-full -translate-x-1/2 -translate-y-1/2 -rotate-45 rounded-full bg-white" />
-            </span>
+            <Image
+              src="/icons/close-black.svg"
+              alt=""
+              width={36}
+              height={36}
+              aria-hidden
+            />
           </button>
 
           <AuthExperience
             mode={mode}
             onModeChange={onModeChange}
             onAuthSuccess={onClose}
-            className="mx-auto max-w-[1068px]"
+            className="mx-auto max-w-[780px]"
           />
         </div>
       </div>

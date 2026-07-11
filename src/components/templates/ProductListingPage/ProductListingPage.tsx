@@ -39,7 +39,7 @@ export function ProductListingPage({
 }) {
   return (
     <SiteLayout>
-      <section className="listing-shell pb-12 pt-3">
+      <section className="breadcrumb-shell">
         <Breadcrumbs
           items={
             breadcrumbs ?? [
@@ -47,9 +47,10 @@ export function ProductListingPage({
               { label: title },
             ]
           }
-          className="mb-2"
         />
-        <h1 className="page-heading leading-tight">
+      </section>
+      <section className="listing-shell pb-12 pt-0">
+        <h1 className="text-5xl font-bold uppercase leading-tight text-black">
           {title}
         </h1>
 
@@ -67,22 +68,16 @@ export function ProductListingPage({
 
       {recentlyViewedProducts.length > 0 && (
         <section className="listing-shell py-12">
-          <h2 className="mb-6 text-display-section font-extrabold uppercase">
+          <h2 className="mb-6 text-4xl font-extrabold uppercase">
             Sản phẩm bạn đã xem
           </h2>
-          <div
-            className="grid grid-cols-2 md:grid-cols-4"
-            style={{
-              columnGap: "var(--product-grid-gap-x)",
-              rowGap: "var(--product-grid-gap-y)",
-            }}
-          >
+          <div className="grid grid-cols-2 gap-x-3.5 gap-y-6 md:grid-cols-4 xl:gap-x-4 xl:gap-y-7">
             {recentlyViewedProducts.map((product, index) => (
               <ProductCard
                 key={`${product.id}-viewed-${index}`}
                 product={product}
-                className="gap-2"
-                imageClassName="aspect-[351/430]"
+                className="min-w-0 w-full"
+                quickAddOnHover
               />
             ))}
           </div>

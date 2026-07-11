@@ -22,10 +22,10 @@ function ActionLink({ href, onClick, label, variant }: OrderActionLink) {
       variant={variant === "primary" ? "imagePill" : "outline"}
       backgroundImage={variant === "primary" ? "/images/button_background.png" : undefined}
       className={cn(
-        "min-h-[34px] min-w-[140px] !rounded-[3px] px-6 py-1.5 text-center whitespace-nowrap transition-[transform,filter,box-shadow,background-color,color,border-color] duration-200",
+        "min-h-[42px] min-w-[124px] rounded-pill px-6 py-2 text-center whitespace-nowrap transition-[transform,filter,box-shadow,background-color,color,border-color] duration-200",
         variant === "primary"
-          ? "border-2 border-[#ff593d] bg-cover bg-center text-[15px] font-bold text-white shadow-none hover:-translate-y-px hover:brightness-[0.98]"
-          : "border-2 border-black bg-white text-[14px] font-normal text-black shadow-none hover:-translate-y-px hover:bg-black hover:text-white",
+          ? "border border-primary bg-cover bg-center text-sm font-bold text-white shadow-[0_10px_22px_rgba(207,92,67,0.24)] hover:-translate-y-px hover:brightness-[0.98] hover:shadow-[0_14px_26px_rgba(207,92,67,0.28)] md:text-base"
+          : "border-2 border-black bg-white text-sm font-medium text-black hover:-translate-y-px hover:bg-black hover:text-white hover:shadow-[0_10px_18px_rgba(0,0,0,0.12)] md:text-base",
       )}
     >
       {label}
@@ -41,7 +41,7 @@ export function OrderActions({ actions, className }: OrderActionsProps) {
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center justify-end gap-5",
+        "flex flex-wrap items-center justify-end gap-3",
         className,
       )}
     >

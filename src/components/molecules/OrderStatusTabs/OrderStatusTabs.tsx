@@ -23,7 +23,7 @@ export function OrderStatusTabs({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end gap-x-8 gap-y-3 border-b border-black/10 pb-3",
+        "flex flex-wrap items-end gap-x-7 gap-y-3 border-b border-black/10 pb-2.5",
         className,
       )}
     >
@@ -39,7 +39,7 @@ export function OrderStatusTabs({
           >
             <span
               className={cn(
-                "text-base leading-none md:text-[18px]",
+                "text-base leading-none md:text-xl",
                 active ? "font-normal text-[#ff593d]" : "font-normal text-black",
               )}
             >
@@ -47,7 +47,7 @@ export function OrderStatusTabs({
             </span>
             <span
               className={cn(
-                "h-[3px] w-full min-w-[76px] bg-[url('/images/strip-title-underline.png')] bg-[length:100%_100%] bg-no-repeat transition-opacity",
+                "h-[3px] w-full min-w-[72px] bg-[url('/images/strip-title-underline.png')] bg-[length:100%_100%] bg-no-repeat transition-opacity",
                 active ? "opacity-100" : "opacity-0 group-hover:opacity-40",
               )}
             />

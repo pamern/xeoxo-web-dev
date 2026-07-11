@@ -17,12 +17,22 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
       if (event.key === "Escape") onClose();
     }
 
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
     document.addEventListener("keydown", handleKeyDown);
     document.body.style.overflow = "hidden";
 
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
     };
   }, [open, onClose]);
 
@@ -32,7 +42,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         aria-hidden
         onClick={onClose}
         className={cn(
-          "fixed inset-0 z-[110] bg-black/40 transition-opacity duration-300",
+          "fixed inset-0 z-[180] bg-black/40 transition-opacity duration-300",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       />
@@ -41,12 +51,12 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         role="dialog"
         aria-label="Giỏ hàng"
         className={cn(
-          "fixed right-0 top-0 z-[120] flex h-full w-[400px] max-w-[calc(100vw-2rem)] flex-col bg-white text-foreground shadow-[0_20px_60px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-out",
+          "fixed right-0 top-0 z-[190] flex h-full w-[400px] max-w-[calc(100vw-2rem)] flex-col bg-white text-foreground shadow-[0_20px_60px_rgba(0,0,0,0.25)] transition-transform duration-300 ease-out",
           open ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex items-center justify-between border-b border-border px-6 py-5">
-          <h2 className="text-body-lg font-semibold">Giỏ hàng</h2>
+          <h2 className="text-lg font-semibold leading-[1.5]">Giỏ hàng</h2>
           <button
             type="button"
             onClick={onClose}
@@ -85,7 +95,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                       {item.color} - {item.item_type === "CUSTOMIZED" ? "Customize" : item.size}
                     </p>
                     {item.item_type === "CUSTOMIZED" && (
-                      <div className="text-[10px] text-muted-foreground leading-tight">
+                      <div className="text-[0.625rem] text-muted-foreground leading-tight">
                         {(() => {
                           const snapshot = typeof item.customization_snapshot === "string"
                             ? (() => { try { return JSON.parse(item.customization_snapshot); } catch { return null; } })()
@@ -131,7 +141,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
         <div className="border-t border-border px-6 py-5">
           <div className="mb-4 flex items-center justify-between text-body-sm">
             <span>Tạm tính</span>
-            <span className="text-body-lg font-bold">{formatPrice(cart.subtotal)}</span>
+            <span className="text-lg font-bold leading-[1.5]">{formatPrice(cart.subtotal)}</span>
           </div>
           <Link
             href={ROUTES.CART}

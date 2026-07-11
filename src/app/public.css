@@ -1,0 +1,79 @@
+@tailwind components;
+
+@layer components {
+  .homepage-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  .catalog-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  .listing-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  .product-page-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+  }
+
+  .breadcrumb-shell {
+    @apply mx-auto w-full max-w-site;
+    padding-inline: var(--site-gutter-x);
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .homepage-product-grid {
+    @apply grid grid-cols-2 gap-x-3.5 gap-y-5 lg:grid-cols-4 xl:gap-x-4 xl:gap-y-6;
+  }
+
+  .homepage-collection-grid {
+    @apply grid gap-2.5 xl:gap-3;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  @media (min-width: 640px) {
+    .homepage-collection-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 960px) and (max-width: 1279px) {
+    .homepage-collection-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .homepage-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+
+    .catalog-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+
+    .listing-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+
+    .product-page-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+
+    .breadcrumb-shell {
+      padding-inline: var(--site-gutter-x-lg);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .homepage-collection-grid {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+  }
+}

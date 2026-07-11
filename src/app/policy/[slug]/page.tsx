@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
+import { PublicPageHeader } from "@/components/molecules/PublicPageHeader/PublicPageHeader";
 import { PolicyClosingNote } from "@/components/organisms/PolicyClosingNote";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
@@ -312,7 +313,8 @@ function CustomerPolicyPage() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <div className="site-container pb-5 pt-12">
+        <section className="breadcrumb-shell">
+          <div className="mx-auto w-full max-w-content">
           <Breadcrumbs
             items={[
               {
@@ -324,24 +326,17 @@ function CustomerPolicyPage() {
               { label: "Chính sách chăm sóc khách hàng" },
             ]}
           />
-        </div>
-
-        <section className="site-container flex flex-col items-center pb-5 pt-3 text-center">
-          <h1 className="page-heading text-foreground">
-            Chính sách khách hàng
-          </h1>
-          <Image
-            src="/images/strip-title-underline.png"
-            alt=""
-            width={438}
-            height={5}
-            className="mt-[10px] h-[5px] w-full max-w-[438px]"
-            aria-hidden
-          />
+          </div>
         </section>
 
-        <article className="content-body site-container pb-12 pt-6 text-foreground md:pb-14 md:pt-8">
-          <section className="max-w-[1527px] space-y-4 md:space-y-5">
+        <PublicPageHeader
+          title="Chính sách khách hàng"
+          titleClassName="text-foreground"
+        />
+
+        <article className="site-container pb-12 pt-6 text-foreground md:pb-14 md:pt-8">
+          <div className="mx-auto w-full max-w-content text-base font-light leading-relaxed text-black">
+          <section className="space-y-4 md:space-y-5">
             <p>
               Chào mừng Quý khách đã đến với{" "}
               <strong className="font-bold">XÉO XỌ,</strong>
@@ -359,17 +354,17 @@ function CustomerPolicyPage() {
 
           <section className="mt-10 grid items-start gap-10 lg:grid-cols-2 xl:gap-12">
             <div className="max-w-[76ch] space-y-7">
-              <h2 className="content-heading">
+              <h2 className="text-base font-bold text-black md:text-lg">
                 Chính sách tích điểm
               </h2>
               <PolicyList items={POINT_POLICY} />
 
-              <h2 className="content-heading max-w-[616px] pt-1">
+              <h2 className="max-w-[616px] pt-1 text-base font-bold text-black md:text-lg">
                 Trở thành khách hàng thân thiết của XÉO XỌ qua các bước sau:
               </h2>
               <PolicyList items={MEMBER_STEPS} />
 
-              <h2 className="content-heading max-w-[616px] pt-1">
+              <h2 className="max-w-[616px] pt-1 text-base font-bold text-black md:text-lg">
                 Hãy trở thành thành viên SILVER - GOLD - DIAMOND - MVG của XÉO
                 XỌ ngay hôm nay:
               </h2>
@@ -388,13 +383,13 @@ function CustomerPolicyPage() {
             </div>
           </section>
 
-          <section className="mt-12 max-w-[1527px] space-y-6">
-            <h2 className="content-heading">
+          <section className="mt-12 space-y-6">
+            <h2 className="text-base font-bold text-black md:text-lg">
               Điều kiện duy trì thành viên trong 1 năm
             </h2>
             <PolicyList items={MAINTENANCE_RULES} />
 
-            <h2 className="content-heading pt-1">
+            <h2 className="pt-1 text-base font-bold text-black md:text-lg">
               Lưu ý:
             </h2>
             <PolicyList items={NOTES} />
@@ -403,6 +398,7 @@ function CustomerPolicyPage() {
               mới nhất.
             </p>
           </section>
+          </div>
         </article>
 
         <PolicyClosingNote />
@@ -415,7 +411,7 @@ function PolicyList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3 pl-6 marker:text-[0.9em] md:pl-8">
       {items.map((item) => (
-        <li key={item} className="content-body list-disc pl-1 text-justify">
+        <li key={item} className="list-disc pl-1 text-justify">
           {item}
         </li>
       ))}
@@ -436,7 +432,8 @@ function GenericPolicyPage({
   return (
     <SiteLayout>
       <div className="bg-background">
-        <div className="site-container pb-5 pt-12">
+        <section className="breadcrumb-shell">
+          <div className="mx-auto w-full max-w-content">
           <Breadcrumbs
             items={[
               {
@@ -448,23 +445,15 @@ function GenericPolicyPage({
               { label: title },
             ]}
           />
-        </div>
-
-        <section className="site-container flex flex-col items-center pb-5 pt-3 text-center">
-          <h1 className="page-heading text-foreground">{title}</h1>
-          <Image
-            src="/images/strip-title-underline.png"
-            alt=""
-            width={438}
-            height={5}
-            className="mt-[10px] h-[5px] w-full max-w-[438px]"
-            aria-hidden
-          />
+          </div>
         </section>
 
-        <article className="content-body site-container pb-12 pt-6 text-foreground md:pb-14 md:pt-8">
+        <PublicPageHeader title={title} titleClassName="text-foreground" />
+
+        <article className="site-container pb-12 pt-6 text-foreground md:pb-14 md:pt-8">
+          <div className="mx-auto w-full max-w-content text-base font-light leading-relaxed text-black">
           {intro.length > 0 ? (
-            <section className="max-w-[1527px] space-y-4 md:space-y-5">
+            <section className="space-y-4 md:space-y-5">
               {intro.map((paragraph) => (
                 <p key={paragraph}>{paragraph}</p>
               ))}
@@ -472,11 +461,11 @@ function GenericPolicyPage({
           ) : null}
 
           {sections.length > 0 ? (
-            <section className="mt-10 max-w-[1527px] space-y-6">
+            <section className="mt-10 space-y-6">
               {sections.map((section, index) => (
                 <div key={`${section.heading ?? "section"}-${index}`} className="space-y-4">
                   {section.heading ? (
-                    <h2 className="content-heading">{section.heading}</h2>
+                    <h2 className="text-base font-bold text-black md:text-lg">{section.heading}</h2>
                   ) : null}
                   {section.paragraphs?.length ? (
                     <div className="space-y-4">
@@ -491,6 +480,7 @@ function GenericPolicyPage({
               ))}
             </section>
           ) : null}
+          </div>
         </article>
 
         <PolicyClosingNote />
@@ -511,11 +501,11 @@ function PolicyContactBlock({
 }) {
   return (
     <div className="rounded-md border border-border bg-card px-5 py-4 text-left">
-      <p className="content-heading">{contact.company}</p>
+      <p className="text-base font-bold text-black md:text-lg">{contact.company}</p>
       <div className="mt-3 space-y-2">
-        <p className="content-body">Địa chỉ: {contact.address}</p>
-        <p className="content-body">Email: {contact.email}</p>
-        <p className="content-body">Hotline: {contact.hotline}</p>
+        <p className="text-base font-light leading-relaxed text-black">Địa chỉ: {contact.address}</p>
+        <p className="text-base font-light leading-relaxed text-black">Email: {contact.email}</p>
+        <p className="text-base font-light leading-relaxed text-black">Hotline: {contact.hotline}</p>
       </div>
     </div>
   );

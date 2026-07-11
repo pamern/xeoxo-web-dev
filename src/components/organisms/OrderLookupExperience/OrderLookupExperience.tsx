@@ -63,11 +63,11 @@ export function OrderLookupExperience({
   };
 
   const inputBaseClass =
-    "h-[62px] w-full rounded-[100px] border border-black bg-white px-[26px] py-5 text-[18px] font-light text-black outline-none transition-colors placeholder:text-black/50 focus:border-black md:px-[50px]";
+    "h-[62px] w-full rounded-[100px] border border-black bg-white px-[26px] py-5 text-[1.125rem] font-light text-black outline-none transition-colors placeholder:text-black/50 focus:border-black md:px-[50px]";
   const primaryActionClass =
-    "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-black px-[60px] py-5 text-[20px] font-bold text-white transition hover:bg-white hover:text-black md:min-w-[306px] md:px-[100px] md:text-[22px]";
+    "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-black px-[60px] py-5 text-[1.25rem] font-bold text-white transition hover:bg-white hover:text-black md:min-w-[306px] md:px-[100px] md:text-[1.375rem]";
   const secondaryActionClass =
-    "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-white px-[60px] py-5 text-[20px] font-bold text-black transition hover:bg-black hover:text-white md:min-w-[306px] md:px-[100px] md:text-[22px]";
+    "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-white px-[60px] py-5 text-[1.25rem] font-bold text-black transition hover:bg-black hover:text-white md:min-w-[306px] md:px-[100px] md:text-[1.375rem]";
 
   const normalizedContact = formValues.contact.trim();
 
@@ -77,7 +77,7 @@ export function OrderLookupExperience({
         <div className="bg-white p-6 md:p-[40px]">
           <div className="flex flex-col justify-between gap-4 pb-6 sm:flex-row sm:items-center">
             <div className="w-full space-y-3">
-              <h1 className="text-[34px] font-bold leading-[1.24] text-black md:text-[44px]">
+              <h1 className="text-[2.125rem] font-bold leading-[1.24] text-black md:text-[2.75rem]">
                 Tra cứu đơn hàng
               </h1>
               <div
@@ -91,7 +91,7 @@ export function OrderLookupExperience({
           <form onSubmit={handleSubmit} className="mt-8 space-y-0">
             <div className="grid gap-5 pb-8 lg:grid-cols-2 xl:gap-[50px]">
               <label className="space-y-[9px]">
-                <span className="px-[10px] text-[15px] font-medium text-black">
+                <span className="px-[10px] text-[0.9375rem] font-medium text-black">
                   Mã đơn hàng:
                 </span>
                 <input
@@ -110,7 +110,7 @@ export function OrderLookupExperience({
               </label>
 
               <label className="space-y-[9px]">
-                <span className="px-[10px] text-[15px] font-medium text-black">
+                <span className="px-[10px] text-[0.9375rem] font-medium text-black">
                   Số điện thoại/Email đặt hàng:
                 </span>
                 <input
@@ -149,7 +149,7 @@ export function OrderLookupExperience({
 
       {errorMessage ? (
         <section className="mx-auto max-w-[1529px] border border-[#cf5c43] bg-[#fff4f0] px-6 py-5 text-[#a64e3b] md:px-[40px]">
-          <p className="text-[18px] font-medium">{errorMessage}</p>
+          <p className="text-[1.125rem] font-medium">{errorMessage}</p>
         </section>
       ) : null}
 

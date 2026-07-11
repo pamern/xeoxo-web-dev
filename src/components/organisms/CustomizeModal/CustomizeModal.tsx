@@ -197,7 +197,7 @@ export function CustomizeModal({
           <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#f15a42]">
             Xéo Xọ Customize {genderLabel}
           </p>
-          <h2 id="customize-title" className="mt-1 text-2xl font-bold sm:text-[32px]">
+          <h2 id="customize-title" className="mt-1 text-2xl font-bold sm:text-[2rem]">
             Đặt sản phẩm theo số đo riêng
           </h2>
           <p className="mt-2 text-sm leading-relaxed text-black/60">

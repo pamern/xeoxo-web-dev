@@ -1,1 +1,6 @@
-export { CartSummary } from "./CartSummary";
+export {
+  CartSummary,
+  CartSummaryPayment,
+  CartSummaryProducts,
+  CartSummaryProvider,
+} from "./CartSummary";

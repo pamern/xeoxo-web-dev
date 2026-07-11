@@ -105,7 +105,7 @@ function FormField({
   onChange: (field: Exclude<AddressFieldName, "is_default">, value: string) => void;
 }) {
   return (
-    <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
+    <label className="flex flex-col gap-1.5 text-sm font-semibold text-foreground">
       <span>{label}</span>
       <input
         type={type}
@@ -115,7 +115,7 @@ function FormField({
         placeholder={placeholder}
         onChange={(event) => onChange(name, event.target.value)}
         className={cn(
-          "form-control min-h-12 rounded-[12px] border-black/15 bg-white px-4 py-3 text-sm font-medium placeholder:text-foreground/35",
+          "form-control min-h-10 rounded-[10px] border-black/15 bg-white px-4 py-2.5 text-sm font-medium placeholder:text-foreground/35",
           error && "border-destructive focus:border-destructive focus:ring-destructive",
         )}
       />
@@ -143,26 +143,26 @@ function AddressCard({
 
   return (
     <article className="border border-black/30 bg-white shadow-[0_10px_24px_rgba(0,0,0,0.04)]">
-      <div className="flex flex-col gap-4 px-5 py-5 md:px-6">
-        <div className="flex flex-col gap-3 border-b border-black/10 pb-4 md:flex-row md:items-start md:justify-between">
+      <div className="flex flex-col gap-3.5 px-4 py-4 md:px-5">
+        <div className="flex flex-col gap-2.5 border-b border-black/10 pb-3.5 md:flex-row md:items-start md:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <h3 className="text-[22px] font-extrabold leading-none text-foreground">
+              <h3 className="text-xl font-extrabold leading-none text-foreground">
                 {address.recipient_name}
               </h3>
-              <span className="hidden text-[28px] font-light leading-none text-foreground/35 md:inline">
+              <span className="hidden text-[1.75rem] font-light leading-none text-foreground/35 md:inline">
                 |
               </span>
-              <p className="text-[17px] font-medium text-foreground/58">
+              <p className="text-sm font-medium text-foreground/58 md:text-base">
                 {address.recipient_phone}
               </p>
             </div>
-            <p className="text-base font-medium leading-relaxed text-foreground/82">
+            <p className="text-sm font-medium leading-relaxed text-foreground/82 md:text-base">
               {formatAddress(address)}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start text-sm font-semibold">
+          <div className="flex items-center gap-2 self-start text-xs font-semibold md:text-sm">
             <button
               type="button"
               onClick={() => onEdit(address)}
@@ -182,13 +182,13 @@ function AddressCard({
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           {isDefault ? (
-            <span className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-[#f0644a] px-5 text-base font-semibold text-[#f0644a]">
+            <span className="inline-flex min-h-9 items-center justify-center rounded-[8px] border border-[#f0644a] px-4 text-sm font-semibold text-[#f0644a]">
               Mặc định
             </span>
           ) : (
-            <span className="inline-flex min-h-11 items-center justify-center rounded-[8px] border border-transparent px-5 text-base font-semibold text-transparent">
+            <span className="inline-flex min-h-9 items-center justify-center rounded-[8px] border border-transparent px-4 text-sm font-semibold text-transparent">
               Mặc định
             </span>
           )}
@@ -199,7 +199,7 @@ function AddressCard({
               onClick={() => onSetDefault(address)}
               disabled={isBusy}
               className={cn(
-                "inline-flex min-h-11 min-w-[220px] items-center justify-center rounded-[8px] border px-6 text-base font-medium transition-colors",
+                "inline-flex min-h-9 min-w-[176px] items-center justify-center rounded-[8px] border px-5 text-sm font-medium transition-colors",
                 "border-black/55 bg-white text-foreground hover:bg-black hover:text-white",
                 "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-foreground",
               )}
@@ -424,8 +424,8 @@ export function AccountAddressBook({
 
   if (!isAuthenticated) {
     return (
-      <div className="mt-8 rounded-[20px] border border-border bg-secondary px-6 py-8">
-        <p className="text-lg font-medium">Bạn cần đăng nhập để xem sổ địa chỉ.</p>
+      <div className="mt-6 rounded-[18px] border border-border bg-secondary px-5 py-6">
+        <p className="text-base font-medium">Bạn cần đăng nhập để xem sổ địa chỉ.</p>
         <p className="mt-2 text-sm font-light text-foreground/72">
           Sau khi đăng nhập, trang này sẽ hiển thị các địa chỉ giao hàng gắn với
           tài khoản của bạn trong hệ thống.
@@ -436,7 +436,7 @@ export function AccountAddressBook({
 
   if (isLoading) {
     return (
-      <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
+      <div className="mt-6 rounded-[18px] border border-black/12 bg-secondary px-5 py-8">
         <p className="text-base font-medium text-foreground/72">
           Đang tải sổ địa chỉ...
         </p>
@@ -445,21 +445,21 @@ export function AccountAddressBook({
   }
 
   return (
-    <div className="mt-8 space-y-7">
+    <div className="mt-6 space-y-6">
       {errorMessage ? (
-        <div className="rounded-[20px] border border-[#d76a54]/25 bg-[#fff2ee] px-6 py-8">
-          <p className="text-lg font-semibold text-[#b14f3d]">{errorMessage}</p>
+        <div className="rounded-[18px] border border-[#d76a54]/25 bg-[#fff2ee] px-5 py-6">
+          <p className="text-base font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : null}
 
       {formMode ? (
-        <section className="rounded-[22px] border border-black/12 bg-[#fffdfa] px-5 py-6 shadow-[0_16px_34px_rgba(0,0,0,0.06)] md:px-6">
+        <section className="rounded-[20px] border border-black/12 bg-[#fffdfa] px-4 py-5 shadow-[0_16px_34px_rgba(0,0,0,0.06)] md:px-5">
           <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
             <div>
-              <h2 className="text-[24px] font-extrabold leading-none text-foreground">
+              <h2 className="text-xl font-extrabold leading-none text-foreground">
                 {formMode.type === "edit" ? "Chỉnh sửa địa chỉ" : "Thêm địa chỉ mới"}
               </h2>
-              <p className="mt-2 max-w-[720px] text-sm font-medium leading-relaxed text-foreground/65">
+              <p className="mt-1.5 max-w-[620px] text-xs font-medium leading-relaxed text-foreground/65 md:text-sm">
                 Nếu địa chỉ này đã từng được dùng cho đơn hàng, hệ thống sẽ lưu
                 thành địa chỉ mới để giữ nguyên lịch sử giao hàng cũ.
               </p>
@@ -474,7 +474,7 @@ export function AccountAddressBook({
             </button>
           </div>
 
-          <form className="mt-6 grid gap-4" onSubmit={handleSubmit}>
+          <form className="mt-5 grid gap-4" onSubmit={handleSubmit}>
             <div className="grid gap-4 md:grid-cols-2">
               <FormField
                 label="Họ và tên"
@@ -529,7 +529,7 @@ export function AccountAddressBook({
                   })),
                 ]}
                 error={fieldErrors.province_id ?? provinceError}
-                className="h-12 rounded-[12px] border-black/15 bg-white text-sm font-medium"
+                className="h-10 rounded-[10px] border-black/15 bg-white text-sm font-medium"
                 wrapperClassName="text-sm font-semibold"
               />
 
@@ -548,7 +548,7 @@ export function AccountAddressBook({
                 ]}
                 disabled={!currentProvince || wardOptions.length === 0}
                 error={fieldErrors.district_name}
-                className="h-12 rounded-[12px] border-black/15 bg-white text-sm font-medium disabled:cursor-not-allowed disabled:bg-secondary"
+                className="h-10 rounded-[10px] border-black/15 bg-white text-sm font-medium disabled:cursor-not-allowed disabled:bg-secondary"
                 wrapperClassName="text-sm font-semibold"
               />
             </div>
@@ -582,19 +582,19 @@ export function AccountAddressBook({
               Đặt làm địa chỉ mặc định
             </label>
 
-            <div className="flex flex-col gap-3 pt-2 md:flex-row md:justify-end">
+            <div className="flex flex-col gap-3 pt-1 md:flex-row md:justify-end">
               <button
                 type="button"
                 onClick={closeForm}
                 disabled={isMutating}
-                className="inline-flex min-h-[48px] items-center justify-center rounded-[10px] border border-black/15 px-6 text-sm font-bold text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-[42px] items-center justify-center rounded-[10px] border border-black/15 px-5 text-sm font-bold text-foreground transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={isMutating}
-                className="inline-flex min-h-[48px] min-w-[220px] items-center justify-center rounded-[10px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-[42px] min-w-[180px] items-center justify-center rounded-[10px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-5 text-sm font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isMutating
                   ? "Đang lưu địa chỉ..."
@@ -619,11 +619,11 @@ export function AccountAddressBook({
           />
         ))
       ) : (
-        <div className="rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
-          <p className="text-xl font-bold text-foreground">
+        <div className="rounded-[18px] border border-black/12 bg-secondary px-5 py-8">
+          <p className="text-lg font-bold text-foreground">
             Bạn chưa có địa chỉ giao hàng nào.
           </p>
-          <p className="mt-3 max-w-[620px] text-sm font-light leading-relaxed text-foreground/72 md:text-base">
+          <p className="mt-3 max-w-[520px] text-sm font-light leading-relaxed text-foreground/72">
             Thêm địa chỉ đầu tiên để dùng nhanh ở checkout và lưu làm mặc định
             cho các lần mua sau.
           </p>
@@ -636,7 +636,7 @@ export function AccountAddressBook({
             type="button"
             onClick={openCreateForm}
             disabled={isMutating}
-            className="inline-flex min-h-[50px] min-w-[196px] items-center justify-center rounded-[8px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-6 text-lg font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[42px] min-w-[164px] items-center justify-center rounded-[8px] border border-[#cf5c43] bg-[url('/images/header-line-up.png')] bg-[length:cover] bg-center px-5 text-base font-extrabold text-white shadow-[0_12px_26px_rgba(207,92,67,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             Thêm địa điểm
           </button>

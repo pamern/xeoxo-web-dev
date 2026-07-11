@@ -5,6 +5,7 @@ import { Crimson_Pro, Unbounded } from "next/font/google";
 import { CartDrawerProvider } from "@/components/providers/CartDrawerProvider";
 import { CartToastProvider } from "@/components/providers/CartToastProvider";
 import "./globals.css";
+import "./public.css";
 
 const unbounded = Unbounded({
   subsets: ["latin", "vietnamese"],

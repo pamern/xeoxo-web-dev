@@ -23,7 +23,7 @@ export default function PolicyIndexPage() {
   return (
     <SiteLayout>
       <div className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
-        <h1 className="page-heading mb-8">Chăm sóc khách hàng</h1>
+        <h1 className="mb-8 text-5xl font-bold leading-none text-black">Chăm sóc khách hàng</h1>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {POLICY_LINKS.map((policy) => (

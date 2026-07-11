@@ -289,26 +289,3 @@ function EmptyCatalogState({
     </section>
   );
 }
-
-function FilterPill({
-  href,
-  active,
-  children,
-}: {
-  href: string;
-  active?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className={
-        active
-          ? "shrink-0 whitespace-nowrap rounded-pill bg-black px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button text-white"
-          : "shrink-0 whitespace-nowrap rounded-pill border border-black px-[var(--filter-chip-px)] py-[var(--filter-chip-py)] text-button transition-colors hover:bg-black hover:text-white"
-      }
-    >
-      {children}
-    </Link>
-  );
-}

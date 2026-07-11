@@ -262,7 +262,7 @@ function PersonalColorIntro({ onStart }: { onStart: () => void }) {
                 <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-body-sm font-bold text-primary-foreground">
                   {index + 1}
                 </span>
-                <p className="whitespace-nowrap text-[14px] font-bold leading-[1.15] sm:text-[15px]">
+                <p className="whitespace-nowrap text-[0.875rem] font-bold leading-[1.15] sm:text-[0.9375rem]">
                   {step.title}
                 </p>
                 <p className="text-body-sm text-muted-foreground">
@@ -276,7 +276,7 @@ function PersonalColorIntro({ onStart }: { onStart: () => void }) {
         <button
           type="button"
           onClick={onStart}
-          className="mt-10 inline-flex h-[52px] items-center justify-center gap-2 rounded-pill bg-primary px-10 text-button font-bold uppercase text-primary-foreground shadow-[0_10px_24px_rgba(0,0,0,0.15)] transition-transform hover:scale-[1.02] hover:opacity-90"
+          className="mt-10 inline-flex h-[52px] items-center justify-center gap-2 rounded-pill bg-primary px-10 text-base font-bold uppercase leading-[1.12] text-primary-foreground shadow-[0_10px_24px_rgba(0,0,0,0.15)] transition-transform hover:scale-[1.02] hover:opacity-90"
         >
           Bắt đầu làm quiz
           <span aria-hidden>&rarr;</span>
@@ -459,13 +459,13 @@ function PersonalColorResult({
       {/* Recommendations & products section (Padded) */}
       <section className="mx-auto w-full max-w-site px-6 py-12 xl:px-[100px]">
         {isLoading && (
-          <p className="mt-10 text-center text-body-lg text-muted-foreground">
+          <p className="mt-10 text-center text-lg font-normal leading-[1.5] text-muted-foreground">
             Đang tải bảng màu phù hợp với bạn...
           </p>
         )}
 
         {errorMessage && (
-          <p className="mt-10 text-center text-body-lg text-destructive">
+          <p className="mt-10 text-center text-lg font-normal leading-[1.5] text-destructive">
             {errorMessage}
           </p>
         )}
