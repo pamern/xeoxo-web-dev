@@ -4,12 +4,16 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/atoms/Button";
 import { CartItem } from "@/components/molecules/CartItem";
 import { AuthModal } from "@/components/organisms/AuthModal";
+import { CustomizeModal } from "@/components/organisms/CustomizeModal";
 import { useAvailableLoyaltyRewards } from "@/hooks/useAvailableLoyaltyRewards";
 import { useCart } from "@/hooks/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
 import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { ROUTES } from "@/constants/routes";
+import type { MeasurementValues } from "@/features/size-recommendation/size-recommendation";
 import { formatPrice } from "@/lib/utils";
+import { createCustomizationRequest } from "@/services/customization.service";
+import type { CartItemDto } from "@/types/cart.types";
 import type { AvailableLoyaltyReward } from "@/types/loyalty.types";
 
 type CartSummaryContextValue = ReturnType<typeof useCartSummaryState>;
@@ -90,6 +94,21 @@ function formatExpiredAt(value: string | null) {
   }).format(new Date(value));
 }
 
+function parseMeasurementValues(values: MeasurementValues) {
+  const parsed: Record<string, number> = {};
+
+  for (const [key, value] of Object.entries(values)) {
+    if (value !== undefined && value !== null && value !== "") {
+      const next = Number.parseFloat(String(value).replace(",", "."));
+      if (!Number.isNaN(next)) {
+        parsed[key] = next;
+      }
+    }
+  }
+
+  return parsed;
+}
+
 function useCartSummaryState() {
   const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } =
     useCart();
@@ -124,6 +143,7 @@ function useCartSummaryState() {
   const [appliedVoucher, setAppliedVoucher] = useState("");
   const [hasManualVoucherChoice, setHasManualVoucherChoice] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+  const [customizingItem, setCustomizingItem] = useState<CartItemDto | null>(null);
 
   const cartItemIds = useMemo(
     () => cart.items.map((item) => item.cart_item_id),
@@ -223,6 +243,31 @@ function useCartSummaryState() {
     setHasManualVoucherChoice(true);
   }
 
+  async function submitCartCustomize(
+    values: MeasurementValues,
+    note: string,
+    saveAsDefault: boolean,
+  ) {
+    if (!customizingItem?.component_id) {
+      return;
+    }
+
+    const request = await createCustomizationRequest({
+      component_id: customizingItem.component_id,
+      measurements: parseMeasurementValues(values),
+      customer_note: note,
+      save_as_default: saveAsDefault,
+    });
+
+    const result = await updateItem(customizingItem.cart_item_id, {
+      customization_id: request.customization_id,
+    });
+
+    if (result.ok) {
+      setCustomizingItem(null);
+    }
+  }
+
   return {
     acceptedTerms,
     allSelected,
@@ -234,6 +279,7 @@ function useCartSummaryState() {
     cart,
     clearCart,
     clearVoucher,
+    customizingItem,
     discount,
     errorMessage,
     isLoading,
@@ -252,10 +298,12 @@ function useCartSummaryState() {
     selectedSubtotal,
     setAcceptedTerms,
     setAuthModalMode,
+    setCustomizingItem,
     setIsVoucherModalOpen,
     setPaymentMethodId,
     setVoucherSearch,
     shippingFee,
+    submitCartCustomize,
     subtotal,
     toggleAll,
     toggleLine,
@@ -289,6 +337,7 @@ export function CartSummaryProducts() {
     isMutating,
     removeItem,
     selectedIds,
+    setCustomizingItem,
     toggleAll,
     toggleLine,
     updateItem,
@@ -360,6 +409,7 @@ export function CartSummaryProducts() {
               onVariantChange={(next) =>
                 void updateItem(item.cart_item_id, next)
               }
+              onCustomize={() => setCustomizingItem(item)}
               onRemove={() => void removeItem(item.cart_item_id)}
             />
           ))}
@@ -378,6 +428,7 @@ export function CartSummaryPayment() {
     baseShippingFee,
     bestReward,
     clearVoucher,
+    customizingItem,
     discount,
     errorMessage,
     isLoadingRewards,
@@ -392,10 +443,12 @@ export function CartSummaryPayment() {
     selectedSubtotal,
     setAcceptedTerms,
     setAuthModalMode,
+    setCustomizingItem,
     setIsVoucherModalOpen,
     setPaymentMethodId,
     setVoucherSearch,
     shippingFee,
+    submitCartCustomize,
     subtotal,
     total,
     voucherSearch,
@@ -602,6 +655,16 @@ export function CartSummaryPayment() {
           mode={authModalMode}
           onClose={() => setAuthModalMode(null)}
           onModeChange={(mode) => setAuthModalMode(mode)}
+        />
+      )}
+
+      {customizingItem && (
+        <CustomizeModal
+          gender={customizingItem.gender ?? "nu"}
+          componentType={customizingItem.component_type ?? undefined}
+          basePrice={customizingItem.unit_price}
+          onClose={() => setCustomizingItem(null)}
+          onSubmit={submitCartCustomize}
         />
       )}
     </aside>

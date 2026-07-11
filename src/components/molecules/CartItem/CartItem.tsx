@@ -21,14 +21,13 @@ function VariantSelect({
   onChange: (value: string) => void;
 }) {
   const list = options.includes(value) ? options : [value, ...options];
-
   return (
-    <span className="relative inline-block">
+    <span className="relative inline-block min-w-[86px] w-full">
       <select
         aria-label={ariaLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-12 appearance-none rounded-pill border border-black bg-white pl-4 pr-9 text-sm font-medium text-black outline-none transition focus:ring-2 focus:ring-black/15"
+        className="h-[28px] w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-6 text-xs font-semibold text-black outline-none transition focus:ring-2 focus:ring-black/15 text-center [text-align-last:center]"
       >
         {list.map((option) => (
           <option key={option} value={option}>
@@ -38,11 +37,12 @@ function VariantSelect({
       </select>
       <span
         aria-hidden
-        className="pointer-events-none absolute right-4 top-1/2 h-2 w-2 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-black"
+        className="pointer-events-none absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-black"
       />
     </span>
   );
 }
+
 
 const MEASUREMENT_LABELS: Record<string, string> = {
   height: "Chiều cao",
@@ -62,6 +62,7 @@ export function CartItem({
   onSelectedChange,
   onQuantityChange,
   onVariantChange,
+  onCustomize,
   onRemove,
 }: {
   item: CartItemDto;
@@ -69,19 +70,38 @@ export function CartItem({
   onSelectedChange?: (checked: boolean) => void;
   onQuantityChange: (quantity: number) => void;
   onVariantChange: (next: { variant_id: number }) => void;
+  onCustomize?: () => void;
   onRemove: () => void;
 }) {
   const router = useRouter();
   const productHref = ROUTES.PRODUCT(item.slug);
   const av = item.available_variants || [];
-  const sizeOptions = av.length
+  const colorOptions = av.length
+    ? Array.from(new Set(av.map((v) => v.color_name)))
+    : [item.color].filter(Boolean);
+
+  const baseSizeOptions = av.length
     ? Array.from(new Set(av.map((v) => v.size_name)))
     : [item.size].filter(Boolean);
+  const sizeOptions = [
+    ...baseSizeOptions.filter((option) => option !== "Customize"),
+    "Customize",
+  ];
 
   const handleSizeChange = (newSize: string) => {
-    const found = av.find(
-      (v) => v.size_name === newSize && v.color_name === item.color,
-    );
+    if (newSize === "Customize") {
+      onCustomize?.();
+      return;
+    }
+
+    const found = av.find((v) => v.size_name === newSize && v.color_name === item.color);
+    if (found) {
+      onVariantChange({ variant_id: found.variant_id });
+    }
+  };
+
+  const handleColorChange = (newColor: string) => {
+    const found = av.find((v) => v.color_name === newColor && v.size_name === item.size);
     if (found) {
       onVariantChange({ variant_id: found.variant_id });
     }
@@ -104,27 +124,12 @@ export function CartItem({
   };
 
   const isCustomized = item.item_type === "CUSTOMIZED";
-  const snapshot =
-    typeof item.customization_snapshot === "string"
-      ? (() => {
-          try {
-            return JSON.parse(item.customization_snapshot);
-          } catch {
-            return null;
-          }
-        })()
-      : item.customization_snapshot;
+  const snapshot = typeof item.customization_snapshot === "string"
+    ? (() => { try { return JSON.parse(item.customization_snapshot); } catch { return null; } })()
+    : item.customization_snapshot;
 
-  const measurements = (snapshot as Record<string, unknown> | null)?.measurements as
-    | Record<string, string | number>
-    | undefined;
-  const rawNote = (snapshot as Record<string, unknown> | null)?.note;
-  const note =
-    typeof rawNote === "string"
-      ? rawNote.trim()
-      : rawNote != null
-        ? String(rawNote)
-        : "";
+  const measurements = (snapshot as any)?.measurements || {};
+  const note = (snapshot as any)?.note;
 
   return (
     <article
@@ -133,9 +138,9 @@ export function CartItem({
       aria-label={`Xem chi tiết ${item.name}`}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="grid cursor-pointer grid-cols-[24px_minmax(84px,118px)_minmax(0,1fr)] items-center gap-3 border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-5"
+      className="grid cursor-pointer grid-cols-[32px_80px_minmax(0,1fr)] sm:grid-cols-[36px_96px_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
     >
-      <label className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
+      <label className="justify-self-center inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white cursor-pointer transition hover:border-black/70">
         <input
           type="checkbox"
           checked={selected}
@@ -143,98 +148,81 @@ export function CartItem({
           aria-label={`Chọn ${item.name}`}
           className="sr-only"
         />
-        <span
-          className={
-            selected
-              ? "h-[15px] w-[15px] rounded-[3px] bg-black"
-              : "h-[15px] w-[15px] rounded-[3px] bg-white"
-          }
-        />
+        <span className={selected ? "h-[10px] w-[10px] rounded-[1px] bg-black" : "h-[10px] w-[10px] rounded-[1px] bg-white"} />
       </label>
 
-      <div className="flex flex-col items-start gap-2">
+      <div className="flex flex-col gap-2">
         <Link
           href={productHref}
           aria-label={`Xem chi tiết ${item.name}`}
-          className="group relative h-[132px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[168px]"
+          className="group relative h-[110px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[130px]"
         >
           <Image
             src={item.thumbnail || "/images/placeholder.png"}
             alt={item.name}
             fill
-            sizes="(min-width: 1024px) 118px, 26vw"
+            sizes="(min-width: 1024px) 96px, 25vw"
             className="object-cover transition duration-300 group-hover:scale-105"
           />
         </Link>
         <button
           type="button"
           onClick={onRemove}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-black/60 transition hover:text-black"
+          className="inline-flex items-center gap-1.5 self-start text-xs font-medium text-black/60 transition hover:text-black"
         >
-          <Image src="/icons/xoa.svg" alt="" width={16} height={16} aria-hidden />
+          <Image src="/icons/xoa.svg" alt="" width={13} height={13} aria-hidden />
           Xóa
         </button>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-3.5">
+      <div className="flex min-w-0 flex-col gap-2.5">
         <Link
           href={productHref}
-          className="line-clamp-2 text-base font-medium leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline sm:text-[1.15rem]"
+          className="line-clamp-2 text-sm font-semibold uppercase leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline sm:text-base"
         >
           {item.name}
         </Link>
 
-        <div className="flex flex-wrap items-center gap-2.5 sm:flex-nowrap">
-          {isCustomized ? (
-            <span className="inline-flex h-12 items-center rounded-pill border border-[#f15a42] bg-[#fff4ee] px-4 text-sm font-bold text-[#f15a42]">
-              Customize
-            </span>
-          ) : (
-            <VariantSelect
-              value={item.size}
-              options={sizeOptions}
-              ariaLabel={`Kích cỡ của ${item.name}`}
-              onChange={handleSizeChange}
-            />
-          )}
+        <div className="grid grid-cols-[96px_92px_1fr_75px_2fr_auto] sm:grid-cols-[126px_104px_1fr_80px_2fr_auto] items-center gap-2 sm:gap-3 w-full">
+          <VariantSelect
+            value={item.color}
+            options={colorOptions}
+            ariaLabel={`Màu của ${item.name}`}
+            onChange={handleColorChange}
+          />
+          <VariantSelect
+            value={item.size}
+            options={sizeOptions}
+            ariaLabel={`Kích cỡ của ${item.name}`}
+            onChange={handleSizeChange}
+          />
+          <div aria-hidden />
           <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
-          <span className="ml-auto whitespace-nowrap text-right text-base font-bold text-black sm:text-[1.15rem]">
+          <div aria-hidden />
+          <span className="text-right text-body-sm font-bold uppercase text-black sm:text-base justify-self-end whitespace-nowrap pr-2 sm:pr-4">
             {formatPrice(item.line_total)}
           </span>
         </div>
 
         {isCustomized && (
-          <div className="mt-1.5 rounded-[8px] bg-black/[0.03] p-2.5 text-xs text-black/70">
+          <div className="mt-2 rounded-[8px] bg-black/[0.03] p-3 text-body-sm text-black/70">
             <p className="font-bold text-black/80">Số đo Customize:</p>
-            <div className="mt-1 flex flex-wrap gap-x-2.5 gap-y-1">
-              {Object.entries(measurements || {})
-                .filter(
-                  ([, val]) =>
-                    val !== undefined &&
-                    val !== null &&
-                    String(val).trim() !== "",
-                )
+            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+              {Object.entries(measurements)
+                .filter(([, val]) => val !== undefined && val !== null && String(val).trim() !== "")
                 .map(([key, val]) => {
                   const label = MEASUREMENT_LABELS[key] || key;
                   const unit = key === "weight" ? "kg" : "cm";
-
                   return (
-                    <span
-                      key={key}
-                      className="rounded border border-black/10 bg-white px-2 py-0.5 text-xs font-medium text-black/75"
-                    >
-                      {label}: {val}
-                      {unit}
+                    <span key={key} className="bg-white px-2 py-0.5 rounded border border-black/10 text-xs font-medium text-black/75">
+                      {label}: {val as string | number}{unit}
                     </span>
                   );
                 })}
             </div>
             {note && (
-              <p className="mt-1.5 text-xs italic text-black/60">
-                <span className="font-semibold not-italic text-black/75">
-                  Ghi chú:
-                </span>{" "}
-                {String(note)}
+              <p className="mt-2 text-xs italic text-black/60">
+                <span className="font-semibold not-italic text-black/75">Ghi chú:</span> {note}
               </p>
             )}
           </div>

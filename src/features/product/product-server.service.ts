@@ -7,6 +7,17 @@ function mediaUrl(storageKey?: string | null, bucketName?: string | null) {
   }
 
   if (storageKey.startsWith("http://") || storageKey.startsWith("https://") || storageKey.startsWith("/")) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      try {
+        const targetHost = new URL(supabaseUrl).host;
+        return storageKey
+          .replace(/127\.0\.0\.1:15431/g, targetHost)
+          .replace(/localhost:15431/g, targetHost);
+      } catch (e) {
+        // ignore invalid URL
+      }
+    }
     return storageKey;
   }
 
@@ -350,6 +361,163 @@ export async function getRelatedProducts(slug: string, limit = 5): Promise<Produ
       images: images.length > 0 ? images : ["/images/placeholder.png"],
       categorySlug: "api",
       gender: currentDepartment?.toLowerCase() === "men" ? "nam" : "nu",
+      description: "",
+      sizes: [],
+      colors: productColorsMap.get(pId) ?? [{ name: "Mặc định", hex: "#111111" }],
+    };
+  });
+}
+
+export async function searchProductLines(query: string, limit = 5): Promise<Product[]> {
+  const admin = createAdminClient();
+
+  let matchedLines = null;
+  let error = null;
+  let attempts = 3;
+
+  while (attempts > 0) {
+    const res = await admin
+      .schema("catalog")
+      .from("product_line")
+      .select("product_line_id, slug, line_name, color_id, status")
+      .eq("status", "ACTIVE")
+      .ilike("line_name", `%${query}%`)
+      .limit(limit);
+
+    matchedLines = res.data;
+    error = res.error;
+
+    if (
+      error &&
+      (error.message.includes("schema cache") ||
+        error.message.includes("PGRST002") ||
+        error.message.includes("connection") ||
+        error.message.includes("timeout"))
+    ) {
+      attempts--;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      continue;
+    }
+    break;
+  }
+
+  if (error || !matchedLines || matchedLines.length === 0) {
+    if (error) {
+      console.error("[searchProductLines] query failed", error);
+    }
+    return [];
+  }
+
+  const productLineIds = matchedLines.map((pl) => Number(pl.product_line_id));
+
+  // Get media for matched lines
+  const { data: allLineMedia } = await admin
+    .schema("catalog")
+    .from("product_line_media")
+    .select("product_line_id, media_id, media_role, display_order")
+    .in("product_line_id", productLineIds)
+    .order("display_order", { ascending: true });
+
+  const lineMediaMap = new Map<number, number[]>();
+  for (const lm of allLineMedia || []) {
+    const pId = Number(lm.product_line_id);
+    const mId = Number(lm.media_id);
+    const existing = lineMediaMap.get(pId) ?? [];
+    existing.push(mId);
+    lineMediaMap.set(pId, existing);
+  }
+
+  const mediaIds = allLineMedia?.map((lm) => Number(lm.media_id)) ?? [];
+  let mediaRows: any[] = [];
+  if (mediaIds.length) {
+    const { data } = await admin
+      .schema("catalog")
+      .from("media")
+      .select("media_id, storage_key, bucket_name")
+      .in("media_id", mediaIds);
+    mediaRows = data || [];
+  }
+
+  const mediaMap = new Map(
+    (mediaRows || []).map((item) => [Number(item.media_id), item]),
+  );
+
+  // Get colors
+  const { data: colors } = await admin
+    .schema("catalog")
+    .from("color")
+    .select("color_id, color_name, color_code");
+
+  const colorMap = new Map(
+    (colors || []).map((item) => [Number(item.color_id), item]),
+  );
+
+  const productColorsMap = new Map<number, { name: string; hex: string }[]>();
+  for (const pl of matchedLines) {
+    const pId = Number(pl.product_line_id);
+    if (pl.color_id) {
+      const c = colorMap.get(Number(pl.color_id));
+      if (c) {
+        productColorsMap.set(pId, [{ name: c.color_name, hex: c.color_code }]);
+      }
+    }
+  }
+
+  // Get components and variants for pricing
+  const { data: components } = await admin
+    .schema("catalog")
+    .from("product_component")
+    .select("component_id, product_line_id")
+    .in("product_line_id", productLineIds);
+
+  const componentIds = (components || []).map((c) => Number(c.component_id));
+  
+  let variants: any[] = [];
+  if (componentIds.length) {
+    const { data } = await admin
+      .schema("catalog")
+      .from("product_variant")
+      .select("variant_id, component_id, status, price")
+      .in("component_id", componentIds);
+    variants = data || [];
+  }
+
+  const componentToProductLineMap = new Map<number, number>();
+  for (const c of components || []) {
+    componentToProductLineMap.set(Number(c.component_id), Number(c.product_line_id));
+  }
+
+  const productLinePricesMap = new Map<number, number[]>();
+  for (const v of variants || []) {
+    const pLineId = componentToProductLineMap.get(Number(v.component_id));
+    if (pLineId) {
+      const prices = productLinePricesMap.get(pLineId) ?? [];
+      prices.push(Number(v.price ?? 0));
+      productLinePricesMap.set(pLineId, prices);
+    }
+  }
+
+  // Map to Product Dto
+  return matchedLines.map((pl) => {
+    const pId = Number(pl.product_line_id);
+    const mediaIds = lineMediaMap.get(pId) ?? [];
+    const images = mediaIds
+      .map((mId) => {
+        const media = mediaMap.get(mId);
+        return media ? mediaUrl(media.storage_key, media.bucket_name) : null;
+      })
+      .filter((img): img is string => img != null);
+
+    return {
+      id: String(pId),
+      slug: pl.slug,
+      name: pl.line_name,
+      price: Math.min(
+        ...(productLinePricesMap.get(pId)?.filter((price) => price > 0) ?? [0]),
+      ),
+      images: images.length > 0 ? images : ["/images/placeholder.png"],
+      categorySlug: "api",
+      gender: "nu",
       description: "",
       sizes: [],
       colors: productColorsMap.get(pId) ?? [{ name: "Mặc định", hex: "#111111" }],

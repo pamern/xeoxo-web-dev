@@ -42,6 +42,7 @@ type VariantRecord = {
 type ComponentRecord = {
   component_id: number;
   product_line_id: number;
+  component_type?: string | null;
 };
 
 type ProductLineRecord = {
@@ -49,6 +50,16 @@ type ProductLineRecord = {
   slug: string;
   line_name: string;
   color_id: number | null;
+};
+
+type LineCategoryDepartmentRecord = {
+  product_line_id: number;
+  category_id: number;
+};
+
+type CategoryDepartmentRecord = {
+  category_id: number;
+  department: string | null;
 };
 
 type SizeOptionRecord = {
@@ -83,6 +94,18 @@ const NON_PURCHASABLE_VARIANT_STATUSES = new Set(["INACTIVE", "COMING_SOON"]);
 
 function toNumber(value: unknown) {
   return typeof value === "number" ? value : Number(value ?? 0);
+}
+
+function getDisplaySizeName(sizeName: string | null | undefined) {
+  const normalized = sizeName?.trim();
+  return normalized ? normalized : "Freesize";
+}
+
+function mapDepartmentToGender(department: string | null | undefined) {
+  const normalized = department?.trim().toUpperCase();
+  if (normalized === "MEN") return "nam" as const;
+  if (normalized === "KIDS") return "tre-em" as const;
+  return "nu" as const;
 }
 
 export function isVariantPurchasableStatus(status: string | null | undefined) {
@@ -389,7 +412,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
     admin,
     "catalog",
     "product_component",
-    "component_id, product_line_id",
+    "component_id, product_line_id, component_type",
     "component_id",
     allComponentIds,
   );
@@ -438,6 +461,34 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
     lineMedia.map((record) => record.media_id),
   );
 
+  const { data: lineCategories, error: lineCategoryError } = productLines.length
+    ? await admin
+      .schema("catalog")
+      .from("line_category")
+      .select("product_line_id, category_id")
+      .in("product_line_id", productLines.map((line) => line.product_line_id))
+    : { data: [], error: null };
+
+  if (lineCategoryError) {
+    throw new Error(lineCategoryError.message);
+  }
+
+  const categoryIds = Array.from(
+    new Set(
+      ((lineCategories ?? []) as LineCategoryDepartmentRecord[])
+        .map((record) => record.category_id)
+        .filter((id): id is number => typeof id === "number"),
+    ),
+  );
+  const categories = await fetchRecordsByIds<CategoryDepartmentRecord>(
+    admin,
+    "catalog",
+    "category",
+    "category_id, department",
+    "category_id",
+    categoryIds,
+  );
+
   const variantMap = new Map(variants.map((variant) => [variant.variant_id, variant]));
   const componentMap = new Map(
     components.map((component) => [component.component_id, component]),
@@ -448,7 +499,18 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
   const sizeMap = new Map(sizes.map((size) => [size.size_option_id, size]));
   const colorMap = new Map(colors.map((color) => [color.color_id, color]));
   const mediaMap = new Map(media.map((item) => [item.media_id, item]));
+  const categoryMap = new Map(categories.map((category) => [category.category_id, category]));
+  const genderByLine = new Map<number, "nam" | "nu" | "tre-em">();
   const mediaByLine = new Map<number, ProductLineMediaRecord[]>();
+
+  for (const record of (lineCategories ?? []) as LineCategoryDepartmentRecord[]) {
+    if (!genderByLine.has(record.product_line_id)) {
+      genderByLine.set(
+        record.product_line_id,
+        mapDepartmentToGender(categoryMap.get(record.category_id)?.department),
+      );
+    }
+  }
 
   for (const record of lineMedia) {
     const list = mediaByLine.get(record.product_line_id) ?? [];
@@ -467,7 +529,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
     const { data: allComps, error: compsErr } = await admin
       .schema("catalog")
       .from("product_component")
-      .select("component_id, product_line_id")
+      .select("component_id, product_line_id, component_type")
       .in("product_line_id", productLineIds);
 
     if (compsErr) {
@@ -539,16 +601,19 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
       lineMediaRecords.sort((a, b) => a.display_order - b.display_order)[0];
     const thumbnail = mainMedia
       ? mediaUrl(
-          mediaMap.get(mainMedia.media_id)?.storage_key,
-          mediaMap.get(mainMedia.media_id)?.bucket_name,
-        )
+        mediaMap.get(mainMedia.media_id)?.storage_key,
+        mediaMap.get(mainMedia.media_id)?.bucket_name,
+      )
       : "/images/placeholder.png";
     const color = productLine?.color_id
       ? colorMap.get(productLine.color_id)?.color_name ?? ""
       : "";
-    const size = variant?.size_option_id
-      ? sizeMap.get(variant.size_option_id)?.size_name ?? ""
-      : "";
+    const itemType = (item.item_type as "STANDARD" | "CUSTOMIZED") || "STANDARD";
+    const size = itemType === "CUSTOMIZED"
+      ? "Customize"
+      : variant?.size_option_id
+        ? getDisplaySizeName(sizeMap.get(variant.size_option_id)?.size_name)
+        : getDisplaySizeName(null);
     const unitPrice = toNumber(item.unit_price);
     const quantity = toNumber(item.quantity);
 
@@ -560,26 +625,30 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
 
     const availableVariants = allVariants
       .filter((v) => siblingComponentIds.includes(v.component_id))
+      .filter((v) => isVariantAvailable(
+        v.status,
+        allStockMap.get(Number(v.variant_id)) ?? 0,
+      ))
       .map((v) => {
-        const sizeName = v.size_option_id ? allSizeMap.get(v.size_option_id) ?? "" : "";
+        const sizeName = v.size_option_id
+          ? getDisplaySizeName(allSizeMap.get(v.size_option_id))
+          : getDisplaySizeName(null);
         return {
           variant_id: Number(v.variant_id),
           size_name: sizeName,
           color_name: color,
           price: toNumber(v.price),
-          is_available: isVariantAvailable(
-            v.status,
-            allStockMap.get(Number(v.variant_id)) ?? 0,
-          ),
+          is_available: true,
         };
       });
-
-    const itemType = (item.item_type as "STANDARD" | "CUSTOMIZED") || "STANDARD";
 
     return {
       cart_item_id: item.cart_item_id,
       variant_id: item.variant_id,
       product_line_id: productLine?.product_line_id ?? 0,
+      component_id: componentId ?? null,
+      component_type: component?.component_type ?? null,
+      gender: productLine ? genderByLine.get(productLine.product_line_id) ?? "nu" : "nu",
       slug: productLine?.slug ?? "",
       name: productLine?.line_name ?? "",
       thumbnail,
@@ -588,7 +657,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
       quantity,
       unit_price: unitPrice,
       line_total: unitPrice * quantity,
-      available_variants: itemType === "STANDARD" ? availableVariants : [],
+      available_variants: availableVariants,
       item_type: itemType,
       customization_id: item.customization_id,
       surcharge_percent: customization?.surcharge_percent,

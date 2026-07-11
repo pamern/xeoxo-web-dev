@@ -6,6 +6,7 @@ import type {
 } from "@/types/appointment-lookup.types";
 import type { AppointmentDto, CreateAppointmentValues } from "@/types/appointment.types";
 import type { ApiResponse as RouteApiResponse } from "@/lib/api-response";
+import type { SelectOption } from "@/components/molecules/SelectField";
 
 export type CancelAppointmentValues = {
   contact?: string;
@@ -64,6 +65,17 @@ export const appointmentService = {
       response,
       "Không thể hủy lịch hẹn.",
     );
+  },
+
+  async getBranches(): Promise<SelectOption[]> {
+    const response = await fetch("/api/v1/branches");
+    const result = (await response.json()) as RouteApiResponse<SelectOption[]>;
+
+    if (!result.success) {
+      throw new Error(result.message);
+    }
+
+    return result.data!;
   },
 };
 

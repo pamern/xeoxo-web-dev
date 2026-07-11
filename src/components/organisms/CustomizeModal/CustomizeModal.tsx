@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent } from "react";
 import Image from "next/image";
 import { Button } from "@/components/atoms/Button";
 import {
@@ -15,6 +15,7 @@ import type { Gender } from "@/types/product.types";
 import {
   validateMeasurementField,
   validateMeasurements,
+  detectMeasurementWarnings,
   type MeasurementErrors,
 } from "@/validations/size-recommendation.schema";
 import { saveProfile } from "@/services/measurement.service";
@@ -71,9 +72,20 @@ export function CustomizeModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
+  const timersRef = useRef<Record<string, NodeJS.Timeout>>({});
+  const normalizedValuesRef = useRef<MeasurementValues>(values);
   const fields = getMeasurementFields(gender, componentType);
   const genderLabel = gender === "nam" ? "Nam" : "Nữ";
   const customPrice = basePrice * 1.2;
+
+  useEffect(() => {
+    return () => {
+      // Clean up timers on unmount
+      Object.values(timersRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
   useEffect(() => {
     setIsSaved(hasPersistedMeasurements);
@@ -107,20 +119,70 @@ export function CustomizeModal({
     setIsSaved(false);
     setSaveAsDefault(false);
     setSaveMessage(null);
-    if (touched[key]) {
-      setErrors((current) => ({
-        ...current,
-        [key]: validateMeasurementField(key, value, gender, componentType),
-      }));
+
+    // Hide error immediately while typing
+    setErrors((current) => {
+      const nextErr = { ...current };
+      delete nextErr[key];
+      return nextErr;
+    });
+
+    if (timersRef.current[key]) {
+      clearTimeout(timersRef.current[key]);
     }
+
+    // Set 650ms debounce
+    timersRef.current[key] = setTimeout(() => {
+      const error = validateMeasurementField(key, value, gender, componentType);
+      setErrors((current) => {
+        if (error) {
+          return { ...current, [key]: error };
+        } else {
+          const nextErr = { ...current };
+          delete nextErr[key];
+          return nextErr;
+        }
+      });
+    }, 650);
+  }
+
+  function handleBlur(key: MeasurementKey) {
+    if (timersRef.current[key]) {
+      clearTimeout(timersRef.current[key]);
+    }
+
+    // Normalize value
+    const normalizedVal = values[key].trim().replace(",", ".");
+    setValues((current) => ({ ...current, [key]: normalizedVal }));
+
+    setTouched((current) => ({ ...current, [key]: true }));
+    const error = validateMeasurementField(key, normalizedVal, gender, componentType);
+    setErrors((current) => {
+      if (error) {
+        return { ...current, [key]: error };
+      } else {
+        const nextErr = { ...current };
+        delete nextErr[key];
+        return nextErr;
+      }
+    });
   }
 
   async function handleSaveToDbOrLocal() {
     setSaveMessage(null);
     setIsSaving(true);
     try {
+      // Normalize all values before saving
+      const normalizedValues = { ...values };
+      fields.forEach((field) => {
+        if (values[field.key]) {
+          normalizedValues[field.key] = values[field.key].trim().replace(",", ".");
+        }
+      });
+      setValues(normalizedValues);
+
       const filteredValues = Object.fromEntries(
-        fields.map((field) => [field.key, values[field.key] ?? ""])
+        fields.map((field) => [field.key, normalizedValues[field.key] ?? ""])
       ) as MeasurementValues;
 
       const parsed = parseMeasurementValues(filteredValues);
@@ -144,22 +206,68 @@ export function CustomizeModal({
     }
   }
 
+  async function executeSubmit(normalizedValues = values) {
+    try {
+      setSubmitted(true);
+      const filteredValues = Object.fromEntries(
+        fields.map((field) => [field.key, normalizedValues[field.key] ?? ""])
+      ) as MeasurementValues;
+
+      await onSubmit(filteredValues, note, canPersistMeasurements && saveAsDefault);
+    } catch (e) {
+      console.error("Error in CustomizeModal onSubmit:", e);
+      setSubmitted(false);
+    }
+  }
+
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateMeasurements(values, gender, componentType);
+
+    // Clear all timers
+    Object.values(timersRef.current).forEach(clearTimeout);
+
+    // Normalize all fields before submission
+    const normalizedValues = { ...values };
+    fields.forEach((field) => {
+      if (values[field.key]) {
+        normalizedValues[field.key] = values[field.key].trim().replace(",", ".");
+      }
+    });
+    setValues(normalizedValues);
+    normalizedValuesRef.current = normalizedValues;
+
+    const nextErrors = validateMeasurements(normalizedValues, gender, componentType);
     setTouched(Object.fromEntries(fields.map((field) => [field.key, true])));
     setErrors(nextErrors);
-    if (Object.keys(nextErrors).length > 0) return;
-    setSubmitted(true);
 
-    const filteredValues = Object.fromEntries(
-      fields.map((field) => [field.key, values[field.key] ?? ""])
-    ) as MeasurementValues;
+    // Separate blocking errors from range warnings
+    const blockingErrors: MeasurementErrors = {};
+    const warningFields: string[] = [];
+    Object.entries(nextErrors).forEach(([k, err]) => {
+      if (err === "Giá trị có thể chưa chính xác. Vui lòng kiểm tra lại số đo và đơn vị.") {
+        warningFields.push(k);
+      } else if (err) {
+        blockingErrors[k as MeasurementKey] = err;
+      }
+    });
 
-    onSubmit(filteredValues, note, canPersistMeasurements && saveAsDefault);
+    if (Object.keys(blockingErrors).length > 0) return;
+
+    // Check logic warnings & range warnings
+    const warning = detectMeasurementWarnings(normalizedValues, gender, componentType);
+    if (warning || warningFields.length > 0) {
+      setWarningMessage(
+        warning || "Một số số đo có sự chênh lệch đáng kể. Vui lòng kiểm tra lại."
+      );
+      return;
+    }
+
+    executeSubmit(normalizedValues);
   }
 
   function handleClear() {
+    // Clear all timers
+    Object.values(timersRef.current).forEach(clearTimeout);
     setValues(EMPTY_VALUES);
     setErrors({});
     setTouched({});
@@ -167,6 +275,7 @@ export function CustomizeModal({
     setSaveAsDefault(false);
     setIsSaved(false);
     setSaveMessage(null);
+    setWarningMessage(null);
     onValuesChange?.(EMPTY_VALUES);
     onClearMeasurements?.();
   }
@@ -274,37 +383,39 @@ export function CustomizeModal({
             >
               <Image src="/icons/xoa.svg" alt="Xóa" width={16} height={16} className="transition group-hover:invert" />
             </button>
-            <button
-              type="button"
-              onClick={handleSaveToDbOrLocal}
-              disabled={isSaving}
-              title={isSaved ? "Đã lưu số đo" : "Lưu lại số đo"}
-              className={cn(
-                "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-white focus:outline-none",
-                isSaved
-                  ? "border-black/40"
-                  : ""
-              )}
-            >
-              {isSaving ? (
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-              ) : isSaved ? (
-                <SavedIcon />
-              ) : (
-                <SaveIcon />
-              )}
-              {saveMessage && (
-                <span
-                  role="status"
-                  className={cn(
-                    "absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[6px] border bg-white px-2.5 py-1 text-xs font-semibold shadow-sm",
-                    isSaved ? "border-black/20 text-black" : "border-red-200 text-red-600",
-                  )}
-                >
-                  {isSaved ? "Đã lưu" : saveMessage}
-                </span>
-              )}
-            </button>
+            {canPersistMeasurements && (
+              <button
+                type="button"
+                onClick={handleSaveToDbOrLocal}
+                disabled={isSaving}
+                title={isSaved ? "Đã lưu số đo" : "Lưu lại số đo"}
+                className={cn(
+                  "relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-white focus:outline-none",
+                  isSaved
+                    ? "border-black/40"
+                    : ""
+                )}
+              >
+                {isSaving ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                ) : isSaved ? (
+                  <SavedIcon />
+                ) : (
+                  <SaveIcon />
+                )}
+                {saveMessage && (
+                  <span
+                    role="status"
+                    className={cn(
+                      "absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[6px] border bg-white px-2.5 py-1 text-xs font-semibold shadow-sm",
+                      isSaved ? "border-black/20 text-black" : "border-red-200 text-red-600",
+                    )}
+                  >
+                    {isSaved ? "Đã lưu" : saveMessage}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -343,6 +454,33 @@ export function CustomizeModal({
           </div>
         </form>
       </section>
+      {warningMessage && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl text-center">
+            <h4 className="text-lg font-bold text-black mb-3">Xác nhận số đo</h4>
+            <p className="text-sm text-foreground/80 mb-6">{warningMessage}</p>
+            <div className="flex justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => setWarningMessage(null)}
+                className="rounded-full px-6 h-10 text-sm font-bold border border-black text-black hover:bg-black/5 transition-colors"
+              >
+                Kiểm tra lại
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setWarningMessage(null);
+                  executeSubmit(normalizedValuesRef.current);
+                }}
+                className="rounded-full px-6 h-10 text-sm font-bold bg-black text-white hover:bg-black/85 transition-colors"
+              >
+                Xác nhận số đo đúng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

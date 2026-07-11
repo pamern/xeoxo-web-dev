@@ -18,6 +18,8 @@ import { cartService } from "@/services/cart.service";
 import { createCustomizationRequest } from "@/services/customization.service";
 import { saveProfile } from "@/services/measurement.service";
 import { useAuth } from "@/hooks/useAuth";
+import { appointmentService } from "@/services/appointment.service";
+import type { SelectOption } from "@/components/molecules/SelectField";
 import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
 import type { MeasurementValues } from "@/features/size-recommendation/size-recommendation";
 import type { CartItemDto } from "@/types/cart.types";
@@ -29,19 +31,15 @@ import type {
 import type { Product, ProductColor } from "@/types/product.types";
 
 const APPOINTMENT_BRANCHES = [
-  { label: "06 Nam Ngư, Phường Hoàn Kiếm, Hà Nội.", value: "1" },
-  { label: "43 Đặng Thị Nhu, Phường Sài Gòn, TP. Hồ Chí Minh.", value: "2" },
+  { label: "XEOXO Test Branch", value: "1" },
 ];
 
 const APPOINTMENT_TIME_SLOTS = [
-  { id: "08:00", label: "8h00 - 9h00" },
-  { id: "09:00", label: "9h00 - 10h00" },
-  { id: "10:00", label: "10h00 - 11h00" },
-  { id: "11:00", label: "11h00 - 12h00" },
-  { id: "13:00", label: "13h00 - 14h00" },
-  { id: "14:00", label: "14h00 - 15h00" },
-  { id: "15:00", label: "15h00 - 16h00" },
-  { id: "16:00", label: "16h00 - 17h00" },
+  { id: "09:00", label: "09:00" },
+  { id: "10:30", label: "10:30" },
+  { id: "14:00", label: "14:00" },
+  { id: "15:30", label: "15:30" },
+  { id: "17:00", label: "17:00" },
 ];
 
 type ComponentSelection = {
@@ -87,10 +85,27 @@ export function ProductDetail({
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isSizeRecommendationOpen, setIsSizeRecommendationOpen] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [branches, setBranches] = useState<SelectOption[]>([]);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [showPurchasePanel, setShowPurchasePanel] = useState(false);
   const [activeCustomizeComponentId, setActiveCustomizeComponentId] =
     useState<number | null>(null);
+
+  useEffect(() => {
+    appointmentService.getBranches()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setBranches(data);
+        } else {
+          setBranches(APPOINTMENT_BRANCHES);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load branches:", err);
+        setBranches(APPOINTMENT_BRANCHES);
+      });
+  }, []);
+
   const [componentSelections, setComponentSelections] = useState<
     Record<number, ComponentSelection>
   >({});
@@ -119,10 +134,6 @@ export function ProductDetail({
   } = useSharedMeasurements(product.gender);
   const canPersistMeasurements = isAuthenticated;
 
-  function openAppointmentModal() {
-    setIsAppointmentOpen(true);
-  }
-
   const components = apiProduct.components ?? [];
   const isMultiComponent = components.length > 1;
   const selectedVariant = apiProduct.sizes.find(
@@ -136,11 +147,6 @@ export function ProductDetail({
           (component) => component.component_id === activeCustomizeComponentId,
         );
   const isCustomized = size === "CUSTOM";
-  const isAnyOverlayOpen =
-    isSizeGuideOpen ||
-    isSizeRecommendationOpen ||
-    isAppointmentOpen ||
-    isCustomizeOpen;
   const customBasePrice =
     defaultComponent?.min_price ?? apiProduct.price ?? product.salePrice ?? product.price;
   const customPrice = customBasePrice * 1.2;
@@ -180,7 +186,7 @@ export function ProductDetail({
       }
 
       const rect = descriptionSection.getBoundingClientRect();
-      const shouldShow = !isAnyOverlayOpen && rect.top <= window.innerHeight;
+      const shouldShow = rect.top <= 0;
       setShowPurchasePanel(shouldShow);
       document.body.classList.toggle("pdp-follow-bar-active", shouldShow);
     }
@@ -194,15 +200,7 @@ export function ProductDetail({
       window.removeEventListener("scroll", syncFollowBarState);
       window.removeEventListener("resize", syncFollowBarState);
     };
-  }, [isAnyOverlayOpen, isMultiComponent]);
-
-  useEffect(() => {
-    document.body.classList.toggle("pdp-overlay-open", isAnyOverlayOpen);
-
-    return () => {
-      document.body.classList.remove("pdp-overlay-open");
-    };
-  }, [isAnyOverlayOpen]);
+  }, [isMultiComponent]);
 
   async function handleAdd() {
     if (isCustomized) {
@@ -242,11 +240,10 @@ export function ProductDetail({
         window.dispatchEvent(new Event("xeoxo-cart-updated"));
         setTempCustomization(null); // Clear temp values after successfully adding to cart
       } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Không thể thêm sản phẩm may đo vào giỏ.",
-        );
+        const msg = error instanceof Error ? error.message : "";
+        if (!msg.toLowerCase().includes("trong kho") && !msg.toLowerCase().includes("hết hàng")) {
+          setErrorMessage(msg || "Không thể thêm sản phẩm may đo vào giỏ.");
+        }
       } finally {
         setIsAdding(false);
       }
@@ -273,11 +270,10 @@ export function ProductDetail({
       if (addedItem) showAddedToCart(addedItem);
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Không thể thêm sản phẩm vào giỏ.",
-      );
+      const msg = error instanceof Error ? error.message : "";
+      if (!msg.toLowerCase().includes("trong kho") && !msg.toLowerCase().includes("hết hàng")) {
+        setErrorMessage(msg || "Không thể thêm sản phẩm vào giỏ.");
+      }
     } finally {
       setIsAdding(false);
     }
@@ -397,11 +393,10 @@ export function ProductDetail({
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
       setTempComponentCustomizations({}); // Clear temporary customizations after successfully adding all
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Không thể thêm các thành phần đã chọn vào giỏ.",
-      );
+      const msg = error instanceof Error ? error.message : "";
+      if (!msg.toLowerCase().includes("trong kho") && !msg.toLowerCase().includes("hết hàng")) {
+        setErrorMessage(msg || "Không thể thêm các thành phần đã chọn vào giỏ.");
+      }
     } finally {
       setIsAdding(false);
     }
@@ -468,7 +463,7 @@ export function ProductDetail({
   }
 
   return (
-    <div className="relative grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(340px,0.95fr)] lg:items-start xl:gap-12 2xl:gap-16">
+    <div className="relative grid gap-8 lg:grid-cols-[minmax(0,728px)_minmax(0,714px)] lg:items-start lg:justify-between xl:gap-20">
       {isSizeGuideOpen && (
         <SizeGuideModal
           gender={product.gender}
@@ -488,7 +483,7 @@ export function ProductDetail({
           onValuesChange={updateSharedMeasurementValues}
           onOpenAppointment={() => {
             setIsSizeRecommendationOpen(false);
-            openAppointmentModal();
+            setIsAppointmentOpen(true);
           }}
           onOpenCustomize={() => {
             setIsSizeRecommendationOpen(false);
@@ -499,17 +494,18 @@ export function ProductDetail({
       )}
       {isAppointmentOpen && (
         <div
-          className="fixed inset-0 z-[160] flex min-h-dvh items-start justify-center overflow-y-auto bg-black/40 px-3 py-5 backdrop-blur-md sm:px-4 sm:py-5"
+          className="fixed inset-0 z-[130] flex items-center justify-center overflow-y-auto bg-black/50 p-3 backdrop-blur-[1px] sm:p-5"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setIsAppointmentOpen(false);
           }}
         >
-          <div className="flex w-full justify-center">
+          <div className="w-full max-w-[1240px]">
             <AppointmentModal
-              branches={APPOINTMENT_BRANCHES}
+              branches={branches.length > 0 ? branches : APPOINTMENT_BRANCHES}
               timeSlots={APPOINTMENT_TIME_SLOTS}
               productLineId={apiProduct.product_line_id}
               onClose={() => setIsAppointmentOpen(false)}
+              className="max-w-[1240px]"
             />
           </div>
         </div>
@@ -535,7 +531,7 @@ export function ProductDetail({
           onSubmit={handleCustomizeSubmit}
         />
       )}
-      {!isMultiComponent && showPurchasePanel && !isAnyOverlayOpen && (
+      {!isMultiComponent && showPurchasePanel && (
         <SingleComponentPurchasePanel
           color={color}
           image={product.images[0]}
@@ -575,9 +571,9 @@ export function ProductDetail({
 
       <ProductImageGallery images={product.images} alt={product.name} />
 
-      <aside className="flex min-w-0 flex-col gap-5 lg:gap-6">
+      <aside className="flex flex-col lg:min-h-[650px] lg:justify-between">
         <section className="border-b border-black pb-5">
-          <h1 className="text-[2.25rem] font-bold leading-tight">
+          <h1 className="text-[28px] font-bold leading-tight md:text-[36px]">
             {product.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
@@ -591,7 +587,7 @@ export function ProductDetail({
 
         <div className="py-5">
           <div className="flex flex-wrap items-end gap-3">
-            <span className="text-[2.25rem] font-bold leading-none">
+            <span className="text-heading-section font-bold leading-none md:text-[36px]">
               {formatPrice(price)}
             </span>
             {product.salePrice && (
@@ -624,7 +620,7 @@ export function ProductDetail({
             isAdding={isAdding}
             selections={componentSelections}
             onAdd={handleMultiAdd}
-            onOpenAppointment={openAppointmentModal}
+            onOpenAppointment={() => setIsAppointmentOpen(true)}
             onOpenCustomize={openComponentCustomize}
             onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
             onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
@@ -645,7 +641,7 @@ export function ProductDetail({
                 }
                 onOpenSizeGuide={() => setIsSizeGuideOpen(true)}
                 onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
-                onOpenAppointment={openAppointmentModal}
+                onOpenAppointment={() => setIsAppointmentOpen(true)}
                 onOpenCustomize={() => {
                   if (size === "CUSTOM") {
                     setSize("");
@@ -705,7 +701,7 @@ export function ProductDetail({
         </div>
 
         <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
-          <div className="grid gap-x-6 gap-y-3 rounded-[10px] bg-[#ededed] px-6 py-4 sm:grid-cols-2">
+          <div className="grid gap-x-10 gap-y-3 rounded-[10px] bg-[#ededed] px-7 py-4 sm:grid-cols-2">
             <ProductService
               icon="/icons/freeship.svg"
               title="Freeship"
@@ -734,7 +730,7 @@ export function ProductDetail({
             <h2 className="mb-3 text-lg font-bold uppercase">
               Có thể phù hợp với bạn
             </h2>
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
+            <div className="grid grid-cols-3 gap-4">
               {relatedProducts.slice(0, 3).map((item) => (
                 <CompactProduct key={item.id} product={item} />
               ))}
@@ -793,9 +789,6 @@ function SingleComponentPurchasePanel({
   );
   const hasAvailableVariant = regularSizes.some((option) => option.is_available);
   const customSelected = selectedSize === "CUSTOM";
-  const selectedSizeLabel = customSelected
-  ? "Customize"
-  : selectedSize || "Chưa chọn";
   const selectedVariant = regularSizes.find(
     (option) => getDisplaySizeName(option) === selectedSize,
   );
@@ -803,10 +796,10 @@ function SingleComponentPurchasePanel({
     isAdding || (!customSelected && !selectedVariant?.is_available);
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_6px_18px_rgba(0,0,0,0.06)] lg:block">
-      <div className="mx-auto grid min-h-[72px] max-w-site grid-cols-[minmax(180px,0.95fr)_minmax(220px,1fr)_minmax(120px,auto)_minmax(200px,auto)] items-center gap-3 px-4 py-2 md:px-6 xl:grid-cols-[minmax(220px,1fr)_minmax(280px,1fr)_minmax(140px,auto)_minmax(260px,auto)] xl:px-10">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="relative h-[58px] w-[44px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
+    <div className="fixed inset-x-0 top-0 z-[95] hidden border-y border-[#d4d4d4] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)] lg:block">
+      <div className="mx-auto grid min-h-[96px] max-w-site grid-cols-[minmax(240px,1.1fr)_minmax(280px,1fr)_minmax(130px,0.52fr)_minmax(220px,0.82fr)] items-start gap-4 px-3 py-3 xl:px-[80px]">
+        <div className="flex min-w-0 items-start gap-3 self-start">
+          <div className="relative h-[72px] w-[56px] shrink-0 overflow-hidden rounded-[2px] bg-secondary">
             <Image
               src={image}
               alt={productName}
@@ -816,15 +809,14 @@ function SingleComponentPurchasePanel({
             />
           </div>
           <div className="min-w-0">
-            <h3 className="line-clamp-1 text-[1rem] font-bold leading-tight">{productName}</h3>
-            <p className="mt-0.5 text-[0.875rem] font-bold leading-none">{formatPrice(price)}</p>
+            <h3 className="line-clamp-1 text-[16px] font-bold leading-tight">{productName}</h3>
+            <p className="mt-0.5 text-[14px] font-bold leading-none">{formatPrice(price)}</p>
           </div>
         </div>
 
-        <div className="min-w-0 border-l border-[#d9d9d9] pl-4">
-          <div className="flex items-center gap-2 text-[0.8125rem]">
-            <span className="text-black/55">Kích thước:</span>
-            <span className="font-bold">{selectedSizeLabel}</span>
+        <div className="min-w-0 self-start pl-4">
+          <div className="flex items-center gap-2 text-[13px]">
+            <span className="text-black">Kích thước</span>
           </div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {regularSizes.map((option) => (
@@ -835,7 +827,7 @@ function SingleComponentPurchasePanel({
                 disabled={!option.is_available}
                 aria-pressed={selectedSize === getDisplaySizeName(option)}
                 className={cn(
-                  "h-[30px] min-w-[44px] rounded-pill border px-3 text-[0.6875rem] font-bold transition-colors",
+                  "h-[30px] min-w-[44px] rounded-[4px] border border-black px-3 text-[11px] font-bold transition-colors",
                   !option.is_available &&
                     "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
                   selectedSize === getDisplaySizeName(option) && option.is_available
@@ -878,18 +870,18 @@ function SingleComponentPurchasePanel({
           <button
             type="button"
             onClick={onOpenSizeRecommendation}
-            className="mt-1.5 text-[0.6875rem] font-bold text-[#2748d9] underline underline-offset-2"
+            className="mt-1.5 text-[10px] font-bold text-[#2748d9] underline underline-offset-2"
           >
             Hướng dẫn chọn size
           </button>
         </div>
 
-        <div className="min-w-0 border-l border-[#d9d9d9] pl-4">
-          <div className="flex flex-nowrap items-center gap-2 text-[0.8125rem] whitespace-nowrap">
-            <span className="whitespace-nowrap text-black/55">Màu sắc:</span>
+        <div className="min-w-0 self-start border-l border-[#d9d9d9] pl-4">
+          <div className="flex flex-nowrap items-center gap-2 text-[13px] whitespace-nowrap">
+            <span className="whitespace-nowrap text-black">Màu sắc</span>
           </div>
           <span
-            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-pill border border-black/10 px-4 text-[0.6875rem] font-bold text-white"
+            className="mt-2 inline-flex h-[30px] max-w-full whitespace-nowrap items-center justify-center rounded-[4px] border border-black px-4 text-[11px] font-bold text-white"
             style={{
               backgroundColor: color.hex,
               color: getReadableTextColor(color.hex),
@@ -899,8 +891,8 @@ function SingleComponentPurchasePanel({
           </span>
         </div>
 
-        <div className="flex min-w-0 items-center justify-end gap-3 border-l border-[#d9d9d9] pl-4">
-          <div className="flex h-[30px] items-center gap-4 rounded-full px-1 text-[1.25rem] leading-none">
+        <div className="flex self-start items-start justify-end gap-4 border-l border-[#d9d9d9] pl-5 pt-[22px]">
+          <div className="flex h-[30px] items-center gap-4 rounded-full px-1 text-[20px] leading-none">
             <button
               type="button"
               aria-label="Giảm số lượng"
@@ -925,7 +917,7 @@ function SingleComponentPurchasePanel({
             onClick={onAdd}
             variant="cart"
             disabled={addDisabled}
-            className="h-12 min-w-[220px] rounded-full bg-black px-8 text-[1rem] font-bold text-white hover:bg-black/85"
+            className="h-[30px] min-w-[150px] self-center rounded-full bg-black px-6 text-[14px] font-bold text-white hover:bg-black/85"
           >
             Thêm vào giỏ
           </Button>
@@ -967,16 +959,7 @@ function MultiComponentPurchaseCompact({
   return (
     <div className="mt-5 flex flex-col gap-4">
       <div className="bg-white py-3">
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold text-black">Màu sắc</p>
-            <span
-              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-[4px] border border-black px-5 text-sm font-bold"
-              style={{ backgroundColor: color.hex, color: getReadableTextColor(color.hex) }}
-            >
-              {color.name}
-            </span>
-          </div>
+        <div className="mb-3 flex items-end justify-end">
           <button
             type="button"
             onClick={onOpenSizeGuide}
@@ -1075,7 +1058,7 @@ function ComponentPurchaseCardCompact({
   const title = component.component_name || component.component_type;
 
   return (
-    <section className="grid gap-3 border-t-2 border-primary/80 py-3 last:border-b-2 sm:grid-cols-[minmax(88px,104px)_minmax(0,1fr)_auto] sm:items-center">
+    <section className="py-3">
       <div className="min-w-0">
         <p className="truncate text-sm font-bold leading-tight">{title}</p>
         <p className="mt-1 text-sm font-bold leading-tight">
@@ -1085,63 +1068,70 @@ function ComponentPurchaseCardCompact({
             : selectedVariant?.price ?? component.min_price,
           )}
         </p>
-        <p className="mt-1 text-[0.6875rem] font-semibold text-black/45">
-          {isCustomSelected
-            ? "Customize"
-            : selectedSize
-              ? `Size ${selectedSize}`
-              : "Chọn size"}
-        </p>
-      </div>
-
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <span className="mr-1 text-xs font-bold text-black/55">Chọn size</span>
-        {component.variants.map((option) => (
-          <button
-            key={option.variant_id}
-            type="button"
-            onClick={() => onSelectVariant(option)}
-            disabled={!option.is_available}
-            aria-pressed={selection?.variantId === option.variant_id}
-            className={cn(
-              "h-9 min-w-[42px] rounded-pill border-[2px] px-3 text-[0.6875rem] font-bold transition-colors",
-              !option.is_available &&
-                "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-              selection?.variantId === option.variant_id && option.is_available
-                ? "border-primary bg-primary text-primary-foreground"
-                : option.is_available &&
-                  "border-input bg-white hover:border-primary hover:bg-primary hover:text-primary-foreground",
-            )}
-          >
-            {option.size_name}
-          </button>
-        ))}
-        <Button
-          type="button"
-          onClick={onOpenCustomize}
-          disabled={!hasAvailableVariant}
-          variant="customPill"
-          size="custom"
-          iconSrc="/icons/custom.svg"
-          iconSize={22}
-          iconClassName={cn("h-5 w-5 object-contain", isCustomSelected && "invert")}
-          className={cn(
-            "h-9 min-w-[96px] gap-1 border-[2px] px-2 text-[0.6875rem]",
-            isCustomSelected && "border-primary bg-primary text-primary-foreground",
-            !hasAvailableVariant &&
-              "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50",
-          )}
-        >
-          Custom
-        </Button>
-      </div>
-
-      <div className="justify-self-start sm:justify-self-end">
-        <QuantityPill
-          value={quantity}
-          max={maxQuantity}
-          onChange={onQuantityChange}
-        />
+        {component.color && (
+          <div className="mt-3">
+            <p className="text-xs font-bold text-black">Màu sắc</p>
+            <span
+              className="mt-1 inline-flex h-[30px] min-w-[120px] items-center justify-center rounded-[4px] border border-black px-4 text-xs font-bold"
+              style={{
+                backgroundColor: component.color.color_code,
+                color: getReadableTextColor(component.color.color_code),
+              }}
+            >
+              {component.color.color_name}
+            </span>
+          </div>
+        )}
+        <p className="mt-3 text-xs font-bold text-black">Kích thước</p>
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_88px] sm:items-center">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            {component.variants.map((option) => (
+              <button
+                key={option.variant_id}
+                type="button"
+                onClick={() => onSelectVariant(option)}
+                disabled={!option.is_available}
+                aria-pressed={selection?.variantId === option.variant_id}
+                className={cn(
+                  "h-[26px] min-w-[42px] rounded-[4px] border border-black px-3 text-[11px] font-bold transition-colors",
+                  !option.is_available &&
+                    "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
+                  selection?.variantId === option.variant_id && option.is_available
+                    ? "bg-black text-white"
+                    : option.is_available &&
+                      "bg-white hover:bg-black hover:text-white",
+                )}
+              >
+                {getDisplaySizeName(option)}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={onOpenCustomize}
+              disabled={!hasAvailableVariant}
+              aria-label="Custom"
+              aria-pressed={isCustomSelected}
+              className={cn(
+                "h-[26px] min-w-[96px] rounded-[4px] border border-black px-2 text-[11px] font-bold transition-colors",
+                isCustomSelected && "bg-black text-white",
+                !hasAvailableVariant &&
+                  "cursor-not-allowed bg-[#ededed] text-[#a3a3a3]",
+                hasAvailableVariant && !isCustomSelected &&
+                  "bg-white hover:bg-black hover:text-white",
+              )}
+            >
+              Custom
+            </button>
+          </div>
+          <div className="justify-self-start sm:justify-self-end">
+            <QuantityPill
+              value={quantity}
+              max={maxQuantity}
+              onChange={onQuantityChange}
+              compact
+            />
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -1404,9 +1394,7 @@ function ComponentPurchaseCard({
         <p className="text-sm text-black/55">
           {isCustomSelected
             ? "Đã lưu yêu cầu Customize cho thành phần này."
-            : selectedVariant
-              ? `Tồn kho size ${getDisplaySizeName(selectedVariant)}: ${selectedVariant.stock_quantity ?? 0}`
-              : ""}
+            : ""}
         </p>
       </div>
     </section>
@@ -1414,21 +1402,64 @@ function ComponentPurchaseCard({
 }
 
 function ProductNotice({ icon, title }: { icon: string; title: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="flex min-h-[60px] items-center justify-between gap-4 rounded-[10px] border border-border bg-[#fffdfd] px-5 py-3">
-      <span className="flex items-center gap-4">
-        <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d]">
-          <Image src={icon} alt="" width={22} height={22} aria-hidden />
+    <div className="flex flex-col rounded-[10px] border border-border bg-[#fffdfd] overflow-hidden transition-all duration-300">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-[60px] w-full items-center justify-between gap-4 px-5 text-left focus:outline-none bg-transparent"
+      >
+        <span className="flex items-center gap-4">
+          <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d] shrink-0">
+            <Image src={icon} alt="" width={22} height={22} aria-hidden />
+          </span>
+          <span className="text-body-sm font-medium">
+            Tận hưởng đặc quyền hấp dẫn khi tham gia <span className="font-bold">Xéo Hội</span>
+          </span>
         </span>
-        <span className="text-body-sm font-medium">{title}</span>
-      </span>
-      <Image
-        src="/icons/chevron-down.svg"
-        alt=""
-        width={14}
-        height={8}
-        aria-hidden
-      />
+        <Image
+          src="/icons/chevron-down.svg"
+          alt=""
+          width={14}
+          height={8}
+          aria-hidden
+          className={cn("transition-transform duration-300", isOpen ? "rotate-180" : "")}
+        />
+      </button>
+      {isOpen && (
+        <div className="border-t border-[#ff593d]/20 px-6 py-5 text-[13px] leading-relaxed text-black/85 bg-white">
+          <p className="mb-4">
+            Khi trở thành thành viên của Xéo Xọ, bạn không chỉ sở hữu những thiết kế mang tinh thần <span className="font-bold">Á Đông</span> đương đại, mà còn bước vào một không gian thời trang dành riêng cho những người yêu cái đẹp và cá tính khác biệt.
+          </p>
+          <div className="mb-4 space-y-2 pl-1">
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Nhận nhiều ưu đãi độc quyền dành riêng cho thành viên Xéo Hội.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Cơ hội trở thành những người đầu tiên sở hữu các bộ sưu tập mới nhất từ Xéo Xọ.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Trải nghiệm dịch vụ custom theo yêu cầu, cá nhân hóa từng thiết kế theo dấu ấn riêng.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Nhận tư vấn trực tiếp từ stylist của Xéo Hội để tìm ra phong cách phù hợp nhất với bạn.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Ưu tiên tham gia các hoạt động, workshop và sự kiện đặc biệt từ Xéo Xọ.</span>
+            </div>
+          </div>
+          <p className="font-medium">
+            <span className="font-bold">Xéo Hội</span> không chỉ là một cộng đồng thời trang, mà còn là nơi kết nối những người yêu văn hóa, nghệ thuật và tinh thần sống đậm bản sắc riêng.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -1499,7 +1530,7 @@ function ProductService({
       </span>
       <span className="flex flex-col gap-1">
         <span className="text-caption font-bold">{title}</span>
-        <span className="text-[0.6875rem] font-light leading-relaxed text-foreground/80">
+        <span className="text-[11px] font-light leading-relaxed text-foreground/80">
           {text}
         </span>
       </span>

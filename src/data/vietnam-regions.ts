@@ -604,6 +604,92 @@ export function validateForm(data: {
   return null;
 }
 
+export function validateName(name: string): string | null {
+  const trimVal = name.trim();
+  if (!trimVal) {
+    return "Vui lòng nhập họ và tên người nhận.";
+  }
+  if (trimVal.length < 2) {
+    return "Họ và tên người nhận phải có ít nhất 2 ký tự.";
+  }
+  if (trimVal.length > 100) {
+    return "Họ và tên người nhận không được vượt quá 100 ký tự.";
+  }
+  if (!/[a-zA-ZÀ-ỹ]/.test(trimVal)) {
+    return "Họ và tên người nhận phải chứa chữ cái.";
+  }
+  const letters = trimVal.replace(/[^a-zA-ZÀ-ỹ]/g, "");
+  if (letters.length < 2) {
+    return "Họ và tên người nhận phải có ít nhất 2 ký tự.";
+  }
+  if (!/^[a-zA-ZÀ-ỹ\s'-]+$/u.test(trimVal)) {
+    return "Họ và tên chỉ được chứa chữ cái, khoảng trắng, dấu gạch nối hoặc dấu nháy đơn.";
+  }
+  return null;
+}
+
+export function validatePhone(phone: string): string | null {
+  const trimVal = phone.trim();
+  if (!trimVal) {
+    return "Vui lòng nhập số điện thoại người nhận.";
+  }
+  if (/[^0-9]/.test(trimVal)) {
+    return "Số điện thoại chỉ được chứa chữ số.";
+  }
+  if (trimVal.length !== 10) {
+    return "Số điện thoại phải gồm đúng 10 chữ số.";
+  }
+  if (!trimVal.startsWith("0")) {
+    return "Số điện thoại phải bắt đầu bằng số 0.";
+  }
+  const prefixRegex = /^(03[2-9]|05[2689]|07[0-9]|08[1-9]|09[0-9])/;
+  if (!prefixRegex.test(trimVal)) {
+    return "Đầu số điện thoại không hợp lệ. Vui lòng kiểm tra lại.";
+  }
+  if (/^(.)\1+$/.test(trimVal)) {
+    return "Số điện thoại không hợp lệ. Vui lòng kiểm tra lại.";
+  }
+  return null;
+}
+
+export function validateEmail(email: string): string | null {
+  const trimVal = email.trim();
+  if (!trimVal) {
+    return "Vui lòng nhập email.";
+  }
+  if (/\s/.test(trimVal)) {
+    return "Email không được chứa khoảng trắng.";
+  }
+  if (trimVal.length > 254) {
+    return "Email không được vượt quá 254 ký tự.";
+  }
+  const emailRegex = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+  if (!emailRegex.test(trimVal)) {
+    return "Email không đúng định dạng. Vui lòng nhập theo mẫu: ten@email.com.";
+  }
+  return null;
+}
+
+export function validateAddress(address: string): string | null {
+  const trimVal = address.trim();
+  if (!trimVal) {
+    return "Vui lòng nhập địa chỉ cụ thể.";
+  }
+  if (trimVal.length < 5) {
+    return "Địa chỉ cụ thể phải có ít nhất 5 ký tự.";
+  }
+  if (trimVal.length > 255) {
+    return "Địa chỉ cụ thể không được vượt quá 255 ký tự.";
+  }
+  if (!/[a-zA-ZÀ-ỹ]/.test(trimVal)) {
+    return "Vui lòng nhập địa chỉ cụ thể hợp lệ.";
+  }
+  if (!/^[a-zA-ZÀ-ỹ0-9\s/.,'()-]+$/u.test(trimVal)) {
+    return "Địa chỉ chứa ký tự không được hỗ trợ.";
+  }
+  return null;
+}
+
 export function validateFields(
   data: {
     fullName: string;
@@ -613,62 +699,48 @@ export function validateFields(
     otherReceiver: boolean;
     receiverName?: string;
     receiverPhone?: string;
+    province_id?: string | number;
+    ward?: string;
+    note?: string;
   },
   isMember: boolean
 ): Record<string, string> {
   const errors: Record<string, string> = {};
 
-  const nameTrim = data.fullName.trim();
-  if (!nameTrim) {
-    errors.fullName = "Vui lòng nhập Họ và tên người nhận.";
-  } else if (nameTrim.split(/\s+/).length < 2) {
-    errors.fullName = "Họ và tên phải có tối thiểu 2 từ (cả họ và tên).";
-  } else if (/[0-9!@#$%^&*(),.?":{}|<>]/.test(nameTrim)) {
-    errors.fullName = "Họ và tên không được chứa số hay ký tự đặc biệt.";
+  const nameError = validateName(data.fullName);
+  if (nameError) errors.fullName = nameError;
+
+  const phoneError = validatePhone(data.phone);
+  if (phoneError) errors.phone = phoneError;
+
+  const emailError = validateEmail(data.email);
+  if (emailError) errors.email = emailError;
+
+  if (data.province_id === undefined || data.province_id === "" || Number(data.province_id) <= 0) {
+    errors.province_id = "Vui lòng chọn Tỉnh/Thành phố.";
+  }
+  if (!data.ward || !data.ward.trim()) {
+    errors.ward = "Vui lòng chọn Phường/Xã.";
   }
 
-  const phoneTrim = data.phone.trim();
-  if (!phoneTrim) {
-    errors.phone = "Vui lòng nhập Số điện thoại nhận hàng.";
-  } else if (!/^0[3|5|7|8|9][0-9]{8}$/.test(phoneTrim)) {
-    errors.phone = "Số điện thoại không đúng định dạng (ví dụ: 0912345678).";
-  }
+  const addressError = validateAddress(data.address);
+  if (addressError) errors.address = addressError;
 
-  const emailTrim = data.email.trim();
-  if (!isMember) {
-    if (!emailTrim) {
-      errors.email = "Vui lòng nhập địa chỉ Email để nhận thông báo đơn hàng.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-      errors.email = "Email không đúng định dạng (ví dụ: nguyenvana@gmail.com).";
-    }
-  } else {
-    if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-      errors.email = "Email không đúng định dạng (ví dụ: nguyenvana@gmail.com).";
-    }
-  }
-
-  const addressTrim = data.address.trim();
-  if (!addressTrim) {
-    errors.address = "Vui lòng nhập địa chỉ giao hàng cụ thể.";
-  } else if (addressTrim.length < 6) {
-    errors.address = "Địa chỉ chi tiết quá ngắn (vui lòng ghi rõ số nhà, tên đường...).";
+  if (data.note && data.note.trim().length > 200) {
+    errors.note = "Ghi chú đơn hàng không được vượt quá 200 ký tự.";
   }
 
   if (data.otherReceiver) {
-    const rName = (data.receiverName ?? "").trim();
-    if (!rName) {
-      errors.receiverName = "Vui lòng nhập Họ và tên người nhận hộ.";
-    } else if (rName.split(/\s+/).length < 2) {
-      errors.receiverName = "Họ và tên người nhận hộ phải có tối thiểu 2 từ.";
-    } else if (/[0-9!@#$%^&*(),.?":{}|<>]/.test(rName)) {
-      errors.receiverName = "Họ và tên không được chứa số/ký tự đặc biệt.";
+    const rName = data.receiverName ?? "";
+    const rNameError = validateName(rName);
+    if (rNameError) {
+      errors.receiverName = rNameError;
     }
 
-    const rPhone = (data.receiverPhone ?? "").trim();
-    if (!rPhone) {
-      errors.receiverPhone = "Vui lòng nhập Số điện thoại người nhận hộ.";
-    } else if (!/^0[3|5|7|8|9][0-9]{8}$/.test(rPhone)) {
-      errors.receiverPhone = "Số điện thoại nhận hộ không hợp lệ.";
+    const rPhone = data.receiverPhone ?? "";
+    const rPhoneError = validatePhone(rPhone);
+    if (rPhoneError) {
+      errors.receiverPhone = rPhoneError;
     }
   }
 

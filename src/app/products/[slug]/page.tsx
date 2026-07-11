@@ -139,10 +139,15 @@ export async function generateMetadata({
 
 export default async function ProductPage({
   params,
+  searchParams,
 }: {
   params: Promise<Params>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  const from = typeof resolvedSearchParams.from === "string" ? resolvedSearchParams.from : "";
+
   const [apiProduct, result] = await Promise.all([
     getApiProduct(slug),
     fetchProductBySlugFromApi(slug),
@@ -152,6 +157,71 @@ export default async function ProductPage({
     notFound();
   }
 
+  let customBreadcrumbItem = null;
+
+  if (from) {
+    try {
+      const { createClient } = await import("@/lib/supabase/server");
+      const supabase = await createClient();
+
+      if (from.startsWith("/collections/")) {
+        const colSlug = from.replace("/collections/", "");
+        const { data } = await supabase
+          .schema("catalog")
+          .from("collection")
+          .select("collection_name, slug")
+          .eq("slug", colSlug)
+          .maybeSingle();
+
+        if (data) {
+          customBreadcrumbItem = {
+            label: data.collection_name,
+            href: ROUTES.COLLECTION(data.slug),
+          };
+        }
+      } else if (from.startsWith("/categories/")) {
+        const catSlug = from.replace("/categories/", "");
+        const { data } = await supabase
+          .schema("catalog")
+          .from("category")
+          .select("category_name, slug")
+          .eq("slug", catSlug)
+          .maybeSingle();
+
+        if (data) {
+          customBreadcrumbItem = {
+            label: data.category_name,
+            href: ROUTES.CATEGORY(data.slug),
+          };
+        }
+      } else if (from.startsWith("/catalog/")) {
+        const catalogSlug = from.replace("/catalog/", "");
+        const { data } = await supabase
+          .schema("catalog")
+          .from("category")
+          .select("category_name, slug")
+          .eq("slug", catalogSlug)
+          .maybeSingle();
+
+        if (data) {
+          customBreadcrumbItem = {
+            label: data.category_name,
+            href: ROUTES.CATALOG(data.slug),
+          };
+        }
+      }
+    } catch (e) {
+      console.error("Failed to fetch custom breadcrumb:", e);
+    }
+  }
+
+  const middleBreadcrumb = customBreadcrumbItem || {
+    label: result?.collection?.collection_name ?? "Sản phẩm",
+    href: result?.collection?.slug
+      ? ROUTES.COLLECTION(result.collection.slug)
+      : ROUTES.PRODUCTS,
+  };
+
   const product = mergeProductDetailImageData(apiProduct, result?.product);
 
   return (
@@ -159,13 +229,8 @@ export default async function ProductPage({
       <section className="breadcrumb-shell">
         <Breadcrumbs
           items={[
-            { label: "Trang chủ", href: ROUTES.HOME },
-            {
-              label: result?.collection?.collection_name ?? "Sản phẩm",
-              href: result?.collection?.slug
-                ? ROUTES.COLLECTION(result.collection.slug)
-                : ROUTES.PRODUCTS,
-            },
+            { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },
+            middleBreadcrumb,
             { label: product.name },
           ]}
         />

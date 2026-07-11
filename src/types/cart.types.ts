@@ -10,6 +10,9 @@ export type CartItemDto = {
   cart_item_id: number;
   variant_id: number | null;
   product_line_id: number;
+  component_id: number | null;
+  component_type?: string | null;
+  gender?: "nam" | "nu" | "tre-em";
   slug: string;
   name: string;
   thumbnail: string;
@@ -45,6 +48,7 @@ export type AddCartItemValues = {
 
 export type UpdateCartItemValues = {
   variant_id?: number;
+  customization_id?: number;
   quantity?: number;
 };
 

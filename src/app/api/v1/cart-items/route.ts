@@ -123,7 +123,7 @@ export async function POST(request: Request) {
     const requestedTotal = Number(existing?.quantity ?? 0) + quantity;
 
     if (itemType === "STANDARD" && requestedTotal > stockQuantity) {
-      return fail(`Chi con ${stockQuantity} san pham trong kho.`, 409);
+      return fail("Sản phẩm không đủ số lượng trong kho.", 409);
     }
 
     if (existing) {
