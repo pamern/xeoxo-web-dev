@@ -13,6 +13,8 @@ type SalesOrderRecord = {
 };
 
 type OrderItemRecord = {
+  customization_id: number | null;
+  item_type: string;
   line_total: number | string;
   order_id: number;
   order_item_id: number;
@@ -30,6 +32,11 @@ type VariantRecord = {
 type ComponentRecord = {
   component_id: number;
   product_line_id: number;
+};
+
+type CustomizationRecord = {
+  component_id: number;
+  customization_id: number;
 };
 
 type ProductLineRecord = {
@@ -147,7 +154,9 @@ export async function getCustomerOrdersByCustomerId(
   const { data: orderItems, error: orderItemsError } = await admin
     .schema("sales")
     .from("order_item")
-    .select("order_item_id, order_id, variant_id, quantity, unit_price, line_total")
+    .select(
+      "order_item_id, order_id, variant_id, customization_id, item_type, quantity, unit_price, line_total",
+    )
     .in("order_id", orderIds)
     .order("created_at", { ascending: true });
 
@@ -159,6 +168,9 @@ export async function getCustomerOrdersByCustomerId(
   const orderItemIds = safeOrderItems.map((item) => Number(item.order_item_id));
   const variantIds = safeOrderItems
     .map((item) => item.variant_id)
+    .filter((id): id is number => typeof id === "number");
+  const customizationIds = safeOrderItems
+    .map((item) => item.customization_id)
     .filter((id): id is number => typeof id === "number");
 
   const { data: reviews, error: reviewsError } = orderItemIds.length
@@ -189,13 +201,37 @@ export async function getCustomerOrdersByCustomerId(
     "component_id",
     variants.map((variant) => variant.component_id),
   );
+  const customizations = await fetchRecordsByIds<CustomizationRecord>(
+    admin,
+    "customization",
+    "customization_request",
+    "customization_id, component_id",
+    "customization_id",
+    customizationIds,
+  );
+  const componentIdsFromCustomizations = customizations.map(
+    (customization) => customization.component_id,
+  );
+  const uniqueComponents = [
+    ...components,
+    ...(componentIdsFromCustomizations.length
+      ? await fetchRecordsByIds<ComponentRecord>(
+          admin,
+          "catalog",
+          "product_component",
+          "component_id, product_line_id",
+          "component_id",
+          componentIdsFromCustomizations,
+        )
+      : []),
+  ];
   const productLines = await fetchRecordsByIds<ProductLineRecord>(
     admin,
     "catalog",
     "product_line",
     "product_line_id, line_name, slug, color_id",
     "product_line_id",
-    components.map((component) => component.product_line_id),
+    uniqueComponents.map((component) => component.product_line_id),
   );
   const sizes = await fetchRecordsByIds<SizeOptionRecord>(
     admin,
@@ -236,7 +272,13 @@ export async function getCustomerOrdersByCustomerId(
 
   const variantMap = new Map(variants.map((variant) => [variant.variant_id, variant]));
   const componentMap = new Map(
-    components.map((component) => [component.component_id, component]),
+    uniqueComponents.map((component) => [component.component_id, component]),
+  );
+  const customizationMap = new Map(
+    customizations.map((customization) => [
+      customization.customization_id,
+      customization,
+    ]),
   );
   const productLineMap = new Map(
     productLines.map((line) => [line.product_line_id, line]),
@@ -258,8 +300,14 @@ export async function getCustomerOrdersByCustomerId(
   );
 
   for (const item of safeOrderItems) {
-    const variant = item.variant_id ? variantMap.get(item.variant_id) : undefined;
-    const component = variant ? componentMap.get(variant.component_id) : undefined;
+    const variant = item.variant_id
+      ? variantMap.get(item.variant_id)
+      : undefined;
+    const customization = item.customization_id
+      ? customizationMap.get(item.customization_id)
+      : undefined;
+    const componentId = variant?.component_id ?? customization?.component_id;
+    const component = componentId ? componentMap.get(componentId) : undefined;
     const productLine = component
       ? productLineMap.get(component.product_line_id)
       : undefined;
@@ -281,6 +329,7 @@ export async function getCustomerOrdersByCustomerId(
       "/images/placeholder.png";
 
     const parts = [color, size].filter(Boolean);
+    const isCustomized = item.item_type === "CUSTOMIZED";
     const mappedItem: AccountOrderItem = {
       has_review: reviewedOrderItemIds.has(Number(item.order_item_id)),
       image_alt: mediaRecord?.alt_text ?? productLine?.line_name ?? null,
@@ -291,7 +340,11 @@ export async function getCustomerOrdersByCustomerId(
       product_slug: productLine?.slug ?? null,
       quantity: Number(item.quantity),
       size_label: size,
-      subtitle: parts.length ? parts.join(" - ") : "Tùy chọn mặc định",
+      subtitle: parts.length
+        ? parts.join(" - ")
+        : isCustomized
+          ? "May đo theo yêu cầu"
+          : "Tùy chọn mặc định",
       title: productLine?.line_name ?? "Sản phẩm Xéo Xọ",
     };
 
