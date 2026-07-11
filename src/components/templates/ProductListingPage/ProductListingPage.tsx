@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Image from "next/image";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
 import type { BreadcrumbItem } from "@/components/molecules/Breadcrumbs";
@@ -10,6 +11,7 @@ import type { Product } from "@/types/product.types";
 import { ProductListingResults } from "./ProductListingResults";
 
 const EMPTY_FILTER_OPTIONS: CategoryFilterOptions = {
+  categories: [],
   sizes: [],
   colors: [],
   materials: [],
@@ -47,7 +49,9 @@ export function ProductListingPage({
           {title}
         </h1>
 
-        <ProductListingResults products={products} filterOptions={filterOptions} />
+        <Suspense fallback={<div>Đang tải sản phẩm...</div>}>
+          <ProductListingResults products={products} filterOptions={filterOptions} />
+        </Suspense>
       </section>
 
       <FloralStrip />

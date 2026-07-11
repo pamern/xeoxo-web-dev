@@ -77,19 +77,7 @@ export function AccountOrderHistory({
     <div className="mt-8">
       <div className="-mx-2 rounded-[18px] bg-white px-2 pb-5 pt-1">
         <div className="flex flex-col gap-3 border-b border-black/10 pb-5">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#cf5c43]">
-                Quản lý đơn hàng
-              </p>
-              <p className="mt-2 text-lg font-semibold text-foreground md:text-[22px]">
-                {summaryLabel}
-              </p>
-            </div>
-            <p className="max-w-[420px] text-sm font-light leading-relaxed text-foreground/68">
-              Bộ lọc luôn được giữ trong tầm nhìn để bạn đổi trạng thái mà không mất vị trí đang đọc.
-            </p>
-          </div>
+
 
           <OrderStatusTabs
             items={statusTabs}

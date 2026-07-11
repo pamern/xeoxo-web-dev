@@ -315,34 +315,34 @@ select {
   .stars-shell {
     @apply relative w-full overflow-hidden;
     background-repeat: repeat;
-    background-size: 360px; /* Small, sharp tile size for repeating pattern */
-    padding-block: 14px md:18px;
+    background-size: 240px; /* Even smaller tile pattern to match compact size */
+    @apply py-[10px] md:py-[14px];
   }
 
   .stars-title {
-    @apply mb-5 text-center font-extrabold uppercase tracking-widest text-white text-shadow-soft;
-    font-size: clamp(20px, 16px + 0.5vw, 26px);
+    @apply mb-3 text-center font-extrabold uppercase tracking-widest text-white text-shadow-soft;
+    font-size: clamp(16px, 14px + 0.3vw, 20px);
   }
 
   .stars-card {
-    @apply relative aspect-[3/4] shrink-0 overflow-hidden border border-black/20 bg-black/10 shadow-md transition-all duration-300 hover:shadow-lg;
-    width: clamp(170px, 140px + 3vw, 200px);
+    @apply relative aspect-[3/4] shrink-0 overflow-hidden border border-black/20 bg-black/10 shadow-sm transition-all duration-300 hover:shadow-md;
+    width: clamp(130px, 110px + 2vw, 160px);
   }
 
   .stars-card-overlay {
     @apply absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/75 to-transparent;
-    min-height: clamp(110px, 90px + 1vw, 130px);
-    padding: clamp(10px, 8px + 0.2vw, 12px);
-    padding-top: clamp(24px, 18px + 0.5vw, 32px);
+    min-height: clamp(85px, 75px + 1vw, 105px);
+    padding: clamp(6px, 5px + 0.1vw, 8px);
+    padding-top: clamp(16px, 12px + 0.3vw, 24px);
   }
 
   .stars-card-copy {
-    @apply mb-2 line-clamp-3 text-[10px] md:text-[11px] font-light leading-snug text-white/90;
-    min-height: clamp(40px, 34px + 0.5vw, 48px);
+    @apply mb-1.5 line-clamp-2 text-[9px] md:text-[10px] font-light leading-tight text-white/90;
+    min-height: clamp(24px, 20px + 0.3vw, 30px);
   }
 
   .stars-card-cta {
-    @apply flex h-[28px] w-full items-center justify-center rounded-full border border-white bg-transparent text-center text-[10px] font-bold uppercase tracking-wider text-white transition-colors duration-200 hover:bg-white hover:text-black;
+    @apply flex h-[24px] w-full items-center justify-center rounded-full border border-white bg-transparent text-center text-[9px] font-bold uppercase tracking-wider text-white transition-colors duration-200 hover:bg-white hover:text-black;
   }
 
   .reviews-shell {

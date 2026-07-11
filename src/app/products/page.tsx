@@ -8,7 +8,10 @@ import {
   mapApiProductLinesToProducts,
 } from "@/data/collections.api";
 import { deriveFilterOptionsFromProducts } from "@/features/homepage/homepage.service";
-import { searchProductCatalog } from "@/features/product/product-search.service";
+import {
+  getAllActiveProducts,
+  searchProductCatalog,
+} from "@/features/product/product-search.service";
 
 export const metadata: Metadata = {
   title: "San pham",
@@ -81,11 +84,12 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
     );
   }
 
+  const activeProducts = await getAllActiveProducts();
   return (
     <ProductListingPage
       title="Sản phẩm"
-      products={PRODUCTS}
-      filterOptions={deriveFilterOptionsFromProducts(PRODUCTS)}
+      products={activeProducts}
+      filterOptions={deriveFilterOptionsFromProducts(activeProducts)}
     />
   );
 }

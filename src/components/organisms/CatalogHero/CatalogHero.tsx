@@ -13,7 +13,7 @@ export function CatalogHero({
   ctaHref: string;
 }) {
   return (
-    <section className="group catalog-hero-shell">
+    <Link href={ctaHref} className="group catalog-hero-shell cursor-pointer">
       <Image
         src={image}
         alt={label}
@@ -32,14 +32,11 @@ export function CatalogHero({
           <h1 className="catalog-hero-title">
             {label}
           </h1>
-          <Link
-            href={ctaHref}
-            className="catalog-hero-cta"
-          >
+          <span className="catalog-hero-cta inline-flex items-center">
             Khám phá
-          </Link>
+          </span>
         </div>
       </div>
-    </section>
+    </Link>
   );
 }

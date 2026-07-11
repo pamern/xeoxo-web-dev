@@ -41,53 +41,56 @@ const STARS_DATA = [
 
 export function StarsBanner() {
   return (
-    <section
-      className="stars-shell"
-      style={{ backgroundImage: "url(/images/stars-background.png)" }}
-    >
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-            @keyframes starsMarqueeLeft {
-              from {
-                transform: translateX(0);
-              }
-              to {
-                transform: translateX(calc(-50% - 12px));
-              }
-            }
-
-            .stars-marquee-track {
-              animation: starsMarqueeLeft 42s linear infinite;
-            }
-
-            .stars-marquee:hover .stars-marquee-track,
-            .stars-marquee:focus-within .stars-marquee-track {
-              animation-play-state: paused;
-            }
-
-            @media (prefers-reduced-motion: reduce) {
-              .stars-marquee-track {
-                animation: none;
-              }
-            }
-          `,
-        }}
-      />
-
-      <div className="pointer-events-none absolute inset-0 bg-black/10" />
-
-      <div className="site-container relative z-10">
-        <h2 className="stars-title">
+    <>
+      <div className="site-container py-6">
+        <h2 className="text-center text-[22px] font-extrabold uppercase tracking-widest text-black md:text-[28px]">
           STARS in XÉO XỌ
         </h2>
+      </div>
 
-        <div className="stars-marquee overflow-hidden pb-2">
-          <div className="stars-marquee-track flex w-max gap-4">
+      <section
+        className="stars-shell"
+        style={{ backgroundImage: "url(/images/stars-background.png)" }}
+      >
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              @keyframes starsMarqueeLeft {
+                from {
+                  transform: translateX(0);
+                }
+                to {
+                  transform: translateX(calc(-50% - 12px));
+                }
+              }
+
+              .stars-marquee-track {
+                animation: starsMarqueeLeft 42s linear infinite;
+              }
+
+              .stars-marquee:hover .stars-marquee-track,
+              .stars-marquee:focus-within .stars-marquee-track {
+                animation-play-state: paused;
+              }
+
+              @media (prefers-reduced-motion: reduce) {
+                .stars-marquee-track {
+                  animation: none;
+                }
+              }
+            `,
+          }}
+        />
+
+        <div className="pointer-events-none absolute inset-0 bg-black/10" />
+
+        <div className="relative z-10 w-full">
+          <div className="stars-marquee overflow-hidden pb-1">
+            <div className="stars-marquee-track flex w-max gap-3">
             {[0, 1].map((groupIndex) => (
               <div
                 key={groupIndex}
-                className="flex gap-4"
+                className="flex gap-3"
                 aria-hidden={groupIndex === 1}
               >
                 {STARS_DATA.map((star) => (
@@ -118,12 +121,13 @@ export function StarsBanner() {
                       </a>
                     </div>
                   </div>
-                ))}
-              </div>
-            ))}
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }

@@ -9,11 +9,14 @@ import { StarsBanner } from "@/components/organisms/StarsBanner";
 import { ValueProposition } from "@/components/organisms/ValueProposition";
 import { CategoryBanner } from "@/components/molecules/CategoryBanner";
 import { SiteLayout } from "@/components/templates/SiteLayout";
+import { CatalogTabs } from "./CatalogTabs";
 import { ROUTES } from "@/constants/routes";
 import { COLLECTIONS, MATERIALS, MATERIALS_NU, VALUE_PROPS } from "@/data/catalog";
 import {
   getCategoryProductSections,
   getHomepageCollections,
+  getHomepageProductSections,
+  getHomepageCustomSections,
   type CatalogDepartment,
 } from "@/features/homepage/homepage.service";
 import type { HomepageProductSection } from "@/types/homepage.types";
@@ -47,7 +50,7 @@ const CATALOG_CONTENT: Record<
   },
   "tre-em": {
     heroLabel: "Đồ Trẻ Em",
-    banner: "/images/cat-ao-dai.png",
+    banner: "/images/catalog/tre-em/main-banner.png",
     department: "KIDS",
     emptyTitle: "Hiện chưa có sản phẩm trẻ em",
     emptyDescription: "",
@@ -85,10 +88,53 @@ async function getCatalogHeroCollections() {
 }
 
 async function getCatalogProductSections(
+  slug: CatalogSlug,
   department: CatalogDepartment | null,
   parentCategorySlug?: string,
 ) {
   try {
+    const categorySlugs = slug === "nu"
+      ? ["ao-dam-chan-vay", "ao-dai-nu", "ao-dai-doi-cuoi"]
+      : slug === "nam"
+      ? ["ao-dai-nam", "ao-dai-doi-cuoi"]
+      : [];
+
+    if (categorySlugs.length > 0) {
+      // Fetch other standard sections using getHomepageProductSections
+      const standardSlugs = categorySlugs.filter((s) => s !== "ao-dai-doi-cuoi");
+      const [standardSections, customSections] = await Promise.all([
+        getHomepageProductSections({
+          categorySlugs: standardSlugs,
+          limit: 4,
+        }),
+        getHomepageCustomSections({ limit: 100 }),
+      ]);
+
+      // Map slugs to sections in the requested order
+      const sectionsMap = new Map<string, HomepageProductSection>();
+      for (const sect of standardSections) {
+        sectionsMap.set(sect.categorySlug, sect);
+      }
+
+      const customDoiCuoi = customSections.find((s) => s.categorySlug === "ao-dai-doi-cuoi");
+      if (customDoiCuoi) {
+        const filteredProducts = customDoiCuoi.products
+          .filter((p) => p.gender === (slug === "nu" ? "nu" : "nam"))
+          .slice(0, 4);
+
+        sectionsMap.set("ao-dai-doi-cuoi", {
+          categoryId: 9999,
+          categorySlug: "ao-dai-doi-cuoi",
+          categoryName: "Áo dài đôi - Cưới",
+          products: filteredProducts,
+        });
+      }
+
+      return categorySlugs
+        .map((s) => sectionsMap.get(s))
+        .filter((s): s is HomepageProductSection => s !== undefined);
+    }
+
     return await getCategoryProductSections({
       department: department ?? undefined,
       parentCategorySlug,
@@ -103,6 +149,35 @@ function formatProductSectionTitle(categoryName: string) {
   return `Sản phẩm ${categoryName}`;
 }
 
+function getCategoryBannerImage(catalogSlug: CatalogSlug, categorySlug: string): string {
+  const normSlug = categorySlug.toLowerCase();
+  
+  if (catalogSlug === "nu") {
+    if (normSlug.includes("dam") || normSlug.includes("vay")) {
+      return "/images/catalog/nu/ÁO ĐẦM - VÁY.png";
+    }
+    if (normSlug === "ao-dai" || normSlug.includes("ao-dai-nu")) {
+      return "/images/catalog/nu/ÁO DÀI.png";
+    }
+    if (normSlug.includes("cuoi") || normSlug.includes("doi")) {
+      return "/images/catalog/nu/_ÁO DÀI ĐÔI - ÁO DÀI CƯỚI.png";
+    }
+    return "/images/catalog/nu/đồ nữ.png";
+  }
+
+  if (catalogSlug === "nam") {
+    if (normSlug.includes("ao-dai-nam")) {
+      return "/images/catalog/nam/Áo dài Nam.png";
+    }
+    if (normSlug.includes("cuoi") || normSlug.includes("doi")) {
+      return "/images/catalog/nam/_ÁO DÀI ĐÔI - ÁO DÀI CƯỚI.png";
+    }
+    return "/images/catalog/nam/đồ nam.png";
+  }
+
+  return "/images/cat-ao-dai.png";
+}
+
 // Trang catalog/landing dùng chung cho các entry từ header.
 export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
   const content = CATALOG_CONTENT[slug];
@@ -110,8 +185,21 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
 
   const [heroCollections, productSections] = await Promise.all([
     getCatalogHeroCollections(),
-    getCatalogProductSections(content.department, content.parentCategorySlug),
+    getCatalogProductSections(slug, content.department, content.parentCategorySlug),
   ]);
+  const allProducts = productSections.flatMap((section) => section.products);
+  const uniqueProducts = Array.from(
+    new Map(allProducts.map((p) => [p.id, p])).values()
+  );
+
+  const newestProducts = [...uniqueProducts]
+    .sort((a, b) => Number(b.id) - Number(a.id))
+    .slice(0, 4);
+
+  const bestSellingProducts = [...uniqueProducts]
+    .sort((a, b) => (b.price - a.price) || (Number(a.id) - Number(b.id)))
+    .slice(0, 4);
+
   const firstCollection = heroCollections[0];
 
   return (
@@ -119,41 +207,49 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
       <CatalogHero
         label={content.heroLabel}
         image={content.banner}
-        ctaHref={ROUTES.COLLECTION(firstCollection.slug)}
+        ctaHref={`/categories/${slug}`}
       />
 
       {slug !== "tre-em" && <CatalogHeroGrid collections={heroCollections} />}
 
-      <section className="catalog-shell py-8">
-        <div className="no-scrollbar flex gap-[var(--filter-bar-gap)] overflow-x-auto pb-2">
-          <FilterPill
-            href={productSections[0] ? ROUTES.CATEGORY(productSections[0].categorySlug) : "#"}
-            active
-          >
-            Sản phẩm mới
-          </FilterPill>
-          {heroCollections.map((collection) => (
-            <FilterPill key={collection.slug} href={ROUTES.COLLECTION(collection.slug)}>
-              {collection.name}
-            </FilterPill>
-          ))}
-        </div>
-      </section>
+      {(newestProducts.length > 0 || bestSellingProducts.length > 0) && (
+        <CatalogTabs
+          slug={slug}
+          newestProducts={newestProducts}
+          bestSellingProducts={bestSellingProducts}
+          newestHref={`/categories/${slug}?sort=newest`}
+          bestSellingHref={`/categories/${slug}?sort=best-selling`}
+        />
+      )}
 
       {productSections.length > 0 ? (
         productSections.map((section) => (
           <div key={section.categorySlug}>
             <CategoryBanner
               title={section.categoryName}
-              image={content.banner}
-              href={ROUTES.CATEGORY(section.categorySlug)}
+              image={getCategoryBannerImage(slug, section.categorySlug)}
+              href={
+                section.categorySlug === "ao-dai-doi-cuoi" && (slug === "nam" || slug === "nu")
+                  ? `${ROUTES.CATEGORY(section.categorySlug)}?gender=${slug}`
+                  : ROUTES.CATEGORY(section.categorySlug)
+              }
             />
-            <ProductRow
-              title={formatProductSectionTitle(section.categoryName)}
-              products={section.products}
-              actionHref={ROUTES.CATEGORY(section.categorySlug)}
-              quickAddOnHover
-            />
+            {section.products.length > 0 ? (
+              <ProductRow
+                title={formatProductSectionTitle(section.categoryName)}
+                products={section.products}
+                actionHref={
+                  section.categorySlug === "ao-dai-doi-cuoi" && (slug === "nam" || slug === "nu")
+                    ? `${ROUTES.CATEGORY(section.categorySlug)}?gender=${slug}`
+                    : ROUTES.CATEGORY(section.categorySlug)
+                }
+                quickAddOnHover
+              />
+            ) : (
+              <div className="catalog-shell py-12 text-center text-gray-500 font-light text-body-sm">
+                Sản phẩm của mục này đang được cập nhật trong thời gian tới.
+              </div>
+            )}
           </div>
         ))
       ) : (

@@ -101,7 +101,8 @@ export function ProductCard({
             src={product.images[0]}
             alt={product.name}
             fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 351px"
+            sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
+            quality={60}
             className={cn(
               "object-cover transition duration-500",
               quickAddOnHover ? "group-hover:scale-110" : "group-hover:scale-105",
@@ -112,7 +113,8 @@ export function ProductCard({
               src={hoverImage}
               alt=""
               fill
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 351px"
+              sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
+              quality={60}
               aria-hidden
               className="object-cover opacity-0 transition duration-500 group-hover:scale-110 group-hover:opacity-100"
             />
@@ -123,11 +125,6 @@ export function ProductCard({
           {product.isNew && (
             <span className="rounded-pill bg-primary px-3 py-1 text-caption text-primary-foreground">
               NEW
-            </span>
-          )}
-          {isSingleSize && (
-            <span className="rounded-pill bg-black/70 px-3 py-1 text-caption text-white">
-              1 SIZE
             </span>
           )}
         </div>
