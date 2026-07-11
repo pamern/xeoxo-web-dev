@@ -69,6 +69,7 @@ export default async function CategoryPage({
       ]}
       filterOptions={filterOptions}
       recentlyViewedProducts={[]}
+      categorySlug={slug}
     />
   );
 }

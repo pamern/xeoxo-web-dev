@@ -26,16 +26,18 @@ export function ProductListingPage({
   breadcrumbs,
   filterOptions = EMPTY_FILTER_OPTIONS,
   recentlyViewedProducts = [],
+  categorySlug,
 }: {
   title: string;
   products: Product[];
   breadcrumbs?: BreadcrumbItem[];
   filterOptions?: CategoryFilterOptions;
   recentlyViewedProducts?: Product[];
+  categorySlug?: string;
 }) {
   return (
     <SiteLayout>
-      <section className="listing-shell pb-12 pt-10">
+      <section className="listing-shell pb-12 pt-3">
         <Breadcrumbs
           items={
             breadcrumbs ?? [
@@ -43,14 +45,18 @@ export function ProductListingPage({
               { label: title },
             ]
           }
-          className="mb-5"
+          className="mb-2"
         />
         <h1 className="page-heading leading-tight">
           {title}
         </h1>
 
         <Suspense fallback={<div>Đang tải sản phẩm...</div>}>
-          <ProductListingResults products={products} filterOptions={filterOptions} />
+          <ProductListingResults
+            products={products}
+            filterOptions={filterOptions}
+            categorySlug={categorySlug}
+          />
         </Suspense>
       </section>
 

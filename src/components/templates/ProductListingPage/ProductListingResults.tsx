@@ -55,37 +55,21 @@ function getProductSeasons(product: Product): string[] {
   return Array.from(seasons);
 }
 
-type PriceBucket = { label: string; min: number; max: number };
-
-function buildPriceBuckets(priceMin: number, priceMax: number): PriceBucket[] {
-  if (priceMax <= priceMin) return [];
-
-  const step = (priceMax - priceMin) / 3;
-  const boundary1 = Math.round((priceMin + step) / 50_000) * 50_000;
-  const boundary2 = Math.round((priceMin + step * 2) / 50_000) * 50_000;
-
-  return [
-    { label: `Dưới ${formatPrice(boundary1)}`, min: 0, max: boundary1 },
-    {
-      label: `${formatPrice(boundary1)} - ${formatPrice(boundary2)}`,
-      min: boundary1,
-      max: boundary2,
-    },
-    { label: `Trên ${formatPrice(boundary2)}`, min: boundary2, max: Infinity },
-  ];
-}
-
 export function ProductListingResults({
   products,
   filterOptions,
+  categorySlug,
 }: {
   products: Product[];
   filterOptions: CategoryFilterOptions;
+  categorySlug?: string;
 }) {
   const searchParams = useSearchParams();
   const sortParam = searchParams.get("sort");
   const genderParam = searchParams.get("gender");
   const seasonParam = searchParams.get("season");
+  const shouldShowGenderFilter = categorySlug === "ao-dai" || !!seasonParam;
+  const shouldPrioritizeGenderFilter = categorySlug === "ao-dai" || !!seasonParam;
 
   const initialSort = useMemo(() => {
     if (sortParam === "newest") return "Mới nhất";
@@ -116,34 +100,49 @@ export function ProductListingResults({
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState(initialSort);
   const [sortOpen, setSortOpen] = useState(false);
+  const [priceRange, setPriceRange] = useState({
+    min: filterOptions.priceMin,
+    max: filterOptions.priceMax,
+  });
 
   const hasSelection = Object.values(selected).some((values) => values.length > 0);
+  const hasPriceSelection =
+    filterOptions.priceMax > filterOptions.priceMin &&
+    (priceRange.min > filterOptions.priceMin || priceRange.max < filterOptions.priceMax);
 
   // Reset pagination when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [selected]);
+  }, [selected, priceRange]);
 
-  const priceBuckets = useMemo(
-    () => buildPriceBuckets(filterOptions.priceMin, filterOptions.priceMax),
-    [filterOptions.priceMin, filterOptions.priceMax],
-  );
+  useEffect(() => {
+    setPriceRange({
+      min: filterOptions.priceMin,
+      max: filterOptions.priceMax,
+    });
+  }, [filterOptions.priceMin, filterOptions.priceMax]);
 
   const filterGroups: ProductFilterGroup[] = useMemo(() => {
     const groups: ProductFilterGroup[] = [];
 
-    // Màu sắc cá nhân ở trên cùng
-    groups.push({
-      label: PERSONAL_COLOR_LABEL,
-      options: ["Xuân", "Hạ", "Thu", "Đông"],
-    });
-
-    // Giới tính ở vị trí tiếp theo - chỉ hiển thị khi đi từ kết quả quiz personal color (có seasonParam)
-    if (seasonParam) {
+    const pushGenderFilter = () => {
+      if (!shouldShowGenderFilter) return;
       groups.push({
         label: GENDER_LABEL,
         options: ["Nam", "Nữ"],
       });
+    };
+
+    const pushPersonalColorFilter = () => {
+      if (products.length === 0) return;
+      groups.push({
+        label: PERSONAL_COLOR_LABEL,
+        options: ["Xuân", "Hạ", "Thu", "Đông"],
+      });
+    };
+
+    if (shouldPrioritizeGenderFilter) {
+      pushGenderFilter();
     }
 
     if (filterOptions.categories && filterOptions.categories.length > 1) {
@@ -161,6 +160,10 @@ export function ProductListingResults({
     if (filterOptions.sizes.length > 0) {
       groups.push({ label: SIZE_LABEL, options: filterOptions.sizes });
     }
+    if (!shouldPrioritizeGenderFilter) {
+      pushGenderFilter();
+    }
+    pushPersonalColorFilter();
     if (filterOptions.colors.length > 0) {
       const selectedSeason = selected[PERSONAL_COLOR_LABEL]?.[0];
       let colorOptions = filterOptions.colors.map((color) => color.name);
@@ -183,17 +186,25 @@ export function ProductListingResults({
         });
       }
     }
-    if (priceBuckets.length > 0) {
+    if (filterOptions.priceMax > filterOptions.priceMin) {
       groups.push({
         label: PRICE_LABEL,
-        options: priceBuckets.map((bucket) => bucket.label),
       });
     }
     if (filterOptions.materials.length > 0) {
       groups.push({ label: MATERIAL_LABEL, options: filterOptions.materials });
     }
     return groups;
-  }, [filterOptions, priceBuckets, selected, seasonParam]);
+  }, [filterOptions, products.length, selected, shouldShowGenderFilter, shouldPrioritizeGenderFilter]);
+  const firstFilterLabel = filterGroups[0]?.label;
+  const hasPersonalColorFilter = filterGroups.some((group) => group.label === PERSONAL_COLOR_LABEL);
+  const defaultOpenFilterLabels = useMemo(() => {
+    if (seasonParam && hasPersonalColorFilter) {
+      return [PERSONAL_COLOR_LABEL];
+    }
+
+    return firstFilterLabel ? [firstFilterLabel] : [];
+  }, [firstFilterLabel, hasPersonalColorFilter, seasonParam]);
 
   function toggleOption(groupLabel: string, option: string) {
     setSelected((current) => {
@@ -218,13 +229,8 @@ export function ProductListingResults({
     const colorFilters = selected[COLOR_LABEL] ?? [];
     const materialFilters = selected[MATERIAL_LABEL] ?? [];
     const collectionFilters = selected[COLLECTION_LABEL] ?? [];
-    const priceFilters = selected[PRICE_LABEL] ?? [];
     const genderFilters = selected[GENDER_LABEL] ?? [];
     const seasonFilters = selected[PERSONAL_COLOR_LABEL] ?? [];
-
-    const selectedBuckets = priceBuckets.filter((bucket) =>
-      priceFilters.includes(bucket.label),
-    );
 
     const filtered = products.filter((product) => {
       if (genderFilters.length > 0) {
@@ -275,12 +281,7 @@ export function ProductListingResults({
       ) {
         return false;
       }
-      if (
-        selectedBuckets.length > 0 &&
-        !selectedBuckets.some(
-          (bucket) => product.price >= bucket.min && product.price < bucket.max,
-        )
-      ) {
+      if (hasPriceSelection && (product.price < priceRange.min || product.price > priceRange.max)) {
         return false;
       }
       return true;
@@ -298,7 +299,7 @@ export function ProductListingResults({
     }
 
     return filtered;
-  }, [products, selected, priceBuckets, filterOptions.categories, sortBy]);
+  }, [products, selected, filterOptions.categories, sortBy, hasPriceSelection, priceRange]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
 
@@ -346,17 +347,36 @@ export function ProductListingResults({
   }, [filteredProducts, currentPage]);
 
   return (
-    <div className="mt-10 grid gap-10 lg:grid-cols-[240px_minmax(0,1fr)]">
+    <div className="mt-2 grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
       <ProductFilterSidebar
         groups={filterGroups}
         resultCount={filteredProducts.length}
         selected={selected}
         onToggle={toggleOption}
-        onClear={() => setSelected({})}
+        onClear={() => {
+          setSelected({});
+          setPriceRange({
+            min: filterOptions.priceMin,
+            max: filterOptions.priceMax,
+          });
+        }}
+        priceRange={
+          filterOptions.priceMax > filterOptions.priceMin
+            ? {
+                min: filterOptions.priceMin,
+                max: filterOptions.priceMax,
+                valueMin: priceRange.min,
+                valueMax: priceRange.max,
+                onChange: setPriceRange,
+              }
+            : undefined
+        }
+        defaultOpenGroupLabels={defaultOpenFilterLabels}
+        className="lg:sticky lg:top-[calc(var(--site-header-height,0px)+16px)] lg:max-h-[calc(100vh-var(--site-header-height,0px)-24px)] lg:overflow-y-auto lg:pr-1"
       />
-      <div>
+      <div className="lg:-mt-6">
         {/* Active tags & Sort dropdown top bar */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-gray-100 pb-4">
+        <div className="mb-2 flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             {Object.entries(selected).flatMap(([groupLabel, options]) =>
               options.map((option) => (
@@ -374,9 +394,31 @@ export function ProductListingResults({
                 </div>
               ))
             )}
-            {hasSelection && (
+            {hasPriceSelection && (
+              <div className="flex items-center gap-1.5 rounded border border-gray-200 bg-white px-2.5 py-1 text-[11px] font-light text-black">
+                <span>{formatPrice(priceRange.min)} - {formatPrice(priceRange.max)}</span>
+                <button
+                  onClick={() =>
+                    setPriceRange({
+                      min: filterOptions.priceMin,
+                      max: filterOptions.priceMax,
+                    })
+                  }
+                  className="text-gray-400 hover:text-black transition-colors text-xs font-light ml-0.5"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            {(hasSelection || hasPriceSelection) && (
               <button
-                onClick={() => setSelected({})}
+                onClick={() => {
+                  setSelected({});
+                  setPriceRange({
+                    min: filterOptions.priceMin,
+                    max: filterOptions.priceMax,
+                  });
+                }}
                 className="text-[11px] font-light text-[#FF5C39] hover:text-[#e04322] transition-colors underline underline-offset-2 ml-2"
               >
                 Xoá lọc

@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { useEffect, useMemo, useState } from "react";
+import { cn, formatPrice } from "@/lib/utils";
 
 export type ProductFilterGroup = {
   label: string;
   options?: string[];
+};
+
+export type ProductPriceRange = {
+  min: number;
+  max: number;
+  valueMin: number;
+  valueMax: number;
+  onChange: (range: { min: number; max: number }) => void;
 };
 
 export function ProductFilterSidebar({
@@ -14,6 +22,8 @@ export function ProductFilterSidebar({
   selected,
   onToggle,
   onClear,
+  priceRange,
+  defaultOpenGroupLabels,
   className,
 }: {
   groups: ProductFilterGroup[];
@@ -21,19 +31,31 @@ export function ProductFilterSidebar({
   selected: Record<string, string[]>;
   onToggle: (groupLabel: string, option: string) => void;
   onClear?: () => void;
+  priceRange?: ProductPriceRange;
+  defaultOpenGroupLabels?: string[];
   className?: string;
 }) {
   const hasSelection = Object.values(selected).some((values) => values.length > 0);
-  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    "Danh mục": true,
-    "Màu sắc cá nhân": true,
-  });
+  const firstGroupLabel = groups[0]?.label;
+  const initialOpenGroups = useMemo(
+    () => {
+      const labels = defaultOpenGroupLabels ?? (firstGroupLabel ? [firstGroupLabel] : []);
+
+      return Object.fromEntries(labels.map((label) => [label, true]));
+    },
+    [defaultOpenGroupLabels, firstGroupLabel],
+  );
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(initialOpenGroups);
+
+  useEffect(() => {
+    setOpenGroups(initialOpenGroups);
+  }, [initialOpenGroups]);
 
   return (
     <aside className={cn("w-full text-black lg:w-[240px]", className)}>
       <div className="flex items-center justify-between border-b border-black pb-3">
-        <h2 className="text-body-md font-light leading-none uppercase tracking-wider">Bộ lọc</h2>
-        <span className="text-body-sm font-light leading-none text-muted-foreground">{resultCount} kết quả</span>
+        <h2 className="text-body-md font-light leading-tight uppercase tracking-wider">Bộ lọc</h2>
+        <span className="text-body-sm font-light leading-tight text-muted-foreground">{resultCount} kết quả</span>
       </div>
 
 
@@ -60,7 +82,9 @@ export function ProductFilterSidebar({
                   className="h-1.5 w-1.5 rotate-45 border-b border-r border-black transition-transform duration-200 group-open:rotate-[225deg]"
                 />
               </summary>
-              {group.options && group.options.length > 0 && (
+              {group.label === "Giá" && priceRange ? (
+                <PriceRangeSlider range={priceRange} />
+              ) : group.options && group.options.length > 0 ? (
                 <div
                   className={cn(
                     "pt-3 text-body-sm font-light text-muted-foreground",
@@ -124,7 +148,7 @@ export function ProductFilterSidebar({
                     );
                   })}
                 </div>
-              )}
+              ) : null}
             </details>
           );
         })}
@@ -133,4 +157,58 @@ export function ProductFilterSidebar({
   );
 }
 
+function PriceRangeSlider({ range }: { range: ProductPriceRange }) {
+  const { min, max, valueMin, valueMax, onChange } = range;
+  const step = 50_000;
+  const safeMax = Math.max(max, min + step);
+  const minPercent = ((valueMin - min) / (safeMax - min)) * 100;
+  const maxPercent = ((valueMax - min) / (safeMax - min)) * 100;
 
+  function updateMin(nextValue: number) {
+    onChange({ min: Math.min(nextValue, valueMax - step), max: valueMax });
+  }
+
+  function updateMax(nextValue: number) {
+    onChange({ min: valueMin, max: Math.max(nextValue, valueMin + step) });
+  }
+
+  return (
+    <div className="pt-4">
+      <div className="mb-4 flex items-start justify-between gap-3 text-[11px] font-light text-muted-foreground">
+        <span>{formatPrice(valueMin)}</span>
+        <span className="text-right">{formatPrice(valueMax)}</span>
+      </div>
+
+      <div className="relative h-7">
+        <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-gray-200" />
+        <div
+          className="absolute top-1/2 h-[2px] -translate-y-1/2 bg-black"
+          style={{
+            left: `${minPercent}%`,
+            right: `${100 - maxPercent}%`,
+          }}
+        />
+        <input
+          type="range"
+          min={min}
+          max={safeMax}
+          step={step}
+          value={valueMin}
+          onChange={(event) => updateMin(Number(event.target.value))}
+          className="price-range-input"
+          aria-label="Giá tối thiểu"
+        />
+        <input
+          type="range"
+          min={min}
+          max={safeMax}
+          step={step}
+          value={valueMax}
+          onChange={(event) => updateMax(Number(event.target.value))}
+          className="price-range-input"
+          aria-label="Giá tối đa"
+        />
+      </div>
+    </div>
+  );
+}
