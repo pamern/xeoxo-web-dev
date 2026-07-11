@@ -6,6 +6,9 @@ import {
   getCategoryBySlug,
   getCategoryListing,
 } from "@/features/homepage/homepage.service";
+import { filterAndSortProducts, SEASON_MAP } from "@/features/catalog/product-filtering";
+
+const PRODUCTS_PAGE_SIZE = 12;
 
 type Params = { slug: string };
 
@@ -40,10 +43,10 @@ export default async function CategoryPage({
   searchParams,
 }: {
   params: Promise<Params>;
-  searchParams: Promise<{ gender?: string }>;
+  searchParams: Promise<{ gender?: string; season?: string }>;
 }) {
   const { slug } = await params;
-  const { gender } = await searchParams;
+  const { gender, season } = await searchParams;
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
@@ -51,10 +54,25 @@ export default async function CategoryPage({
 
   const isDeptPage = slug === "nu" || slug === "nam" || slug === "tre-em";
 
+  // Mirror the initial `selected` filters ProductListingResults derives from
+  // the same URL params, so the server-rendered first page matches what the
+  // client will request once it hydrates.
+  const genderFilter =
+    gender === "nam" ? "Nam" : gender === "nu" ? "Nữ" : gender === "tre-em" ? "Trẻ em" : undefined;
+  const seasonFilter = season ? SEASON_MAP[season.toUpperCase()] || season : undefined;
+
+  const firstPageProducts = filterAndSortProducts(products, filterOptions, {
+    gender: genderFilter ? [genderFilter] : undefined,
+    season: seasonFilter ? [seasonFilter] : undefined,
+  });
+  const initialProducts = firstPageProducts.slice(0, PRODUCTS_PAGE_SIZE);
+  const initialTotal = firstPageProducts.length;
+
   return (
     <ProductListingPage
       title={category.categoryName}
-      products={products}
+      products={initialProducts}
+      initialTotal={initialTotal}
       breadcrumbs={[
         { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },
         ...(category.department && !isDeptPage

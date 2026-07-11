@@ -14,6 +14,7 @@ import {
 import { useOrderHistory } from "@/hooks/useOrderHistory";
 import type { AccountOrder } from "@/types/account-order.types";
 import { ProductReviewModal } from "@/components/organisms/ProductReviewModal/ProductReviewModal";
+import { Pagination } from "@/components/molecules/Pagination";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("vi-VN").format(value) + " VND";
@@ -32,23 +33,29 @@ function buildOrderStatusTabs(): OrderStatusTab[] {
 
 export function AccountOrderHistory({
   initialOrders,
+  initialTotal,
   isAuthenticated,
   statusGroup,
 }: {
   initialOrders?: AccountOrder[];
+  initialTotal?: number;
   isAuthenticated: boolean;
   statusGroup: OrderHistoryFilter;
 }) {
-  const { errorMessage, isLoading, orders } = useOrderHistory(
-    statusGroup,
-    isAuthenticated,
-    initialOrders,
-  );
+  const {
+    errorMessage,
+    isLoading,
+    orders,
+    total,
+    currentPage,
+    totalPages,
+    goToPage,
+  } = useOrderHistory(statusGroup, isAuthenticated, initialOrders, initialTotal);
   const statusTabs = buildOrderStatusTabs();
   const summaryLabel =
     statusGroup === "all"
-      ? `Tất cả đơn hàng (${orders.length})`
-      : `${statusTabs.find((tab) => tab.value === statusGroup)?.label ?? "Đơn hàng"} (${orders.length})`;
+      ? `Tất cả đơn hàng (${total})`
+      : `${statusTabs.find((tab) => tab.value === statusGroup)?.label ?? "Đơn hàng"} (${total})`;
   const [activeReviewOrder, setActiveReviewOrder] = useState<AccountOrder | null>(null);
 
   if (!isAuthenticated) {
@@ -74,11 +81,9 @@ export function AccountOrderHistory({
   }
 
   return (
-    <div className="mt-8">
-      <div className="-mx-2 rounded-[18px] bg-white px-2 pb-5 pt-1">
-        <div className="flex flex-col gap-3 border-b border-black/10 pb-5">
-
-
+    <div className="mt-2 md:mt-3">
+      <div className="-mx-2 rounded-[18px] bg-white px-2 pb-1.5 pt-1 md:pb-2">
+        <div className="flex flex-col gap-2 md:gap-3">
           <OrderStatusTabs
             items={statusTabs}
             value={statusGroup}
@@ -98,7 +103,6 @@ export function AccountOrderHistory({
           <p className="text-base font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : orders.length ? (
-        <div className="mt-8 space-y-6">
         <div className="mt-8 space-y-6">
           {orders.map((order) => {
             const status = getOrderStatusPresentation(order.order_status);
@@ -143,7 +147,17 @@ export function AccountOrderHistory({
             );
           })}
         </div>
-      ) : (
+      ) : null}
+
+      {!isLoading && !errorMessage && orders.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={goToPage}
+        />
+      )}
+
+      {!isLoading && !errorMessage && orders.length === 0 && (
         <div className="mt-6 rounded-[16px] border border-black/12 bg-secondary px-5 py-8">
           <p className="text-lg font-bold text-foreground">
             {statusGroup === "all"

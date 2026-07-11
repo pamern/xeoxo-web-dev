@@ -3,8 +3,8 @@ import { getCurrentCustomerId } from "@/features/cart/cart-server.service";
 import { createCheckoutOrder } from "@/features/checkout/checkout-server.service";
 import { getCustomerOrdersByCustomerId } from "@/features/order/account-order.service";
 import {
-  filterOrdersByStatus,
   isOrderHistoryFilter,
+  ORDERS_PAGE_SIZE,
 } from "@/features/order/order-history";
 
 export async function GET(request: Request) {
@@ -20,10 +20,19 @@ export async function GET(request: Request) {
       ? statusGroupParam
       : "all";
 
-    const orders = await getCustomerOrdersByCustomerId(customerId);
-    const filteredOrders = filterOrdersByStatus(orders, statusGroup);
+    const offsetParam = Number(searchParams.get("offset") ?? "0");
+    const limitParam = Number(searchParams.get("limit") ?? ORDERS_PAGE_SIZE);
+    const offset = Number.isFinite(offsetParam) && offsetParam >= 0 ? offsetParam : 0;
+    const limit =
+      Number.isFinite(limitParam) && limitParam > 0 ? limitParam : ORDERS_PAGE_SIZE;
 
-    return ok(filteredOrders, "Lấy lịch sử đơn hàng thành công.");
+    const { orders, total } = await getCustomerOrdersByCustomerId(customerId, {
+      statusGroup,
+      offset,
+      limit,
+    });
+
+    return ok({ orders, total, offset, limit }, "Lấy lịch sử đơn hàng thành công.");
   } catch (error) {
     console.error("[orders/GET]", error);
     return fail(

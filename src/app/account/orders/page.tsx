@@ -14,8 +14,8 @@ import {
 } from "@/features/auth/auth.service";
 import { getCustomerOrdersByCustomerId } from "@/features/order/account-order.service";
 import {
-  filterOrdersByStatus,
   isOrderHistoryFilter,
+  ORDERS_PAGE_SIZE,
   type OrderHistoryFilter,
 } from "@/features/order/order-history";
 import type { AccountOrder } from "@/types/account-order.types";
@@ -72,15 +72,18 @@ export default async function AccountOrdersRoute({
   const authenticatedUser = await getAuthenticatedUser(supabase);
   const isAuthenticated = Boolean(authenticatedUser);
   let initialOrders: AccountOrder[] | undefined;
+  let initialTotal: number | undefined;
 
   if (authenticatedUser) {
     const customer = await getCustomerProfileByAccountId(authenticatedUser.id);
 
     if (customer?.customer_id) {
-      const orders = await getCustomerOrdersByCustomerId(
+      const { orders, total } = await getCustomerOrdersByCustomerId(
         Number(customer.customer_id),
+        { statusGroup: activeFilter, offset: 0, limit: ORDERS_PAGE_SIZE },
       );
-      initialOrders = filterOrdersByStatus(orders, activeFilter);
+      initialOrders = orders;
+      initialTotal = total;
     }
   }
 
@@ -112,7 +115,7 @@ export default async function AccountOrdersRoute({
               </aside>
 
               <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
-                <div className="flex flex-col gap-5 border-b border-black/10 pb-6">
+                <div className="flex flex-col gap-1.5 pb-1.5 md:gap-2 md:pb-2">
                   <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
                     Lịch sử đơn hàng
                   </h1>
@@ -123,6 +126,7 @@ export default async function AccountOrdersRoute({
                 <AccountOrderHistory
                   isAuthenticated={isAuthenticated}
                   initialOrders={initialOrders}
+                  initialTotal={initialTotal}
                   statusGroup={activeFilter}
                 />
               </section>

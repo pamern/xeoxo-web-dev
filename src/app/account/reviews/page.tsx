@@ -10,7 +10,7 @@ import { ROUTES } from "@/constants/routes";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCustomerReviews } from "@/features/review/review.service";
+import { getCustomerReviews, REVIEWS_PAGE_SIZE } from "@/features/review/review.service";
 import { AccountReviewsContent } from "@/components/organisms/AccountReviewsContent/AccountReviewsContent";
 
 export const metadata: Metadata = {
@@ -49,6 +49,7 @@ export default async function AccountReviewsRoute() {
   // 1. Get logged-in user session
   const { data: { user } } = await supabase.auth.getUser();
   let initialReviews: any[] = [];
+  let initialTotal = 0;
   let customerName = "Khách hàng";
 
   if (user) {
@@ -65,11 +66,15 @@ export default async function AccountReviewsRoute() {
     if (customer) {
       customerName = customer.customer_name || "Khách hàng XÉO XỌ";
       // 3. Fetch reviews from feature service
-      const fetchedReviews = await getCustomerReviews(Number(customer.customer_id));
+      const { reviews: fetchedReviews, total } = await getCustomerReviews(
+        Number(customer.customer_id),
+        { offset: 0, limit: REVIEWS_PAGE_SIZE },
+      );
       initialReviews = fetchedReviews.map((r) => ({
         ...r,
         customer_name: customerName,
       }));
+      initialTotal = total;
     }
   }
 
@@ -110,6 +115,7 @@ export default async function AccountReviewsRoute() {
 
                 <AccountReviewsContent
                   initialReviews={initialReviews}
+                  initialTotal={initialTotal}
                   customerName={customerName}
                 />
               </section>

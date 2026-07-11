@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductMediaPublicUrl } from "@/lib/supabase/storage";
 import type { AccountOrder, AccountOrderItem, AccountOrderDetail, AccountOrderShipping } from "@/types/account-order.types";
+import { getOrderStatusesForFilter, type OrderHistoryFilter } from "@/features/order/order-history";
 
 type SalesOrderRecord = {
   created_at: string;
@@ -95,26 +96,50 @@ async function fetchRecordsByIds<TRecord extends Record<string, unknown>>(
 
 export async function getCustomerOrdersByCustomerId(
   customerId: number,
-): Promise<AccountOrder[]> {
+  options?: {
+    statusGroup?: OrderHistoryFilter;
+    offset?: number;
+    limit?: number;
+  },
+): Promise<{ orders: AccountOrder[]; total: number }> {
   const admin = createAdminClient();
 
-  const { data: orders, error: ordersError } = await admin
+  let query = admin
     .schema("sales")
     .from("sales_order")
     .select(
       "order_id, order_code, order_status, payment_status, total_amount, created_at",
+      { count: "exact" },
     )
     .eq("customer_id", customerId)
     .order("created_at", { ascending: false });
+
+  const statusFilter = getOrderStatusesForFilter(options?.statusGroup ?? "all");
+  if (statusFilter?.in) {
+    query = query.in("order_status", statusFilter.in);
+  } else if (statusFilter?.notIn) {
+    query = query.not(
+      "order_status",
+      "in",
+      `(${statusFilter.notIn.join(",")})`,
+    );
+  }
+
+  if (typeof options?.offset === "number" && typeof options?.limit === "number") {
+    query = query.range(options.offset, options.offset + options.limit - 1);
+  }
+
+  const { data: orders, error: ordersError, count } = await query;
 
   if (ordersError) {
     throw new Error(ordersError.message);
   }
 
   const safeOrders = (orders ?? []) as SalesOrderRecord[];
+  const total = count ?? safeOrders.length;
 
   if (!safeOrders.length) {
-    return [];
+    return { orders: [], total };
   }
 
   const orderIds = safeOrders.map((order) => Number(order.order_id));
@@ -275,7 +300,7 @@ export async function getCustomerOrdersByCustomerId(
     itemsByOrder.set(Number(item.order_id), list);
   }
 
-  return safeOrders.map((order) => ({
+  const mappedOrders = safeOrders.map((order) => ({
     created_at: order.created_at,
     items: itemsByOrder.get(Number(order.order_id)) ?? [],
     order_code: order.order_code,
@@ -284,13 +309,15 @@ export async function getCustomerOrdersByCustomerId(
     payment_status: order.payment_status,
     total_amount: toNumber(order.total_amount),
   }));
+
+  return { orders: mappedOrders, total };
 }
 
 export async function getCustomerOrderDetail(
   orderId: number,
   customerId: number,
 ): Promise<AccountOrderDetail | null> {
-  const orders = await getCustomerOrdersByCustomerId(customerId);
+  const { orders } = await getCustomerOrdersByCustomerId(customerId);
   const order = orders.find((o) => o.order_id === orderId);
   if (!order) return null;
 

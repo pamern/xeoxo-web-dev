@@ -1,5 +1,7 @@
 import type { AccountOrder } from "@/types/account-order.types";
 
+export const ORDERS_PAGE_SIZE = 5;
+
 export type OrderHistoryFilter =
   | "all"
   | "shipping"
@@ -100,6 +102,36 @@ export function filterOrdersByStatus(
   return orders.filter(
     (order) => getOrderStatusPresentation(order.order_status).filter === filter,
   );
+}
+
+const KNOWN_TERMINAL_STATUSES = ["COMPLETED", "CANCELLED", "RETURNED"];
+
+/**
+ * Order statuses that satisfy each history filter at the database level.
+ * "shipping" has no fixed status list: it is every status that isn't one of
+ * the terminal statuses above (mirrors the fallback branch of
+ * getOrderStatusPresentation, which buckets unknown statuses into "shipping").
+ */
+export function getOrderStatusesForFilter(
+  filter: OrderHistoryFilter,
+): { in?: string[]; notIn?: string[] } | null {
+  if (filter === "all") {
+    return null;
+  }
+
+  if (filter === "completed") {
+    return { in: ["COMPLETED"] };
+  }
+
+  if (filter === "cancelled") {
+    return { in: ["CANCELLED"] };
+  }
+
+  if (filter === "returned") {
+    return { in: ["RETURNED"] };
+  }
+
+  return { notIn: KNOWN_TERMINAL_STATUSES };
 }
 
 export function getOrderActions(
