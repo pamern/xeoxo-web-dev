@@ -75,9 +75,16 @@ const config: Config = {
         serif: ["var(--font-serif)", "serif"],
       },
       fontSize: {
+        "display-page": ["3rem", { lineHeight: "1.1", letterSpacing: "0", fontWeight: "800" }],
         "display-section": ["2.25rem", { lineHeight: "1.1", letterSpacing: "0", fontWeight: "800" }],
         "heading-section": ["1.5rem", { lineHeight: "1.16", letterSpacing: "0", fontWeight: "700" }],
+        "heading-card": ["1.5rem", { lineHeight: "1.16", letterSpacing: "0", fontWeight: "700" }],
+        "body-lg": ["1rem", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "400" }],
         "body-sm": ["0.8125rem", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "300" }],
+        button: ["1rem", { lineHeight: "1.2", letterSpacing: "0", fontWeight: "700" }],
+        "button-lg": ["1.125rem", { lineHeight: "1.2", letterSpacing: "0", fontWeight: "700" }],
+        nav: ["0.75rem", { lineHeight: "1.2", letterSpacing: "0.02em", fontWeight: "600" }],
+        "nav-utility": ["0.875rem", { lineHeight: "1.4", letterSpacing: "0", fontWeight: "400" }],
         caption: ["0.75rem", { lineHeight: "1.4", letterSpacing: "0", fontWeight: "400" }],
       },
       maxWidth: {

@@ -200,7 +200,7 @@ export function AccountNavigation({
 
       {isMounted && isConfirmOpen
         ? createPortal(
-            <div className="fixed inset-0 z-[260] bg-black/40 px-4">
+            <div className="fixed inset-0 z-[260] bg-black/45 px-4">
               <div
                 className="flex min-h-full items-center justify-center"
                 onMouseDown={(event) => {
@@ -210,18 +210,18 @@ export function AccountNavigation({
                 }}
               >
                 <div
-                  className="w-full max-w-[440px] rounded-[24px] bg-white p-6 shadow-[0_26px_70px_rgba(0,0,0,0.24)] md:p-7"
+                  className="w-full max-w-[520px] rounded-[28px] bg-white p-7 shadow-[0_26px_70px_rgba(0,0,0,0.24)] md:p-8"
                   style={{
                     transform: `translate(${modalOffset.x}px, ${modalOffset.y}px)`,
                   }}
                 >
                   <div
-                    className="-mx-2 -mt-2 mb-3 flex cursor-grab touch-none justify-center rounded-[16px] px-2 py-2 active:cursor-grabbing"
+                    className="-mx-2 -mt-2 mb-4 flex cursor-grab touch-none justify-center rounded-[18px] px-2 py-2 active:cursor-grabbing"
                     onPointerDown={handleDragStart}
                   >
                     <span
                       aria-hidden
-                      className="h-1.5 w-10 rounded-full bg-black/12"
+                      className="h-1.5 w-12 rounded-full bg-black/12"
                     />
                   </div>
 
@@ -230,28 +230,28 @@ export function AccountNavigation({
                     alt="Xéo Xọ"
                     width={122}
                     height={72}
-                    className="h-auto w-[64px] md:w-[72px]"
+                    className="h-auto w-[78px] md:w-[90px]"
                     priority
                   />
-                  <h2 className="mt-2.5 text-2xl font-extrabold leading-none text-foreground">
+                  <h2 className="mt-3 text-[30px] font-extrabold leading-none text-foreground">
                     Xác nhận đăng xuất?
                   </h2>
-                  <p className="mt-3 text-sm leading-5 text-foreground/72">
+                  <p className="mt-4 text-sm leading-6 text-foreground/72 md:text-base">
                     Bạn sẽ được đưa về trang chủ sau khi đăng xuất thành công.
                   </p>
 
                   {auth.errorMessage ? (
-                    <p className="mt-3 rounded-[12px] border border-[#d76a54]/25 bg-[#fff2ee] px-4 py-3 text-sm font-medium text-[#b14f3d]">
+                    <p className="mt-4 rounded-[14px] border border-[#d76a54]/25 bg-[#fff2ee] px-4 py-3 text-sm font-medium text-[#b14f3d]">
                       {auth.errorMessage}
                     </p>
                   ) : null}
 
-                  <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-end">
                     <button
                       type="button"
                       onClick={() => setIsConfirmOpen(false)}
                       disabled={auth.isSubmitting}
-                      className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-black/20 px-6 text-sm font-semibold text-foreground transition-colors hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[50px] items-center justify-center rounded-full border border-black/20 px-7 text-sm font-semibold text-foreground transition-colors hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Hủy
                     </button>
@@ -259,7 +259,7 @@ export function AccountNavigation({
                       type="button"
                       onClick={() => void handleLogout()}
                       disabled={auth.isSubmitting}
-                      className="inline-flex min-h-[44px] min-w-[136px] items-center justify-center whitespace-nowrap rounded-full bg-black px-7 text-sm font-bold uppercase tracking-[0.03em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="inline-flex min-h-[50px] min-w-[156px] items-center justify-center whitespace-nowrap rounded-full bg-black px-8 text-sm font-bold uppercase tracking-[0.03em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {auth.isSubmitting ? "Đang xử lý..." : "Đăng xuất"}
                     </button>

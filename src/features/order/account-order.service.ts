@@ -1,5 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductMediaPublicUrl } from "@/lib/supabase/storage";
+import { lookupOrderByContact } from "@/features/order/order-lookup.service";
+import type { OrderLookupInput } from "@/validations/order/order-lookup.schema";
 import type { AccountOrder, AccountOrderItem, AccountOrderDetail, AccountOrderShipping } from "@/types/account-order.types";
 import { getOrderStatusesForFilter, type OrderHistoryFilter } from "@/features/order/order-history";
 
@@ -473,7 +475,13 @@ export async function cancelCustomerOrder(
     };
   }
 
-  // Update order status to CANCELLED
+  return markOrderAsCancelled(admin, orderId);
+}
+
+async function markOrderAsCancelled(
+  admin: ReturnType<typeof createAdminClient>,
+  orderId: number,
+): Promise<{ success: boolean; message?: string }> {
   const { error: updateError } = await admin
     .schema("sales")
     .from("sales_order")
@@ -487,7 +495,6 @@ export async function cancelCustomerOrder(
     return { success: false, message: updateError.message };
   }
 
-  // Update shipping status if shipping record exists
   await admin
     .schema("sales")
     .from("shipping")
@@ -498,4 +505,25 @@ export async function cancelCustomerOrder(
     .eq("order_id", orderId);
 
   return { success: true };
+}
+
+export async function cancelGuestLookupOrder(
+  input: OrderLookupInput & { orderId: number },
+): Promise<{ success: boolean; message?: string }> {
+  const admin = createAdminClient();
+  const order = await lookupOrderByContact(input);
+
+  if (!order || order.order_id !== input.orderId) {
+    return { success: false, message: "Không tìm thấy đơn hàng." };
+  }
+
+  const allowedStatuses = ["PENDING", "CONFIRMED", "PACKING"];
+  if (!allowedStatuses.includes(String(order.order_status).toUpperCase())) {
+    return {
+      success: false,
+      message: "Đơn hàng đã được vận chuyển hoặc hoàn thành, không thể hủy.",
+    };
+  }
+
+  return markOrderAsCancelled(admin, input.orderId);
 }

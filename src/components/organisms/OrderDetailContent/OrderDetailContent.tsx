@@ -351,7 +351,7 @@ export function OrderDetailContent({
                 ) : null}
               </>
             ) : (
-              <p className="text-[1rem] font-light italic text-black/50 md:text-right">
+              <p className="text-[16px] font-light italic text-black/50 md:text-right">
                 Chưa bàn giao đơn vị vận chuyển
               </p>
             )}

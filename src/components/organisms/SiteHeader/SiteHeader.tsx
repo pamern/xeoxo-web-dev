@@ -47,6 +47,43 @@ const MAIN_NAV: UtilityLink[] = [
   { label: "BỘ SƯU TẬP", href: ROUTES.COLLECTIONS },
 ];
 
+function groupCategories(categories: CategoryNavItem[]) {
+  const categoryIds = new Set(categories.map((category) => category.categoryId));
+  const roots = categories.filter(
+    (category) => !category.parentId || !categoryIds.has(category.parentId),
+  );
+  const mapped = roots.map((root) => {
+    const children = categories
+      .filter((category) => category.parentId === root.categoryId)
+      .sort((left, right) => left.categoryName.localeCompare(right.categoryName));
+
+    return {
+      children,
+      parent: root,
+    };
+  });
+  const rootsWithChildren = mapped.filter((group) => group.children.length > 0);
+  const rootsWithoutChildren = mapped
+    .filter((group) => group.children.length === 0)
+    .map((group) => group.parent);
+
+  if (rootsWithoutChildren.length === 0) {
+    return rootsWithChildren;
+  }
+
+  return [
+    ...rootsWithChildren,
+    {
+      children: rootsWithoutChildren,
+      parent: {
+        categoryId: -999,
+        categoryName: "Khác",
+        categorySlug: "",
+      },
+    },
+  ];
+}
+
 export function SiteHeader({
   womenCategories = [],
   menCategories = [],
@@ -405,37 +442,98 @@ export function SiteHeader({
                   </Link>
 
                   {hasDropdown && (
-                    <div
-                      className={cn(
-                        "absolute top-full z-[90] w-[720px] max-w-[calc(100vw-48px)] pt-[14px]",
-                        dropdownAlignment,
-                        hoveredNav === item.label
-                          ? "pointer-events-auto"
-                          : "pointer-events-none",
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          "rounded-[16px] bg-background p-5 text-foreground shadow-[0_18px_38px_rgba(0,0,0,0.16)] transition-all duration-200",
-                          hoveredNav === item.label
-                            ? "translate-y-0 opacity-100"
-                            : "-translate-y-2 opacity-0",
-                        )}
-                      >
-                        <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-                          {categories.map((category) => (
-                            <Link
-                              key={category.categoryId}
-                              href={ROUTES.CATEGORY(category.categorySlug)}
-                              className="text-[13px] font-medium text-foreground transition-colors hover:text-foreground/60"
-                              onClick={() => setHoveredNav(null)}
-                            >
-                              {category.categoryName}
-                            </Link>
-                          ))}
+                    (() => {
+                      const grouped = groupCategories(categories);
+                      const widthClass =
+                        grouped.length === 1
+                          ? "w-[240px]"
+                          : grouped.length === 2
+                            ? "w-[480px]"
+                            : "w-[720px]";
+                      const gridColsClass =
+                        grouped.length === 1
+                          ? "grid-cols-1"
+                          : grouped.length === 2
+                            ? "grid-cols-2"
+                            : "grid-cols-3";
+
+                      return (
+                        <div
+                          className={cn(
+                            "absolute top-full z-[90] max-w-[calc(100vw-48px)] pt-[14px]",
+                            dropdownAlignment,
+                            widthClass,
+                            hoveredNav === item.label
+                              ? "pointer-events-auto"
+                              : "pointer-events-none",
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "rounded-[16px] border border-gray-100 bg-background p-6 text-foreground shadow-[0_18px_38px_rgba(0,0,0,0.16)] transition-all duration-200",
+                              hoveredNav === item.label
+                                ? "translate-y-0 opacity-100"
+                                : "-translate-y-2 opacity-0",
+                            )}
+                          >
+                            {item.href ? (
+                              <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
+                                <Link
+                                  href={
+                                    item.href === ROUTES.CATALOG_WOMEN
+                                      ? "/categories/nu"
+                                      : item.href === ROUTES.CATALOG_MEN
+                                        ? "/categories/nam"
+                                        : item.href === ROUTES.CATALOG_AO_DAI
+                                          ? "/categories/ao-dai"
+                                          : item.href
+                                  }
+                                  className="flex items-center gap-1 text-[11px] font-medium text-[#FF5C39] transition-colors hover:text-[#e04322]"
+                                  onClick={() => setHoveredNav(null)}
+                                >
+                                  Xem tất cả sản phẩm →
+                                </Link>
+                              </div>
+                            ) : null}
+                            <div className={cn("grid gap-10", gridColsClass)}>
+                              {grouped.map((group) => (
+                                <div
+                                  key={group.parent.categoryId}
+                                  className="flex min-w-[180px] flex-col gap-3"
+                                >
+                                  {group.parent.categorySlug ? (
+                                    <Link
+                                      href={ROUTES.CATEGORY(group.parent.categorySlug)}
+                                      className="border-b border-gray-100 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:text-[#FF5C39]"
+                                      onClick={() => setHoveredNav(null)}
+                                    >
+                                      {group.parent.categoryName}
+                                    </Link>
+                                  ) : (
+                                    <span className="border-b border-gray-100 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-black">
+                                      {group.parent.categoryName}
+                                    </span>
+                                  )}
+
+                                  <div className="flex flex-col gap-2">
+                                    {group.children.map((child) => (
+                                      <Link
+                                        key={child.categoryId}
+                                        href={ROUTES.CATEGORY(child.categorySlug)}
+                                        className="text-[11px] font-light text-muted-foreground transition-colors hover:text-black"
+                                        onClick={() => setHoveredNav(null)}
+                                      >
+                                        {child.categoryName}
+                                      </Link>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })()
                   )}
                 </div>
               );

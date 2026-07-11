@@ -71,8 +71,8 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
 
   return (
     <SiteLayout>
-      <div className="account-page-shell">
-        <section className="breadcrumb-shell">
+      <div className="bg-background">
+        <section className="mx-auto w-full max-w-site px-6 pt-6 xl:px-[100px]">
           <Breadcrumbs
             items={[
               { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },
@@ -82,21 +82,16 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
           />
         </section>
 
-        <section className="account-page-section pt-6">
-          <div className="mx-auto max-w-site">
-            <div className="account-page-grid mt-2">
-              <aside className="account-sticky-rail">
-                <AccountNavigation
-                  items={ACCOUNT_NAV_ITEMS}
-                  activeHref={ROUTES.ACCOUNT_ORDERS}
-                  variant="account"
-                />
-              </aside>
+        <section className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
+          <div className="flex flex-col lg:flex-row gap-10">
+            {/* Left Column: Sidebar (25%) */}
+            <div className="w-full lg:w-1/4 shrink-0">
+              <AccountNavigation items={ACCOUNT_NAV_ITEMS} activeHref={ROUTES.ACCOUNT_ORDERS} variant="account" />
+            </div>
 
-              {/* Right Column: Main Content (80%) */}
-              <div className="flex-1">
-                <OrderDetailContent order={order} customer={customerData} />
-              </div>
+            {/* Right Column: Main Content (80%) */}
+            <div className="flex-1">
+              <OrderDetailContent order={order} customer={customerData} />
             </div>
           </div>
         </section>

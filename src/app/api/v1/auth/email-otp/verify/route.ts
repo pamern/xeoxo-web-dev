@@ -1,11 +1,15 @@
 import { fail, ok } from "@/lib/api-response";
 import { parseAuthIdentifier } from "@/lib/auth-identifier";
+import { setGuestOrderCancelOtpCookie } from "@/lib/guest-order-cancel-otp";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
       email?: string;
+      order_code?: string;
+      order_id?: number;
+      purpose?: string;
       token?: string;
     };
 
@@ -34,6 +38,22 @@ export async function POST(request: Request) {
         400,
         error,
       );
+    }
+
+    if (body.purpose === "cancel-order") {
+      const orderCode = String(body.order_code ?? "").trim().toUpperCase();
+      const orderId = Number(body.order_id);
+
+      if (!orderCode || !Number.isInteger(orderId) || orderId <= 0) {
+        return fail("Thiếu thông tin xác thực hủy đơn hàng.", 400);
+      }
+
+      await setGuestOrderCancelOtpCookie({
+        contact: identifier.value,
+        orderCode,
+        orderId,
+        purpose: "cancel-order",
+      });
     }
 
     return ok(null, "Xác thực OTP email thành công.");
