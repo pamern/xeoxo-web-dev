@@ -23,17 +23,32 @@ async function readApi<T>(response: Response, fallback: string) {
   return payload.data;
 }
 
+export type OrderHistoryPage = {
+  orders: AccountOrder[];
+  total: number;
+  offset: number;
+  limit: number;
+};
+
 export const orderService = {
-  async getOrders(statusGroup: OrderHistoryFilter) {
-    const query =
-      statusGroup === "all"
-        ? API.ORDERS
-        : `${API.ORDERS}?status_group=${encodeURIComponent(statusGroup)}`;
-    const response = await fetch(query, {
+  async getOrders(
+    statusGroup: OrderHistoryFilter,
+    pagination: { offset: number; limit: number },
+  ) {
+    const query = new URLSearchParams({
+      offset: String(pagination.offset),
+      limit: String(pagination.limit),
+    });
+
+    if (statusGroup !== "all") {
+      query.set("status_group", statusGroup);
+    }
+
+    const response = await fetch(`${API.ORDERS}?${query.toString()}`, {
       credentials: "include",
     });
 
-    return readApi<AccountOrder[]>(response, "Không thể tải lịch sử đơn hàng.");
+    return readApi<OrderHistoryPage>(response, "Không thể tải lịch sử đơn hàng.");
   },
 
   async lookupOrder(values: OrderLookupValues) {

@@ -1,30 +1,46 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductMediaPublicUrl } from "@/lib/supabase/storage";
 
-export async function getCustomerReviews(customerId: number) {
+export const REVIEWS_PAGE_SIZE = 5;
+
+export async function getCustomerReviews(
+  customerId: number,
+  pagination?: { offset: number; limit: number },
+) {
   const admin = createAdminClient();
 
-  const { data: reviews, error: revErr } = await admin
+  let query = admin
     .schema("sales")
     .from("review")
-    .select(`
+    .select(
+      `
       review_id,
       order_item_id,
       rating,
       review_content,
       created_at,
       updated_at
-    `)
+    `,
+      { count: "exact" },
+    )
     .eq("customer_id", customerId)
     .order("created_at", { ascending: false });
+
+  if (pagination) {
+    query = query.range(pagination.offset, pagination.offset + pagination.limit - 1);
+  }
+
+  const { data: reviews, error: revErr, count } = await query;
 
   if (revErr) {
     throw new Error(revErr.message);
   }
 
   const safeReviews = reviews || [];
+  const total = count ?? safeReviews.length;
+
   if (!safeReviews.length) {
-    return [];
+    return { reviews: [], total };
   }
 
   const orderItemIds = safeReviews.map((r) => Number(r.order_item_id));
@@ -234,5 +250,5 @@ export async function getCustomerReviews(customerId: number) {
     });
   }
 
-  return result;
+  return { reviews: result, total };
 }

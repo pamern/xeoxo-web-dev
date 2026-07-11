@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 import { ProductReviewModal } from "@/components/organisms/ProductReviewModal/ProductReviewModal";
+import { Pagination } from "@/components/molecules/Pagination";
+
+const REVIEWS_PER_PAGE = 5;
 
 type ReviewItem = {
   review_id: number;
@@ -31,6 +34,7 @@ type ReviewItem = {
 
 interface AccountReviewsContentProps {
   initialReviews: ReviewItem[];
+  initialTotal: number;
   customerName: string;
 }
 
@@ -70,22 +74,46 @@ function EmptyReviewState() {
 
 export function AccountReviewsContent({
   initialReviews,
+  initialTotal,
   customerName,
 }: AccountReviewsContentProps) {
   const [reviews, setReviews] = useState<ReviewItem[]>(initialReviews);
+  const [total, setTotal] = useState(initialTotal);
   const [selectedReview, setSelectedReview] = useState<ReviewItem | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
+  const totalPages = Math.max(1, Math.ceil(total / REVIEWS_PER_PAGE));
+  const hasHydratedFromInitial = useRef(false);
 
-  const fetchReviews = async () => {
+  const fetchReviews = async (page: number) => {
+    setIsLoading(true);
     try {
-      const res = await fetch("/api/v1/reviews");
+      const query = new URLSearchParams({
+        offset: String((page - 1) * REVIEWS_PER_PAGE),
+        limit: String(REVIEWS_PER_PAGE),
+      });
+      const res = await fetch(`/api/v1/reviews?${query.toString()}`);
       const payload = await res.json();
       if (payload.success) {
-        setReviews(payload.data || []);
+        setReviews(payload.data?.reviews ?? []);
+        setTotal(payload.data?.total ?? 0);
       }
     } catch (err) {
       console.error("Lỗi khi tải danh sách đánh giá:", err);
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!hasHydratedFromInitial.current) {
+      hasHydratedFromInitial.current = true;
+      return;
+    }
+
+    void fetchReviews(currentPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
 
   const formatReviewDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -237,6 +265,14 @@ export function AccountReviewsContent({
         </div>
       )}
 
+      {total > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
+      )}
+
       {selectedReview && (
         <ProductReviewModal
           orderCode=""
@@ -258,7 +294,7 @@ export function AccountReviewsContent({
           onClose={() => setSelectedReview(null)}
           onFinished={() => {
             setSelectedReview(null);
-            void fetchReviews();
+            void fetchReviews(currentPage);
           }}
         />
       )}

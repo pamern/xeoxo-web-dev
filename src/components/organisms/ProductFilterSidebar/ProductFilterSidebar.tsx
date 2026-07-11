@@ -52,7 +52,7 @@ export function ProductFilterSidebar({
   }, [initialOpenGroups]);
 
   return (
-    <aside className={cn("w-full text-black lg:w-[240px]", className)}>
+    <aside className={cn("w-full text-black lg:w-[272px]", className)}>
       <div className="flex items-center justify-between border-b border-black pb-3">
         <h2 className="text-body-md font-light leading-tight uppercase tracking-wider">Bộ lọc</h2>
         <span className="text-body-sm font-light leading-tight text-muted-foreground">{resultCount} kết quả</span>

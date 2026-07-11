@@ -27,6 +27,7 @@ export function ProductListingPage({
   filterOptions = EMPTY_FILTER_OPTIONS,
   recentlyViewedProducts = [],
   categorySlug,
+  initialTotal,
 }: {
   title: string;
   products: Product[];
@@ -34,6 +35,7 @@ export function ProductListingPage({
   filterOptions?: CategoryFilterOptions;
   recentlyViewedProducts?: Product[];
   categorySlug?: string;
+  initialTotal?: number;
 }) {
   return (
     <SiteLayout>
@@ -56,6 +58,7 @@ export function ProductListingPage({
             products={products}
             filterOptions={filterOptions}
             categorySlug={categorySlug}
+            initialTotal={initialTotal}
           />
         </Suspense>
       </section>

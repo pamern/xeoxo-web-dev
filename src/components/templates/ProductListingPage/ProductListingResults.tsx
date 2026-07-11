@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   ProductFilterSidebar,
   type ProductFilterGroup,
 } from "@/components/organisms/ProductFilterSidebar";
 import { ProductGrid } from "@/components/organisms/ProductGrid";
+import { Pagination } from "@/components/molecules/Pagination";
 import { cn, formatPrice } from "@/lib/utils";
 import type { Product } from "@/types/product.types";
 import type { CategoryFilterOptions } from "@/features/homepage/homepage.service";
+import { COLOR_TO_SEASON, filterAndSortProducts } from "@/features/catalog/product-filtering";
 
 const CATEGORY_LABEL = "Danh mục";
 const SIZE_LABEL = "Kích thước";
@@ -30,40 +32,18 @@ const SEASON_MAP: Record<string, string> = {
   WINTER: "Đông"
 };
 
-const COLOR_TO_SEASON: Record<string, string> = {
-  "Cam": "Xuân", "Hồng cam": "Xuân", "Kem": "Xuân", "Trắng kem": "Xuân",
-  "Vàng": "Xuân", "Vàng kem": "Xuân", "Vàng nhạt": "Xuân", "Xanh cốm": "Xuân",
-  "Hồng": "Hạ", "Hồng nhạt": "Hạ", "Hồng phấn": "Hạ", "Hồng phấn nhạt": "Hạ",
-  "Trắng xám": "Hạ", "Tím nhạt": "Hạ", "Xanh biển nhạt": "Hạ", "Xanh ngọc": "Hạ",
-  "Xanh xám": "Hạ", "Xám bạc": "Hạ",
-  "Be": "Thu", "Vàng nâu": "Thu", "Xanh lá": "Thu", "Xanh oliu": "Thu", "Đỏ đậm": "Thu",
-  "Hồng sen": "Đông", "Hồng tím": "Đông", "Hồng đậm": "Đông", "Hồng đỗ": "Đông",
-  "Trắng": "Đông", "Tím": "Đông", "Xanh": "Đông", "Xanh biển": "Đông",
-  "Xanh coban": "Đông", "Xanh lam": "Đông", "Xanh lục": "Đông", "Đen": "Đông",
-  "Đỏ": "Đông", "Đỏ mận": "Đông"
-};
-
-function getProductSeasons(product: Product): string[] {
-  const seasons = new Set<string>();
-  product.colors.forEach((c) => {
-    for (const [colorName, season] of Object.entries(COLOR_TO_SEASON)) {
-      if (c.name.toLowerCase().includes(colorName.toLowerCase())) {
-        seasons.add(season);
-      }
-    }
-  });
-  return Array.from(seasons);
-}
-
 export function ProductListingResults({
   products,
   filterOptions,
   categorySlug,
+  initialTotal,
 }: {
   products: Product[];
   filterOptions: CategoryFilterOptions;
   categorySlug?: string;
+  initialTotal?: number;
 }) {
+  const isServerPaginated = Boolean(categorySlug) && typeof initialTotal === "number";
   const searchParams = useSearchParams();
   const sortParam = searchParams.get("sort");
   const genderParam = searchParams.get("gender");
@@ -223,134 +203,90 @@ export function ProductListingResults({
     });
   }
 
+  // Client-side filtering fallback, used only for listing flows that have no
+  // categorySlug-backed server endpoint to page against (e.g. /products search
+  // & collection results). Category pages fetch a filtered/sorted page from
+  // /api/v1/products/listing instead.
   const filteredProducts = useMemo(() => {
-    const categoryFilters = selected[CATEGORY_LABEL] ?? [];
-    const sizeFilters = selected[SIZE_LABEL] ?? [];
-    const colorFilters = selected[COLOR_LABEL] ?? [];
-    const materialFilters = selected[MATERIAL_LABEL] ?? [];
-    const collectionFilters = selected[COLLECTION_LABEL] ?? [];
-    const genderFilters = selected[GENDER_LABEL] ?? [];
-    const seasonFilters = selected[PERSONAL_COLOR_LABEL] ?? [];
+    if (isServerPaginated) {
+      return [];
+    }
 
-    const filtered = products.filter((product) => {
-      if (genderFilters.length > 0) {
-        const mappedGenders = genderFilters.map((g) => {
-          if (g === "Nam") return "nam";
-          if (g === "Nữ") return "nu";
-          return "tre-em";
-        });
-        if (!mappedGenders.includes(product.gender)) {
-          return false;
-        }
-      }
-      if (seasonFilters.length > 0) {
-        const productSeasons = getProductSeasons(product);
-        if (!productSeasons.some((s) => seasonFilters.includes(s))) {
-          return false;
-        }
-      }
-      if (
-        categoryFilters.length > 0 &&
-        !categoryFilters.includes(
-          filterOptions.categories.find((c) => c.slug === product.categorySlug)?.name ?? "",
-        )
-      ) {
-        return false;
-      }
-      if (
-        sizeFilters.length > 0 &&
-        !product.sizes.some((size) => sizeFilters.includes(size))
-      ) {
-        return false;
-      }
-      if (
-        colorFilters.length > 0 &&
-        !product.colors.some((color) => colorFilters.includes(color.name))
-      ) {
-        return false;
-      }
-      if (
-        materialFilters.length > 0 &&
-        !materialFilters.includes(product.materialName ?? "")
-      ) {
-        return false;
-      }
-      if (
-        collectionFilters.length > 0 &&
-        !collectionFilters.includes(product.collectionName ?? "")
-      ) {
-        return false;
-      }
-      if (hasPriceSelection && (product.price < priceRange.min || product.price > priceRange.max)) {
-        return false;
-      }
-      return true;
+    return filterAndSortProducts(products, filterOptions, {
+      category: selected[CATEGORY_LABEL],
+      size: selected[SIZE_LABEL],
+      color: selected[COLOR_LABEL],
+      material: selected[MATERIAL_LABEL],
+      collection: selected[COLLECTION_LABEL],
+      gender: selected[GENDER_LABEL],
+      season: selected[PERSONAL_COLOR_LABEL],
+      priceMin: hasPriceSelection ? priceRange.min : undefined,
+      priceMax: hasPriceSelection ? priceRange.max : undefined,
+      sort: sortBy,
     });
+  }, [isServerPaginated, products, selected, filterOptions, sortBy, hasPriceSelection, priceRange]);
 
-    // Sort products
-    if (sortBy === "Giá thấp đến cao") {
-      filtered.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "Giá cao đến thấp") {
-      filtered.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "Mới nhất") {
-      filtered.sort((a, b) => Number(b.id) - Number(a.id));
-    } else if (sortBy === "Bán chạy nhất") {
-      filtered.sort((a, b) => (b.price - a.price) || (Number(a.id) - Number(b.id)));
+  const [serverProducts, setServerProducts] = useState<Product[]>(products);
+  const [serverTotal, setServerTotal] = useState(initialTotal ?? 0);
+  const hasHydratedServerInitial = useRef(false);
+
+  useEffect(() => {
+    if (!isServerPaginated) {
+      return;
     }
 
-    return filtered;
-  }, [products, selected, filterOptions.categories, sortBy, hasPriceSelection, priceRange]);
-
-  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
-
-  const pageNumbers = useMemo(() => {
-    const pages: (number | string)[] = [];
-    if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-      return pages;
+    if (!hasHydratedServerInitial.current) {
+      hasHydratedServerInitial.current = true;
+      return;
     }
 
-    pages.push(1);
-
-    if (currentPage > 3) {
-      pages.push("...");
+    const controller = new AbortController();
+    const query = new URLSearchParams();
+    query.set("category_slug", categorySlug as string);
+    query.set("offset", String((currentPage - 1) * ITEMS_PER_PAGE));
+    query.set("limit", String(ITEMS_PER_PAGE));
+    query.set("sort", sortBy);
+    (selected[CATEGORY_LABEL] ?? []).forEach((v) => query.append("category", v));
+    (selected[SIZE_LABEL] ?? []).forEach((v) => query.append("size", v));
+    (selected[COLOR_LABEL] ?? []).forEach((v) => query.append("color", v));
+    (selected[MATERIAL_LABEL] ?? []).forEach((v) => query.append("material", v));
+    (selected[COLLECTION_LABEL] ?? []).forEach((v) => query.append("collection", v));
+    (selected[GENDER_LABEL] ?? []).forEach((v) => query.append("gender", v));
+    (selected[PERSONAL_COLOR_LABEL] ?? []).forEach((v) => query.append("season", v));
+    if (hasPriceSelection) {
+      query.set("price_min", String(priceRange.min));
+      query.set("price_max", String(priceRange.max));
     }
 
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
+    fetch(`/api/v1/products/listing?${query.toString()}`, { signal: controller.signal })
+      .then((res) => res.json())
+      .then((payload) => {
+        if (payload.success) {
+          setServerProducts(payload.data.products);
+          setServerTotal(payload.data.total);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error("Không thể tải danh sách sản phẩm:", err);
+        }
+      });
 
-    let adjustedStart = start;
-    let adjustedEnd = end;
-    if (currentPage <= 3) {
-      adjustedEnd = 4;
-    } else if (currentPage >= totalPages - 2) {
-      adjustedStart = totalPages - 3;
-    }
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isServerPaginated, categorySlug, currentPage, sortBy, selected, hasPriceSelection, priceRange]);
 
-    for (let i = adjustedStart; i <= adjustedEnd; i++) {
-      pages.push(i);
-    }
-
-    if (currentPage < totalPages - 2) {
-      pages.push("...");
-    }
-
-    pages.push(totalPages);
-    return pages;
-  }, [currentPage, totalPages]);
-
-  const paginatedProducts = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredProducts.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredProducts, currentPage]);
+  const displayProducts = isServerPaginated
+    ? serverProducts
+    : filteredProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const displayTotal = isServerPaginated ? serverTotal : filteredProducts.length;
+  const totalPages = Math.max(1, Math.ceil(displayTotal / ITEMS_PER_PAGE));
 
   return (
-    <div className="mt-2 grid gap-8 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
+    <div className="mt-2 grid gap-8 lg:grid-cols-[272px_minmax(0,1fr)] lg:items-start">
       <ProductFilterSidebar
         groups={filterGroups}
-        resultCount={filteredProducts.length}
+        resultCount={displayTotal}
         selected={selected}
         onToggle={toggleOption}
         onClear={() => {
@@ -464,68 +400,22 @@ export function ProductListingResults({
         </div>
 
         <ProductGrid
-          products={paginatedProducts}
+          products={displayProducts}
           className="gap-x-7 gap-y-12"
           cardClassName="gap-2"
           cardImageClassName="aspect-[351/430]"
           quickAddOnHover
         />
 
-        {totalPages > 1 && (
-          <div className="mt-12 flex items-center justify-center gap-2">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => {
-                setCurrentPage((prev) => Math.max(prev - 1, 1));
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 transition disabled:opacity-30 disabled:pointer-events-none hover:bg-gray-50"
-              aria-label="Trang trước"
-            >
-              ←
-            </button>
-            {pageNumbers.map((page, index) => {
-              if (page === "...") {
-                return (
-                  <span
-                    key={`ellipsis-${index}`}
-                    className="flex h-10 w-10 items-center justify-center text-body-md text-gray-400 font-light"
-                  >
-                    ...
-                  </span>
-                );
-              }
-              return (
-                <button
-                  key={page}
-                  onClick={() => {
-                    setCurrentPage(Number(page));
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-full text-body-md font-medium transition",
-                    currentPage === page
-                      ? "bg-black text-white"
-                      : "border border-gray-200 bg-white text-black hover:bg-gray-50",
-                  )}
-                >
-                  {page}
-                </button>
-              );
-            })}
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => {
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 transition disabled:opacity-30 disabled:pointer-events-none hover:bg-gray-50"
-              aria-label="Trang sau"
-            >
-              →
-            </button>
-          </div>
-        )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={(page) => {
+            setCurrentPage(page);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="mt-12"
+        />
       </div>
     </div>
   );
