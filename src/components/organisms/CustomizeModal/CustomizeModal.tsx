@@ -107,12 +107,17 @@ export function CustomizeModal({
     setIsSaved(false);
     setSaveAsDefault(false);
     setSaveMessage(null);
-    if (touched[key]) {
-      setErrors((current) => ({
-        ...current,
-        [key]: validateMeasurementField(key, value, gender, componentType),
-      }));
-    }
+    setTouched((current) => ({ ...current, [key]: true }));
+    setErrors((current) => {
+      const error = validateMeasurementField(key, value, gender, componentType);
+      if (error) {
+        return { ...current, [key]: error };
+      } else {
+        const nextErr = { ...current };
+        delete nextErr[key];
+        return nextErr;
+      }
+    });
   }
 
   async function handleSaveToDbOrLocal() {

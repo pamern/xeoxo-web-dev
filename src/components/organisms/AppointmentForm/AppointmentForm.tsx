@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useState, useEffect, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/atoms/Button";
 import { SelectField, type SelectOption } from "@/components/molecules/SelectField";
 import type { TimeSlot } from "@/components/molecules/TimeSlotPicker";
@@ -31,10 +31,10 @@ const DEFAULT_VALUES: AppointmentValues = {
 };
 
 const fieldClassName =
-  "h-11 w-full rounded-[22px] border border-black/30 bg-white px-5 text-body font-light text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-11 w-full rounded-[22px] border border-black/30 bg-white px-5 text-body font-medium text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10";
 
 const compactFieldClassName =
-  "h-11 w-full rounded-[22px] border border-black/30 bg-white px-5 text-body font-light text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-11 w-full rounded-[22px] border border-black/30 bg-white px-5 text-body font-medium text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10";
 
 type AppointmentErrors = Partial<Record<keyof AppointmentValues, string>>;
 
@@ -64,13 +64,32 @@ export function AppointmentForm({
   const [submitError, setSubmitError] = useState<string>();
   const [errors, setErrors] = useState<AppointmentErrors>({});
 
+  useEffect(() => {
+    if (branches.length > 0 && !values.branch) {
+      setValues((current) => ({ ...current, branch: branches[0].value }));
+    }
+  }, [branches, values.branch]);
+
+  useEffect(() => {
+    if (timeSlots.length > 0 && !values.timeSlot) {
+      setValues((current) => ({ ...current, timeSlot: timeSlots[0].id }));
+    }
+  }, [timeSlots, values.timeSlot]);
+
   function update<K extends keyof AppointmentValues>(key: K, value: AppointmentValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
     setSubmitted(false);
     setSubmitError(undefined);
-    if (errors[key]) {
-      setErrors((current) => ({ ...current, [key]: validateField(key, value) }));
-    }
+    setErrors((current) => {
+      const error = validateField(key, value);
+      if (error) {
+        return { ...current, [key]: error };
+      } else {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      }
+    });
   }
 
   function handleBlur<K extends keyof AppointmentValues>(key: K) {
@@ -105,19 +124,19 @@ export function AppointmentForm({
       <div className="mx-auto flex w-full max-w-[760px] flex-col gap-4 px-0 pb-7">
         <FieldRow label="Họ và tên:">
           <FieldControl error={errors.fullName}>
-            <input name="fullName" value={values.fullName} onChange={(event) => update("fullName", event.target.value)} onBlur={() => handleBlur("fullName")} placeholder="Nhập họ và tên" aria-invalid={Boolean(errors.fullName)} className={fieldInputClass(compactFieldClassName, errors.fullName)} />
+            <input name="fullName" value={values.fullName} onChange={(event) => update("fullName", event.target.value)} onBlur={() => handleBlur("fullName")} placeholder="Nguyễn Văn A" aria-invalid={Boolean(errors.fullName)} className={fieldInputClass(compactFieldClassName, errors.fullName)} />
           </FieldControl>
         </FieldRow>
 
         <FieldRow label="Số điện thoại:">
           <FieldControl error={errors.phone}>
-            <input name="phone" inputMode="tel" value={values.phone} onChange={(event) => update("phone", event.target.value)} onBlur={() => handleBlur("phone")} placeholder="Nhập số điện thoại" aria-invalid={Boolean(errors.phone)} className={fieldInputClass(compactFieldClassName, errors.phone)} />
+            <input name="phone" inputMode="tel" value={values.phone} onChange={(event) => update("phone", event.target.value)} onBlur={() => handleBlur("phone")} placeholder="0912345678" aria-invalid={Boolean(errors.phone)} className={fieldInputClass(compactFieldClassName, errors.phone)} />
           </FieldControl>
         </FieldRow>
 
         <FieldRow label="Email cá nhân:">
           <FieldControl error={errors.email}>
-            <input name="email" type="email" value={values.email} onChange={(event) => update("email", event.target.value)} onBlur={() => handleBlur("email")} placeholder="Nhập email (không bắt buộc)" aria-invalid={Boolean(errors.email)} className={fieldInputClass(compactFieldClassName, errors.email)} />
+            <input name="email" type="email" value={values.email} onChange={(event) => update("email", event.target.value)} onBlur={() => handleBlur("email")} placeholder="nguyenvana@gmail.com" aria-invalid={Boolean(errors.email)} className={fieldInputClass(compactFieldClassName, errors.email)} />
           </FieldControl>
         </FieldRow>
 
@@ -184,9 +203,9 @@ export function AppointmentForm({
             value={values.note}
             onChange={(event) => update("note", event.target.value)}
             maxLength={500}
-            placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 500 ký tự)"
+            placeholder="Tôi muốn tư vấn về đầm lụa dáng dài..."
             rows={3}
-            className="w-full resize-none rounded-[12px] border border-black/30 bg-white px-4 py-3 text-body font-light text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10"
+            className="w-full resize-none rounded-[12px] border border-black/30 bg-white px-4 py-3 text-body font-medium text-black outline-none transition-colors placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10"
           />
         </FieldRow>
       </div>
@@ -232,7 +251,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
   return (
     <div className="flex min-w-0 flex-col gap-1.5">
       {children}
-      {error && <span className="text-xs font-medium text-red-600">{error}</span>}
+      {error && <span className="text-sm font-semibold text-[#ff593d] px-2">{error}</span>}
     </div>
   );
 }
@@ -240,7 +259,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
 function fieldInputClass(base: string, error?: string) {
   return cn(
     base,
-    error && "border-red-500 text-red-700 focus:border-red-500 focus:ring-red-100",
+    error ? "border-[#ff593d] focus:ring-red-500/15" : "border-black/30 focus:ring-black/15",
   );
 }
 
@@ -278,15 +297,23 @@ function validateField(
   value: AppointmentValues[keyof AppointmentValues],
 ) {
   const text = String(value).trim();
-  if (["fullName", "phone", "branch", "date", "timeSlot"].includes(key) && !text) {
+  if (["fullName", "phone", "email", "branch", "date", "timeSlot"].includes(key) && !text) {
     return "Vui lòng nhập thông tin này";
   }
-  if (key === "fullName" && text.length < 2) return "Họ và tên phải có ít nhất 2 ký tự";
-  if (key === "phone" && !/^(?:\+?84|0)\d{9}$/.test(text.replace(/\s/g, ""))) {
-    return "Số điện thoại không hợp lệ";
+  if (key === "fullName") {
+    if (!/^[A-Za-zÀ-ỹ\s]{2,50}$/.test(text)) {
+      return "Họ và tên chỉ được chứa chữ cái, từ 2 đến 50 ký tự";
+    }
   }
-  if (key === "email" && text && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) {
-    return "Email không hợp lệ";
+  if (key === "phone") {
+    if (!/^0[0-9]{9}$/.test(text)) {
+      return "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0";
+    }
+  }
+  if (key === "email") {
+    if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(text)) {
+      return "Email không hợp lệ";
+    }
   }
   if (key === "date" && text && text < TODAY) return "Ngày hẹn không được ở trong quá khứ";
   return undefined;

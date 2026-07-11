@@ -101,6 +101,10 @@ export type ProductComponentDto = {
   display_order: number;
   min_price: number;
   variants: ProductSizeOptionDto[];
+  color?: {
+    color_name: string;
+    color_code: string;
+  } | null;
 };
 
 export type SizeChartDto = {

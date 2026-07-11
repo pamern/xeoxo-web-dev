@@ -621,30 +621,22 @@ export function validateFields(
   const nameTrim = data.fullName.trim();
   if (!nameTrim) {
     errors.fullName = "Vui lòng nhập Họ và tên người nhận.";
-  } else if (nameTrim.split(/\s+/).length < 2) {
-    errors.fullName = "Họ và tên phải có tối thiểu 2 từ (cả họ và tên).";
-  } else if (/[0-9!@#$%^&*(),.?":{}|<>]/.test(nameTrim)) {
-    errors.fullName = "Họ và tên không được chứa số hay ký tự đặc biệt.";
+  } else if (!/^[A-Za-zÀ-ỹ\s]{2,50}$/.test(nameTrim)) {
+    errors.fullName = "Họ và tên chỉ được chứa chữ cái, từ 2 đến 50 ký tự.";
   }
 
   const phoneTrim = data.phone.trim();
   if (!phoneTrim) {
     errors.phone = "Vui lòng nhập Số điện thoại nhận hàng.";
-  } else if (!/^0[3|5|7|8|9][0-9]{8}$/.test(phoneTrim)) {
-    errors.phone = "Số điện thoại không đúng định dạng (ví dụ: 0912345678).";
+  } else if (!/^0[0-9]{9}$/.test(phoneTrim)) {
+    errors.phone = "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.";
   }
 
   const emailTrim = data.email.trim();
-  if (!isMember) {
-    if (!emailTrim) {
-      errors.email = "Vui lòng nhập địa chỉ Email để nhận thông báo đơn hàng.";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-      errors.email = "Email không đúng định dạng (ví dụ: nguyenvana@gmail.com).";
-    }
-  } else {
-    if (emailTrim && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-      errors.email = "Email không đúng định dạng (ví dụ: nguyenvana@gmail.com).";
-    }
+  if (!emailTrim) {
+    errors.email = "Vui lòng nhập địa chỉ Email.";
+  } else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(emailTrim)) {
+    errors.email = "Email không đúng định dạng (ví dụ: nguyenvana@gmail.com).";
   }
 
   const addressTrim = data.address.trim();

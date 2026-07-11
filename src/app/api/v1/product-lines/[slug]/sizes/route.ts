@@ -89,10 +89,10 @@ export async function GET(
 
     const variantsResult = componentIds.length
       ? await admin
-          .schema("catalog")
-          .from("product_variant")
-          .select("variant_id, size_option_id, price, status")
-          .in("component_id", componentIds)
+        .schema("catalog")
+        .from("product_variant")
+        .select("variant_id, size_option_id, price, status")
+        .in("component_id", componentIds)
       : { data: [], error: null };
 
     if (variantsResult.error) {
@@ -106,10 +106,10 @@ export async function GET(
 
     const sizesResult = sizeIds.length
       ? await admin
-          .schema("catalog")
-          .from("size_option")
-          .select("size_option_id, size_name")
-          .in("size_option_id", sizeIds)
+        .schema("catalog")
+        .from("size_option")
+        .select("size_option_id, size_name")
+        .in("size_option_id", sizeIds)
       : { data: [], error: null };
 
     if (sizesResult.error) {
@@ -118,13 +118,13 @@ export async function GET(
 
     const inventoryResult = variants.length
       ? await admin
-          .schema("catalog")
-          .from("v_inventory_availability")
-          .select("variant_id, total_quantity")
-          .in(
-            "variant_id",
-            variants.map((variant) => variant.variant_id),
-          )
+        .schema("catalog")
+        .from("v_inventory_availability")
+        .select("variant_id, total_quantity")
+        .in(
+          "variant_id",
+          variants.map((variant) => variant.variant_id),
+        )
       : { data: [], error: null };
 
     if (inventoryResult.error) {

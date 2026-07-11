@@ -79,7 +79,7 @@ export const productService = {
   async getReviews(
     slug: string,
     page = 1,
-    limit = 5,
+    limit = 10,
     filters?: { rating?: number | null; has_image?: boolean; component_id?: number | null }
   ) {
     try {

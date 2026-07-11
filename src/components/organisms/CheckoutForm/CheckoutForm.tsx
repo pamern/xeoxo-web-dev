@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useMemo,
   type FormEvent,
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -14,6 +15,7 @@ import { ActionSuccessModal } from "@/components/organisms/ActionSuccessModal";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAuth } from "@/hooks/useAuth";
 import { useCheckout } from "@/hooks/useCheckout";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { ROUTES } from "@/constants/routes";
 import { validateFields } from "@/data/vietnam-regions";
 import type { CustomerAddress } from "@/types/customer.types";
@@ -30,10 +32,10 @@ function PillInput({
   error?: string;
 }) {
   return (
-    <label className={`flex w-full flex-col gap-3 ${className}`}>
+    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
       <span className="text-base font-semibold text-black">{label}</span>
       <input
-        className={`h-[61px] w-full rounded-pill border bg-white px-6 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`h-[46px] w-full rounded-pill border bg-white px-4 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -60,10 +62,10 @@ function PillTextarea({
   className?: string;
 }) {
   return (
-    <label className={`flex w-full flex-col gap-3 ${className}`}>
+    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
       <span className="text-base font-semibold text-black">{label}</span>
       <textarea
-        className={`min-h-[166px] w-full resize-none rounded-[20px] border bg-white px-6 py-5 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`min-h-[85px] w-full resize-none rounded-[20px] border bg-white px-4 py-3 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -92,11 +94,11 @@ function PillSelect({
   error?: string;
 } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <label className={`flex w-full flex-col gap-3 ${className}`}>
+    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
       <span className="text-base font-semibold text-black">{label}</span>
       <div className="relative w-full">
         <select
-          className={`h-[61px] w-full appearance-none rounded-pill border bg-white px-6 text-base font-medium text-black outline-none transition focus:ring-2 ${
+          className={`h-[46px] w-full appearance-none rounded-pill border bg-white px-4 text-base font-medium text-black outline-none transition focus:ring-2 ${
             error
               ? "border-[#ff593d] focus:ring-red-500/15"
               : "border-black focus:ring-black/15"
@@ -111,7 +113,7 @@ function PillSelect({
         </select>
         <span
           aria-hidden
-          className="pointer-events-none absolute right-6 top-1/2 h-2.5 w-2.5 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-black"
+          className="pointer-events-none absolute right-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-black"
         />
       </div>
       {error && (
@@ -196,6 +198,93 @@ export function CheckoutForm() {
   const [policiesOpen, setPoliciesOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const { paymentMethods } = usePaymentMethods();
+  const options = useMemo(() => {
+    const source = paymentMethods.length
+      ? paymentMethods
+      : [
+          {
+            method_id: 1,
+            method_name: "Chuyển khoản ngân hàng",
+            method_code: "BANK_TRANSFER",
+            provider: "BANK_TRANSFER",
+            is_online: true,
+          },
+        ];
+
+    return [...source].sort((a, b) => {
+      if (a.is_online !== b.is_online) {
+        return a.is_online ? -1 : 1;
+      }
+      return a.method_id - b.method_id;
+    });
+  }, [paymentMethods]);
+
+  const [paymentMethodId, setPaymentMethodId] = useState<number>(1);
+
+  useEffect(() => {
+    if (
+      options.length &&
+      !options.some((option) => option.method_id === paymentMethodId)
+    ) {
+      setPaymentMethodId(options[0].method_id);
+    }
+  }, [options, paymentMethodId]);
+
+  const validateSingleField = (name: string, value: string) => {
+    const val = value.trim();
+    let error = "";
+    if (name === "fullName") {
+      if (!val) {
+        error = "Vui lòng nhập Họ và tên người nhận.";
+      } else if (!/^[A-Za-zÀ-ỹ\s]{2,50}$/.test(val)) {
+        error = "Họ và tên chỉ được chứa chữ cái, từ 2 đến 50 ký tự.";
+      }
+    } else if (name === "phone") {
+      if (!val) {
+        error = "Vui lòng nhập Số điện thoại nhận hàng.";
+      } else if (!/^0[0-9]{9}$/.test(val)) {
+        error = "Số điện thoại phải gồm 10 chữ số và bắt đầu bằng 0.";
+      }
+    } else if (name === "email") {
+      if (!val) {
+        error = "Vui lòng nhập địa chỉ Email.";
+      } else if (!/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(val)) {
+        error = "Email không đúng định dạng (ví dụ: nguyenvana@gmail.com).";
+      }
+    } else if (name === "address") {
+      if (!val) {
+        error = "Vui lòng nhập địa chỉ giao hàng cụ thể.";
+      } else if (val.length < 6) {
+        error = "Địa chỉ chi tiết quá ngắn (vui lòng ghi rõ số nhà, tên đường...).";
+      }
+    } else if (name === "receiverName" && otherReceiver) {
+      if (!val) {
+        error = "Vui lòng nhập Họ và tên người nhận hộ.";
+      } else if (val.split(/\s+/).length < 2) {
+        error = "Họ và tên người nhận hộ phải có tối thiểu 2 từ.";
+      } else if (/[0-9!@#$%^&*(),.?":{}|<>]/.test(val)) {
+        error = "Họ và tên không được chứa số/ký tự đặc biệt.";
+      }
+    } else if (name === "receiverPhone" && otherReceiver) {
+      if (!val) {
+        error = "Vui lòng nhập Số điện thoại người nhận hộ.";
+      } else if (!/^0[3|5|7|8|9][0-9]{8}$/.test(val)) {
+        error = "Số điện thoại nhận hộ không hợp lệ.";
+      }
+    }
+
+    setFieldErrors((prev) => {
+      const copy = { ...prev };
+      if (error) {
+        copy[name] = error;
+      } else {
+        delete copy[name];
+      }
+      return copy;
+    });
+  };
 
   const [dbProvinces, setDbProvinces] = useState<
     Array<{
@@ -518,8 +607,22 @@ export function CheckoutForm() {
         </section>
       )}
 
+      {!shouldShowAddressForm && (
+        <PillTextarea
+          label="Ghi chú đơn hàng (tuỳ chọn)"
+          name="note"
+          rows={2}
+          maxLength={200}
+          className="mt-4"
+          error={fieldErrors.note}
+          onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+          onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+          placeholder="Ghi chú đơn hàng (tối đa 200 ký tự)"
+        />
+      )}
+
       {shouldShowAddressForm && !isLoadingAddresses && (
-        <div className="mt-6 grid gap-6">
+        <div className="mt-6 grid gap-4">
           {isMember && hasSavedAddress && (
             <div className="flex flex-col gap-3 rounded-[10px] border border-black/25 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -551,6 +654,8 @@ export function CheckoutForm() {
             placeholder="Nguyễn Văn A"
             autoComplete="name"
             error={fieldErrors.fullName}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
             required
           />
           <PillInput
@@ -559,15 +664,20 @@ export function CheckoutForm() {
             placeholder="0912345678"
             autoComplete="tel"
             error={fieldErrors.phone}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
             required
           />
           <PillInput
             label="Email"
             name="email"
             type="email"
-            placeholder="email@example.com"
+            placeholder="nguyenvana@gmail.com"
             autoComplete="email"
             error={fieldErrors.email}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+            required
           />
 
           <div className="grid gap-3 md:grid-cols-2 md:gap-[11px]">
@@ -598,7 +708,21 @@ export function CheckoutForm() {
             placeholder="123 Đường Lê Lợi, Phường Bến Thành"
             autoComplete="street-address"
             error={fieldErrors.address}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
             required
+          />
+
+          <PillTextarea
+            label="Ghi chú đơn hàng (tuỳ chọn)"
+            name="note"
+            rows={2}
+            maxLength={200}
+            className="mt-2"
+            error={fieldErrors.note}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+            placeholder="Ghi chú đơn hàng (tối đa 200 ký tự)"
           />
 
           {isMember && (
@@ -629,62 +753,61 @@ export function CheckoutForm() {
             name="receiverName"
             placeholder="Nguyễn Văn B"
             error={fieldErrors.receiverName}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
           />
           <PillInput
             label="Số điện thoại"
             name="receiverPhone"
             placeholder="0987654321"
             error={fieldErrors.receiverPhone}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
           />
         </div>
       )}
 
-      <PillTextarea
-        label="Ghi chú đơn hàng (tuỳ chọn)"
-        name="note"
-        rows={5}
-        maxLength={200}
-        className="mt-5"
-        error={fieldErrors.note}
-        placeholder="Ghi chú đơn hàng (tối đa 200 ký tự), ví dụ: thời gian giao hàng mong muốn"
+      <input
+        type="hidden"
+        name="payment_method_id"
+        value={paymentMethodId}
       />
 
-      <div className="mt-10">
-        <button
-          type="button"
-          onClick={() => setPoliciesOpen((open) => !open)}
-          aria-expanded={policiesOpen}
-          className="flex items-center gap-2 text-base font-semibold text-black"
-        >
-          <Image
-            src="/icons/chevron-down.svg"
-            alt=""
-            width={18}
-            height={18}
-            aria-hidden
-            className={
-              policiesOpen
-                ? "rotate-180 transition-transform"
-                : "transition-transform"
-            }
-          />
-          Các chính sách mua hàng
-        </button>
-        {policiesOpen && (
-          <ul className="mt-4 flex flex-col gap-2 pl-7 text-body-sm text-black/75">
-            {POLICIES.map((policy) => (
-              <li key={policy}>
-                <Link
-                  href={ROUTES.POLICIES}
-                  className="underline underline-offset-2 hover:text-black"
-                >
-                  {policy}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <fieldset className="mt-10 space-y-0">
+        <legend className="mb-4 text-lg font-bold uppercase">
+          Phương thức thanh toán
+        </legend>
+        {options.map((option) => {
+          const checked = paymentMethodId === option.method_id;
+          return (
+            <label
+              key={option.method_id}
+              className="flex cursor-pointer items-center gap-4 border-b border-black/50 py-4 first:border-t"
+            >
+              <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border-2 border-[#2E54FF] bg-white">
+                <input
+                  type="radio"
+                  name="paymentMethodPreview"
+                  value={option.method_id}
+                  checked={checked}
+                  onChange={() => setPaymentMethodId(option.method_id)}
+                  className="sr-only"
+                />
+                <span
+                  className={
+                    checked
+                      ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]"
+                      : "h-[15px] w-[15px] rounded-full bg-white"
+                  }
+                />
+              </span>
+              <span className="text-base font-medium">
+                {option.method_name}
+              </span>
+            </label>
+          );
+        })}
+      </fieldset>
 
       {(addressError || errorMessage) && (
         <p className="mt-5 text-sm font-semibold text-red-600">

@@ -134,19 +134,19 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         .order("display_order", { ascending: true }),
       productLine.color_id
         ? admin
-            .schema("catalog")
-            .from("color")
-            .select("color_name, color_code")
-            .eq("color_id", productLine.color_id)
-            .maybeSingle()
+          .schema("catalog")
+          .from("color")
+          .select("color_name, color_code")
+          .eq("color_id", productLine.color_id)
+          .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
       productLine.material_id
         ? admin
-            .schema("catalog")
-            .from("material")
-            .select("material_name, description, care_instruction")
-            .eq("material_id", productLine.material_id)
-            .maybeSingle()
+          .schema("catalog")
+          .from("material")
+          .select("material_name, description, care_instruction")
+          .eq("material_id", productLine.material_id)
+          .maybeSingle()
         : Promise.resolve({ data: null, error: null }),
       admin
         .schema("catalog")
@@ -187,13 +187,13 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     });
     const mediaRows = productMedia.length
       ? await admin
-          .schema("catalog")
-          .from("media")
-          .select("media_id, storage_key, media_type, bucket_name")
-          .in(
-            "media_id",
-            productMedia.map((item) => item.media_id),
-          )
+        .schema("catalog")
+        .from("media")
+        .select("media_id, storage_key, media_type, bucket_name")
+        .in(
+          "media_id",
+          productMedia.map((item) => item.media_id),
+        )
       : { data: [], error: null };
 
     if (mediaRows.error) {
@@ -209,10 +209,10 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     );
     const variantsResult = componentIds.length
       ? await admin
-          .schema("catalog")
-          .from("product_variant")
-          .select("variant_id, component_id, size_option_id, price, status")
-          .in("component_id", componentIds)
+        .schema("catalog")
+        .from("product_variant")
+        .select("variant_id, component_id, size_option_id, price, status")
+        .in("component_id", componentIds)
       : { data: [], error: null };
 
     if (variantsResult.error) {
@@ -221,31 +221,79 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
 
     const variants = variantsResult.data ?? [];
     const variantIds = variants.map((variant) => Number(variant.variant_id));
-    const orderItemsResult = variantIds.length
+    const standardOrderItemsResult = variantIds.length
       ? await admin
-          .schema("sales")
-          .from("order_item")
-          .select("order_item_id, variant_id")
-          .in("variant_id", variantIds)
+        .schema("sales")
+        .from("order_item")
+        .select("order_item_id, variant_id, customization_id, item_type")
+        .in("variant_id", variantIds)
       : { data: [], error: null };
 
-    const orderItemsList = orderItemsResult.error ? [] : orderItemsResult.data ?? [];
+    const customizationRequestsResult = componentIds.length
+      ? await admin
+        .schema("customization")
+        .from("customization_request")
+        .select("customization_id, component_id")
+        .in("component_id", componentIds)
+      : { data: [], error: null };
+    const customizationIds = customizationRequestsResult.error
+      ? []
+      : (customizationRequestsResult.data ?? []).map((item) =>
+        Number(item.customization_id),
+      );
+    const customOrderItemsResult = customizationIds.length
+      ? await admin
+        .schema("sales")
+        .from("order_item")
+        .select("order_item_id, variant_id, customization_id, item_type")
+        .in("customization_id", customizationIds)
+      : { data: [], error: null };
+
+    const orderItemsById = new Map<number, {
+      order_item_id: number;
+      variant_id: number | null;
+      customization_id: number | null;
+      item_type: string | null;
+    }>();
+    for (const item of [
+      ...(standardOrderItemsResult.error ? [] : standardOrderItemsResult.data ?? []),
+      ...(customOrderItemsResult.error ? [] : customOrderItemsResult.data ?? []),
+    ]) {
+      orderItemsById.set(Number(item.order_item_id), {
+        order_item_id: Number(item.order_item_id),
+        variant_id: item.variant_id == null ? null : Number(item.variant_id),
+        customization_id:
+          item.customization_id == null ? null : Number(item.customization_id),
+        item_type: item.item_type == null ? null : String(item.item_type),
+      });
+    }
+    const orderItemsList = [...orderItemsById.values()];
     const orderItemIds = orderItemsList.map((item) =>
       Number(item.order_item_id),
     );
     const orderItemMap = new Map<number, number>(
-      orderItemsList.map((item) => [Number(item.order_item_id), Number(item.variant_id)]),
+      orderItemsList
+        .filter((item) => item.variant_id != null)
+        .map((item) => [Number(item.order_item_id), Number(item.variant_id)]),
+    );
+    const orderItemCustomizationMap = new Map<number, number>(
+      orderItemsList
+        .filter((item) => item.customization_id != null)
+        .map((item) => [
+          Number(item.order_item_id),
+          Number(item.customization_id),
+        ]),
     );
 
     const reviewsResult = orderItemIds.length
       ? await admin
-          .schema("sales")
-          .from("review")
-          .select("review_id, customer_id, order_item_id, rating, review_content, created_at")
-          .eq("review_status", "DISPLAY")
-          .in("order_item_id", orderItemIds)
-          .order("rating", { ascending: false })
-          .order("created_at", { ascending: false })
+        .schema("sales")
+        .from("review")
+        .select("review_id, customer_id, order_item_id, rating, review_content, created_at")
+        .eq("review_status", "DISPLAY")
+        .in("order_item_id", orderItemIds)
+        .order("rating", { ascending: false })
+        .order("created_at", { ascending: false })
       : { data: [], error: null };
 
     const safeReviewsResult = reviewsResult.error ? { data: [] } : reviewsResult;
@@ -255,10 +303,10 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
       .filter((id): id is number => typeof id === "number");
     const sizesResult = sizeIds.length
       ? await admin
-          .schema("catalog")
-          .from("size_option")
-          .select("size_option_id, size_name")
-          .in("size_option_id", sizeIds)
+        .schema("catalog")
+        .from("size_option")
+        .select("size_option_id, size_name")
+        .in("size_option_id", sizeIds)
       : { data: [], error: null };
 
     if (sizesResult.error) {
@@ -267,13 +315,13 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
 
     const inventoryResult = variants.length
       ? await admin
-          .schema("catalog")
-          .from("v_inventory_availability")
-          .select("variant_id, total_quantity")
-          .in(
-            "variant_id",
-            variants.map((variant) => variant.variant_id),
-          )
+        .schema("catalog")
+        .from("v_inventory_availability")
+        .select("variant_id, total_quantity")
+        .in(
+          "variant_id",
+          variants.map((variant) => variant.variant_id),
+        )
       : { data: [], error: null };
 
     if (inventoryResult.error) {
@@ -298,14 +346,14 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     }
 
     const displayReviews = safeReviewsResult.data ?? [];
-    const reviewPreview = displayReviews.slice(0, 5);
+    const reviewPreview = displayReviews.slice(0, 10);
     const customerIds = reviewPreview.map((review) => Number(review.customer_id));
     const customersResult = customerIds.length
       ? await admin
-          .schema("iam")
-          .from("customer")
-          .select("customer_id, customer_name")
-          .in("customer_id", customerIds)
+        .schema("iam")
+        .from("customer")
+        .select("customer_id, customer_name")
+        .in("customer_id", customerIds)
       : { data: [], error: null };
 
     if (customersResult.error) {
@@ -320,7 +368,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     );
     const avgRating = displayReviews.length
       ? displayReviews.reduce((sum, review) => sum + Number(review.rating), 0) /
-        displayReviews.length
+      displayReviews.length
       : 0;
     const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     for (const review of displayReviews) {
@@ -330,6 +378,11 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
     const minPrice = variants.length
       ? Math.min(...variants.map((variant) => toNumber(variant.price)))
       : 0;
+
+    const { data: allDbColors } = await admin
+      .schema("catalog")
+      .from("color")
+      .select("color_name, color_code");
 
     const componentsList = componentsResult.data ?? [];
     const mappedComponents = componentsList.map((comp) => {
@@ -354,6 +407,23 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         return rankDifference || a.size_name.localeCompare(b.size_name, "vi");
       });
 
+      // Match component color based on database color names
+      let compColor = colorResult.data
+        ? { color_name: colorResult.data.color_name, color_code: colorResult.data.color_code }
+        : null;
+
+      if (allDbColors) {
+        for (const dbColor of allDbColors) {
+          if (comp.component_name.toLowerCase().includes(dbColor.color_name.toLowerCase())) {
+            compColor = { color_name: dbColor.color_name, color_code: dbColor.color_code };
+            break;
+          }
+        }
+      }
+      if (comp.component_name.toLowerCase().includes("xanh mint") || comp.component_name.toLowerCase().includes("mint")) {
+        compColor = { color_name: "Xanh mint", color_code: "#A8E6CF" };
+      }
+
       return {
         component_id: Number(comp.component_id),
         component_name: String(comp.component_name),
@@ -362,6 +432,7 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         display_order: Number(comp.display_order),
         min_price: minPrice,
         variants: compSizes,
+        color: compColor,
       };
     });
 
@@ -375,9 +446,9 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         usage_context: productLine.usage_context,
         features: productLine.features
           ? String(productLine.features)
-              .split(/\r?\n|[;•]/)
-              .map((item) => item.trim())
-              .filter(Boolean)
+            .split(/\r?\n|[;•]/)
+            .map((item) => item.trim())
+            .filter(Boolean)
           : [],
         price: minPrice,
         currency: "VND",
@@ -391,9 +462,9 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         }),
         color: colorResult.data
           ? {
-              color_name: colorResult.data.color_name,
-              color_code: colorResult.data.color_code,
-            }
+            color_name: colorResult.data.color_name,
+            color_code: colorResult.data.color_code,
+          }
           : null,
         sizes: dedupeSizesByName(
           variants.map((variant) => {
@@ -423,9 +494,11 @@ export async function GET(_request: Request, { params }: { params: Promise<Param
         reviews_preview: reviewPreview.map((review) => {
           const variantId = orderItemMap.get(Number(review.order_item_id));
           const variant = variants.find((v) => Number(v.variant_id) === variantId);
-          const sizeName = variant?.size_option_id
-            ? sizeMap.get(Number(variant.size_option_id)) ?? "F"
-            : "F";
+          const sizeName = orderItemCustomizationMap.has(Number(review.order_item_id))
+            ? "Custom"
+            : variant?.size_option_id
+              ? sizeMap.get(Number(variant.size_option_id)) ?? "F"
+              : "F";
           const colorName = colorResult.data?.color_name ?? "Mặc định";
 
           return {

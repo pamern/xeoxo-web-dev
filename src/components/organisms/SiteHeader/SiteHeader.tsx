@@ -72,6 +72,7 @@ export function SiteHeader({
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") ?? "");
   const [searchOpen, setSearchOpen] = useState(false);
   const searchRef = useRef<HTMLFormElement | null>(null);
+
   const CATEGORY_MENU_BY_HREF: Record<string, CategoryNavItem[]> = {
     [ROUTES.CATALOG_WOMEN]: womenCategories,
     [ROUTES.CATALOG_MEN]: menCategories,

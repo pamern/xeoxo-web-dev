@@ -22,12 +22,12 @@ function VariantSelect({
 }) {
   const list = options.includes(value) ? options : [value, ...options];
   return (
-    <span className="relative inline-block">
+    <span className="relative inline-block w-full">
       <select
         aria-label={ariaLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[38px] appearance-none rounded-pill border border-black bg-white pl-4 pr-9 text-body-sm font-medium text-black outline-none transition focus:ring-2 focus:ring-black/15"
+        className="h-[28px] w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-6 text-xs font-semibold text-black outline-none transition focus:ring-2 focus:ring-black/15 text-center [text-align-last:center]"
       >
         {list.map((option) => (
           <option key={option} value={option}>
@@ -37,7 +37,7 @@ function VariantSelect({
       </select>
       <span
         aria-hidden
-        className="pointer-events-none absolute right-4 top-1/2 h-2 w-2 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-black"
+        className="pointer-events-none absolute right-3 top-1/2 h-2 w-2 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-black"
       />
     </span>
   );
@@ -127,9 +127,9 @@ export function CartItem({
       aria-label={`Xem chi tiết ${item.name}`}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="grid cursor-pointer grid-cols-[24px_minmax(92px,134px)_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-5 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
+      className="grid cursor-pointer grid-cols-[32px_80px_minmax(0,1fr)] sm:grid-cols-[36px_96px_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
     >
-      <label className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
+      <label className="justify-self-center inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white cursor-pointer transition hover:border-black/70">
         <input
           type="checkbox"
           checked={selected}
@@ -137,20 +137,20 @@ export function CartItem({
           aria-label={`Chọn ${item.name}`}
           className="sr-only"
         />
-        <span className={selected ? "h-[15px] w-[15px] rounded-[3px] bg-black" : "h-[15px] w-[15px] rounded-[3px] bg-white"} />
+        <span className={selected ? "h-[10px] w-[10px] rounded-[1px] bg-black" : "h-[10px] w-[10px] rounded-[1px] bg-white"} />
       </label>
 
       <div className="flex flex-col gap-2">
         <Link
           href={productHref}
           aria-label={`Xem chi tiết ${item.name}`}
-          className="group relative h-[150px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[180px]"
+          className="group relative h-[110px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[130px]"
         >
           <Image
             src={item.thumbnail || "/images/placeholder.png"}
             alt={item.name}
             fill
-            sizes="(min-width: 1024px) 134px, 28vw"
+            sizes="(min-width: 1024px) 96px, 25vw"
             className="object-cover transition duration-300 group-hover:scale-105"
           />
         </Link>
@@ -164,15 +164,15 @@ export function CartItem({
         </button>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-4">
+      <div className="flex min-w-0 flex-col gap-2.5">
         <Link
           href={productHref}
-          className="line-clamp-2 text-base font-semibold uppercase leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline sm:text-lg"
+          className="line-clamp-2 text-sm font-semibold uppercase leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline sm:text-base"
         >
           {item.name}
         </Link>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="grid grid-cols-[90px_70px_1fr_75px_2fr_auto] sm:grid-cols-[120px_90px_1fr_80px_2fr_auto] items-center gap-2 sm:gap-3 w-full">
           <VariantSelect
             value={item.color}
             options={colorOptions}
@@ -180,7 +180,7 @@ export function CartItem({
             onChange={handleColorChange}
           />
           {isCustomized ? (
-            <span className="inline-flex h-[38px] items-center rounded-pill border border-[#f15a42] bg-[#fff4ee] px-4 text-body-sm font-bold text-[#f15a42]">
+            <span className="inline-flex h-[28px] items-center justify-center rounded-pill border border-[#f15a42] bg-[#fff4ee] px-2 text-[11px] font-bold text-[#f15a42] w-full text-center">
               Customize
             </span>
           ) : (
@@ -191,8 +191,10 @@ export function CartItem({
               onChange={handleSizeChange}
             />
           )}
+          <div aria-hidden />
           <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
-          <span className="ml-auto text-right text-base font-bold uppercase text-black sm:text-lg">
+          <div aria-hidden />
+          <span className="text-right text-body-sm font-bold uppercase text-black sm:text-base justify-self-end whitespace-nowrap pr-2 sm:pr-4">
             {formatPrice(item.line_total)}
           </span>
         </div>

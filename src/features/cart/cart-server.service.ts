@@ -539,9 +539,9 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
       lineMediaRecords.sort((a, b) => a.display_order - b.display_order)[0];
     const thumbnail = mainMedia
       ? mediaUrl(
-          mediaMap.get(mainMedia.media_id)?.storage_key,
-          mediaMap.get(mainMedia.media_id)?.bucket_name,
-        )
+        mediaMap.get(mainMedia.media_id)?.storage_key,
+        mediaMap.get(mainMedia.media_id)?.bucket_name,
+      )
       : "/images/placeholder.png";
     const color = productLine?.color_id
       ? colorMap.get(productLine.color_id)?.color_name ?? ""

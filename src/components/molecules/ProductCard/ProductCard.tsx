@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn, formatPrice } from "@/lib/utils";
 import { ROUTES } from "@/constants/routes";
 import { useQuickAddProduct } from "@/hooks/useQuickAddProduct";
@@ -20,10 +21,16 @@ export function ProductCard({
   imageClassName?: string;
   quickAddOnHover?: boolean;
 }) {
+  const pathname = usePathname();
   const hoverImage = product.images[1] ?? product.images[0];
   const onSale = typeof product.salePrice === "number" && product.salePrice < product.price;
   const quickAdd = useQuickAddProduct(product.slug);
-  const productHref = ROUTES.PRODUCT(product.slug);
+  
+  let productHref = ROUTES.PRODUCT(product.slug);
+  if (pathname && pathname !== "/") {
+    productHref += `?from=${encodeURIComponent(pathname)}`;
+  }
+
   const cardRef = useRef<HTMLElement | null>(null);
   const { isDetailLoading, prefetchDetail, productDetail } = quickAdd;
   const prefetchHandlers = quickAddOnHover
@@ -199,7 +206,7 @@ export function ProductCard({
                         className={cn(
                           "relative flex h-[18px] items-center justify-center overflow-hidden text-[12px] font-medium leading-none transition-colors duration-200",
                           isLocked
-                            ? "cursor-not-allowed rounded-full border border-gray-300 bg-gray-300 text-gray-500 opacity-50"
+                            ? "cursor-not-allowed rounded-[6px] border border-gray-300 bg-gray-300 text-gray-500 opacity-50"
                             : cn(
                                 "rounded-[6px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
                                 isActiveSize &&

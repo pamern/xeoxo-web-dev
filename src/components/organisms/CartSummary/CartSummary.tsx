@@ -7,7 +7,6 @@ import { AuthModal } from "@/components/organisms/AuthModal";
 import { useAvailableLoyaltyRewards } from "@/hooks/useAvailableLoyaltyRewards";
 import { useCart } from "@/hooks/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
-import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { ROUTES } from "@/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import type { AvailableLoyaltyReward } from "@/types/loyalty.types";
@@ -89,7 +88,6 @@ function formatExpiredAt(value: string | null) {
 export function CartSummary() {
   const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } =
     useCart();
-  const { paymentMethods } = usePaymentMethods();
   const {
     rewards,
     isMember,
@@ -99,22 +97,6 @@ export function CartSummary() {
     useCheckout();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [authModalMode, setAuthModalMode] = useState<"login" | "register" | null>(null);
-  const options = useMemo(() => {
-    const source = paymentMethods.length
-      ? paymentMethods
-      : fallbackPaymentOptions();
-
-    return [...source].sort((a, b) => {
-      if (a.is_online !== b.is_online) {
-        return a.is_online ? -1 : 1;
-      }
-
-      return a.method_id - b.method_id;
-    });
-  }, [paymentMethods]);
-  const [paymentMethodId, setPaymentMethodId] = useState<number>(
-    options[0]?.method_id ?? 1,
-  );
   const [acceptedTerms, setAcceptedTerms] = useState(true);
   const [voucherSearch, setVoucherSearch] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState("");
@@ -161,15 +143,6 @@ export function CartSummary() {
   useEffect(() => {
     setSelectedIds(cartItemIds);
   }, [cartItemIds]);
-
-  useEffect(() => {
-    if (
-      options.length &&
-      !options.some((option) => option.method_id === paymentMethodId)
-    ) {
-      setPaymentMethodId(options[0].method_id);
-    }
-  }, [options, paymentMethodId]);
 
   useEffect(() => {
     if (selectedIds.length) {
@@ -230,12 +203,6 @@ export function CartSummary() {
         type="hidden"
         name="cart_item_ids"
         value={selectedIds.join(",")}
-      />
-      <input
-        form="checkout-form"
-        type="hidden"
-        name="payment_method_id"
-        value={paymentMethodId}
       />
       <input
         form="checkout-form"
@@ -410,42 +377,6 @@ export function CartSummary() {
           <span>{formatPrice(total)}</span>
         </div>
       </div>
-
-      <fieldset className="mt-10 space-y-0">
-        <legend className="mb-4 text-lg font-bold uppercase">
-          Phương thức thanh toán
-        </legend>
-        {options.map((option) => {
-          const checked = paymentMethodId === option.method_id;
-          return (
-            <label
-              key={option.method_id}
-              className="flex cursor-pointer items-center gap-4 border-b border-black/50 py-4 first:border-t"
-            >
-              <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border-2 border-[#2E54FF] bg-white">
-                <input
-                  type="radio"
-                  name="paymentMethodPreview"
-                  value={option.method_id}
-                  checked={checked}
-                  onChange={() => setPaymentMethodId(option.method_id)}
-                  className="sr-only"
-                />
-                <span
-                  className={
-                    checked
-                      ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]"
-                      : "h-[15px] w-[15px] rounded-full bg-white"
-                  }
-                />
-              </span>
-              <span className="text-base font-medium">
-                {option.method_name}
-              </span>
-            </label>
-          );
-        })}
-      </fieldset>
 
       <label className="mt-6 flex cursor-pointer items-start gap-4">
         <span className="mt-0.5 inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">

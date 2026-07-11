@@ -38,6 +38,7 @@ export function ReviewsSection({
 
   const [ratingOpen, setRatingOpen] = useState(false);
   const [componentOpen, setComponentOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "has_image" | "rating" | "component">("all");
 
   const [isPending, startTransition] = useTransition();
   const listContainerRef = useRef<HTMLDivElement>(null);
@@ -76,18 +77,27 @@ export function ReviewsSection({
   }, []);
 
   const handleRatingChange = (newRating: number | null) => {
+    setActiveTab("rating");
     setRating(newRating);
-    fetchFilteredReviews(newRating, hasImage, componentId, 1);
+    setHasImage(false);
+    setComponentId(null);
+    fetchFilteredReviews(newRating, false, null, 1);
   };
 
   const handleHasImageChange = (newHasImage: boolean) => {
+    setActiveTab("has_image");
     setHasImage(newHasImage);
-    fetchFilteredReviews(rating, newHasImage, componentId, 1);
+    setRating(null);
+    setComponentId(null);
+    fetchFilteredReviews(null, newHasImage, null, 1);
   };
 
   const handleComponentChange = (newCompId: number | null) => {
+    setActiveTab("component");
     setComponentId(newCompId);
-    fetchFilteredReviews(rating, hasImage, newCompId, 1);
+    setRating(null);
+    setHasImage(false);
+    fetchFilteredReviews(null, false, newCompId, 1);
   };
 
   const handlePageChange = (p: number) => {
@@ -103,8 +113,7 @@ export function ReviewsSection({
   };
 
   const renderPagination = () => {
-    const totalPages = Math.ceil(filteredTotal / 10);
-    if (totalPages <= 1) return null;
+    const totalPages = Math.max(1, Math.ceil(filteredTotal / 10));
 
     const pages: (number | string)[] = [];
     const maxVisible = 5;
@@ -132,9 +141,9 @@ export function ReviewsSection({
             type="button"
             disabled={isPending}
             onClick={() => handlePageChange(currentPage - 1)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 hover:border-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
-            <svg className="w-4 h-4 stroke-[2.5px] stroke-currentColor fill-none" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 stroke-[2.5px] stroke-current fill-none" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
           </button>
@@ -159,7 +168,7 @@ export function ReviewsSection({
                 "flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold transition-colors",
                 isCurrent
                   ? "bg-black text-white"
-                  : "border border-black/10 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+                  : "border border-black/10 bg-white text-black"
               )}
             >
               {p}
@@ -173,9 +182,9 @@ export function ReviewsSection({
             type="button"
             disabled={isPending}
             onClick={() => handlePageChange(currentPage + 1)}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 hover:border-black disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-black/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
           >
-            <svg className="w-4 h-4 stroke-[2.5px] stroke-currentColor fill-none" viewBox="0 0 24 24">
+            <svg className="w-4 h-4 stroke-[2.5px] stroke-current fill-none" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
             </svg>
           </button>
@@ -203,6 +212,7 @@ export function ReviewsSection({
           <button
             type="button"
             onClick={() => {
+              setActiveTab("all");
               setRating(null);
               setHasImage(false);
               setComponentId(null);
@@ -210,9 +220,9 @@ export function ReviewsSection({
             }}
             className={cn(
               "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
-              (rating === null && !hasImage && componentId === null)
+              (activeTab === "all")
                 ? "border-black bg-black text-white"
-                : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+                : "border-black/35 bg-white text-black"
             )}
           >
             Tất cả ({totalAllCount})
@@ -222,6 +232,7 @@ export function ReviewsSection({
           <button
             type="button"
             onClick={() => {
+              setActiveTab("has_image");
               setRating(null);
               setHasImage(true);
               setComponentId(null);
@@ -229,9 +240,9 @@ export function ReviewsSection({
             }}
             className={cn(
               "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
-              (hasImage && rating === null && componentId === null)
+              (activeTab === "has_image")
                 ? "border-black bg-black text-white"
-                : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+                : "border-black/35 bg-white text-black"
             )}
           >
             Có hình ảnh ({totalImagesCount})
@@ -242,19 +253,26 @@ export function ReviewsSection({
             <button
               type="button"
               onClick={() => {
-                setRatingOpen(!ratingOpen);
+                const nextOpen = !ratingOpen;
+                setRatingOpen(nextOpen);
                 setComponentOpen(false);
+                if (nextOpen) {
+                  setActiveTab("rating");
+                  setHasImage(false);
+                  setComponentId(null);
+                  fetchFilteredReviews(rating, false, null, 1);
+                }
               }}
               className={cn(
                 "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
-                (rating !== null)
+                (activeTab === "rating")
                   ? "border-black bg-black text-white"
-                  : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+                  : "border-black/35 bg-white text-black"
               )}
             >
               <span className="flex items-center gap-1.5">
-                Sao {rating ? `: ${rating} Sao` : ""} 
-                <svg className="w-2.5 h-2.5 shrink-0 stroke-currentColor fill-none stroke-[2px]" viewBox="0 0 24 24">
+                Sao
+                <svg className="w-2.5 h-2.5 shrink-0 stroke-current fill-none stroke-[2px]" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
               </span>
@@ -269,7 +287,10 @@ export function ReviewsSection({
                       handleRatingChange(null);
                       setRatingOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                    className={cn(
+                      "w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors",
+                      rating === null ? "bg-black/5 font-bold" : ""
+                    )}
                   >
                     Tất cả sao
                   </button>
@@ -281,7 +302,10 @@ export function ReviewsSection({
                         handleRatingChange(s);
                         setRatingOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                      className={cn(
+                        "w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors",
+                        rating === s ? "bg-black/5 font-bold" : ""
+                      )}
                     >
                       {s} Sao
                     </button>
@@ -297,19 +321,26 @@ export function ReviewsSection({
               <button
                 type="button"
                 onClick={() => {
-                  setComponentOpen(!componentOpen);
+                  const nextOpen = !componentOpen;
+                  setComponentOpen(nextOpen);
                   setRatingOpen(false);
+                  if (nextOpen) {
+                    setActiveTab("component");
+                    setHasImage(false);
+                    setRating(null);
+                    fetchFilteredReviews(null, false, componentId, 1);
+                  }
                 }}
                 className={cn(
                   "inline-flex h-[34px] items-center justify-center rounded-full border px-4 text-xs font-bold transition-colors cursor-pointer",
-                  (componentId !== null)
+                  (activeTab === "component")
                     ? "border-black bg-black text-white"
-                    : "border-black/35 bg-white text-black hover:border-black hover:bg-black hover:text-white"
+                    : "border-black/35 bg-white text-black"
                 )}
               >
                 <span className="flex items-center gap-1.5">
-                  Thành phần {componentId ? `: ${componentsList.find((c) => c.component_id === componentId)?.component_name}` : ""} 
-                  <svg className="w-2.5 h-2.5 shrink-0 stroke-currentColor fill-none stroke-[2px]" viewBox="0 0 24 24">
+                  Thành phần
+                  <svg className="w-2.5 h-2.5 shrink-0 stroke-current fill-none stroke-[2px]" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                   </svg>
                 </span>
@@ -324,7 +355,10 @@ export function ReviewsSection({
                         handleComponentChange(null);
                         setComponentOpen(false);
                       }}
-                      className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                      className={cn(
+                        "w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors",
+                        componentId === null ? "bg-black/5 font-bold" : ""
+                      )}
                     >
                       Tất cả thành phần
                     </button>
@@ -336,7 +370,10 @@ export function ReviewsSection({
                           handleComponentChange(comp.component_id);
                           setComponentOpen(false);
                         }}
-                        className="w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors"
+                        className={cn(
+                          "w-full text-left px-4 py-2 text-xs font-semibold hover:bg-black hover:text-white transition-colors",
+                          componentId === comp.component_id ? "bg-black/5 font-bold" : ""
+                        )}
                       >
                         {comp.component_name}
                       </button>

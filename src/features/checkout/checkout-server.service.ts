@@ -150,7 +150,7 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
       }
 
       if (item.quantity > stockQuantity) {
-        throw new Error(`${item.name} chi con ${stockQuantity} san pham trong kho.`);
+        throw new Error(`${item.name} không đủ số lượng trong kho.`);
       }
 
       const currentUnitPrice = toNumber(variant.price);

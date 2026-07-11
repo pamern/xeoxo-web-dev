@@ -18,6 +18,8 @@ import { cartService } from "@/services/cart.service";
 import { createCustomizationRequest } from "@/services/customization.service";
 import { saveProfile } from "@/services/measurement.service";
 import { useAuth } from "@/hooks/useAuth";
+import { appointmentService } from "@/services/appointment.service";
+import type { SelectOption } from "@/components/molecules/SelectField";
 import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
 import type { MeasurementValues } from "@/features/size-recommendation/size-recommendation";
 import type { CartItemDto } from "@/types/cart.types";
@@ -83,10 +85,27 @@ export function ProductDetail({
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
   const [isSizeRecommendationOpen, setIsSizeRecommendationOpen] = useState(false);
   const [isAppointmentOpen, setIsAppointmentOpen] = useState(false);
+  const [branches, setBranches] = useState<SelectOption[]>([]);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
   const [showPurchasePanel, setShowPurchasePanel] = useState(false);
   const [activeCustomizeComponentId, setActiveCustomizeComponentId] =
     useState<number | null>(null);
+
+  useEffect(() => {
+    appointmentService.getBranches()
+      .then((data) => {
+        if (data && data.length > 0) {
+          setBranches(data);
+        } else {
+          setBranches(APPOINTMENT_BRANCHES);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load branches:", err);
+        setBranches(APPOINTMENT_BRANCHES);
+      });
+  }, []);
+
   const [componentSelections, setComponentSelections] = useState<
     Record<number, ComponentSelection>
   >({});
@@ -221,11 +240,10 @@ export function ProductDetail({
         window.dispatchEvent(new Event("xeoxo-cart-updated"));
         setTempCustomization(null); // Clear temp values after successfully adding to cart
       } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "Không thể thêm sản phẩm may đo vào giỏ.",
-        );
+        const msg = error instanceof Error ? error.message : "";
+        if (!msg.toLowerCase().includes("trong kho") && !msg.toLowerCase().includes("hết hàng")) {
+          setErrorMessage(msg || "Không thể thêm sản phẩm may đo vào giỏ.");
+        }
       } finally {
         setIsAdding(false);
       }
@@ -252,11 +270,10 @@ export function ProductDetail({
       if (addedItem) showAddedToCart(addedItem);
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Không thể thêm sản phẩm vào giỏ.",
-      );
+      const msg = error instanceof Error ? error.message : "";
+      if (!msg.toLowerCase().includes("trong kho") && !msg.toLowerCase().includes("hết hàng")) {
+        setErrorMessage(msg || "Không thể thêm sản phẩm vào giỏ.");
+      }
     } finally {
       setIsAdding(false);
     }
@@ -376,11 +393,10 @@ export function ProductDetail({
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
       setTempComponentCustomizations({}); // Clear temporary customizations after successfully adding all
     } catch (error) {
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : "Không thể thêm các thành phần đã chọn vào giỏ.",
-      );
+      const msg = error instanceof Error ? error.message : "";
+      if (!msg.toLowerCase().includes("trong kho") && !msg.toLowerCase().includes("hết hàng")) {
+        setErrorMessage(msg || "Không thể thêm các thành phần đã chọn vào giỏ.");
+      }
     } finally {
       setIsAdding(false);
     }
@@ -485,7 +501,7 @@ export function ProductDetail({
         >
           <div className="w-full max-w-[1240px]">
             <AppointmentModal
-              branches={APPOINTMENT_BRANCHES}
+              branches={branches.length > 0 ? branches : APPOINTMENT_BRANCHES}
               timeSlots={APPOINTMENT_TIME_SLOTS}
               productLineId={apiProduct.product_line_id}
               onClose={() => setIsAppointmentOpen(false)}
@@ -943,16 +959,7 @@ function MultiComponentPurchaseCompact({
   return (
     <div className="mt-5 flex flex-col gap-4">
       <div className="bg-white py-3">
-        <div className="mb-3 flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold text-black">Màu sắc</p>
-            <span
-              className="mt-1 inline-flex h-9 min-w-[128px] items-center justify-center rounded-[4px] border border-black px-5 text-sm font-bold"
-              style={{ backgroundColor: color.hex, color: getReadableTextColor(color.hex) }}
-            >
-              {color.name}
-            </span>
-          </div>
+        <div className="mb-3 flex items-end justify-end">
           <button
             type="button"
             onClick={onOpenSizeGuide}
@@ -1061,6 +1068,20 @@ function ComponentPurchaseCardCompact({
             : selectedVariant?.price ?? component.min_price,
           )}
         </p>
+        {component.color && (
+          <div className="mt-3">
+            <p className="text-xs font-bold text-black">Màu sắc</p>
+            <span
+              className="mt-1 inline-flex h-[30px] min-w-[120px] items-center justify-center rounded-[4px] border border-black px-4 text-xs font-bold"
+              style={{
+                backgroundColor: component.color.color_code,
+                color: getReadableTextColor(component.color.color_code),
+              }}
+            >
+              {component.color.color_name}
+            </span>
+          </div>
+        )}
         <p className="mt-3 text-xs font-bold text-black">Kích thước</p>
         <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_88px] sm:items-center">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -1373,9 +1394,7 @@ function ComponentPurchaseCard({
         <p className="text-sm text-black/55">
           {isCustomSelected
             ? "Đã lưu yêu cầu Customize cho thành phần này."
-            : selectedVariant
-              ? `Tồn kho size ${getDisplaySizeName(selectedVariant)}: ${selectedVariant.stock_quantity ?? 0}`
-              : ""}
+            : ""}
         </p>
       </div>
     </section>
@@ -1383,21 +1402,64 @@ function ComponentPurchaseCard({
 }
 
 function ProductNotice({ icon, title }: { icon: string; title: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <div className="flex h-[60px] items-center justify-between gap-4 rounded-[10px] border border-border bg-[#fffdfd] px-5">
-      <span className="flex items-center gap-4">
-        <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d]">
-          <Image src={icon} alt="" width={22} height={22} aria-hidden />
+    <div className="flex flex-col rounded-[10px] border border-border bg-[#fffdfd] overflow-hidden transition-all duration-300">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex h-[60px] w-full items-center justify-between gap-4 px-5 text-left focus:outline-none bg-transparent"
+      >
+        <span className="flex items-center gap-4">
+          <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d] shrink-0">
+            <Image src={icon} alt="" width={22} height={22} aria-hidden />
+          </span>
+          <span className="text-body-sm font-medium">
+            Tận hưởng đặc quyền hấp dẫn khi tham gia <span className="font-bold">Xéo Hội</span>
+          </span>
         </span>
-        <span className="text-body-sm font-medium">{title}</span>
-      </span>
-      <Image
-        src="/icons/chevron-down.svg"
-        alt=""
-        width={14}
-        height={8}
-        aria-hidden
-      />
+        <Image
+          src="/icons/chevron-down.svg"
+          alt=""
+          width={14}
+          height={8}
+          aria-hidden
+          className={cn("transition-transform duration-300", isOpen ? "rotate-180" : "")}
+        />
+      </button>
+      {isOpen && (
+        <div className="border-t border-[#ff593d]/20 px-6 py-5 text-[13px] leading-relaxed text-black/85 bg-white">
+          <p className="mb-4">
+            Khi trở thành thành viên của Xéo Xọ, bạn không chỉ sở hữu những thiết kế mang tinh thần <span className="font-bold">Á Đông</span> đương đại, mà còn bước vào một không gian thời trang dành riêng cho những người yêu cái đẹp và cá tính khác biệt.
+          </p>
+          <div className="mb-4 space-y-2 pl-1">
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Nhận nhiều ưu đãi độc quyền dành riêng cho thành viên Xéo Hội.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Cơ hội trở thành những người đầu tiên sở hữu các bộ sưu tập mới nhất từ Xéo Xọ.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Trải nghiệm dịch vụ custom theo yêu cầu, cá nhân hóa từng thiết kế theo dấu ấn riêng.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Nhận tư vấn trực tiếp từ stylist của Xéo Hội để tìm ra phong cách phù hợp nhất với bạn.</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span className="shrink-0">•</span>
+              <span>Ưu tiên tham gia các hoạt động, workshop và sự kiện đặc biệt từ Xéo Xọ.</span>
+            </div>
+          </div>
+          <p className="font-medium">
+            <span className="font-bold">Xéo Hội</span> không chỉ là một cộng đồng thời trang, mà còn là nơi kết nối những người yêu văn hóa, nghệ thuật và tinh thần sống đậm bản sắc riêng.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
