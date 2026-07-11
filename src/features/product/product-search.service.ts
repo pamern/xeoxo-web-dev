@@ -522,3 +522,26 @@ export async function getProductSearchSuggestions({
   const entries = await enrichSearchEntries(matches.slice(0, limit));
   return entries.map(mapSearchEntryToSuggestion);
 }
+
+export async function getAllActiveProducts(): Promise<Product[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .schema("catalog")
+    .from("product_line")
+    .select("product_line_id, slug, line_name, description, color_id, material_id, collection_id, created_at")
+    .eq("status", "ACTIVE")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const matches = (data ?? []).map((row) => ({
+    ...row,
+    relevance: 1,
+    createdAtMs: row.created_at ? new Date(row.created_at).getTime() : 0,
+  }));
+
+  const entries = await enrichSearchEntries(matches);
+  return entries.map(mapSearchEntryToProduct);
+}

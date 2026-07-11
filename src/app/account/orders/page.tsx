@@ -40,7 +40,7 @@ const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Lịch sử mua hàng", href: ROUTES.ACCOUNT_ORDERS },
   { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
   { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
-  { label: "Đánh giá và phản hồi" },
+  { label: "Đánh giá và phản hồi", href: ROUTES.ACCOUNT_REVIEWS },
   { label: "Câu hỏi thường gặp", href: ROUTES.FAQ_ACCOUNT },
   { label: "Đăng xuất", action: "logout" },
 ];
@@ -102,7 +102,7 @@ export default async function AccountOrdersRoute({
               ]}
             />
 
-            <div className="mt-8 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
+            <div className="account-page-grid">
               <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={ACCOUNT_NAV_ITEMS}

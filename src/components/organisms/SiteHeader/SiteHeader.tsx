@@ -361,37 +361,119 @@ export function SiteHeader({
                     </Link>
 
                     {hasDropdown && (
-                      <div
-                        className={cn(
-                          "absolute top-full z-[90] w-[720px] max-w-[calc(100vw-48px)] pt-[14px]",
-                          dropdownAlignment,
-                          hoveredNav === item.label
-                            ? "pointer-events-auto"
-                            : "pointer-events-none",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "rounded-[16px] bg-background p-5 text-foreground shadow-[0_18px_38px_rgba(0,0,0,0.16)] transition-all duration-200",
-                            hoveredNav === item.label
-                              ? "translate-y-0 opacity-100"
-                              : "-translate-y-2 opacity-0",
-                          )}
-                        >
-                          <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-                            {categories.map((category) => (
-                              <Link
-                                key={category.categoryId}
-                                href={ROUTES.CATEGORY(category.categorySlug)}
-                                className="header-dropdown-link"
-                                onClick={() => setHoveredNav(null)}
-                              >
-                                {category.categoryName}
-                              </Link>
-                            ))}
+                      (() => {
+                        const grouped = (() => {
+                          const categoryIds = new Set(categories.map(c => c.categoryId));
+                          const roots = categories.filter(c => !c.parentId || !categoryIds.has(c.parentId));
+                          const mapped = roots.map(root => {
+                            const children = categories.filter(c => c.parentId === root.categoryId);
+                            return {
+                              parent: root,
+                              children: children.sort((a, b) => a.categoryName.localeCompare(b.categoryName)),
+                            };
+                          });
+                          const rootsWithChildren = mapped.filter(g => g.children.length > 0);
+                          const rootsWithoutChildren = mapped.filter(g => g.children.length === 0).map(g => g.parent);
+                          if (rootsWithoutChildren.length > 0) {
+                            return [
+                              ...rootsWithChildren,
+                              {
+                                parent: {
+                                  categoryId: -999,
+                                  categoryName: "Khác",
+                                  categorySlug: "",
+                                },
+                                children: rootsWithoutChildren,
+                              }
+                            ];
+                          }
+                          return rootsWithChildren;
+                        })();
+
+                        const widthClass = 
+                          grouped.length === 1 ? "w-[240px]" :
+                          grouped.length === 2 ? "w-[480px]" :
+                          "w-[720px]";
+
+                        const gridColsClass = 
+                          grouped.length === 1 ? "grid-cols-1" :
+                          grouped.length === 2 ? "grid-cols-2" :
+                          "grid-cols-3";
+
+                        return (
+                          <div
+                            className={cn(
+                              "absolute top-full z-[90] pt-[14px] max-w-[calc(100vw-48px)]",
+                              dropdownAlignment,
+                              widthClass,
+                              hoveredNav === item.label
+                                ? "pointer-events-auto"
+                                : "pointer-events-none",
+                            )}
+                          >
+                            <div
+                              className={cn(
+                                "rounded-[16px] bg-background p-6 text-foreground shadow-[0_18px_38px_rgba(0,0,0,0.16)] transition-all duration-200 border border-gray-100",
+                                hoveredNav === item.label
+                                  ? "translate-y-0 opacity-100"
+                                  : "-translate-y-2 opacity-0",
+                              )}
+                            >
+                              {item.href && (
+                                <div className="mb-4 border-b border-gray-100 pb-3 flex justify-between items-center">
+                                  <Link
+                                    href={
+                                      item.href === ROUTES.CATALOG_WOMEN
+                                        ? "/categories/nu"
+                                        : item.href === ROUTES.CATALOG_MEN
+                                        ? "/categories/nam"
+                                        : item.href === ROUTES.CATALOG_AO_DAI
+                                        ? "/categories/ao-dai"
+                                        : item.href
+                                    }
+                                    className="text-[11px] font-medium text-[#FF5C39] hover:text-[#e04322] transition-colors flex items-center gap-1"
+                                    onClick={() => setHoveredNav(null)}
+                                  >
+                                    Xem tất cả sản phẩm →
+                                  </Link>
+                                </div>
+                              )}
+                              <div className={cn("grid gap-10", gridColsClass)}>
+                                {grouped.map((group, groupIdx) => (
+                                  <div key={groupIdx} className="flex flex-col gap-3 min-w-[180px]">
+                                    {group.parent.categorySlug ? (
+                                      <Link
+                                        href={ROUTES.CATEGORY(group.parent.categorySlug)}
+                                        className="text-[10px] font-semibold uppercase tracking-widest text-black border-b border-gray-100 pb-1.5 hover:text-[#FF5C39] transition-colors"
+                                        onClick={() => setHoveredNav(null)}
+                                      >
+                                        {group.parent.categoryName}
+                                      </Link>
+                                    ) : (
+                                      <span className="text-[10px] font-semibold uppercase tracking-widest text-black border-b border-gray-100 pb-1.5">
+                                        {group.parent.categoryName}
+                                      </span>
+                                    )}
+                                    
+                                    <div className="flex flex-col gap-2">
+                                      {group.children.map((child) => (
+                                        <Link
+                                          key={child.categoryId}
+                                          href={ROUTES.CATEGORY(child.categorySlug)}
+                                          className="text-[11px] font-light text-muted-foreground hover:text-black transition-colors"
+                                          onClick={() => setHoveredNav(null)}
+                                        >
+                                          {child.categoryName}
+                                        </Link>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      </div>
+                        );
+                      })()
                     )}
                   </div>
                 );
@@ -703,7 +785,7 @@ function AccountSidebar({
     { label: "Lịch sử đơn hàng", href: ROUTES.ACCOUNT_ORDERS },
     { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
     { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
-    { label: "Đánh giá và phản hồi" },
+    { label: "Đánh giá và phản hồi", href: ROUTES.ACCOUNT_REVIEWS },
     { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
   ] as const;
   const latestCollectionHref = latestCollectionHighlight

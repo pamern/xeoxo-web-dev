@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ProductGrid } from "@/components/organisms/ProductGrid";
 import { StarsBanner } from "@/components/organisms/StarsBanner";
+import { ROUTES } from "@/constants/routes";
 import {
   QUIZ_QUESTIONS,
   SEASON_LABEL,
@@ -509,15 +511,26 @@ function PersonalColorResult({
 
             {data.products.length > 0 && (
               <div className="mt-14 border-t border-black/10 pt-10">
-                <h2 className="mb-6 text-2xl font-medium uppercase">
-                  Có thể bạn sẽ thích
-                </h2>
-                <ProductGrid
-                  products={data.products}
-                  className="gap-x-7 gap-y-12"
-                  cardClassName="gap-2"
-                  cardImageClassName="aspect-[351/430]"
-                />
+                <div className="max-w-[1080px] mx-auto">
+                  <div className="flex items-end justify-between gap-4 mb-6">
+                    <h2 className="text-2xl font-medium uppercase md:text-3xl">
+                      Có thể bạn sẽ thích
+                    </h2>
+                    <Link
+                      href={`${ROUTES.PRODUCTS}?season=${result.season}`}
+                      className="shrink-0 text-body-sm underline underline-offset-4 transition-opacity hover:opacity-70"
+                    >
+                      Xem đầy đủ
+                    </Link>
+                  </div>
+                  <ProductGrid
+                    products={data.products}
+                    className="gap-x-5 gap-y-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    cardClassName="gap-1.5"
+                    cardImageClassName="aspect-[351/430]"
+                    quickAddOnHover
+                  />
+                </div>
               </div>
             )}
           </>

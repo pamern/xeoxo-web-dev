@@ -15,6 +15,12 @@ const DEPARTMENT_LABEL: Record<string, string> = {
   KIDS: "Đồ Trẻ Em",
 };
 
+const DEPARTMENT_HREF: Record<string, string> = {
+  WOMEN: "/categories/nu",
+  MEN: "/categories/nam",
+  KIDS: "/categories/tre-em",
+};
+
 export async function generateMetadata({
   params,
 }: {
@@ -29,12 +35,21 @@ export async function generateMetadata({
   };
 }
 
-export default async function CategoryPage({ params }: { params: Promise<Params> }) {
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<Params>;
+  searchParams: Promise<{ gender?: string }>;
+}) {
   const { slug } = await params;
+  const { gender } = await searchParams;
   const category = await getCategoryBySlug(slug);
   if (!category) notFound();
 
   const { products, filterOptions } = await getCategoryListing(slug);
+
+  const isDeptPage = slug === "nu" || slug === "nam" || slug === "tre-em";
 
   return (
     <ProductListingPage
@@ -42,13 +57,19 @@ export default async function CategoryPage({ params }: { params: Promise<Params>
       products={products}
       breadcrumbs={[
         { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },
-        ...(category.department
-          ? [{ label: DEPARTMENT_LABEL[category.department] ?? category.department }]
+        ...(category.department && !isDeptPage
+          ? [
+              {
+                label: DEPARTMENT_LABEL[category.department] ?? category.department,
+                href: DEPARTMENT_HREF[category.department],
+              },
+            ]
           : []),
         { label: category.categoryName },
       ]}
       filterOptions={filterOptions}
       recentlyViewedProducts={[]}
+      categorySlug={slug}
     />
   );
 }

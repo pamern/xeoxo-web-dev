@@ -8,20 +8,20 @@ import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 import { COLLECTIONS } from "@/data/catalog";
 import {
-  getCategoryProductSections,
   getHomepageCollections,
+  getHomepageCustomSections,
+  type HomepageCustomSectionDto,
 } from "@/features/homepage/homepage.service";
-import type { HomepageProductSection } from "@/types/homepage.types";
 import type { Collection } from "@/types/product.types";
 import Image from "next/image";
 import Link from "next/link";
 
 async function getHomePageProductSections() {
   try {
-    return await getCategoryProductSections({ limit: 4 });
+    return await getHomepageCustomSections({ limit: 4 });
   } catch (error) {
     console.error("[homepage] Failed to load product sections", error);
-    return [] satisfies HomepageProductSection[];
+    return [] satisfies HomepageCustomSectionDto[];
   }
 }
 
@@ -33,30 +33,6 @@ async function getHomePageCollections() {
     console.error("[homepage] Failed to load collections", error);
     return [] satisfies Collection[];
   }
-}
-
-function getHomepageCategoryBannerImage(section: HomepageProductSection) {
-  const normalized = `${section.categorySlug} ${section.categoryName}`.toLowerCase();
-
-  if (
-    normalized.includes("đầm") ||
-    normalized.includes("dam") ||
-    normalized.includes("váy") ||
-    normalized.includes("vay")
-  ) {
-    return "/images/cat-dam-vay.png";
-  }
-
-  if (
-    normalized.includes("cưới") ||
-    normalized.includes("cuoi") ||
-    normalized.includes("đôi") ||
-    normalized.includes("doi")
-  ) {
-    return "/images/cat-ao-cuoi.png";
-  }
-
-  return "/images/cat-ao-dai.png";
 }
 
 function formatProductSectionTitle(categoryName: string) {
@@ -100,7 +76,7 @@ export default async function HomePage() {
       <section className="homepage-shell pb-12">
         <Link
           href={ROUTES.PERSONAL_COLOR}
-          className="group relative flex min-h-[260px] overflow-hidden rounded-lg md:min-h-[420px] lg:min-h-[615px]"
+          className="group relative flex w-full aspect-[1728/615] overflow-hidden rounded-lg min-h-[160px]"
         >
           <Image
             src="/images/homepage_personal_color.png"
@@ -131,7 +107,7 @@ export default async function HomePage() {
         <div key={section.categorySlug}>
           <CategoryBanner
             title={section.categoryName}
-            image={getHomepageCategoryBannerImage(section)}
+            image={section.bannerImage}
             href={ROUTES.CATEGORY(section.categorySlug)}
           />
 

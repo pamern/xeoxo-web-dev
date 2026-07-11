@@ -313,34 +313,36 @@ select {
   }
 
   .stars-shell {
-    @apply relative w-full overflow-hidden bg-cover bg-center;
-    padding-block: clamp(40px, 28.57px + 0.89vw, 56px);
+    @apply relative w-full overflow-hidden;
+    background-repeat: repeat;
+    background-size: 240px; /* Even smaller tile pattern to match compact size */
+    @apply py-[10px] md:py-[14px];
   }
 
   .stars-title {
-    @apply mb-8 text-center font-extrabold uppercase tracking-widest text-white text-shadow-soft;
-    font-size: clamp(28px, 19.43px + 0.67vw, 36px);
+    @apply mb-3 text-center font-extrabold uppercase tracking-widest text-white text-shadow-soft;
+    font-size: clamp(16px, 14px + 0.3vw, 20px);
   }
 
   .stars-card {
-    @apply relative aspect-[3/4] shrink-0 overflow-hidden border border-black/20 bg-black/10 shadow-lg transition-all duration-300 hover:shadow-xl;
-    width: clamp(260px, 214.29px + 3.57vw, 280px);
+    @apply relative aspect-[3/4] shrink-0 overflow-hidden border border-black/20 bg-black/10 shadow-sm transition-all duration-300 hover:shadow-md;
+    width: clamp(130px, 110px + 2vw, 160px);
   }
 
   .stars-card-overlay {
-    @apply absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black via-black/85 to-transparent;
-    min-height: clamp(164px, 127.43px + 2.86vw, 180px);
-    padding: clamp(14px, 8.29px + 0.45vw, 16px);
-    padding-top: clamp(36px, 24.57px + 0.89vw, 48px);
+    @apply absolute inset-x-0 bottom-0 flex flex-col justify-end bg-gradient-to-t from-black/90 via-black/75 to-transparent;
+    min-height: clamp(85px, 75px + 1vw, 105px);
+    padding: clamp(6px, 5px + 0.1vw, 8px);
+    padding-top: clamp(16px, 12px + 0.3vw, 24px);
   }
 
   .stars-card-copy {
-    @apply mb-3 line-clamp-4 text-body-sm font-light leading-relaxed text-white/90;
-    min-height: clamp(64px, 52.57px + 0.89vw, 72px);
+    @apply mb-1.5 line-clamp-2 text-[9px] md:text-[10px] font-light leading-tight text-white/90;
+    min-height: clamp(24px, 20px + 0.3vw, 30px);
   }
 
   .stars-card-cta {
-    @apply flex h-[38px] w-full items-center justify-center rounded-full border border-white bg-transparent text-center text-button-sm font-bold uppercase tracking-wider text-white transition-colors duration-200 hover:bg-white hover:text-black;
+    @apply flex h-[24px] w-full items-center justify-center rounded-full border border-white bg-transparent text-center text-[9px] font-bold uppercase tracking-wider text-white transition-colors duration-200 hover:bg-white hover:text-black;
   }
 
   .reviews-shell {
@@ -419,7 +421,7 @@ select {
     }
 
     .account-page-grid {
-      grid-template-columns: 20% minmax(0, 1fr);
+      grid-template-columns: 25% minmax(0, 1fr);
     }
   }
 
@@ -594,6 +596,57 @@ select {
   .footer-social-icon {
     width: var(--footer-social-icon-size);
     height: var(--footer-social-icon-size);
+  }
+
+  .price-range-input {
+    pointer-events: none;
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    width: 100%;
+    height: 24px;
+    margin: 0;
+    transform: translateY(-50%);
+    appearance: none;
+    background: transparent;
+  }
+
+  .price-range-input::-webkit-slider-runnable-track {
+    height: 2px;
+    background: transparent;
+  }
+
+  .price-range-input::-webkit-slider-thumb {
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    margin-top: -8px;
+    appearance: none;
+    border: 2px solid #000;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
+    cursor: grab;
+  }
+
+  .price-range-input:active::-webkit-slider-thumb {
+    cursor: grabbing;
+  }
+
+  .price-range-input::-moz-range-track {
+    height: 2px;
+    background: transparent;
+  }
+
+  .price-range-input::-moz-range-thumb {
+    pointer-events: auto;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #000;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 0.18);
+    cursor: grab;
   }
 
   @media (min-width: 640px) {

@@ -5,7 +5,6 @@ import {
   AccountNavigation,
   type AccountNavItem,
 } from "@/components/organisms/AccountNavigation/AccountNavigation";
-import { OrderDetailContent } from "@/components/organisms/OrderDetailContent";
 import { PolicyClosingNote } from "@/components/organisms/PolicyClosingNote";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
@@ -15,6 +14,7 @@ import {
 } from "@/features/auth/auth.service";
 import { getCustomerOrderDetail } from "@/features/order/account-order.service";
 import { createClient } from "@/lib/supabase/server";
+import { OrderDetailContent } from "@/components/organisms/OrderDetailContent/OrderDetailContent";
 
 export const metadata: Metadata = {
   title: "Chi tiết đơn hàng",
@@ -34,14 +34,12 @@ const ACCOUNT_NAV_ITEMS: AccountNavItem[] = [
   { label: "Lịch sử mua hàng", href: ROUTES.ACCOUNT_ORDERS },
   { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
   { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
-  { label: "Đánh giá và phản hồi" },
+  { label: "Đánh giá và phản hồi", href: ROUTES.ACCOUNT_REVIEWS },
   { label: "Câu hỏi thường gặp", href: ROUTES.FAQ_ACCOUNT },
   { label: "Đăng xuất", action: "logout" },
 ];
 
-export default async function OrderDetailPage({
-  params,
-}: OrderDetailPageProps) {
+export default async function OrderDetailPage({ params }: OrderDetailPageProps) {
   const { id } = await params;
   const orderId = Number(id);
 
@@ -61,13 +59,15 @@ export default async function OrderDetailPage({
     notFound();
   }
 
-  const order = await getCustomerOrderDetail(
-    orderId,
-    Number(customer.customer_id),
-  );
+  const order = await getCustomerOrderDetail(orderId, Number(customer.customer_id));
   if (!order) {
     notFound();
   }
+
+  const customerData = {
+    customer_name: customer.customer_name ?? null,
+    phone: customer.phone ?? null,
+  };
 
   return (
     <SiteLayout>
@@ -75,38 +75,23 @@ export default async function OrderDetailPage({
         <section className="mx-auto w-full max-w-site px-6 pt-6 xl:px-[100px]">
           <Breadcrumbs
             items={[
-              {
-                label: "",
-                href: ROUTES.HOME,
-                iconSrc: "/icons/home.svg",
-                iconAlt: "Trang chủ",
-              },
+              { label: "", href: ROUTES.HOME, iconSrc: "/icons/home.svg", iconAlt: "Trang chủ" },
               { label: "Lịch sử đơn hàng", href: ROUTES.ACCOUNT_ORDERS },
               { label: "Chi tiết đơn hàng" },
             ]}
           />
         </section>
 
-        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
-          <div className="mx-auto max-w-site">
-            <div className="mt-2 grid gap-8 lg:grid-cols-[20%_minmax(0,1fr)] lg:items-start">
-              <aside className="account-sticky-rail">
-                <AccountNavigation
-                  items={ACCOUNT_NAV_ITEMS}
-                  activeHref={ROUTES.ACCOUNT_ORDERS}
-                  variant="account"
-                />
-              </aside>
+        <section className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
+          <div className="flex flex-col lg:flex-row gap-10">
+            {/* Left Column: Sidebar (25%) */}
+            <div className="w-full lg:w-1/4 shrink-0">
+              <AccountNavigation items={ACCOUNT_NAV_ITEMS} activeHref={ROUTES.ACCOUNT_ORDERS} variant="account" />
+            </div>
 
-              <section>
-                <OrderDetailContent
-                  allowCancel
-                  backHref={ROUTES.ACCOUNT_ORDERS}
-                  customerName={customer.customer_name}
-                  customerPhone={customer.phone}
-                  order={order}
-                />
-              </section>
+            {/* Right Column: Main Content (80%) */}
+            <div className="flex-1">
+              <OrderDetailContent order={order} customer={customerData} />
             </div>
           </div>
         </section>

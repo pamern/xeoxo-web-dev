@@ -156,7 +156,11 @@ async function getHomepageProductCardRows(
         category_slug: category.slug,
         price: row.min_price,
         main_storage_key: row.main_storage_key,
-        hover_storage_key: null,
+        hover_storage_key: row.main_storage_key
+          ? row.main_storage_key.substring(0, row.main_storage_key.lastIndexOf("/") + 1) +
+            "gallery-01" +
+            row.main_storage_key.substring(row.main_storage_key.lastIndexOf("."))
+          : null,
       };
     })
     .filter((row): row is HomepageProductCardRow => row !== null);
@@ -322,9 +326,8 @@ async function fetchHomepageProductSections(
   }
 
   const categoryRows = ((categories ?? []) as unknown) as CategoryRow[];
-  const categoryIds = categoryRows.map((row) => row.category_id);
-
-  if (categoryIds.length === 0) {
+  
+  if (categoryRows.length === 0) {
     return categorySlugs.map((categorySlug) => ({
       categoryId: 0,
       categorySlug,
@@ -333,10 +336,43 @@ async function fetchHomepageProductSections(
     }));
   }
 
-  const rows = await getHomepageProductCardRows(
-    supabase,
-    categoryRows.map((category) => category.category_id),
-  );
+  // Build a map of categoryId -> parent requested slug, expanding descendants recursively up to 3 levels
+  const categoryToParentSlug = new Map<number, string>();
+  for (const cat of categoryRows) {
+    categoryToParentSlug.set(cat.category_id, cat.slug);
+    
+    // Level 1 subcategories
+    const { data: sub1 } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("category_id")
+      .eq("parent_id", cat.category_id)
+      .eq("is_active", true);
+    
+    const sub1Ids = (sub1 ?? []).map((c) => c.category_id);
+    for (const id of sub1Ids) {
+      categoryToParentSlug.set(id, cat.slug);
+    }
+    
+    if (sub1Ids.length > 0) {
+      // Level 2 subcategories
+      const { data: sub2 } = await supabase
+        .schema("catalog")
+        .from("category")
+        .select("category_id")
+        .in("parent_id", sub1Ids)
+        .eq("is_active", true);
+      
+      const sub2Ids = (sub2 ?? []).map((c) => c.category_id);
+      for (const id of sub2Ids) {
+        categoryToParentSlug.set(id, cat.slug);
+      }
+    }
+  }
+
+  const expandedCategoryIds = Array.from(categoryToParentSlug.keys());
+
+  const rows = await getHomepageProductCardRows(supabase, expandedCategoryIds);
   const productLineIds = [...new Set(rows.map((row) => Number(row.product_line_id)))];
   const stockStatusMap = await getProductLinesStockStatus(supabase, productLineIds);
 
@@ -345,13 +381,15 @@ async function fetchHomepageProductSections(
     const bStock = stockStatusMap.get(Number(b.product_line_id)) ? 1 : 0;
     return bStock - aStock;
   });
+  
   const rowsByCategory = new Map<string, HomepageProductCardRow[]>();
 
   sortedRows.forEach((row) => {
-    const currentRows = rowsByCategory.get(row.category_slug) ?? [];
+    const parentSlug = categoryToParentSlug.get(row.category_id) ?? row.category_slug;
+    const currentRows = rowsByCategory.get(parentSlug) ?? [];
     if (currentRows.length < limit) {
       currentRows.push(row);
-      rowsByCategory.set(row.category_slug, currentRows);
+      rowsByCategory.set(parentSlug, currentRows);
     }
   });
 
@@ -365,10 +403,12 @@ async function fetchHomepageProductSections(
     const category = categoryRows.find((item) => item.slug === categorySlug);
 
     return {
-      categoryId: sectionRows[0]?.category_id ?? category?.category_id ?? 0,
+      categoryId: category?.category_id ?? sectionRows[0]?.category_id ?? 0,
       categorySlug,
       categoryName:
-        sectionRows[0]?.category_name ?? category?.category_name ?? categorySlug,
+        categorySlug === "ao-dai-doi-cuoi"
+          ? "Áo dài đôi - Cưới"
+          : category?.category_name ?? sectionRows[0]?.category_name ?? categorySlug,
       products: sectionRows.map((row) =>
         mapHomepageRowToProduct(
           row,
@@ -378,6 +418,127 @@ async function fetchHomepageProductSections(
       ),
     };
   });
+}
+
+export type HomepageCustomSectionDto = {
+  categorySlug: string;
+  categoryName: string;
+  bannerImage: string;
+  products: Product[];
+};
+
+export async function getHomepageCustomSections({
+  limit = 4,
+}: {
+  limit?: number;
+} = {}): Promise<HomepageCustomSectionDto[]> {
+  return unstable_cache(
+    () => fetchHomepageCustomSections(limit),
+    ["homepage-custom-sections", String(limit)],
+    { revalidate: CATALOG_CACHE_TTL_SECONDS, tags: ["catalog"] }
+  )();
+}
+
+async function fetchHomepageCustomSections(limit: number): Promise<HomepageCustomSectionDto[]> {
+  const supabase = createAdminClient();
+  const { data: allCategories, error: categoryError } = await supabase
+    .schema("catalog")
+    .from("category")
+    .select("category_id, category_name, slug, parent_id")
+    .eq("is_active", true);
+
+  if (categoryError || !allCategories) {
+    throw new Error(categoryError?.message ?? "Failed to fetch categories");
+  }
+
+  const getDescendantsAndSelf = (rootSlug: string) => {
+    const root = allCategories.find((c) => c.slug === rootSlug);
+    if (!root) return [];
+    const result = [root];
+    let searchIds = [root.category_id];
+    while (searchIds.length > 0) {
+      const children = allCategories.filter((c) => c.parent_id && searchIds.includes(c.parent_id));
+      if (children.length === 0) break;
+      result.push(...children);
+      searchIds = children.map((c) => c.category_id);
+    }
+    return result;
+  };
+
+  const damVayCats = getDescendantsAndSelf("ao-dam-chan-vay");
+  const damVayIds = damVayCats.map((c) => c.category_id);
+
+  const doiCuoiCats = [
+    ...getDescendantsAndSelf("ao-dai-doi"),
+    ...getDescendantsAndSelf("ao-dai-cuoi-nu"),
+    ...getDescendantsAndSelf("ao-dai-cuoi-nam"),
+  ];
+  const doiCuoiIds = doiCuoiCats.map((c) => c.category_id);
+
+  const allAoDaiCats = getDescendantsAndSelf("ao-dai");
+  const aoDaiCats = allAoDaiCats.filter((c) => !doiCuoiIds.includes(c.category_id));
+  const aoDaiIds = aoDaiCats.map((c) => c.category_id);
+
+  const sectionsDefine = [
+    {
+      categorySlug: "ao-dam-chan-vay",
+      categoryName: "Áo đầm - Váy",
+      bannerImage: "/images/home-page/ÁO ĐẦM - VÁY.png",
+      categoryIds: damVayIds,
+    },
+    {
+      categorySlug: "ao-dai",
+      categoryName: "Áo dài",
+      bannerImage: "/images/home-page/ÁO DÀI.png",
+      categoryIds: aoDaiIds,
+    },
+    {
+      categorySlug: "ao-dai-doi-cuoi",
+      categoryName: "Áo dài đôi - Cưới",
+      bannerImage: "/images/home-page/ÁO DÀI ĐÔI - ÁO DÀI CƯỚI.png",
+      categoryIds: doiCuoiIds,
+    },
+  ];
+
+  const result: HomepageCustomSectionDto[] = [];
+
+  for (const def of sectionsDefine) {
+    if (def.categoryIds.length === 0) {
+      result.push({
+        categorySlug: def.categorySlug,
+        categoryName: def.categoryName,
+        bannerImage: def.bannerImage,
+        products: [],
+      });
+      continue;
+    }
+
+    const rows = await getHomepageProductCardRows(supabase, def.categoryIds);
+    const productLineIds = [...new Set(rows.map((row) => Number(row.product_line_id)))];
+    const stockStatusMap = await getProductLinesStockStatus(supabase, productLineIds);
+
+    const sortedRows = [...rows].sort((a, b) => {
+      return Number(b.product_line_id) - Number(a.product_line_id);
+    });
+
+    const products = sortedRows.slice(0, limit).map((row) =>
+      mapHomepageRowToProduct(
+        row,
+        getProductMediaPublicUrl(supabase, row.main_storage_key),
+        getProductMediaPublicUrl(supabase, row.hover_storage_key),
+        row.category_slug.includes("nam") ? "nam" : "nu"
+      )
+    );
+
+    result.push({
+      categorySlug: def.categorySlug,
+      categoryName: def.categoryName,
+      bannerImage: def.bannerImage,
+      products,
+    });
+  }
+
+  return result;
 }
 
 export async function getCategoryProductSections({
@@ -519,6 +680,7 @@ export type CategoryNavItem = {
   categoryId: number;
   categoryName: string;
   categorySlug: string;
+  parentId?: number | null;
 };
 
 // Danh sách category thật theo department, dùng cho dropdown menu ở header
@@ -540,7 +702,7 @@ async function fetchCategoriesByDepartment(
   const { data, error } = await supabase
     .schema("catalog")
     .from("category")
-    .select("category_id, category_name, slug")
+    .select("category_id, category_name, slug, parent_id")
     .eq("department", department)
     .eq("is_active", true)
     .order("category_name", { ascending: true });
@@ -553,6 +715,7 @@ async function fetchCategoriesByDepartment(
     categoryId: Number(category.category_id),
     categoryName: String(category.category_name),
     categorySlug: String(category.slug),
+    parentId: category.parent_id ? Number(category.parent_id) : null,
   }));
 }
 
@@ -577,12 +740,30 @@ export async function getCategoryBySlug(
 }
 
 async function fetchCategoryBySlug(slug: string): Promise<CategoryDetail | null> {
+  if (slug === "nu" || slug === "nam" || slug === "tre-em") {
+    const dept = slug === "tre-em" ? "KIDS" : slug === "nam" ? "MEN" : "WOMEN";
+    return {
+      categoryId: dept === "WOMEN" ? 8888 : dept === "MEN" ? 8889 : 8890,
+      categoryName: dept === "WOMEN" ? "Đồ Nữ" : dept === "MEN" ? "Đồ Nam" : "Đồ Trẻ Em",
+      categorySlug: slug,
+      department: dept,
+    };
+  }
+  if (slug === "ao-dai-doi-cuoi") {
+    return {
+      categoryId: 9999,
+      categoryName: "Áo dài đôi - Cưới",
+      categorySlug: "ao-dai-doi-cuoi",
+      department: null,
+    };
+  }
   const supabase = createAdminClient();
+  const dbSlug = slug === "ao-dam-vay" ? "ao-dam-chan-vay" : slug;
   const { data, error } = await supabase
     .schema("catalog")
     .from("category")
     .select("category_id, category_name, slug, department")
-    .eq("slug", slug)
+    .eq("slug", dbSlug)
     .eq("is_active", true)
     .maybeSingle();
 
@@ -809,6 +990,7 @@ function sizeRank(sizeName: string) {
 }
 
 export type CategoryFilterOptions = {
+  categories: { name: string; slug: string }[];
   sizes: string[];
   colors: { name: string; hex: string }[];
   materials: string[];
@@ -844,6 +1026,7 @@ async function fetchCategoryListing(
   const emptyResult: CategoryListing = {
     products: [],
     filterOptions: {
+      categories: [],
       sizes: [],
       colors: [],
       materials: [],
@@ -853,11 +1036,35 @@ async function fetchCategoryListing(
     },
   };
 
-  const [section] = await getHomepageProductSections({
-    categorySlugs: [categorySlug],
-    limit: 200,
-  });
-  const products = section?.products ?? [];
+  const normalizedSlug = categorySlug === "ao-dam-vay" ? "ao-dam-chan-vay" : categorySlug;
+  let products: Product[] = [];
+  if (normalizedSlug === "nu" || normalizedSlug === "nam" || normalizedSlug === "tre-em") {
+    const dept = normalizedSlug === "tre-em" ? "KIDS" : normalizedSlug === "nam" ? "MEN" : "WOMEN";
+    const supabase = createAdminClient();
+    const { data: deptCats } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("slug")
+      .eq("department", dept)
+      .eq("is_active", true);
+
+    const slugs = (deptCats ?? []).map((c) => c.slug);
+    const sections = await getHomepageProductSections({
+      categorySlugs: slugs,
+      limit: 200,
+    });
+    products = sections.flatMap((s) => s.products);
+  } else if (normalizedSlug === "ao-dai-doi-cuoi" || normalizedSlug === "ao-dam-chan-vay" || normalizedSlug === "ao-dai") {
+    const customSections = await fetchHomepageCustomSections(200);
+    const section = customSections.find((s) => s.categorySlug === normalizedSlug);
+    products = section?.products ?? [];
+  } else {
+    const [section] = await getHomepageProductSections({
+      categorySlugs: [normalizedSlug],
+      limit: 200,
+    });
+    products = section?.products ?? [];
+  }
 
   console.info("[category-listing] products", {
     categorySlug,
@@ -1075,9 +1282,27 @@ async function fetchCategoryListing(
     priceMax = Math.max(priceMax, product.price);
   }
 
+  const { data: catList } = await supabase
+    .schema("catalog")
+    .from("category")
+    .select("category_name, slug")
+    .eq("is_active", true);
+
+  const catMap = new Map((catList ?? []).map((c) => [c.slug, c.category_name]));
+  const uniqueCategorySlugs = new Set(
+    enrichedProducts.map((p) => p.categorySlug).filter(Boolean),
+  );
+  const categoriesList = [...uniqueCategorySlugs]
+    .map((slug) => ({
+      slug,
+      name: catMap.get(slug) ?? slug,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
   return {
     products: enrichedProducts,
     filterOptions: {
+      categories: categoriesList,
       sizes: [...allSizes].sort((a, b) => sizeRank(a) - sizeRank(b)),
       colors: [...allColors].map(([name, hex]) => ({ name, hex })),
       materials: [...allMaterials],
@@ -1098,8 +1323,47 @@ export function deriveFilterOptionsFromProducts(
   const allColors = new Map<string, string>();
   const allMaterials = new Set<string>();
   const allCollections = new Map<string, string>();
+  const allCategories = new Map<string, string>();
   let priceMin = Infinity;
   let priceMax = 0;
+
+  const categoryNameMap: Record<string, string> = {
+    "ao-dam-vay": "Áo đầm - Váy",
+    "ao-dam-chan-vay": "Áo đầm - Váy",
+    "ao-dai-nu": "Áo dài nữ",
+    "ao-cuoi-nu": "Áo cưới nữ",
+    "ao-dai-doi-cuoi": "Áo dài đôi - Cưới",
+    "ao-nam": "Áo nam",
+    "ao-dai-nam": "Áo dài nam",
+    "ao-cuoi-nam": "Áo cưới nam",
+    "ao-dai": "Áo dài",
+    "nu": "Đồ Nữ",
+    "nam": "Đồ Nam",
+    "tre-em": "Đồ Trẻ Em",
+
+    // Các slug từ Database
+    "ao-dai-suong-tay-loe-dai": "Áo dài suông tay loe dài",
+    "ao-dai-4-ta": "Áo dài 4 tà",
+    "ao-so-mi": "Áo sơ mi",
+    "ao-choang": "Áo choàng",
+    "quan": "Quần",
+    "dam-da-hoi": "Đầm dạ hội",
+    "dam-dao-pho": "Đầm dạo phố",
+    "dam-2-day": "Đầm 2 dây",
+    "ao-dai-cuoi-nu": "Áo dài cưới nữ",
+    "ao-dai-cuoi-nam": "Áo dài cưới nam",
+    "ao-yem": "Áo yếm",
+    "dam-dai": "Đầm dài",
+    "chan-vay": "Chân váy",
+    "ao-dai-cuc-lech": "Áo dài cúc lệch",
+    "ao-dai-ngan-cuc-lech": "Áo dài ngắn cúc lệch",
+    "ao-dai-ngan-cuc-lenh": "Áo dài ngắn cúc lệch",
+    "ao-dai-ngan-cuc-thang": "Áo dài ngắn cúc thẳng",
+    "ao-dai-vat-cheo": "Áo dài vạt chéo",
+    "ao-khoac": "Áo khoác",
+    "ao-phong": "Áo phông",
+    "vay-cuoi": "Váy cưới"
+  };
 
   for (const product of products) {
     product.sizes.forEach((size) => allSizes.add(size));
@@ -1108,11 +1372,17 @@ export function deriveFilterOptionsFromProducts(
     if (product.collectionSlug && product.collectionName) {
       allCollections.set(product.collectionSlug, product.collectionName);
     }
+    const slug = product.categorySlug;
+    if (slug) {
+      const name = categoryNameMap[slug] || (slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, " "));
+      allCategories.set(slug, name);
+    }
     priceMin = Math.min(priceMin, product.price);
     priceMax = Math.max(priceMax, product.price);
   }
 
   return {
+    categories: [...allCategories].map(([slug, name]) => ({ slug, name })),
     sizes: [...allSizes].sort((a, b) => sizeRank(a) - sizeRank(b)),
     colors: [...allColors].map(([name, hex]) => ({ name, hex })),
     materials: [...allMaterials],

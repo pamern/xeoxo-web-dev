@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import Link from "next/link";
 import { OrderStatusTabs, type OrderStatusTab } from "@/components/molecules/OrderStatusTabs";
 import { OrderCard } from "@/components/organisms/OrderCard";
@@ -12,6 +13,7 @@ import {
 } from "@/features/order/order-history";
 import { useOrderHistory } from "@/hooks/useOrderHistory";
 import type { AccountOrder } from "@/types/account-order.types";
+import { ProductReviewModal } from "@/components/organisms/ProductReviewModal/ProductReviewModal";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("vi-VN").format(value) + " VND";
@@ -47,6 +49,7 @@ export function AccountOrderHistory({
     statusGroup === "all"
       ? `Tất cả đơn hàng (${orders.length})`
       : `${statusTabs.find((tab) => tab.value === statusGroup)?.label ?? "Đơn hàng"} (${orders.length})`;
+  const [activeReviewOrder, setActiveReviewOrder] = useState<AccountOrder | null>(null);
 
   if (!isAuthenticated) {
     return (
@@ -74,19 +77,7 @@ export function AccountOrderHistory({
     <div className="mt-8">
       <div className="-mx-2 rounded-[18px] bg-white px-2 pb-5 pt-1">
         <div className="flex flex-col gap-3 border-b border-black/10 pb-5">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#cf5c43]">
-                Quản lý đơn hàng
-              </p>
-              <p className="mt-2 text-lg font-semibold text-foreground md:text-[22px]">
-                {summaryLabel}
-              </p>
-            </div>
-            <p className="max-w-[420px] text-sm font-light leading-relaxed text-foreground/68">
-              Bộ lọc luôn được giữ trong tầm nhìn để bạn đổi trạng thái mà không mất vị trí đang đọc.
-            </p>
-          </div>
+
 
           <OrderStatusTabs
             items={statusTabs}
@@ -97,16 +88,17 @@ export function AccountOrderHistory({
       </div>
 
       {isLoading ? (
-        <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
+        <div className="mt-6 rounded-[16px] border border-black/12 bg-secondary px-5 py-8">
           <p className="text-base font-medium text-foreground/72">
             Đang tải lịch sử đơn hàng...
           </p>
         </div>
       ) : errorMessage ? (
-        <div className="mt-8 rounded-[20px] border border-[#d76a54]/25 bg-[#fff2ee] px-6 py-8">
-          <p className="text-lg font-semibold text-[#b14f3d]">{errorMessage}</p>
+        <div className="mt-6 rounded-[16px] border border-[#d76a54]/25 bg-[#fff2ee] px-5 py-7">
+          <p className="text-base font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : orders.length ? (
+        <div className="mt-8 space-y-6">
         <div className="mt-8 space-y-6">
           {orders.map((order) => {
             const status = getOrderStatusPresentation(order.order_status);
@@ -134,14 +126,26 @@ export function AccountOrderHistory({
                   returnPolicy: ROUTES.POLICY("return"),
                   shippingPolicy: ROUTES.POLICY("shipping"),
                   orderDetail: ROUTES.ACCOUNT_ORDER,
-                })}
+                }).map((action) =>
+                  action.label === "Đánh giá" || action.label === "Xem đánh giá"
+                    ? {
+                        ...action,
+                        href: undefined,
+                        onClick: (e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setActiveReviewOrder(order);
+                        },
+                      }
+                    : action
+                )}
               />
             );
           })}
         </div>
       ) : (
-        <div className="mt-8 rounded-[20px] border border-black/12 bg-secondary px-6 py-10">
-          <p className="text-xl font-bold text-foreground">
+        <div className="mt-6 rounded-[16px] border border-black/12 bg-secondary px-5 py-8">
+          <p className="text-lg font-bold text-foreground">
             {statusGroup === "all"
               ? "Bạn chưa có đơn hàng nào."
               : "Chưa có đơn hàng ở trạng thái này."}
@@ -160,6 +164,19 @@ export function AccountOrderHistory({
             </Link>
           </div>
         </div>
+      )}
+
+      {activeReviewOrder && (
+        <ProductReviewModal
+          orderCode={activeReviewOrder.order_code}
+          items={activeReviewOrder.items}
+          onClose={() => setActiveReviewOrder(null)}
+          onFinished={() => {
+            const redirectUrl = ROUTES.ACCOUNT_ORDER(activeReviewOrder.order_id.toString());
+            setActiveReviewOrder(null);
+            window.location.href = redirectUrl;
+          }}
+        />
       )}
     </div>
   );
