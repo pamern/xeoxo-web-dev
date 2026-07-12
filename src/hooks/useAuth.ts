@@ -3,7 +3,16 @@
 import { useEffect, useState } from "react";
 import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { createClient } from "@/lib/supabase/client";
-import { authService } from "@/services/auth.service";
+import {
+  authService,
+  isInvalidCredentialsError,
+} from "@/services/auth.service";
+import {
+  getLoginBlockedMessage,
+  getLoginBlockRemainingMs,
+  registerFailedLoginAttempt,
+  resetFailedLoginAttempts,
+} from "@/lib/auth-login-guard";
 import type {
   AuthCustomer,
   AuthProvider,
@@ -92,17 +101,40 @@ export function useAuth() {
       return { ok: false };
     }
 
+    const identifier = parseAuthIdentifier(parsed.data.account);
+
+    if (!identifier) {
+      setErrorMessage("Email hoặc số điện thoại không hợp lệ.");
+      setNoticeMessage(undefined);
+      return { ok: false };
+    }
+
+    const blockedRemainingMs = getLoginBlockRemainingMs(identifier.value);
+    if (blockedRemainingMs > 0) {
+      setErrorMessage(getLoginBlockedMessage());
+      setNoticeMessage(undefined);
+      return { ok: false };
+    }
+
     setIsSubmitting(true);
     setErrorMessage(undefined);
     setNoticeMessage(undefined);
 
     try {
       await authService.login(parsed.data);
+      resetFailedLoginAttempts(identifier.value);
       await authService.syncProfile();
       await refresh();
       return { ok: true };
     } catch (error) {
       logAuthError("login", error, { account: parsed.data.account });
+      if (isInvalidCredentialsError(error)) {
+        const failureState = registerFailedLoginAttempt(identifier.value);
+        if (failureState.isBlocked) {
+          setErrorMessage(getLoginBlockedMessage());
+          return { ok: false };
+        }
+      }
       setErrorMessage(
         error instanceof Error ? error.message : "Đăng nhập thất bại.",
       );
