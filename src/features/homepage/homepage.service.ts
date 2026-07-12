@@ -845,6 +845,213 @@ async function fetchNewestDepartmentProducts(
   );
 }
 
+async function resolveCatalogCategoryIds(
+  supabase: ReturnType<typeof createAdminClient>,
+  department: CatalogDepartment | undefined,
+  parentCategorySlug: string | undefined,
+): Promise<number[]> {
+  if (parentCategorySlug) {
+    const { data: parentCategory, error: parentCategoryError } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("category_id")
+      .eq("slug", parentCategorySlug)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (parentCategoryError) {
+      throw new Error(parentCategoryError.message);
+    }
+    if (!parentCategory) {
+      return [];
+    }
+
+    const parentCategoryId = Number(parentCategory.category_id);
+    const { data: childCategories, error: childCategoryError } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("category_id")
+      .eq("parent_id", parentCategoryId)
+      .eq("is_active", true);
+
+    if (childCategoryError) {
+      throw new Error(childCategoryError.message);
+    }
+
+    return [parentCategoryId, ...(childCategories ?? []).map((c) => Number(c.category_id))];
+  }
+
+  if (department) {
+    const { data: categories, error: categoryError } = await supabase
+      .schema("catalog")
+      .from("category")
+      .select("category_id")
+      .eq("department", department)
+      .eq("is_active", true);
+
+    if (categoryError) {
+      throw new Error(categoryError.message);
+    }
+
+    return (categories ?? []).map((c) => Number(c.category_id));
+  }
+
+  return [];
+}
+
+async function getUniqueProductCardRows(
+  supabase: ReturnType<typeof createAdminClient>,
+  categoryIds: number[],
+): Promise<HomepageProductCardRow[]> {
+  const rows = await getHomepageProductCardRows(supabase, categoryIds);
+  const uniqueRowsMap = new Map<number, HomepageProductCardRow>();
+  for (const row of rows) {
+    if (!uniqueRowsMap.has(row.product_line_id)) {
+      uniqueRowsMap.set(row.product_line_id, row);
+    }
+  }
+  return [...uniqueRowsMap.values()];
+}
+
+// "Sản phẩm mới" thật sự dựa theo product_line.created_at, quét toàn bộ
+// department/danh mục thay vì chỉ trong tập sản phẩm đã bị giới hạn sẵn.
+export async function getCatalogNewestProducts({
+  department,
+  parentCategorySlug,
+  limit = 4,
+}: {
+  department?: CatalogDepartment;
+  parentCategorySlug?: string;
+  limit?: number;
+}): Promise<Product[]> {
+  return unstable_cache(
+    () => fetchCatalogNewestProducts(department, parentCategorySlug, limit),
+    ["catalog-newest-products", department ?? "all", parentCategorySlug ?? "all", String(limit)],
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.categories, CACHE_TAGS.products],
+    },
+  )();
+}
+
+async function fetchCatalogNewestProducts(
+  department: CatalogDepartment | undefined,
+  parentCategorySlug: string | undefined,
+  limit: number,
+): Promise<Product[]> {
+  const supabase = createAdminClient();
+  const categoryIds = await resolveCatalogCategoryIds(supabase, department, parentCategorySlug);
+  if (categoryIds.length === 0) {
+    return [];
+  }
+
+  const uniqueRows = await getUniqueProductCardRows(supabase, categoryIds);
+  const productLineIds = uniqueRows.map((row) => Number(row.product_line_id));
+  if (productLineIds.length === 0) {
+    return [];
+  }
+
+  const { data: lineRows, error: lineError } = await supabase
+    .schema("catalog")
+    .from("product_line")
+    .select("product_line_id, created_at")
+    .in("product_line_id", productLineIds);
+
+  if (lineError) {
+    throw new Error(lineError.message);
+  }
+
+  const createdAtMap = new Map(
+    (lineRows ?? []).map((row) => [Number(row.product_line_id), String(row.created_at)]),
+  );
+
+  const sortedRows = [...uniqueRows].sort((a, b) => {
+    const aTime = new Date(createdAtMap.get(Number(a.product_line_id)) ?? 0).getTime();
+    const bTime = new Date(createdAtMap.get(Number(b.product_line_id)) ?? 0).getTime();
+    return bTime - aTime;
+  });
+
+  return sortedRows.slice(0, limit).map((row) =>
+    mapHomepageRowToProduct(
+      row,
+      getProductMediaPublicUrl(supabase, row.main_storage_key),
+      getProductMediaPublicUrl(supabase, row.hover_storage_key),
+      department ? GENDER_BY_DEPARTMENT[department] : inferGenderFromCategorySlug(row.category_slug),
+    ),
+  );
+}
+
+// "Bán chạy nhất" thật sự dựa theo tổng số lượng bán từ đơn COMPLETED
+// (catalog.v_product_line_sales), quét toàn bộ department/danh mục.
+export async function getCatalogBestSellingProducts({
+  department,
+  parentCategorySlug,
+  limit = 4,
+}: {
+  department?: CatalogDepartment;
+  parentCategorySlug?: string;
+  limit?: number;
+}): Promise<Product[]> {
+  return unstable_cache(
+    () => fetchCatalogBestSellingProducts(department, parentCategorySlug, limit),
+    ["catalog-bestselling-products", department ?? "all", parentCategorySlug ?? "all", String(limit)],
+    {
+      revalidate: CATALOG_CACHE_TTL_SECONDS,
+      tags: [CACHE_TAGS.categories, CACHE_TAGS.products],
+    },
+  )();
+}
+
+async function fetchCatalogBestSellingProducts(
+  department: CatalogDepartment | undefined,
+  parentCategorySlug: string | undefined,
+  limit: number,
+): Promise<Product[]> {
+  const supabase = createAdminClient();
+  const categoryIds = await resolveCatalogCategoryIds(supabase, department, parentCategorySlug);
+  if (categoryIds.length === 0) {
+    return [];
+  }
+
+  const uniqueRows = await getUniqueProductCardRows(supabase, categoryIds);
+  const productLineIds = uniqueRows.map((row) => Number(row.product_line_id));
+  if (productLineIds.length === 0) {
+    return [];
+  }
+
+  const { data: salesRows, error: salesError } = await supabase
+    .schema("catalog")
+    .from("v_product_line_sales")
+    .select("product_line_id, sold_quantity")
+    .in("product_line_id", productLineIds);
+
+  if (salesError) {
+    throw new Error(salesError.message);
+  }
+
+  const soldQuantityMap = new Map(
+    (salesRows ?? []).map((row) => [Number(row.product_line_id), Number(row.sold_quantity ?? 0)]),
+  );
+
+  const sortedRows = uniqueRows
+    .filter((row) => (soldQuantityMap.get(Number(row.product_line_id)) ?? 0) > 0)
+    .sort((a, b) => {
+      const diff =
+        (soldQuantityMap.get(Number(b.product_line_id)) ?? 0) -
+        (soldQuantityMap.get(Number(a.product_line_id)) ?? 0);
+      return diff !== 0 ? diff : Number(b.product_line_id) - Number(a.product_line_id);
+    });
+
+  return sortedRows.slice(0, limit).map((row) =>
+    mapHomepageRowToProduct(
+      row,
+      getProductMediaPublicUrl(supabase, row.main_storage_key),
+      getProductMediaPublicUrl(supabase, row.hover_storage_key),
+      department ? GENDER_BY_DEPARTMENT[department] : inferGenderFromCategorySlug(row.category_slug),
+    ),
+  );
+}
+
 export async function getHomepageCollections({
   limit = 5,
   coverVariant = "horizontal",
@@ -1081,12 +1288,26 @@ async function fetchCategoryListing(
   const { data: lineRows, error: lineError } = await supabase
     .schema("catalog")
     .from("product_line")
-    .select("product_line_id, color_id, material_id, collection_id")
+    .select("product_line_id, color_id, material_id, collection_id, created_at")
     .in("product_line_id", productLineIds);
 
   if (lineError) {
     throw new Error(lineError.message);
   }
+
+  const { data: salesRows, error: salesError } = await supabase
+    .schema("catalog")
+    .from("v_product_line_sales")
+    .select("product_line_id, sold_quantity")
+    .in("product_line_id", productLineIds);
+
+  if (salesError) {
+    throw new Error(salesError.message);
+  }
+
+  const soldQuantityMap = new Map(
+    (salesRows ?? []).map((row) => [Number(row.product_line_id), Number(row.sold_quantity ?? 0)]),
+  );
 
   const colorIds = [
     ...new Set(
@@ -1261,6 +1482,8 @@ async function fetchCategoryListing(
       collectionSlug: collection?.slug ?? product.collectionSlug,
       collectionName: collection?.name,
       price: prices.length > 0 ? Math.min(...prices) : product.price,
+      createdAt: lineInfo?.created_at ? String(lineInfo.created_at) : undefined,
+      soldQuantity: soldQuantityMap.get(lineId) ?? 0,
     };
   });
 

@@ -57,8 +57,8 @@ export default async function AccountProfileRoute() {
 
   return (
     <SiteLayout>
-      <div className="account-page-shell">
-        <section className="account-page-section">
+      <div className="bg-background">
+        <section className="px-6 pb-10 pt-6 xl:px-[100px] xl:pb-16">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -82,12 +82,12 @@ export default async function AccountProfileRoute() {
                 />
               </aside>
 
-              <section className="account-content-panel">
-                <div className="flex flex-col gap-2">
-                  <h1 className="account-panel-title">
+              <section className="rounded-[14px] bg-white px-5 py-6 shadow-[0_10px_34px_rgba(0,0,0,0.14)] md:px-7 md:py-7 xl:px-8 xl:py-8">
+                <div className="flex flex-col gap-1.5">
+                  <h1 className="text-[19px] font-extrabold leading-none md:text-[26px]">
                     Hồ sơ thông tin
                   </h1>
-                  <p className="account-panel-subtitle">
+                  <p className="text-xs font-medium text-foreground/72">
                     Quản lý thông tin hồ sơ để bảo mật tài khoản
                   </p>
                 </div>

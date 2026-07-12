@@ -81,7 +81,7 @@ export default async function AccountReviewsRoute() {
   return (
     <SiteLayout>
       <div className="bg-background">
-        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
+        <section className="px-6 pb-10 pt-6 xl:px-[100px] xl:pb-16">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -105,9 +105,9 @@ export default async function AccountReviewsRoute() {
                 />
               </aside>
 
-              <section className="rounded-[14px] bg-white px-6 py-8 shadow-[0_10px_34px_rgba(0,0,0,0.14)] md:px-9 md:py-9 xl:px-10 xl:py-10">
-                <div className="flex flex-col gap-4">
-                  <h1 className="text-[28px] font-extrabold leading-none md:text-[34px]">
+              <section className="rounded-[14px] bg-white px-5 py-6 shadow-[0_10px_34px_rgba(0,0,0,0.14)] md:px-7 md:py-7 xl:px-8 xl:py-8">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-[19px] font-extrabold leading-none md:text-[26px]">
                     Đánh giá và phản hồi
                   </h1>
                   <FloralDivider />

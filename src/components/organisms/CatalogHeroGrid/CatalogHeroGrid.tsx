@@ -10,7 +10,7 @@ export function CatalogHeroGrid({ collections }: { collections: Collection[] }) 
     <section className="flex flex-col">
       <Band className="bg-top" />
 
-      <div className="catalog-shell grid grid-cols-1 gap-4 py-6 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 xl:grid-cols-5 xl:gap-[29px] xl:py-[clamp(24px,2.29px+1.70vw,39px)]">
+      <div className="catalog-shell grid grid-cols-2 gap-2 py-6 sm:grid-cols-3 sm:gap-3 md:grid-cols-5 md:gap-4 xl:gap-4 xl:py-[clamp(24px,2.29px+1.70vw,39px)]">
         {featured.map((collection) => (
           <Link
             key={collection.slug}

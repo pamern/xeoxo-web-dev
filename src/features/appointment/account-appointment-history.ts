@@ -6,6 +6,13 @@ import type {
 } from "@/types/account-appointment.types";
 import type { AccountAppointmentQueryInput } from "@/validations/appointment/account-appointment-query.schema";
 
+function isRangeNotSatisfiableError(error: { message?: string; code?: string }) {
+  return (
+    error.code === "PGRST103" ||
+    Boolean(error.message?.toLowerCase().includes("range not satisfiable"))
+  );
+}
+
 type MeasurementAppointmentRecord = {
   appointment_date: string;
   appointment_id: number;
@@ -183,6 +190,14 @@ export async function getMeasurementAppointmentsByCustomerId(
     await appointmentsQuery;
 
   if (appointmentsError) {
+    // Không có lịch hẹn nào khớp offset/limit yêu cầu (ví dụ tab lọc rỗng) ->
+    // Postgres trả lỗi range thay vì mảng rỗng, coi như không có dữ liệu.
+    if (isRangeNotSatisfiableError(appointmentsError)) {
+      return {
+        items: [],
+        pagination: { page: query.page, limit: query.limit, total: 0 },
+      };
+    }
     throw new Error(appointmentsError.message);
   }
 

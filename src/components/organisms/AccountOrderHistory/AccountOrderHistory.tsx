@@ -103,7 +103,7 @@ export function AccountOrderHistory({
           <p className="text-base font-semibold text-[#b14f3d]">{errorMessage}</p>
         </div>
       ) : orders.length ? (
-        <div className="mt-8 space-y-6">
+        <div className="mt-5 space-y-4">
           {orders.map((order) => {
             const status = getOrderStatusPresentation(order.order_status);
 

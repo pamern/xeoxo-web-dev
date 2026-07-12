@@ -314,6 +314,25 @@ export async function GET(request: Request, { params }: { params: Promise<Params
     if (countErr) throw new Error(countErr.message);
     const total = count || 0;
 
+    // Không có review nào khớp filter -> tránh gọi .range() trên tập rỗng
+    // (Postgres trả lỗi "Requested range not satisfiable" thay vì mảng rỗng).
+    if (total === 0) {
+      return ok(
+        {
+          reviews: [],
+          total: 0,
+          total_all: totalAll,
+          total_images: totalImagesCount,
+          avg_rating: avgRating,
+          page,
+          limit,
+          has_more: false,
+          components: componentList,
+        },
+        "Thành công.",
+      );
+    }
+
     // 6. Get reviews paginated
     let revQuery = admin
       .schema("sales")

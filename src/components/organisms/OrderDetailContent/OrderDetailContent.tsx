@@ -7,6 +7,7 @@ import { CancelOrderButton } from "@/components/molecules/CancelOrderButton";
 import { ProductReviewModal } from "@/components/organisms/ProductReviewModal/ProductReviewModal";
 import { ROUTES } from "@/constants/routes";
 import { getOrderStatusPresentation } from "@/features/order/order-history";
+import { openChatForOrder } from "@/lib/chat-events";
 import { cn, formatPrice } from "@/lib/utils";
 import type { AccountOrderDetail } from "@/types/account-order.types";
 
@@ -75,7 +76,10 @@ export function OrderDetailContent({
   const isCompleted = status.filter === "completed";
   const isCancelled = status.filter === "cancelled";
   const isReturned = status.filter === "returned";
-  const isShipping = status.filter === "shipping";
+  const isShipping =
+    status.filter === "shipping" ||
+    status.filter === "pending" ||
+    status.filter === "confirmed";
   const canCancel =
     allowCancel &&
     ["PENDING", "CONFIRMED", "PACKING"].includes(
@@ -283,12 +287,27 @@ export function OrderDetailContent({
                 : "Đánh giá"}
             </button>
           ) : null}
+          {!isCancelled && !isReturned ? (
+            <button
+              type="button"
+              onClick={() =>
+                openChatForOrder({
+                  orderCode: order.order_code,
+                  statusLabel: status.label,
+                  totalLabel: formatPrice(order.total_amount),
+                })
+              }
+              className="flex min-h-[26px] items-center justify-center rounded-[2px] border border-black bg-transparent text-[11px] font-medium text-black transition-colors hover:bg-black hover:text-white"
+            >
+              Liên hệ hỗ trợ
+            </button>
+          ) : null}
           {canReturn ? (
             <Link
               href={ROUTES.POLICY("return")}
               className="flex min-h-[26px] items-center justify-center rounded-[2px] border border-black bg-transparent text-[11px] font-medium text-black transition-colors hover:bg-black hover:text-white"
             >
-              {isCompleted ? "Liên hệ đổi trả" : "Liên hệ hỗ trợ"}
+              {isCompleted ? "Đổi trả" : "Chính sách đổi trả"}
             </Link>
           ) : null}
           {isCompleted && order.items[0]?.product_slug ? (
@@ -350,11 +369,7 @@ export function OrderDetailContent({
                   </p>
                 ) : null}
               </>
-            ) : (
-              <p className="text-[16px] font-light italic text-black/50 md:text-right">
-                Chưa bàn giao đơn vị vận chuyển
-              </p>
-            )}
+            ) : null}
           </div>
         </div>
       </div>

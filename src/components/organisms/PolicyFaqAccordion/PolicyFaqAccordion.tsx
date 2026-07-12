@@ -14,12 +14,14 @@ export type PolicyFaqAccordionProps = {
   className?: string;
   defaultOpenId?: string | null;
   items: PolicyFaqAccordionItem[];
+  size?: "default" | "compact";
 };
 
 export function PolicyFaqAccordion({
   className,
   defaultOpenId = null,
   items,
+  size = "default",
 }: PolicyFaqAccordionProps) {
   const [openId, setOpenId] = useState<string | null>(defaultOpenId);
 
@@ -35,6 +37,7 @@ export function PolicyFaqAccordion({
             answer={item.answer}
             isOpen={isOpen}
             onToggle={() => setOpenId(isOpen ? null : item.id)}
+            size={size}
           />
         );
       })}

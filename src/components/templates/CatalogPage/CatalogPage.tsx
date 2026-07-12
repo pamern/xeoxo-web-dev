@@ -14,6 +14,8 @@ import { ROUTES } from "@/constants/routes";
 import { COLLECTIONS, MATERIALS, MATERIALS_NU, VALUE_PROPS } from "@/data/catalog";
 import {
   getCategoryProductSections,
+  getCatalogBestSellingProducts,
+  getCatalogNewestProducts,
   getHomepageCollections,
   getHomepageProductSections,
   getHomepageCustomSections,
@@ -183,22 +185,21 @@ export async function CatalogPage({ slug }: { slug: CatalogSlug }) {
   const content = CATALOG_CONTENT[slug];
   if (!content) notFound();
 
-  const [heroCollections, productSections] = await Promise.all([
-    getCatalogHeroCollections(),
-    getCatalogProductSections(slug, content.department, content.parentCategorySlug),
-  ]);
-  const allProducts = productSections.flatMap((section) => section.products);
-  const uniqueProducts = Array.from(
-    new Map(allProducts.map((p) => [p.id, p])).values()
-  );
-
-  const newestProducts = [...uniqueProducts]
-    .sort((a, b) => Number(b.id) - Number(a.id))
-    .slice(0, 4);
-
-  const bestSellingProducts = [...uniqueProducts]
-    .sort((a, b) => (b.price - a.price) || (Number(a.id) - Number(b.id)))
-    .slice(0, 4);
+  const [heroCollections, productSections, newestProducts, bestSellingProducts] =
+    await Promise.all([
+      getCatalogHeroCollections(),
+      getCatalogProductSections(slug, content.department, content.parentCategorySlug),
+      getCatalogNewestProducts({
+        department: content.department ?? undefined,
+        parentCategorySlug: content.parentCategorySlug,
+        limit: 4,
+      }),
+      getCatalogBestSellingProducts({
+        department: content.department ?? undefined,
+        parentCategorySlug: content.parentCategorySlug,
+        limit: 4,
+      }),
+    ]);
 
   const firstCollection = heroCollections[0];
 

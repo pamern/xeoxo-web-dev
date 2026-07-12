@@ -121,9 +121,16 @@ export function filterAndSortProducts(
   } else if (filters.sort === "Giá cao đến thấp") {
     sorted.sort((a, b) => b.price - a.price);
   } else if (filters.sort === "Mới nhất") {
-    sorted.sort((a, b) => Number(b.id) - Number(a.id));
+    sorted.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime || Number(b.id) - Number(a.id);
+    });
   } else if (filters.sort === "Bán chạy nhất") {
-    sorted.sort((a, b) => (b.price - a.price) || (Number(a.id) - Number(b.id)));
+    sorted.sort((a, b) => {
+      const diff = (b.soldQuantity ?? 0) - (a.soldQuantity ?? 0);
+      return diff !== 0 ? diff : Number(b.id) - Number(a.id);
+    });
   }
 
   return sorted;

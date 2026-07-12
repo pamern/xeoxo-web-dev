@@ -59,6 +59,10 @@
   --site-gutter-x: 1.5rem;
   --site-gutter-x-lg: clamp(32px, -105.14px + 10.71vw, 80px);
   --control-height: clamp(44px, 41.2px + 0.74vw, 54px);
+
+  --catalog-hero-min-height: clamp(320px, 224px + 20vw, 560px);
+  --catalog-hero-grid-py: clamp(24px, 2.29px + 1.7vw, 39px);
+  --catalog-hero-band-height: clamp(28px, 12px + 1.25vw, 39px);
 }
 
 * {
@@ -364,17 +368,17 @@ select {
     @apply self-start;
   }
 
-  @media (min-width: 1024px) {
+  @media (min-width: 768px) {
     .account-sticky-rail {
       position: sticky;
-      top: calc(var(--site-header-height, 0px) + 24px);
-      max-height: calc(100vh - var(--site-header-height, 0px) - 24px);
+      top: calc(var(--site-header-height, 0px) + 20px);
+      max-height: calc(100vh - var(--site-header-height, 0px) - 20px);
       overflow-y: auto;
       scrollbar-gutter: stable;
     }
 
     .account-page-grid {
-      grid-template-columns: 25% minmax(0, 1fr);
+      grid-template-columns: minmax(260px, 0.22fr) minmax(0, 1fr);
     }
   }
 
