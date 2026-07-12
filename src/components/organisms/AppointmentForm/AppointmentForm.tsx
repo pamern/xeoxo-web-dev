@@ -60,7 +60,7 @@ const DEFAULT_VALUES: AppointmentValues = {
 };
 
 const fieldClassName =
-  "h-9 w-full rounded-pill border border-black/40 bg-white px-3.5 text-sm font-light text-black outline-none transition-colors placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-9 w-full rounded-[10px] border border-black/30 bg-white px-3.5 text-xs font-semibold text-black outline-none transition placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10";
 
 type AppointmentErrors = Partial<Record<keyof AppointmentValues, string>>;
 
@@ -300,7 +300,7 @@ export function AppointmentForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="bg-transparent">
-      <div className="mx-auto flex w-full flex-col gap-3 pb-5">
+      <div className="mx-auto flex w-full flex-col gap-3">
         <FieldRow label="Họ và tên">
           <FieldControl error={errors.fullName}>
             <input
@@ -323,7 +323,7 @@ export function AppointmentForm({
               value={values.phone}
               onChange={(event) => update("phone", event.target.value)}
               onBlur={() => handleBlur("phone")}
-              placeholder="09xxxxxxxx"
+              placeholder="0383389276"
               aria-invalid={Boolean(errors.phone)}
               className={fieldInputClass(fieldClassName, errors.phone)}
             />
@@ -369,7 +369,7 @@ export function AppointmentForm({
             <div ref={branchRef} className="relative">
               <DropdownTrigger
                 value={branches.find((branch) => branch.value === values.branch)?.label ?? ""}
-                placeholder="Chá»n chi nhÃ¡nh"
+                placeholder="Chọn chi nhánh"
                 isOpen={isBranchOpen}
                 onClick={() => {
                   setIsBranchOpen((current) => !current);
@@ -379,8 +379,8 @@ export function AppointmentForm({
               />
 
               {isBranchOpen ? (
-                <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full overflow-hidden rounded-[18px] border border-black/10 bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
-                  <div className="flex flex-col gap-2.5">
+                <div className="absolute left-0 top-[calc(100%+6px)] z-20 w-full overflow-hidden rounded-[12px] border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.1)]">
+                  <div className="flex flex-col gap-2">
                     {branches.map((branch) => {
                       const isSelected = values.branch === branch.value;
 
@@ -389,15 +389,15 @@ export function AppointmentForm({
                           key={branch.value}
                           type="button"
                           onClick={() => handleBranchSelect(branch.value)}
-                          className="flex items-center gap-3 text-left text-sm text-black transition-colors"
+                          className="flex items-center gap-3 text-left text-xs text-black transition-colors"
                         >
                           <span
                             className={cn(
-                              "h-5 w-5 rounded-full border border-black/80",
-                              isSelected && "border-[6px] border-[#f15a42]",
+                              "h-4 w-4 rounded-full border border-black/80",
+                              isSelected && "border-[5px] border-black",
                             )}
                           />
-                          <span className={cn("leading-snug", isSelected && "font-medium")}>
+                          <span className={cn("leading-snug", isSelected && "font-semibold")}>
                             {branch.label}
                           </span>
                         </button>
@@ -424,8 +424,8 @@ export function AppointmentForm({
               />
 
               {isDateOpen ? (
-                <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full max-w-[380px] overflow-hidden rounded-[18px] border border-black/10 bg-white p-3.5 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
-                  <div className="mb-3 grid grid-cols-[1fr_1fr] gap-2">
+                <div className="absolute left-0 top-[calc(100%+6px)] z-20 w-full max-w-[320px] overflow-hidden rounded-[12px] border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.1)]">
+                  <div className="mb-2 grid grid-cols-[1fr_1fr] gap-2">
                     <SelectMini
                       value={String(visibleMonth.getMonth())}
                       onChange={(event) => handleMonthChange(Number(event.target.value))}
@@ -448,9 +448,9 @@ export function AppointmentForm({
                     </SelectMini>
                   </div>
 
-                  <div className="grid grid-cols-7 gap-y-2 text-center">
+                  <div className="grid grid-cols-7 gap-y-1.5 text-center">
                     {WEEKDAY_LABELS.map((label) => (
-                      <div key={label} className="text-xs font-bold">
+                      <div key={label} className="text-[10px] font-bold text-black/50">
                         {label}
                       </div>
                     ))}
@@ -465,11 +465,11 @@ export function AppointmentForm({
                           disabled={day.isDisabled}
                           onClick={() => handleDateSelect(day.value)}
                           className={cn(
-                            "mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs transition-colors",
+                            "mx-auto flex h-6 w-6 items-center justify-center rounded-full text-[11px] transition-colors",
                             day.isCurrentMonth ? "text-black" : "text-black/28",
                             day.isDisabled &&
                               "cursor-not-allowed bg-black/[0.04] text-black/20",
-                            isSelected && "bg-[#f15a42] font-bold text-white",
+                            isSelected && "bg-black font-bold text-white",
                           )}
                         >
                           {day.dayNumber}
@@ -497,8 +497,8 @@ export function AppointmentForm({
               />
 
               {isTimeOpen ? (
-                <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full max-w-[500px] overflow-hidden rounded-[18px] border border-black/10 bg-white p-4 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
-                  <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+                <div className="absolute left-0 top-[calc(100%+6px)] z-20 w-full max-w-[320px] overflow-hidden rounded-[12px] border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.1)]">
+                  <div className="grid grid-cols-1 gap-x-4 gap-y-2 sm:grid-cols-2">
                     {orderedTimeSlots.map((slot) => {
                       const isSelected = values.timeSlot === slot.id;
 
@@ -509,16 +509,16 @@ export function AppointmentForm({
                           disabled={slot.isDisabled}
                           onClick={() => handleTimeSelect(slot.id)}
                           className={cn(
-                            "flex items-center gap-2.5 text-left text-sm text-black transition-colors",
+                            "flex items-center gap-2 text-left text-xs text-black transition-colors",
                             slot.isDisabled && "cursor-not-allowed text-black/25",
-                            isSelected && "font-bold text-[#f15a42]",
+                            isSelected && "font-bold text-black",
                           )}
                         >
                           <span
                             className={cn(
-                              "h-5 w-5 rounded-full border border-black/80",
+                              "h-4 w-4 rounded-full border border-black/80",
                               slot.isDisabled && "border-black/20",
-                              isSelected && "border-[6px] border-[#f15a42]",
+                              isSelected && "border-[5px] border-black",
                             )}
                           />
                           <span>{slot.label}</span>
@@ -541,36 +541,31 @@ export function AppointmentForm({
               maxLength={200}
               placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 200 ký tự)"
               rows={2}
-              className="min-h-[3.125rem] w-full resize-none rounded-[18px] border border-black/40 bg-white px-3.5 py-2 text-sm font-light text-black outline-none transition-colors placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10"
+              className="min-h-[56px] w-full resize-none rounded-[10px] border border-black/30 bg-white px-3.5 py-2 text-xs font-semibold text-black outline-none transition placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </FieldControl>
         </FieldRow>
       </div>
 
-      <div className="-mx-6 -mb-4 mt-6 px-2 pb-4 sm:-mx-8">
-        <div className="relative flex min-h-[96px] flex-col items-center justify-center gap-2 overflow-visible rounded-none px-4 py-4 text-center sm:min-h-[108px]">
-          <div className="pointer-events-none absolute inset-x-0 top-[-22px] z-0 h-11 bg-white" />
-          {submitted && showInlineSuccessMessage ? (
-            <p className="text-body-sm font-medium text-white">Đã ghi nhận thông tin đặt lịch.</p>
-          ) : null}
-          {submitError ? (
-            <p className="text-body-sm font-medium text-white">{submitError}</p>
-          ) : null}
-          <div
-            className="relative z-10 flex w-[calc(100%+36px)] max-w-none justify-center rounded-none bg-cover bg-center px-10 py-5 sm:w-[calc(100%+48px)]"
-            style={{ backgroundImage: "url(/images/bg-gia-nhap-btn.png)" }}
-          >
-            <Button
-              type="submit"
-              variant="outline"
-              size="md"
-              disabled={isSubmitting}
-              className="h-9 w-full max-w-[260px] rounded-pill border-2 border-white bg-transparent px-5 text-base font-bold normal-case text-white hover:bg-white hover:text-black"
-            >
-              Đặt lịch
-            </Button>
-          </div>
-        </div>
+      <div
+        className="mt-5 flex min-h-[84px] flex-col items-center justify-center gap-1.5 rounded-[14px] bg-cover bg-center px-5 py-4 text-center"
+        style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
+      >
+        {submitted && showInlineSuccessMessage ? (
+          <p className="text-xs font-semibold text-white">Đã ghi nhận thông tin đặt lịch.</p>
+        ) : null}
+        {submitError ? (
+          <p className="text-xs font-semibold text-white">{submitError}</p>
+        ) : null}
+        <Button
+          type="submit"
+          variant="outline"
+          size="md"
+          disabled={isSubmitting}
+          className="h-10 w-auto min-w-[200px] rounded-pill border border-white bg-transparent px-8 text-sm font-bold text-white hover:bg-white hover:text-black"
+        >
+          Đặt lịch
+        </Button>
       </div>
     </form>
   );
@@ -578,20 +573,20 @@ export function AppointmentForm({
 
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid items-start gap-2 md:grid-cols-[11.5rem_minmax(0,1fr)] md:gap-3">
-      <span className="pt-2 text-base font-bold leading-tight text-black">
+    <label className="flex w-full flex-col gap-1">
+      <span className="text-xs font-semibold text-black">
         {label}
       </span>
       {children}
-    </div>
+    </label>
   );
 }
 
 function FieldControl({ error, children }: { error?: string; children: ReactNode }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1.5">
+    <div className="flex min-w-0 flex-col gap-1">
       {children}
-      {error ? <span className="text-xs font-medium text-red-600">{error}</span> : null}
+      {error ? <span className="text-xs font-semibold text-[#ff593d] px-2">{error}</span> : null}
     </div>
   );
 }
@@ -599,7 +594,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
 function fieldInputClass(base: string, error?: string) {
   return cn(
     base,
-    error && "border-red-500 text-red-700 focus:border-red-500 focus:ring-red-100",
+    error && "border-[#ff593d] focus:ring-red-500/15",
   );
 }
 
@@ -619,8 +614,8 @@ function DropdownTrigger({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-9 w-full items-center justify-between rounded-pill border border-black/40 bg-white px-4 text-left text-sm transition-colors",
-        isOpen && "border-black",
+        "flex h-9 w-full items-center justify-between rounded-[10px] border border-black/30 bg-white px-3.5 text-left text-xs font-semibold transition-colors hover:border-black/50",
+        isOpen && "border-black focus:ring-2 focus:ring-black/15",
       )}
     >
       <span className={cn(value ? "text-black" : "text-black/35")}>
@@ -629,7 +624,7 @@ function DropdownTrigger({
       <span
         aria-hidden
         className={cn(
-          "mb-[2px] mr-1 inline-block h-3 w-3 rotate-45 border-b-2 border-r-2 border-[#f15a42] transition-transform",
+          "mb-[2px] mr-1 inline-block h-1.5 w-1.5 rotate-45 border-b-2 border-r-2 border-black transition-transform",
           isOpen && "translate-y-[1px] rotate-[225deg]",
         )}
       />
@@ -650,7 +645,7 @@ function SelectMini({
     <select
       value={value}
       onChange={onChange}
-      className="h-9 rounded-[14px] border border-black/20 bg-white px-3 text-sm outline-none focus:border-black"
+      className="h-9 rounded-[10px] border border-black/20 bg-white px-2.5 text-xs font-semibold outline-none focus:border-black"
     >
       {children}
     </select>
@@ -672,7 +667,7 @@ function GenderPill({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "h-9 rounded-pill border border-black/30 bg-white px-4 text-sm font-bold leading-none text-black transition-colors",
+        "h-9 rounded-[10px] border border-black/30 bg-white px-4 text-xs font-bold leading-none text-black transition-colors",
         active && "bg-black text-white",
       )}
     >

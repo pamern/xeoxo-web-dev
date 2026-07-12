@@ -12,6 +12,21 @@ docs/api/api_documentation.yaml
 
 Khi code API, phải đọc `API_RULES.md` trước, sau đó đọc đúng endpoint trong `api_documentation.yaml`.
 
+### 1.1. Kiến trúc API (REST vs GraphQL)
+
+Dù dữ liệu E-commerce may đo rất phù hợp với Graph-like model, dự án XEOXO chọn **REST API** trên Next.js Route Handlers vì các lý do chiến lược:
+1. **Tận dụng PostgREST từ Supabase**: Supabase sinh tự động REST endpoint dựa trên RLS giúp giảm thiểu code backend và đảm bảo bảo mật.
+2. **Cơ chế Caching đơn giản**: Dễ dàng cache qua CDN/Browser cho các trang sản phẩm tĩnh nhờ vào HTTP method GET chuẩn.
+3. **Phát triển nhanh**: Giảm thiểu chi phí thiết lập GraphQL Server/Client, tối ưu hóa thời gian triển khai.
+
+### 1.2. 5 Nguyên tắc thiết kế cốt lõi
+
+1. **Định hướng tài nguyên (Resource-Oriented)**: Sử dụng danh từ số nhiều làm endpoint, các hành động cụ thể ánh xạ qua HTTP Method thích hợp (`GET`, `POST`, `PATCH`, `DELETE`).
+2. **Đồng nhất phản hồi (Standardized Response)**: Tất cả API phải sử dụng helper `src/lib/api-response.ts` để định dạng cấu trúc JSON đồng bộ.
+3. **Không tin cậy Client ID (Zero-Trust Customer ID)**: Không nhận `customer_id` từ body/query đối với route bảo mật; luôn lấy trực tiếp từ session giải mã phía Server.
+4. **Xác thực Schema nghiêm ngặt (Zod Validation)**: Mọi đầu vào phải được lọc và kiểm tra bằng Zod schema để tránh SQL Injection/XSS.
+5. **Kiến trúc phân lớp (Layered separation)**: Tách biệt rõ ràng: Route Handler (điều hướng) -> Feature Service (nghiệp vụ & DB) -> Response.
+
 ---
 
 ## 2. Cách đọc `api_documentation.yaml`

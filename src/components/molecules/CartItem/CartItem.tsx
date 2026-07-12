@@ -128,7 +128,7 @@ export function CartItem({
       aria-label={`Xem chi tiết ${item.name}`}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="grid cursor-pointer grid-cols-[32px_80px_minmax(0,1fr)] sm:grid-cols-[36px_96px_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
+      className="grid cursor-pointer grid-cols-[32px_60px_minmax(0,1fr)] sm:grid-cols-[36px_72px_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-3 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
     >
       <label className="justify-self-center inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white cursor-pointer transition hover:border-black/70">
         <input
@@ -145,13 +145,13 @@ export function CartItem({
         <Link
           href={productHref}
           aria-label={`Xem chi tiết ${item.name}`}
-          className="group relative h-[110px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[130px]"
+          className="group relative h-[80px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[96px]"
         >
           <Image
             src={item.thumbnail || "/images/placeholder.png"}
             alt={item.name}
             fill
-            sizes="(min-width: 1024px) 96px, 25vw"
+            sizes="(min-width: 1024px) 72px, 25vw"
             className="object-cover transition duration-300 group-hover:scale-105"
           />
         </Link>
@@ -165,28 +165,32 @@ export function CartItem({
         </button>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-2.5">
+      <div className="flex min-w-0 flex-col gap-2">
         <Link
           href={productHref}
-          className="line-clamp-2 text-sm font-semibold uppercase leading-snug text-black underline-offset-4 transition hover:underline focus-visible:underline sm:text-base"
+          className="line-clamp-2 text-xs font-semibold uppercase leading-snug text-black/90 underline-offset-4 transition hover:underline focus-visible:underline"
         >
           {item.name}
         </Link>
 
-        <div className="flex w-full items-center justify-between gap-3">
-          <div className="flex items-center justify-start gap-2 sm:gap-3">
+        <div className="grid grid-cols-[100px_90px_1fr] items-center gap-2 w-full sm:grid-cols-[110px_100px_1fr] sm:gap-4">
+          <div className="flex justify-start">
             <VariantSelect
               value={item.size}
               options={sizeOptions}
               ariaLabel={`Kích cỡ của ${item.name}`}
               onChange={handleSizeChange}
             />
+          </div>
+          <div className="flex justify-start">
             <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
           </div>
 
-          <span className="shrink-0 text-right text-body-sm font-bold uppercase text-black sm:text-base">
-            {formatPrice(item.line_total)}
-          </span>
+          <div className="flex justify-end pr-2 sm:pr-8">
+            <span className="shrink-0 text-right text-[13px] font-semibold text-black whitespace-nowrap">
+              {formatPrice(item.line_total)}
+            </span>
+          </div>
         </div>
 
         {isCustomized && (

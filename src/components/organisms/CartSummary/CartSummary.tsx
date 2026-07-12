@@ -8,6 +8,7 @@ import { CustomizeModal } from "@/components/organisms/CustomizeModal";
 import { useAvailableLoyaltyRewards } from "@/hooks/useAvailableLoyaltyRewards";
 import { useCart } from "@/hooks/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
+import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
 import { ROUTES } from "@/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import { createCustomizationRequest } from "@/services/customization.service";
@@ -120,6 +121,11 @@ export function CartSummary() {
   const [hasManualVoucherChoice, setHasManualVoucherChoice] = useState(false);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [customizingItem, setCustomizingItem] = useState<CartItemDto | null>(null);
+
+  const {
+    values: sharedMeasurementValues,
+    updateValues: updateSharedMeasurementValues,
+  } = useSharedMeasurements(customizingItem?.gender ?? "nu");
 
   const cartItemIds = useMemo(
     () => cart.items.map((item) => item.cart_item_id),
@@ -237,7 +243,7 @@ export function CartSummary() {
 
   return (
     <aside className="w-full text-black">
-      <h2 className="text-2xl font-bold uppercase md:text-heading-section md:leading-tight">
+      <h2 className="text-lg font-bold text-black md:text-xl md:leading-tight">
         Giỏ hàng
       </h2>
 
@@ -327,7 +333,7 @@ export function CartSummary() {
         aria-hidden
       />
 
-      <h3 className="mt-12 text-2xl font-bold uppercase md:text-[28px]">
+      <h3 className="mt-6 text-lg font-bold text-black md:text-xl">
         Chi tiết thanh toán
       </h3>
 
@@ -348,7 +354,7 @@ export function CartSummary() {
           <button
             type="button"
             onClick={() => setIsVoucherModalOpen(true)}
-            className="flex min-h-[58px] w-full items-center justify-between gap-4 rounded-[8px] border border-[#f15a42] bg-[#fff4ee] px-4 py-3 text-left text-[#111111] transition hover:border-[#d9442d] hover:bg-[#ffe8dc]"
+            className="flex min-h-[48px] w-full items-center justify-between gap-4 rounded-[8px] border border-[#f15a42] bg-[#fff4ee] px-4 py-2.5 text-left text-[#111111] transition hover:border-[#d9442d] hover:bg-[#ffe8dc]"
           >
             <span className="flex min-w-0 flex-col gap-1">
               <span className="text-sm font-bold uppercase">
@@ -401,28 +407,28 @@ export function CartSummary() {
         />
       )}
 
-      <div className="mt-6 divide-y divide-black/50 border-y border-black/50 text-base">
-        <div className="flex items-center justify-between py-4">
+      <div className="mt-4 divide-y divide-black/50 border-y border-black/50 text-sm">
+        <div className="flex items-center justify-between py-2.5">
           <span>Tạm tính</span>
           <span className="font-semibold">{formatPrice(subtotal)}</span>
         </div>
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-2.5">
           <span>Voucher ưu đãi</span>
           <span className="font-semibold">{formatPrice(discount)}</span>
         </div>
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-2.5">
           <span>Phí giao hàng</span>
           <span className="font-semibold">
             {shippingFee === 0 ? "Miễn phí" : formatPrice(shippingFee)}
           </span>
         </div>
-        <div className="flex items-center justify-between py-5 text-lg font-bold uppercase">
+        <div className="flex items-center justify-between py-3.5 text-base font-bold uppercase">
           <span>Thành tiền</span>
           <span>{formatPrice(total)}</span>
         </div>
       </div>
 
-      <label className="mt-6 flex cursor-pointer items-start gap-4">
+      <label className="mt-4 flex cursor-pointer items-start gap-4">
         <span className="mt-0.5 inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
           <input
             type="checkbox"
@@ -455,7 +461,7 @@ export function CartSummary() {
         variant="primaryPill"
         size="pill"
         disabled={!acceptedTerms || selectedIds.length === 0 || isMutating}
-        className="mt-8 h-[58px] w-full min-w-0 text-base font-bold uppercase"
+        className="mt-5 h-[46px] w-full min-w-0 text-sm font-bold uppercase"
       >
         Thanh toán ngay
       </Button>
@@ -468,15 +474,27 @@ export function CartSummary() {
         />
       )}
 
-      {customizingItem && (
-        <CustomizeModal
-          gender={customizingItem.gender ?? "nu"}
-          componentType={customizingItem.component_type ?? undefined}
-          basePrice={customizingItem.unit_price}
-          onClose={() => setCustomizingItem(null)}
-          onSubmit={submitCartCustomize}
-        />
-      )}
+      {customizingItem && (() => {
+        const itemSnapshot = customizingItem.customization_snapshot
+          ? (typeof customizingItem.customization_snapshot === "string"
+              ? (() => { try { return JSON.parse(customizingItem.customization_snapshot); } catch { return null; } })()
+              : customizingItem.customization_snapshot)
+          : null;
+        const itemMeasurements = itemSnapshot?.measurements;
+        const initialValues = itemMeasurements || sharedMeasurementValues;
+
+        return (
+          <CustomizeModal
+            gender={customizingItem.gender ?? "nu"}
+            componentType={customizingItem.component_type ?? undefined}
+            basePrice={customizingItem.unit_price}
+            initialValues={initialValues}
+            onValuesChange={updateSharedMeasurementValues}
+            onClose={() => setCustomizingItem(null)}
+            onSubmit={submitCartCustomize}
+          />
+        );
+      })()}
     </aside>
   );
 }

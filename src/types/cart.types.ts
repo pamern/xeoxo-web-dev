@@ -11,6 +11,7 @@ export type CartItemDto = {
   variant_id: number | null;
   product_line_id: number;
   component_id: number | null;
+  component_name?: string | null;
   component_type?: string | null;
   gender?: "nam" | "nu" | "tre-em";
   slug: string;

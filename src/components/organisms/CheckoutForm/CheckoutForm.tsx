@@ -32,10 +32,10 @@ function PillInput({
   error?: string;
 }) {
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <span className="text-base font-semibold text-black">{label}</span>
+    <label className={`flex w-full flex-col gap-1 ${className}`}>
+      <span className="text-[13px] font-semibold text-black">{label}</span>
       <input
-        className={`h-[46px] w-full rounded-pill border bg-white px-4 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`h-[36px] w-full rounded-pill border bg-white px-4 text-xs font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -43,7 +43,7 @@ function PillInput({
         {...props}
       />
       {error && (
-        <span className="text-sm font-semibold text-[#ff593d] px-2">
+        <span className="text-xs font-semibold text-[#ff593d] px-2">
           {error}
         </span>
       )}
@@ -62,10 +62,10 @@ function PillTextarea({
   className?: string;
 }) {
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <span className="text-base font-semibold text-black">{label}</span>
+    <label className={`flex w-full flex-col gap-1 ${className}`}>
+      <span className="text-[13px] font-semibold text-black">{label}</span>
       <textarea
-        className={`min-h-[85px] w-full resize-none rounded-[20px] border bg-white px-4 py-3 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`min-h-[70px] w-full resize-none rounded-[16px] border bg-white px-4 py-2.5 text-xs font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -73,7 +73,7 @@ function PillTextarea({
         {...props}
       />
       {error && (
-        <span className="text-sm font-semibold text-[#ff593d] px-2">
+        <span className="text-xs font-semibold text-[#ff593d] px-2">
           {error}
         </span>
       )}
@@ -94,11 +94,11 @@ function PillSelect({
   error?: string;
 } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
-      <span className="text-base font-semibold text-black">{label}</span>
+    <label className={`flex w-full flex-col gap-1 ${className}`}>
+      <span className="text-[13px] font-semibold text-black">{label}</span>
       <div className="relative w-full">
         <select
-          className={`h-[46px] w-full appearance-none rounded-pill border bg-white px-4 text-base font-medium text-black outline-none transition focus:ring-2 ${
+          className={`h-[36px] w-full appearance-none rounded-pill border bg-white pl-4 pr-10 text-xs font-medium text-black outline-none transition focus:ring-2 ${
             error
               ? "border-[#ff593d] focus:ring-red-500/15"
               : "border-black focus:ring-black/15"
@@ -117,7 +117,7 @@ function PillSelect({
         />
       </div>
       {error && (
-        <span className="text-sm font-semibold text-[#ff593d] px-2">
+        <span className="text-xs font-semibold text-[#ff593d] px-2">
           {error}
         </span>
       )}
@@ -447,15 +447,15 @@ export function CheckoutForm() {
       className="w-full text-black"
     >
       {!isMember ? (
-        <div className="rounded-[10px] bg-[#D9D9D9]/30 p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
+        <div className="rounded-[10px] bg-[#D9D9D9]/30 p-3 sm:py-3.5 sm:px-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <div
-              className="inline-flex h-[53px] w-full max-w-[341px] items-center justify-center rounded-pill border border-black bg-cover bg-center px-8 text-sm font-bold uppercase text-white shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
+              className="inline-flex h-[36px] w-full max-w-[200px] shrink-0 items-center justify-center rounded-pill border border-black bg-cover bg-center px-4 text-xs font-bold uppercase text-white shadow-[0_2px_4px_rgba(0,0,0,0.15)]"
               style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
             >
               Gia nhập Xéo Hội ngay!
             </div>
-            <div className="min-w-0 text-sm leading-6 text-black/75">
+            <div className="min-w-0 text-xs leading-5 text-black/75">
               Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
               <AuthModalLink
                 mode="register"
@@ -468,7 +468,7 @@ export function CheckoutForm() {
         </div>
       ) : null}
 
-      <h2 className="mt-10 text-2xl font-bold uppercase md:text-heading-section md:leading-tight">
+      <h2 className="mt-6 text-lg font-bold text-black md:text-xl">
         Thông tin vận chuyển
       </h2>
 
@@ -494,18 +494,18 @@ export function CheckoutForm() {
       )}
 
       {isMember && !isLoadingAddresses && selectedAddress && !useNewAddress && (
-        <section className="mt-5 overflow-hidden rounded-[10px] border border-black bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+        <section className="mt-4 overflow-hidden rounded-[8px] border border-black bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
           <div
-            className="h-2.5 w-full bg-cover bg-center"
+            className="h-1.5 w-full bg-cover bg-center"
             style={{ backgroundImage: "url('/images/strip-cart-section.png')" }}
             aria-hidden
           />
-          <div className="px-5 py-4">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <div className="px-4 py-3">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-base font-bold uppercase">Giao đến</span>
+                <span className="text-xs font-bold uppercase text-black/80">Giao đến</span>
                 {selectedAddress.is_default && (
-                  <span className="rounded-[3px] border border-[#ff593d] px-3 py-1 text-xs font-semibold text-[#ff593d]">
+                  <span className="rounded-[3px] border border-[#ff593d] px-2 py-0.5 text-[10px] font-semibold text-[#ff593d]">
                     Mặc định
                   </span>
                 )}
@@ -513,20 +513,20 @@ export function CheckoutForm() {
               <button
                 type="button"
                 onClick={() => setAddressBookOpen((open) => !open)}
-                className="rounded-pill border border-black px-4 py-2 text-sm font-bold transition hover:bg-black hover:text-white"
+                className="rounded-pill border border-black px-3 py-1 text-xs font-bold transition hover:bg-black hover:text-white"
                 aria-expanded={addressBookOpen}
               >
                 {addressBookOpen ? "Đóng" : "Thay đổi"}
               </button>
             </div>
-            <p className="text-base font-bold">
+            <p className="text-sm font-bold text-black/90">
               {selectedAddress.recipient_name}
-              <span className="mx-2 font-light text-black/40">|</span>
-              <span className="font-semibold text-black/70">
+              <span className="mx-2 font-light text-black/30">|</span>
+              <span className="font-semibold text-black/60">
                 {selectedAddress.recipient_phone}
               </span>
             </p>
-            <p className="mt-2 text-sm font-medium leading-6 text-black/75">
+            <p className="mt-1 text-xs font-medium leading-5 text-black/60">
               {formatAddress(selectedAddress)}
             </p>
 
@@ -559,7 +559,7 @@ export function CheckoutForm() {
                               {address.recipient_name} ·{" "}
                               {address.recipient_phone}
                             </span>
-                            <span className="mt-1 block text-sm leading-5 text-black/65">
+                            <span className="mt-1 block text-sm font-medium leading-5 text-black/60">
                               {formatAddress(address)}
                             </span>
                           </span>
@@ -567,17 +567,14 @@ export function CheckoutForm() {
                       </button>
                     );
                   })}
+                  <button
+                    type="button"
+                    onClick={() => setUseNewAddress(true)}
+                    className="rounded-[10px] border border-dashed border-black/30 p-4 text-center font-bold text-black/80 transition hover:border-black/70"
+                  >
+                    + Giao đến địa chỉ mới
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseNewAddress(true);
-                    setAddressBookOpen(false);
-                  }}
-                  className="mt-3 h-10 rounded-pill bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
-                >
-                  + Thêm địa chỉ mới
-                </button>
               </div>
             )}
           </div>
@@ -599,7 +596,7 @@ export function CheckoutForm() {
       )}
 
       {shouldShowAddressForm && !isLoadingAddresses && (
-        <div className="mt-6 grid gap-4">
+        <div className="mt-5 grid gap-3">
           {isMember && hasSavedAddress && (
             <div className="flex flex-col gap-3 rounded-[10px] border border-black/25 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -625,26 +622,30 @@ export function CheckoutForm() {
             </p>
           )}
 
-          <PillInput
-            label="Họ và tên"
-            name="fullName"
-            placeholder="Nguyễn Văn A"
-            autoComplete="name"
-            error={fieldErrors.fullName}
-            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
-            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
-            required
-          />
-          <PillInput
-            label="Số điện thoại"
-            name="phone"
-            placeholder="0912345678"
-            autoComplete="tel"
-            error={fieldErrors.phone}
-            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
-            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
-            required
-          />
+          <div className="grid gap-3 md:grid-cols-[1.5fr_1fr]">
+            <PillInput
+              label="Họ và tên"
+              name="fullName"
+              placeholder="Nguyễn Văn A"
+              autoComplete="name"
+              error={fieldErrors.fullName}
+              labelClassName="text-[13px] text-black/60"
+              onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+              onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+              required
+            />
+            <PillInput
+              label="Số điện thoại"
+              name="phone"
+              placeholder="0383389276"
+              autoComplete="tel"
+              error={fieldErrors.phone}
+              labelClassName="text-[13px] text-black/60"
+              onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+              onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+              required
+            />
+          </div>
           <PillInput
             label="Email"
             name="email"
@@ -710,14 +711,14 @@ export function CheckoutForm() {
         </div>
       )}
 
-      <div className="mt-8">
+      <div className="mt-5">
         <input
           type="hidden"
           name="is_other_receiver"
           value={String(otherReceiver)}
         />
         <SquareCheckbox checked={otherReceiver} onChange={setOtherReceiver}>
-          <span className="text-base font-semibold text-black">
+          <span className="text-sm font-semibold text-black/80">
             Gọi người khác nhận hàng (nếu có)
           </span>
         </SquareCheckbox>
@@ -750,8 +751,8 @@ export function CheckoutForm() {
         value={paymentMethodId}
       />
 
-      <fieldset className="mt-10 space-y-0">
-        <legend className="mb-4 text-lg font-bold uppercase">
+      <fieldset className="mt-6 space-y-0">
+        <legend className="mb-3 text-base font-bold text-black">
           Phương thức thanh toán
         </legend>
         {options.map((option) => {

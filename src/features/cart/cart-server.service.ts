@@ -42,6 +42,7 @@ type VariantRecord = {
 type ComponentRecord = {
   component_id: number;
   product_line_id: number;
+  component_name?: string | null;
   component_type?: string | null;
 };
 
@@ -412,7 +413,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
     admin,
     "catalog",
     "product_component",
-    "component_id, product_line_id, component_type",
+    "component_id, product_line_id, component_name, component_type",
     "component_id",
     allComponentIds,
   );
@@ -529,7 +530,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
     const { data: allComps, error: compsErr } = await admin
       .schema("catalog")
       .from("product_component")
-      .select("component_id, product_line_id, component_type")
+      .select("component_id, product_line_id, component_name, component_type")
       .in("product_line_id", productLineIds);
 
     if (compsErr) {
@@ -647,10 +648,11 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
       variant_id: item.variant_id,
       product_line_id: productLine?.product_line_id ?? 0,
       component_id: componentId ?? null,
+      component_name: component?.component_name ?? null,
       component_type: component?.component_type ?? null,
       gender: productLine ? genderByLine.get(productLine.product_line_id) ?? "nu" : "nu",
       slug: productLine?.slug ?? "",
-      name: productLine?.line_name ?? "",
+      name: component?.component_name ?? productLine?.line_name ?? "",
       thumbnail,
       color,
       size,

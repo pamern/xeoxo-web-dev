@@ -87,47 +87,50 @@ export function AppointmentModal({
 
   return (
     <>
-      <div
-        className={cn(
-          "flex w-full justify-center",
-          shouldTopAlign
-            ? "items-start"
-            : "min-h-[calc(100dvh-40px)] items-center",
-        )}
-      >
-        <section
-          ref={modalRef}
-          className={cn(
-            "relative mx-auto flex w-full max-w-[860px] shrink-0 flex-col overflow-visible rounded-[22px] bg-white px-5 pb-0 pt-5 shadow-[0_18px_54px_rgba(0,0,0,0.28)] sm:px-6 sm:pt-6",
-            className,
-          )}
-        >
-          <button
-            type="button"
-            aria-label="Đóng"
-            onClick={onClose}
-            className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-white transition hover:bg-black/5"
+      <div className="fixed inset-0 z-[140] overflow-y-auto">
+        <div className="relative z-10 flex min-h-full items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/60 transition-opacity" onClick={onClose} />
+
+          <section
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appointment-modal-title"
+            className={cn(
+              "relative w-[90%] sm:w-[40vw] max-w-[480px] min-w-[320px] rounded-[24px] bg-white px-4 pb-5 pt-5 sm:px-5 sm:pb-6 sm:pt-6 shadow-2xl overflow-visible",
+              className
+            )}
           >
-            <Image src="/icons/close-black.svg" alt="" width={36} height={36} aria-hidden />
-          </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Đóng đặt lịch hẹn"
+              className="absolute right-3 top-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white transition hover:bg-black/5 sm:right-5 sm:top-5"
+            >
+              <Image src="/icons/close-black.svg" alt="" width={44} height={44} aria-hidden />
+            </button>
 
-          <header className="pb-3 text-center">
-            <h1 className="text-xl font-bold uppercase leading-none text-black">
-              Đặt lịch may đo
-            </h1>
-            <div className="mx-auto mt-2 h-[5px] w-[min(100%,300px)] overflow-hidden bg-[url('/images/bg-gia-nhap-btn.png')] bg-cover bg-center" />
-          </header>
+            <header className="border-b border-black/20 pb-5 text-center">
+              <p className="text-sm font-bold uppercase tracking-[0.14em] text-[#f15a42]">
+                Xéo Xọ Đặt lịch
+              </p>
+              <h1 id="appointment-modal-title" className="mt-1 text-2xl font-bold sm:text-[2rem] text-black">
+                Đặt lịch may đo
+              </h1>
+            </header>
 
-          <div className="relative mx-auto flex min-h-0 w-full max-w-[720px] flex-1 flex-col overflow-visible rounded-[24px] border border-black/40 bg-white px-4 pb-0 pt-5 sm:px-6 sm:pt-6">
-            <AppointmentForm
-              branches={branches}
-              timeSlots={timeSlots}
-              onSubmit={handleSubmit}
-              showInlineSuccessMessage={false}
-              showGenderField={false}
-            />
-          </div>
-        </section>
+            <div className="relative mt-6">
+              <AppointmentForm
+                branches={branches}
+                timeSlots={timeSlots}
+                onSubmit={handleSubmit}
+                showInlineSuccessMessage={false}
+                showGenderField={false}
+              />
+            </div>
+          </section>
+        </div>
       </div>
 
       {createdAppointment ? (

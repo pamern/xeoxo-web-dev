@@ -328,17 +328,17 @@ export function SizeRecommendationModal({
             <Button type="submit" variant="primaryPill" size="pill" className="bg-black text-white hover:bg-black/80">
               {isPersisting ? "Đang lưu..." : "Tính size phù hợp"}
             </Button>
-            {canPersistMeasurements && (
-              <span className="ml-auto flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleClear}
-                  title="Xóa dữ liệu đang nhập trên giao diện"
-                  aria-label="Xóa dữ liệu đang nhập trên giao diện"
-                  className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white transition hover:border-black hover:bg-black hover:text-white"
-                >
-                  <Image src="/icons/xoa.svg" alt="" width={17} height={17} className="transition group-hover:invert" aria-hidden />
-                </button>
+            <span className="ml-auto flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleClear}
+                title="Xóa dữ liệu đang nhập trên giao diện"
+                aria-label="Xóa dữ liệu đang nhập trên giao diện"
+                className="group inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white transition hover:border-black hover:bg-black hover:text-white"
+              >
+                <Image src="/icons/xoa.svg" alt="" width={17} height={17} className="transition group-hover:invert" aria-hidden />
+              </button>
+              {canPersistMeasurements && (
                 <button
                   type="button"
                   onClick={() => setSaveAsDefault((current) => !current)}
@@ -350,8 +350,8 @@ export function SizeRecommendationModal({
                 >
                   {saveAsDefault ? <SavedIcon /> : <SaveIcon />}
                 </button>
-              </span>
-            )}
+              )}
+            </span>
           </div>
           {persistError && (
             <p role="alert" className="mt-3 text-sm font-semibold text-red-600">
