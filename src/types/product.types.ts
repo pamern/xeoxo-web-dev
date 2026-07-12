@@ -28,6 +28,10 @@ export type Product = {
   salePrice?: number;
   materialName?: string;
   collectionName?: string;
+  /** Thời gian tạo dòng sản phẩm, dùng để sort "Mới nhất". */
+  createdAt?: string;
+  /** Tổng số lượng đã bán (đơn COMPLETED), dùng để sort "Bán chạy nhất". */
+  soldQuantity?: number;
 };
 
 export type ProductColor = {

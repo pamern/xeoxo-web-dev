@@ -421,8 +421,8 @@ export function ProductReviewModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[4px]">
-      <div className="flex h-full max-h-[85vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[4px]">
+      <div className="flex h-full max-h-[90vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[20px] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.3)] sm:max-h-[85vh]">
         {/* Modal Header */}
         <div className="flex items-center justify-between border-b border-black/10 px-6 py-5 md:px-8">
           <h2 className="text-[24px] font-extrabold leading-none text-black">
@@ -523,9 +523,6 @@ export function ProductReviewModal({
                       <>
                         {/* Read-Only view of rating, comments, and media */}
                         <div className="flex flex-col gap-2">
-                          <span className="text-[13px] font-semibold text-black">
-                            Chất lượng sản phẩm:
-                          </span>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: 5 }).map((_, i) => {
                               const starVal = i + 1;
@@ -537,7 +534,7 @@ export function ProductReviewModal({
                                   height={24}
                                   className={cn(
                                     "fill-current",
-                                    isSelected ? "text-amber-400" : "text-slate-200"
+                                    isSelected ? "text-black" : "text-slate-200"
                                   )}
                                   viewBox="0 0 24 24"
                                 >
@@ -626,9 +623,6 @@ export function ProductReviewModal({
                         )}
                         {/* Star Rating Picker */}
                         <div className="flex flex-col gap-2">
-                          <label className="text-[13px] font-semibold text-black">
-                            Chất lượng sản phẩm:
-                          </label>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: 5 }).map((_, i) => {
                               const starVal = i + 1;
@@ -640,14 +634,14 @@ export function ProductReviewModal({
                                   onClick={() =>
                                     handleRatingChange(item.order_item_id, starVal)
                                   }
-                                  className="text-amber-400 transition-transform hover:scale-110 focus:outline-none"
+                                  className="text-black transition-transform hover:scale-110 focus:outline-none"
                                 >
                                   <svg
                                     width={32}
                                     height={32}
                                     className={cn(
                                       "fill-current transition-colors",
-                                      isSelected ? "text-amber-400" : "text-slate-300"
+                                      isSelected ? "text-black" : "text-slate-300"
                                     )}
                                     viewBox="0 0 24 24"
                                   >

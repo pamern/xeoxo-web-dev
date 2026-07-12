@@ -126,8 +126,8 @@ export default async function FaqPage({ searchParams }: FaqPageProps) {
 function AccountFaqPage() {
   return (
     <SiteLayout>
-      <div className="account-page-shell">
-        <section className="account-page-section">
+      <div className="bg-background">
+        <section className="px-6 pb-10 pt-6 xl:px-[100px] xl:pb-16">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -142,7 +142,7 @@ function AccountFaqPage() {
               ]}
             />
 
-            <div className="account-page-grid xl:grid-cols-[290px_minmax(0,1fr)]">
+            <div className="account-page-grid">
               <aside className="account-sticky-rail">
                 <AccountNavigation
                   items={FAQ_NAV_ITEMS}
@@ -151,19 +151,20 @@ function AccountFaqPage() {
                 />
               </aside>
 
-              <section className="account-content-panel">
-                <div className="flex flex-col gap-5">
-                  <h1 className="text-display-section font-extrabold leading-none">
+              <section className="rounded-[14px] bg-white px-5 py-6 shadow-[0_10px_34px_rgba(0,0,0,0.14)] md:px-7 md:py-7 xl:px-8 xl:py-8">
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-[19px] font-extrabold leading-none md:text-[26px]">
                     Câu hỏi thường gặp
                   </h1>
-                  <FloralDivider />
+                  <FloralDivider className="h-[4px] w-full bg-[length:100%_100%] bg-center bg-no-repeat" />
                 </div>
 
-                <div className="mt-8">
+                <div className="mt-5">
                   <PolicyFaqAccordion
                     items={FAQ_ITEMS}
                     defaultOpenId={FAQ_ITEMS[0]?.id ?? null}
-                    className="space-y-7 md:space-y-[26px]"
+                    className="space-y-3 md:space-y-3.5"
+                    size="compact"
                   />
                 </div>
               </section>

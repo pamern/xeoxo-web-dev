@@ -23,7 +23,7 @@ export function OrderStatusTabs({
   return (
     <div
       className={cn(
-        "flex flex-wrap items-end gap-x-7 gap-y-3 border-b border-black/10 pb-2.5",
+        "flex flex-wrap items-end gap-x-5 gap-y-2 border-b border-black/10 pb-2",
         className,
       )}
     >
@@ -39,7 +39,7 @@ export function OrderStatusTabs({
           >
             <span
               className={cn(
-                "text-base leading-none md:text-xl",
+                "text-xs leading-none md:text-sm",
                 active ? "font-normal text-[#ff593d]" : "font-normal text-black",
               )}
             >

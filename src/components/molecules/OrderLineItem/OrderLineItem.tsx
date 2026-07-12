@@ -23,12 +23,12 @@ export function OrderLineItem({
   return (
     <div
       className={cn(
-        "flex min-w-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+        "flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
         className,
       )}
     >
-      <div className="flex min-w-0 flex-1 items-center gap-3 sm:gap-5">
-        <div className="relative h-[68px] w-[68px] shrink-0 overflow-hidden bg-secondary sm:h-[96px] sm:w-[96px]">
+      <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
+        <div className="relative h-[48px] w-[48px] shrink-0 overflow-hidden bg-secondary sm:h-[60px] sm:w-[60px]">
           <Image
             src={imageSrc}
             alt={imageAlt ?? title}
@@ -37,20 +37,20 @@ export function OrderLineItem({
           />
         </div>
 
-        <div className="flex min-w-0 flex-col gap-1.5">
-          <p className="truncate text-sm font-medium leading-[1.2] text-black sm:text-lg">
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <p className="truncate text-xs font-medium leading-[1.2] text-black sm:text-sm">
             {title}
           </p>
-          <p className="text-sm font-extralight leading-[1.4] text-black sm:text-base">
+          <p className="text-[11px] font-extralight leading-[1.4] text-black sm:text-xs">
             {subtitle}
           </p>
-          <p className="text-sm font-extralight leading-[1.4] text-black sm:text-base">
+          <p className="text-[11px] font-extralight leading-[1.4] text-black sm:text-xs">
             x {quantity}
           </p>
         </div>
       </div>
 
-      <div className="shrink-0 self-end text-right text-sm font-normal leading-[1.4] text-black sm:self-auto sm:text-base">
+      <div className="shrink-0 self-end text-right text-xs font-normal leading-[1.4] text-black sm:self-auto sm:text-sm">
         {price}
       </div>
     </div>

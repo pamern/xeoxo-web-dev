@@ -235,7 +235,8 @@ export function CancelOrderButton({
           setIsConfirmOpen(true);
           setErrorMsg(null);
         }}
-        className="flex min-h-[44px] items-center justify-center rounded-pill border-2 border-[#ff593d] bg-white text-[0.9375rem] font-bold text-[#ff593d] transition-colors hover:bg-[#ff593d] hover:text-white"
+        className="flex min-h-[26px] w-full items-center justify-center rounded-[2px] border border-black bg-cover bg-center px-4 text-center text-[11px] font-bold text-white shadow-[0_8px_18px_rgba(207,92,67,0.18)] transition-opacity hover:opacity-90"
+        style={{ backgroundImage: "url('/images/button_background.png')" }}
       >
         Hủy Đơn Hàng
       </button>

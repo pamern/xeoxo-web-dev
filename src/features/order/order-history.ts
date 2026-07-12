@@ -4,6 +4,8 @@ export const ORDERS_PAGE_SIZE = 5;
 
 export type OrderHistoryFilter =
   | "all"
+  | "pending"
+  | "confirmed"
   | "shipping"
   | "completed"
   | "cancelled"
@@ -26,6 +28,8 @@ export const ORDER_HISTORY_FILTERS: Array<{
   value: OrderHistoryFilter;
 }> = [
   { label: "Tất cả", value: "all" },
+  { label: "Chờ xác nhận", value: "pending" },
+  { label: "Đã xác nhận", value: "confirmed" },
   { label: "Đang vận chuyển", value: "shipping" },
   { label: "Hoàn thành", value: "completed" },
   { label: "Đã hủy", value: "cancelled" },
@@ -48,9 +52,15 @@ function isPaidPaymentStatus(status: string) {
 export function isOrderHistoryFilter(
   value: string | undefined,
 ): value is OrderHistoryFilter {
-  return ["all", "shipping", "completed", "cancelled", "returned"].includes(
-    value ?? "",
-  );
+  return [
+    "all",
+    "pending",
+    "confirmed",
+    "shipping",
+    "completed",
+    "cancelled",
+    "returned",
+  ].includes(value ?? "");
 }
 
 export function getOrderStatusPresentation(status: string): OrderStatusPresentation {
@@ -69,15 +79,15 @@ export function getOrderStatusPresentation(status: string): OrderStatusPresentat
   }
 
   if (normalized === "PENDING") {
-    return { filter: "shipping", label: "Chờ xác nhận", tone: "shipping" };
+    return { filter: "pending", label: "Chờ xác nhận", tone: "shipping" };
   }
 
   if (normalized === "CONFIRMED") {
-    return { filter: "shipping", label: "Đã xác nhận", tone: "shipping" };
+    return { filter: "confirmed", label: "Đã xác nhận", tone: "shipping" };
   }
 
   if (normalized === "PACKING") {
-    return { filter: "shipping", label: "Đang chuẩn bị hàng", tone: "shipping" };
+    return { filter: "confirmed", label: "Đang chuẩn bị hàng", tone: "shipping" };
   }
 
   if (normalized === "SHIPPING") {
@@ -105,18 +115,33 @@ export function filterOrdersByStatus(
 }
 
 const KNOWN_TERMINAL_STATUSES = ["COMPLETED", "CANCELLED", "RETURNED"];
+// Mọi status không thuộc "shipping" (PENDING có tab riêng, CONFIRMED/PACKING
+// gộp vào tab "Đã xác nhận", còn lại là terminal).
+const NON_SHIPPING_STATUSES = [
+  "PENDING",
+  "CONFIRMED",
+  "PACKING",
+  ...KNOWN_TERMINAL_STATUSES,
+];
 
 /**
  * Order statuses that satisfy each history filter at the database level.
- * "shipping" has no fixed status list: it is every status that isn't one of
- * the terminal statuses above (mirrors the fallback branch of
- * getOrderStatusPresentation, which buckets unknown statuses into "shipping").
+ * "shipping" bucket cũng nhận mọi status lạ chưa biết (không nằm trong danh
+ * sách known), để khớp với fallback branch của getOrderStatusPresentation.
  */
 export function getOrderStatusesForFilter(
   filter: OrderHistoryFilter,
 ): { in?: string[]; notIn?: string[] } | null {
   if (filter === "all") {
     return null;
+  }
+
+  if (filter === "pending") {
+    return { in: ["PENDING"] };
+  }
+
+  if (filter === "confirmed") {
+    return { in: ["CONFIRMED", "PACKING"] };
   }
 
   if (filter === "completed") {
@@ -131,7 +156,7 @@ export function getOrderStatusesForFilter(
     return { in: ["RETURNED"] };
   }
 
-  return { notIn: KNOWN_TERMINAL_STATUSES };
+  return { notIn: NON_SHIPPING_STATUSES };
 }
 
 export function getOrderActions(
@@ -180,7 +205,7 @@ export function getOrderActions(
     return actions;
   }
 
-  if (status === "shipping") {
+  if (status === "pending" || status === "confirmed" || status === "shipping") {
     return [
       {
         href: routes.orderDetail(order.order_id.toString()),

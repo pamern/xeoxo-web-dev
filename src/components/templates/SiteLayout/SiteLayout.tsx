@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { ChatWidget } from "@/components/organisms/ChatWidget";
 import { SiteFooter } from "@/components/organisms/SiteFooter";
 import { SiteHeader } from "@/components/organisms/SiteHeader";
 import { getCategoriesByDepartment } from "@/features/homepage/homepage.service";
@@ -50,6 +51,8 @@ export async function SiteLayout({
       <Suspense fallback={null}>
         <SiteFooter />
       </Suspense>
+
+      <ChatWidget />
     </div>
   );
 }

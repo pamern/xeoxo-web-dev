@@ -76,6 +76,13 @@ function toNumber(value: number | string | null | undefined) {
   return Number(value ?? 0);
 }
 
+function isRangeNotSatisfiableError(error: { message?: string; code?: string }) {
+  return (
+    error.code === "PGRST103" ||
+    Boolean(error.message?.toLowerCase().includes("range not satisfiable"))
+  );
+}
+
 async function fetchRecordsByIds<TRecord extends Record<string, unknown>>(
   admin: ReturnType<typeof createAdminClient>,
   schema: string,
@@ -141,6 +148,11 @@ export async function getCustomerOrdersByCustomerId(
   const { data: orders, error: ordersError, count } = await query;
 
   if (ordersError) {
+    // Không có đơn hàng nào khớp offset/limit yêu cầu (ví dụ tab lọc rỗng) ->
+    // Postgres trả lỗi range thay vì mảng rỗng, coi như không có dữ liệu.
+    if (isRangeNotSatisfiableError(ordersError)) {
+      return { orders: [], total: 0 };
+    }
     throw new Error(ordersError.message);
   }
 

@@ -121,28 +121,20 @@ export function AccountReviewsContent({
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
-  const getQualityText = (rating: number) => {
-    if (rating === 5) return "Sản phẩm tốt";
-    if (rating === 4) return "Hài lòng";
-    if (rating === 3) return "Bình thường";
-    if (rating === 2) return "Không hài lòng";
-    return "Tệ";
-  };
-
   return (
     <>
       {reviews.length === 0 ? (
         <EmptyReviewState />
       ) : (
-        <div className="mt-6 space-y-6">
+        <div className="mt-5 space-y-4">
           {reviews.map((review) => (
             <div
               key={review.review_id}
-              className="rounded-[12px] border border-black/10 p-5 md:p-6 flex flex-col gap-4 bg-white"
+              className="rounded-[12px] border border-black/10 p-4 md:p-5 flex flex-col gap-3 bg-white"
             >
               {/* User & Rating row */}
-              <div className="flex items-start gap-3">
-                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-slate-100 border border-black/5">
+              <div className="flex items-start gap-2.5">
+                <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-slate-100 border border-black/5">
                   <Image
                     src="/images/placeholder.png"
                     alt={review.customer_name || customerName}
@@ -151,18 +143,18 @@ export function AccountReviewsContent({
                   />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[13px] font-bold text-black leading-tight">
+                  <span className="text-xs font-bold text-black leading-tight">
                     {review.customer_name || customerName}
                   </span>
                   <div className="flex items-center gap-0.5 mt-1">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <svg
                         key={i}
-                        width={14}
-                        height={14}
+                        width={12}
+                        height={12}
                         className={cn(
                           "fill-current",
-                          i < review.rating ? "text-amber-400" : "text-slate-200"
+                          i < review.rating ? "text-black" : "text-slate-200"
                         )}
                         viewBox="0 0 24 24"
                       >
@@ -174,7 +166,7 @@ export function AccountReviewsContent({
               </div>
 
               {/* Product Detail metadata */}
-              <div className="text-[12px] text-black/45 font-light leading-none flex flex-wrap gap-x-2 gap-y-1">
+              <div className="text-[11px] text-black/45 font-light leading-none flex flex-wrap gap-x-2 gap-y-1">
                 <span>{formatReviewDate(review.created_at)}</span>
                 <span>|</span>
                 <span>Sản phẩm: {review.product_title}</span>
@@ -182,22 +174,16 @@ export function AccountReviewsContent({
                 <span>Phân loại hàng: {review.product_subtitle}</span>
               </div>
 
-              {/* Quality Text */}
-              <div className="text-[13px] text-black">
-                <span className="font-light text-black/60">Chất lượng sản phẩm:</span>{" "}
-                <span className="font-bold">{getQualityText(review.rating)}</span>
-              </div>
-
               {/* Content */}
               {review.review_content && (
-                <p className="text-[13px] font-light leading-relaxed text-black/85">
+                <p className="text-xs font-light leading-relaxed text-black/85">
                   {review.review_content}
                 </p>
               )}
 
               {/* Media display */}
               {review.media && review.media.length > 0 && (
-                <div className="flex flex-wrap gap-2.5 mt-1">
+                <div className="flex flex-wrap gap-2 mt-1">
                   {review.media.map((m) => (
                     <div
                       key={m.media_id}
@@ -208,14 +194,14 @@ export function AccountReviewsContent({
                           <img
                             src={m.public_url}
                             alt="Đánh giá"
-                            className="h-[80px] w-[80px] object-cover transition-opacity hover:opacity-90"
+                            className="h-[64px] w-[64px] object-cover transition-opacity hover:opacity-90"
                           />
                         </a>
                       ) : (
                         <video
                           src={m.public_url}
                           controls
-                          className="h-[80px] w-[130px] object-cover"
+                          className="h-[64px] w-[104px] object-cover"
                         />
                       )}
                     </div>
@@ -224,12 +210,12 @@ export function AccountReviewsContent({
               )}
 
               {/* Bottom Bar: Likes and Actions */}
-              <div className="flex items-center justify-between mt-3 pt-3 border-t border-black/[0.06]">
+              <div className="flex items-center justify-between mt-2 pt-2.5 border-t border-black/[0.06]">
                 {/* Likes count (Mocked as image 2 layout) */}
                 <div className="flex items-center gap-1.5 text-black/45">
                   <svg
-                    width={16}
-                    height={16}
+                    width={14}
+                    height={14}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
@@ -238,23 +224,23 @@ export function AccountReviewsContent({
                   >
                     <path d="M14 9V5a3 3 0 00-3-3l-4 9v11h11.28a2 2 0 002-1.7l1.38-9a2 2 0 00-2-2.3zM7 22H4a2 2 0 01-2-2v-7a2 2 0 012-2h3" />
                   </svg>
-                  <span className="text-[12px] font-light">12</span>
+                  <span className="text-[11px] font-light">12</span>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2.5">
                   {!review.is_edited && (
                     <button
                       type="button"
                       onClick={() => setSelectedReview(review)}
-                      className="inline-flex min-h-[30px] items-center justify-center rounded-[4px] border border-black bg-white px-5 text-[12px] font-bold text-black transition-colors hover:bg-black hover:text-white"
+                      className="inline-flex min-h-[26px] items-center justify-center rounded-[4px] border border-black bg-white px-4 text-[11px] font-bold text-black transition-colors hover:bg-black hover:text-white"
                     >
                       Đánh giá lại
                     </button>
                   )}
                   <Link
                     href={ROUTES.PRODUCT(review.product_slug)}
-                    className="inline-flex min-h-[30px] items-center justify-center rounded-[4px] border border-black bg-white px-5 text-[12px] font-bold text-black transition-colors hover:bg-black hover:text-white"
+                    className="inline-flex min-h-[26px] items-center justify-center rounded-[4px] border border-black bg-white px-4 text-[11px] font-bold text-black transition-colors hover:bg-black hover:text-white"
                   >
                     Xem trực tiếp
                   </Link>

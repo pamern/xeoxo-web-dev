@@ -90,7 +90,7 @@ export default async function AccountOrdersRoute({
   return (
     <SiteLayout>
       <div className="bg-background">
-        <section className="px-6 pb-16 pt-10 xl:px-[100px] xl:pb-24">
+        <section className="px-6 pb-10 pt-6 xl:px-[100px] xl:pb-16">
           <div className="mx-auto max-w-site">
             <Breadcrumbs
               variant="account"
@@ -114,9 +114,9 @@ export default async function AccountOrdersRoute({
                 />
               </aside>
 
-              <section className="rounded-[26px] bg-white px-6 py-8 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-10 md:py-10 xl:px-12 xl:py-12">
+              <section className="rounded-[26px] bg-white px-5 py-6 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-7 md:py-7 xl:px-8 xl:py-8">
                 <div className="flex flex-col gap-1.5 pb-1.5 md:gap-2 md:pb-2">
-                  <h1 className="text-[28px] font-extrabold leading-none md:text-[42px]">
+                  <h1 className="text-[19px] font-extrabold leading-none md:text-[26px]">
                     Lịch sử đơn hàng
                   </h1>
 

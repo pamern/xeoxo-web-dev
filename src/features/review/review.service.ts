@@ -3,6 +3,13 @@ import { getProductMediaPublicUrl } from "@/lib/supabase/storage";
 
 export const REVIEWS_PAGE_SIZE = 5;
 
+function isRangeNotSatisfiableError(error: { message?: string; code?: string }) {
+  return (
+    error.code === "PGRST103" ||
+    Boolean(error.message?.toLowerCase().includes("range not satisfiable"))
+  );
+}
+
 export async function getCustomerReviews(
   customerId: number,
   pagination?: { offset: number; limit: number },
@@ -33,6 +40,9 @@ export async function getCustomerReviews(
   const { data: reviews, error: revErr, count } = await query;
 
   if (revErr) {
+    if (isRangeNotSatisfiableError(revErr)) {
+      return { reviews: [], total: 0 };
+    }
     throw new Error(revErr.message);
   }
 

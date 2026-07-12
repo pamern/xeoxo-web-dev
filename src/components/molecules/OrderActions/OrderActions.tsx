@@ -22,10 +22,10 @@ function ActionLink({ href, onClick, label, variant }: OrderActionLink) {
       variant={variant === "primary" ? "imagePill" : "outline"}
       backgroundImage={variant === "primary" ? "/images/button_background.png" : undefined}
       className={cn(
-        "min-h-[42px] min-w-[124px] rounded-pill px-6 py-2 text-center whitespace-nowrap transition-[transform,filter,box-shadow,background-color,color,border-color] duration-200",
+        "!h-auto !min-w-0 min-h-[26px] !rounded-[2px] !px-4 !py-1 text-center whitespace-nowrap transition-colors duration-200",
         variant === "primary"
-          ? "border border-primary bg-cover bg-center text-sm font-bold text-white shadow-[0_10px_22px_rgba(207,92,67,0.24)] hover:-translate-y-px hover:brightness-[0.98] hover:shadow-[0_14px_26px_rgba(207,92,67,0.28)] md:text-base"
-          : "border-2 border-black bg-white text-sm font-medium text-black hover:-translate-y-px hover:bg-black hover:text-white hover:shadow-[0_10px_18px_rgba(0,0,0,0.12)] md:text-base",
+          ? "border border-black bg-cover bg-center text-[11px] font-bold text-white shadow-[0_8px_18px_rgba(207,92,67,0.18)] hover:opacity-90"
+          : "border border-black bg-transparent text-[11px] font-medium text-black hover:bg-black hover:text-white",
       )}
     >
       {label}

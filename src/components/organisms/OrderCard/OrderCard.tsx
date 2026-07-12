@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import { OrderActions, type OrderActionLink } from "@/components/molecules/OrderActions";
 import {
@@ -17,6 +20,8 @@ export type OrderCardProps = {
   href?: string;
 };
 
+const COLLAPSED_ITEMS_LIMIT = 2;
+
 export function OrderCard({
   actions,
   className,
@@ -27,6 +32,12 @@ export function OrderCard({
   totalLabel,
   href,
 }: OrderCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const hasMoreItems = items.length > COLLAPSED_ITEMS_LIMIT;
+  const visibleItems =
+    isExpanded || !hasMoreItems ? items : items.slice(0, COLLAPSED_ITEMS_LIMIT);
+  const hiddenCount = items.length - COLLAPSED_ITEMS_LIMIT;
+
   const badgeClassName =
     statusTone === "completed"
       ? "bg-black text-white"
@@ -41,7 +52,7 @@ export function OrderCard({
   return (
     <article
       className={cn(
-        "relative border border-black bg-white py-4 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#ff593d] hover:shadow-[0_12px_36px_rgba(255,89,61,0.1)]",
+        "relative border border-black bg-white py-3 transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[#ff593d] hover:shadow-[0_12px_36px_rgba(255,89,61,0.1)]",
         className,
       )}
     >
@@ -56,13 +67,13 @@ export function OrderCard({
 
       {/* Card Content - relative z-10 pointer-events-none so click bubbles down to Link overlay */}
       <div className="relative z-0 pointer-events-none">
-        <div className="flex flex-wrap items-start justify-between gap-2 px-4 pb-3 sm:items-center sm:gap-3 sm:px-5">
+        <div className="flex flex-wrap items-start justify-between gap-2 px-3 pb-2.5 sm:items-center sm:gap-3 sm:px-4">
           <p className="min-w-0 text-xs font-normal leading-[1.4] text-black">
             Mã đơn hàng: {orderCode}
           </p>
           <span
             className={cn(
-              "rounded-[8px] px-3 py-1.5 text-xs font-bold leading-[1.3]",
+              "rounded-[8px] px-2.5 py-1 text-[11px] font-bold leading-[1.3]",
               badgeClassName,
             )}
           >
@@ -70,26 +81,49 @@ export function OrderCard({
           </span>
         </div>
 
-        <div className="space-y-3 border-t border-black/10 px-4 py-3 sm:px-5">
-          {items.map((item, index) => (
+        <div className="space-y-2.5 border-t border-black/10 px-3 py-2.5 sm:px-4">
+          {visibleItems.map((item, index) => (
             <OrderLineItem key={`${item.title}-${index}`} {...item} />
           ))}
         </div>
 
-        <div className="mx-4 mt-3 border-t border-black/10 sm:mx-5" />
+        {hasMoreItems && (
+          <div className="relative z-10 pointer-events-auto px-3 pb-1 sm:px-4">
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setIsExpanded((prev) => !prev);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-black/60 underline underline-offset-2 transition-colors hover:text-black"
+            >
+              {isExpanded ? "Thu gọn" : `Xem thêm ${hiddenCount} sản phẩm`}
+              <span
+                aria-hidden
+                className={cn(
+                  "inline-block h-1.5 w-1.5 rotate-45 border-b border-r border-current transition-transform",
+                  isExpanded && "-translate-y-0.5 rotate-[225deg]",
+                )}
+              />
+            </button>
+          </div>
+        )}
 
-        <div className="flex flex-col items-end gap-1 px-4 pt-3.5 text-right sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-x-5 sm:gap-y-1 sm:px-5">
-          <span className="text-xs font-light leading-[1.4] text-black underline md:text-sm">
+        <div className="mx-3 mt-2.5 border-t border-black/10 sm:mx-4" />
+
+        <div className="flex flex-col items-end gap-0.5 px-3 pt-2.5 text-right sm:flex-row sm:flex-wrap sm:items-center sm:justify-end sm:gap-x-3 sm:gap-y-1 sm:px-4">
+          <span className="text-xs font-light leading-[1.4] text-black underline">
             Thành tiền:
           </span>
-          <span className="break-words text-xl font-bold leading-[1.15] text-black md:text-2xl">
+          <span className="break-words text-base font-bold leading-[1.15] text-black md:text-lg">
             {totalLabel}
           </span>
         </div>
       </div>
 
       {/* Actions container - relative z-10 to stay clickable above the overlay */}
-      <div className="relative z-10 px-4 pt-3.5 sm:px-5">
+      <div className="relative z-10 px-3 pt-2.5 sm:px-4">
         <OrderActions actions={actions} />
       </div>
     </article>
