@@ -198,12 +198,12 @@ export default function AboutPage() {
         </div>
       </PatternSection>
 
-      <section className="hidden bg-white px-5 pb-20 pt-10 lg:block lg:px-8 lg:pb-24 xl:px-10 2xl:px-20">
+      <section className="hidden bg-white px-5 pb-20 pt-10 xl:block xl:px-10 xl:pb-24 2xl:px-20">
         <div className="mx-auto max-w-site">
           <h2 className="text-center text-[1.55rem] font-black uppercase leading-[1] tracking-[-0.02em] text-foreground sm:text-[2rem] lg:text-[2.35rem]">
             NHỮNG ĐIỀU XÉO XỌ LUÔN GIỮ
           </h2>
-          <div className="mx-auto mt-8 grid max-w-[1020px] gap-x-6 gap-y-8 sm:grid-cols-2 lg:gap-x-10 xl:grid-cols-4 xl:gap-x-12">
+          <div className="mx-auto mt-8 grid max-w-[1020px] grid-cols-4 gap-x-12 gap-y-8">
             {PRINCIPLES.map((principle, index) => (
               <article
                 key={principle.number}
