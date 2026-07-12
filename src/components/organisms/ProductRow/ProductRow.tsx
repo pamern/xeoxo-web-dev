@@ -42,6 +42,7 @@
 
 import { ProductCard } from "@/components/molecules/ProductCard";
 import { SectionHeading } from "@/components/molecules/SectionHeading";
+import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product.types";
 
 // Một hàng sản phẩm cuộn ngang (carousel) + tiêu đề. Dùng ở trang chủ & catalog.
@@ -51,18 +52,20 @@ export function ProductRow({
   actionHref,
   quickAddOnHover = false,
   cardClassName,
+  className,
 }: {
-  title: string;
+  title?: string;
   products: Product[];
   actionHref?: string;
   quickAddOnHover?: boolean;
   cardClassName?: string;
+  className?: string;
 }) {
   if (products.length === 0) return null;
 
   return (
-    <section className="site-container flex flex-col gap-5 py-8 md:gap-6 md:py-10">
-      <SectionHeading title={title} actionHref={actionHref} />
+    <section className={cn("site-container flex flex-col gap-5 py-8 md:gap-6 md:py-10", className)}>
+      {title ? <SectionHeading title={title} actionHref={actionHref} /> : null}
       <div className="no-scrollbar grid auto-cols-[15rem] grid-flow-col gap-4 overflow-x-auto pb-4 sm:auto-cols-[17rem] lg:grid-flow-row lg:grid-cols-4 lg:auto-cols-auto lg:overflow-visible lg:gap-x-3.5 lg:gap-y-6 xl:gap-x-4 xl:gap-y-7">
         {products.map((product) => (
           <ProductCard

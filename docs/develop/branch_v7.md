@@ -77,7 +77,7 @@ Do đây là `rebase v7 onto develop`:
 
 ---
 
-## 4.2 Cart page shell
+## 4.2 Cart page shell #! Lấy toàn bộ cấu trúc giao diện của trang giỏ hàng từ nhấnh v7. 
 
 ### File
 
@@ -85,29 +85,31 @@ Do đây là `rebase v7 onto develop`:
 
 ### Quyết định
 
-- chọn: `develop`
+- chọn: `v7`
 
 ### Giữ
 
-- `CartSummaryProvider`
-- layout tách `CartSummaryProducts` và `CartSummaryPayment`
-- grid shell mới của trang cart
+- layout trang cart của `v7`
+- wrapper 2 cột với `CheckoutForm` bên trái và `CartSummary` bên phải
+- cách tổ chức page đơn giản hơn của `v7`
+- không thực hiện merge thêm ở cấp page
 
 ### Bỏ
 
-- wrapper cũ chỉ render `CartSummary` nguyên khối của `v7`
+- page shell tách `CartSummaryProvider` / `CartSummaryProducts` / `CartSummaryPayment` ở cấp page của `develop`
 
 ### Lý do
 
-- structure của `develop` rõ hơn, dễ cắm lại logic customize từ `v7`
+- comment `#!` chốt lấy toàn bộ cấu trúc giao diện trang giỏ hàng từ `v7`
+- quyết định mới chốt luôn là không chỉnh thêm gì ở nhóm cart
 
 ### Comment nếu muốn đổi
 
-- có thể comment nếu muốn quay lại layout 2 cột cũ của `v7`
+- có thể comment nếu muốn trả lại page shell tách panel của `develop`
 
 ---
 
-## 4.3 Cart item row
+## 4.3 Cart item row #!Trong cartitemrow bỏ thành phần chọn màu.
 
 ### File
 
@@ -119,7 +121,7 @@ Do đây là `rebase v7 onto develop`:
 
 ### Giữ
 
-- selector màu + size
+- selector màu + size của `v7`
 - flow chọn `Customize` ngay trên item
 - layout row phục vụ cart customize
 
@@ -129,7 +131,8 @@ Do đây là `rebase v7 onto develop`:
 
 ### Lý do
 
-- đây là file gắn trực tiếp với flow cart/customize của `v7`
+- quyết định mới chốt giữ nguyên toàn bộ cart theo `v7`
+- không tách riêng thay đổi màu/size nữa
 
 ### Comment nếu muốn đổi
 
@@ -137,7 +140,7 @@ Do đây là `rebase v7 onto develop`:
 
 ---
 
-## 4.4 Cart summary state và payment panel
+## 4.4 Cart summary state và payment panel #! Trang cart giữ nguyên giao diện và logic từ nhánh v7, không thực hiện thay đổi thêm. 
 
 ### File
 
@@ -145,43 +148,29 @@ Do đây là `rebase v7 onto develop`:
 
 ### Quyết định
 
-- chọn: `manual merge`
+- chọn: `v7`
 
-### Giữ từ `develop`
+### Giữ
 
-- `CartSummaryProvider`
-- tách `CartSummaryProducts` / `CartSummaryPayment`
-- `usePaymentMethods`
-- hidden field `payment_method_id`
-- payment method section của payment panel
-
-### Giữ từ `v7`
-
+- toàn bộ `CartSummary` của `v7`
 - `CustomizeModal`
 - `parseMeasurementValues`
 - state `customizingItem`
 - submit flow tạo customization request rồi update cart item
 - `onCustomize` truyền xuống `CartItem`
 
-### Sửa tay
-
-- cấy lại logic customize của `v7` vào structure context/provider của `develop`
-- render `CustomizeModal` trong `CartSummaryPayment`
-
 ### Lý do
 
-- `develop` mạnh hơn ở cấu trúc checkout/payment
-- `v7` lại có logic customize thật, không nên bỏ
+- quyết định mới chốt toàn bộ cart giữ nguyên `v7`
+- không merge thêm responsive/order từ `develop`
 
 ### Comment nếu muốn đổi
 
-- có thể comment nếu muốn:
-  - bỏ payment method section để quay về flow `v7`
-  - hoặc bỏ customize modal để giữ cart gọn như `develop`
+- có thể comment nếu muốn quay lại phương án merge tay với `develop`
 
 ---
 
-## 4.5 Checkout form
+## 4.5 Checkout form #! Lấy logic và giao diện nhánh v7
 
 ### File
 
@@ -189,23 +178,26 @@ Do đây là `rebase v7 onto develop`:
 
 ### Quyết định
 
-- chọn: `develop`
+- chọn: `v7`
 
 ### Giữ
 
-- layout form, spacing, address flow và field sizing của `develop`
+- giao diện `CheckoutForm` của `v7`
+- logic validate và checkout flow của `v7`
+- payment method handling của `v7`
+- không chỉnh thêm theo `develop`
 
 ### Bỏ
 
-- phần style compact cũ của `v7`
+- bản `CheckoutForm` lấy từ `develop`
 
 ### Lý do
 
-- logic checkout hiện đã ăn với shell mới của `develop`
+- comment `#!` chốt lấy cả logic lẫn giao diện từ `v7`
 
 ### Comment nếu muốn đổi
 
-- có thể comment nếu muốn lấy lại density nhỏ hơn từ `v7`
+- có thể comment nếu muốn chỉ giữ logic `v7` nhưng quay lại shell field của `develop`
 
 ---
 
@@ -260,7 +252,7 @@ Do đây là `rebase v7 onto develop`:
 
 ### Comment nếu muốn đổi
 
-- có thể comment nếu muốn giữ logic `v7` nhưng lấy lại visual token của `develop`
+- có thể comment nếu muốn giữ logic `v7` nhưng lấy lại visual token của `develop` ==> Coi lại
 
 ---
 
@@ -290,7 +282,7 @@ Do đây là `rebase v7 onto develop`:
 
 ---
 
-## 4.9 Appointment form
+## 4.9 Appointment form #! giao diện giữ theo nhánh develop, logic giữ từ nhánh v7. Giữ select khung giờ như bên nhánh develop. 
 
 ### File
 
@@ -298,24 +290,34 @@ Do đây là `rebase v7 onto develop`:
 
 ### Quyết định
 
-- chọn: `develop`
+- chọn: `manual merge`
 
 ### Giữ
 
-- version form mới hơn của `develop`
-- structure import/state đang khớp với code hiện tại
+- giao diện của `develop`
+- custom select khung giờ của `develop`
+- date/branch/time picker structure của `develop`
 
 ### Bỏ
 
-- style compact và debounce validation của `v7` tại các hunk conflict
+- phần giao diện compact riêng của `v7`
 
 ### Lý do
 
-- `develop` an toàn hơn về tính đồng bộ với phần còn lại của booking form
+- comment `#!` chốt:
+  - giao diện theo `develop`
+  - logic theo `v7`
+  - select khung giờ giữ kiểu `develop`
+
+### Sửa tay
+
+- thêm debounce validate của `v7`
+- thêm normalize dữ liệu khi blur/submit của `v7`
+- giữ nguyên phần select time slot đang dùng ở `develop`
 
 ### Comment nếu muốn đổi
 
-- có thể comment nếu muốn merge lại debounce validate từ `v7`
+- có thể comment nếu muốn trả form về thuần `develop` hoặc thuần `v7`
 
 ---
 
@@ -352,7 +354,7 @@ Do đây là `rebase v7 onto develop`:
 
 ---
 
-## 4.11 Site header và search
+## 4.11 Site header và search #! Header giữ nguyên từ nhánh develop, không thực hiện chỉnh sửa thêm. 
 
 ### File
 
@@ -361,33 +363,34 @@ Do đây là `rebase v7 onto develop`:
 
 ### Quyết định
 
-- chọn: `develop`
+- chọn:
+  - `SiteHeader`: `develop`
+  - `product.service`: giữ nguyên trạng thái hiện tại
 
 ### Giữ
 
-- search suggestion flow của `develop`
-- state search/header mới
-- API `getSearchSuggestions` và `getSearchResults`
+- `SiteHeader` đúng theo nhánh `develop`
+- không chỉnh thêm UI/header behavior ngoài bản `develop`
+- `product.service` không thay đổi thêm trong bước này
 
 ### Bỏ
 
-- flow `searchProducts` cũ của `v7`
-- dropdown search cũ trong header
+- mọi chỉnh sửa thêm lên `SiteHeader` ngoài bản `develop`
 
 ### Lý do
 
-- header là shared entry point toàn site, nên ưu tiên bản đã đồng bộ với hook/service hiện tại
+- comment `#!` đã chốt rõ phần `header` phải giữ nguyên từ `develop`
 
 ### Comment nếu muốn đổi
 
-- có thể comment nếu muốn quay lại search dropdown kiểu `v7`
+- có thể comment nếu muốn tách riêng quyết định của `search service` khỏi `header`
 
 ---
 
 ## 5. Trạng thái hiện tại sau khi resolve
 
-- rebase đang được resolve theo chiến lược trên
-- doc này là bản ghi để có thể comment và đổi lại từng quyết định nếu cần
+- code đã được chỉnh lại theo các comment `#!` trong file này
+- doc này đã được cập nhật lại để phản ánh đúng hướng resolve mới
 
 ## 6. Cách comment lại
 

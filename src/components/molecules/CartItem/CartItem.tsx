@@ -76,9 +76,6 @@ export function CartItem({
   const router = useRouter();
   const productHref = ROUTES.PRODUCT(item.slug);
   const av = item.available_variants || [];
-  const colorOptions = av.length
-    ? Array.from(new Set(av.map((v) => v.color_name)))
-    : [item.color].filter(Boolean);
 
   const baseSizeOptions = av.length
     ? Array.from(new Set(av.map((v) => v.size_name)))
@@ -95,13 +92,6 @@ export function CartItem({
     }
 
     const found = av.find((v) => v.size_name === newSize && v.color_name === item.color);
-    if (found) {
-      onVariantChange({ variant_id: found.variant_id });
-    }
-  };
-
-  const handleColorChange = (newColor: string) => {
-    const found = av.find((v) => v.color_name === newColor && v.size_name === item.size);
     if (found) {
       onVariantChange({ variant_id: found.variant_id });
     }
@@ -183,23 +173,18 @@ export function CartItem({
           {item.name}
         </Link>
 
-        <div className="grid grid-cols-[96px_92px_1fr_75px_2fr_auto] sm:grid-cols-[126px_104px_1fr_80px_2fr_auto] items-center gap-2 sm:gap-3 w-full">
-          <VariantSelect
-            value={item.color}
-            options={colorOptions}
-            ariaLabel={`Màu của ${item.name}`}
-            onChange={handleColorChange}
-          />
-          <VariantSelect
-            value={item.size}
-            options={sizeOptions}
-            ariaLabel={`Kích cỡ của ${item.name}`}
-            onChange={handleSizeChange}
-          />
-          <div aria-hidden />
-          <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
-          <div aria-hidden />
-          <span className="text-right text-body-sm font-bold uppercase text-black sm:text-base justify-self-end whitespace-nowrap pr-2 sm:pr-4">
+        <div className="flex w-full items-center justify-between gap-3">
+          <div className="flex items-center justify-start gap-2 sm:gap-3">
+            <VariantSelect
+              value={item.size}
+              options={sizeOptions}
+              ariaLabel={`Kích cỡ của ${item.name}`}
+              onChange={handleSizeChange}
+            />
+            <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
+          </div>
+
+          <span className="shrink-0 text-right text-body-sm font-bold uppercase text-black sm:text-base">
             {formatPrice(item.line_total)}
           </span>
         </div>

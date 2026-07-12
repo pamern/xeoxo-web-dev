@@ -3,6 +3,7 @@
 import {
   useEffect,
   useState,
+  useMemo,
   type FormEvent,
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -14,8 +15,9 @@ import { ActionSuccessModal } from "@/components/organisms/ActionSuccessModal";
 import { useAddresses } from "@/hooks/useAddresses";
 import { useAuth } from "@/hooks/useAuth";
 import { useCheckout } from "@/hooks/useCheckout";
+import { usePaymentMethods } from "@/hooks/usePaymentMethods";
 import { ROUTES } from "@/constants/routes";
-import { validateFields } from "@/data/vietnam-regions";
+import { validateFields, validateName, validatePhone, validateEmail, validateAddress } from "@/data/vietnam-regions";
 import type { CustomerAddress } from "@/types/customer.types";
 import type { ShippingAddressValues } from "@/types/order.types";
 
@@ -30,10 +32,10 @@ function PillInput({
   error?: string;
 }) {
   return (
-    <label className={`flex w-full flex-col gap-2.5 ${className}`}>
-      <span className="text-sm font-semibold text-black">{label}</span>
+    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
+      <span className="text-base font-semibold text-black">{label}</span>
       <input
-        className={`h-[56px] w-full rounded-pill border bg-white px-5 text-sm font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`h-[46px] w-full rounded-pill border bg-white px-4 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -41,7 +43,7 @@ function PillInput({
         {...props}
       />
       {error && (
-        <span className="px-2 text-xs font-semibold text-[#ff593d]">
+        <span className="text-sm font-semibold text-[#ff593d] px-2">
           {error}
         </span>
       )}
@@ -60,10 +62,10 @@ function PillTextarea({
   className?: string;
 }) {
   return (
-    <label className={`flex w-full flex-col gap-2.5 ${className}`}>
-      <span className="text-sm font-semibold text-black">{label}</span>
+    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
+      <span className="text-base font-semibold text-black">{label}</span>
       <textarea
-        className={`min-h-[152px] w-full resize-none rounded-[20px] border bg-white px-5 py-4 text-sm font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`min-h-[85px] w-full resize-none rounded-[20px] border bg-white px-4 py-3 text-base font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -71,7 +73,7 @@ function PillTextarea({
         {...props}
       />
       {error && (
-        <span className="px-2 text-xs font-semibold text-[#ff593d]">
+        <span className="text-sm font-semibold text-[#ff593d] px-2">
           {error}
         </span>
       )}
@@ -92,11 +94,11 @@ function PillSelect({
   error?: string;
 } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <label className={`flex w-full flex-col gap-2.5 ${className}`}>
-      <span className="text-sm font-semibold text-black">{label}</span>
+    <label className={`flex w-full flex-col gap-1.5 ${className}`}>
+      <span className="text-base font-semibold text-black">{label}</span>
       <div className="relative w-full">
         <select
-          className={`h-[56px] w-full appearance-none rounded-pill border bg-white px-5 text-sm font-medium text-black outline-none transition focus:ring-2 ${
+          className={`h-[46px] w-full appearance-none rounded-pill border bg-white px-4 text-base font-medium text-black outline-none transition focus:ring-2 ${
             error
               ? "border-[#ff593d] focus:ring-red-500/15"
               : "border-black focus:ring-black/15"
@@ -111,11 +113,11 @@ function PillSelect({
         </select>
         <span
           aria-hidden
-          className="pointer-events-none absolute right-5 top-1/2 h-2.5 w-2.5 -translate-y-2/3 rotate-45 border-b-2 border-r-2 border-black"
+          className="pointer-events-none absolute right-4 top-1/2 h-2.5 w-2.5 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-black"
         />
       </div>
       {error && (
-        <span className="px-2 text-xs font-semibold text-[#ff593d]">
+        <span className="text-sm font-semibold text-[#ff593d] px-2">
           {error}
         </span>
       )}
@@ -133,7 +135,7 @@ function SquareCheckbox({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3">
+    <label className="flex cursor-pointer items-start gap-4">
       <span className="mt-0.5 inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
         <input
           type="checkbox"
@@ -149,7 +151,7 @@ function SquareCheckbox({
           }
         />
       </span>
-      <span className="text-xs leading-5 text-black/75">{children}</span>
+      <span className="text-body-sm leading-6 text-black/75">{children}</span>
     </label>
   );
 }
@@ -197,6 +199,66 @@ export function CheckoutForm() {
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  const { paymentMethods } = usePaymentMethods();
+  const options = useMemo(() => {
+    const source = paymentMethods.length
+      ? paymentMethods
+      : [
+          {
+            method_id: 1,
+            method_name: "Chuyển khoản ngân hàng",
+            method_code: "BANK_TRANSFER",
+            provider: "BANK_TRANSFER",
+            is_online: true,
+          },
+        ];
+
+    return [...source].sort((a, b) => {
+      if (a.is_online !== b.is_online) {
+        return a.is_online ? -1 : 1;
+      }
+      return a.method_id - b.method_id;
+    });
+  }, [paymentMethods]);
+
+  const [paymentMethodId, setPaymentMethodId] = useState<number>(1);
+
+  useEffect(() => {
+    if (
+      options.length &&
+      !options.some((option) => option.method_id === paymentMethodId)
+    ) {
+      setPaymentMethodId(options[0].method_id);
+    }
+  }, [options, paymentMethodId]);
+
+  const validateSingleField = (name: string, value: string) => {
+    let error = "";
+    if (name === "fullName") {
+      error = validateName(value) ?? "";
+    } else if (name === "phone") {
+      error = validatePhone(value) ?? "";
+    } else if (name === "email") {
+      error = validateEmail(value) ?? "";
+    } else if (name === "address") {
+      error = validateAddress(value) ?? "";
+    } else if (name === "receiverName" && otherReceiver) {
+      error = validateName(value) ?? "";
+    } else if (name === "receiverPhone" && otherReceiver) {
+      error = validatePhone(value) ?? "";
+    }
+
+    setFieldErrors((prev) => {
+      const copy = { ...prev };
+      if (error) {
+        copy[name] = error;
+      } else {
+        delete copy[name];
+      }
+      return copy;
+    });
+  };
+
   const [dbProvinces, setDbProvinces] = useState<
     Array<{
       province_id: number;
@@ -205,6 +267,15 @@ export function CheckoutForm() {
     }>
   >([]);
   const [selectedProvinceId, setSelectedProvinceId] = useState<number>(79);
+
+  useEffect(() => {
+    setFieldErrors((prev) => {
+      const copy = { ...prev };
+      delete copy.province_id;
+      delete copy.ward;
+      return copy;
+    });
+  }, [selectedProvinceId]);
 
   const selectedAddress = activeAddresses.find(
     (address) => address.address_id === selectedAddressId,
@@ -273,6 +344,9 @@ export function CheckoutForm() {
           otherReceiver,
           receiverName: String(formData.get("receiverName") ?? ""),
           receiverPhone: String(formData.get("receiverPhone") ?? ""),
+          province_id: selectedProvinceId,
+          ward: String(formData.get("ward") ?? ""),
+          note: String(formData.get("note") ?? ""),
         },
         isMember,
       );
@@ -301,14 +375,6 @@ export function CheckoutForm() {
     const paymentMethodId = Number(formData.get("payment_method_id"));
     const voucherCode = String(formData.get("voucher_code") ?? "").trim();
     const customerNote = String(formData.get("note") ?? "").trim();
-
-    if (customerNote.length > 200) {
-      setFieldErrors((current) => ({
-        ...current,
-        note: "Ghi chú đơn hàng không được vượt quá 200 ký tự.",
-      }));
-      return;
-    }
 
     if (!cartItemIds.length || !Number.isInteger(paymentMethodId)) {
       return;
@@ -381,10 +447,10 @@ export function CheckoutForm() {
       className="w-full text-black"
     >
       {!isMember ? (
-        <div className="rounded-[10px] bg-[#D9D9D9]/30 p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="rounded-[10px] bg-[#D9D9D9]/30 p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center">
             <div
-              className="inline-flex h-[50px] w-full max-w-[341px] items-center justify-center rounded-pill border border-black bg-cover bg-center px-6 text-sm font-bold uppercase text-white shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
+              className="inline-flex h-[53px] w-full max-w-[341px] items-center justify-center rounded-pill border border-black bg-cover bg-center px-8 text-sm font-bold uppercase text-white shadow-[0_4px_4px_rgba(0,0,0,0.25)]"
               style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
             >
               Gia nhập Xéo Hội ngay!
@@ -402,11 +468,11 @@ export function CheckoutForm() {
         </div>
       ) : null}
 
-      <h2 className="text-xl font-bold md:text-3xl md:leading-tight">
+      <h2 className="mt-10 text-2xl font-bold uppercase md:text-heading-section md:leading-tight">
         Thông tin vận chuyển
       </h2>
 
-      <div className="mt-3">
+      <div className="mt-4">
         <SquareCheckbox checked={acceptedPolicy} onChange={setAcceptedPolicy}>
           Bằng việc ấn nút đặt hàng, bạn xác nhận đã đọc và hiểu về chính sách
           bảo mật dữ liệu cá nhân của Xéo Xọ.{" "}
@@ -420,24 +486,24 @@ export function CheckoutForm() {
       </div>
 
       {isMember && isLoadingAddresses && (
-        <section className="mt-4 rounded-[10px] border border-black/30 bg-white px-4 py-3.5">
-          <p className="text-xs font-semibold text-black/70">
+        <section className="mt-5 rounded-[10px] border border-black/30 bg-white px-5 py-4">
+          <p className="text-sm font-semibold text-black/70">
             Đang tải sổ địa chỉ...
           </p>
         </section>
       )}
 
       {isMember && !isLoadingAddresses && selectedAddress && !useNewAddress && (
-        <section className="mt-4 overflow-hidden rounded-[10px] border border-black bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+        <section className="mt-5 overflow-hidden rounded-[10px] border border-black bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
           <div
             className="h-2.5 w-full bg-cover bg-center"
             style={{ backgroundImage: "url('/images/strip-cart-section.png')" }}
             aria-hidden
           />
-          <div className="px-4 py-3.5">
-            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2.5">
+          <div className="px-5 py-4">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-bold uppercase">Giao đến</span>
+                <span className="text-base font-bold uppercase">Giao đến</span>
                 {selectedAddress.is_default && (
                   <span className="rounded-[3px] border border-[#ff593d] px-3 py-1 text-xs font-semibold text-[#ff593d]">
                     Mặc định
@@ -447,27 +513,27 @@ export function CheckoutForm() {
               <button
                 type="button"
                 onClick={() => setAddressBookOpen((open) => !open)}
-                className="rounded-pill border border-black px-4 py-1.5 text-sm font-bold transition hover:bg-black hover:text-white"
+                className="rounded-pill border border-black px-4 py-2 text-sm font-bold transition hover:bg-black hover:text-white"
                 aria-expanded={addressBookOpen}
               >
                 {addressBookOpen ? "Đóng" : "Thay đổi"}
               </button>
             </div>
-            <p className="text-sm font-bold">
+            <p className="text-base font-bold">
               {selectedAddress.recipient_name}
               <span className="mx-2 font-light text-black/40">|</span>
               <span className="font-semibold text-black/70">
                 {selectedAddress.recipient_phone}
               </span>
             </p>
-            <p className="mt-1.5 text-xs font-medium leading-5 text-black/75">
+            <p className="mt-2 text-sm font-medium leading-6 text-black/75">
               {formatAddress(selectedAddress)}
             </p>
 
             {addressBookOpen && (
-              <div className="mt-4 border-t border-black/15 pt-3.5">
-                <p className="mb-3 text-xs font-bold">Chọn địa chỉ nhận hàng</p>
-                <div className="grid gap-2.5">
+              <div className="mt-5 border-t border-black/15 pt-4">
+                <p className="mb-3 text-sm font-bold">Chọn địa chỉ nhận hàng</p>
+                <div className="grid gap-3">
                   {activeAddresses.map((address) => {
                     const isSelected = address.address_id === selectedAddressId;
                     return (
@@ -478,13 +544,13 @@ export function CheckoutForm() {
                           setSelectedAddressId(address.address_id);
                           setAddressBookOpen(false);
                         }}
-                        className={`rounded-[10px] border p-3.5 text-left transition ${
+                        className={`rounded-[10px] border p-4 text-left transition ${
                           isSelected
                             ? "border-black bg-black/[0.04]"
                             : "border-black/15 hover:border-black/50"
                         }`}
                       >
-                        <span className="flex items-start gap-2.5">
+                        <span className="flex items-start gap-3">
                           <span
                             className={`mt-1 h-4 w-4 shrink-0 rounded-full border-2 ${isSelected ? "border-[5px] border-black" : "border-black/35"}`}
                           />
@@ -493,7 +559,7 @@ export function CheckoutForm() {
                               {address.recipient_name} ·{" "}
                               {address.recipient_phone}
                             </span>
-                            <span className="mt-1 block text-xs leading-5 text-black/65">
+                            <span className="mt-1 block text-sm leading-5 text-black/65">
                               {formatAddress(address)}
                             </span>
                           </span>
@@ -508,7 +574,7 @@ export function CheckoutForm() {
                     setUseNewAddress(true);
                     setAddressBookOpen(false);
                   }}
-                  className="mt-2.5 h-10 rounded-pill bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
+                  className="mt-3 h-10 rounded-pill bg-black px-5 text-sm font-bold text-white transition hover:bg-black/85"
                 >
                   + Thêm địa chỉ mới
                 </button>
@@ -518,13 +584,27 @@ export function CheckoutForm() {
         </section>
       )}
 
+      {!shouldShowAddressForm && (
+        <PillTextarea
+          label="Ghi chú đơn hàng (tuỳ chọn)"
+          name="note"
+          rows={2}
+          maxLength={200}
+          className="mt-4"
+          error={fieldErrors.note}
+          onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+          onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+          placeholder="Ghi chú đơn hàng (tối đa 200 ký tự)"
+        />
+      )}
+
       {shouldShowAddressForm && !isLoadingAddresses && (
-        <div className="mt-5 grid gap-5">
+        <div className="mt-6 grid gap-4">
           {isMember && hasSavedAddress && (
-            <div className="flex flex-col gap-2.5 rounded-[10px] border border-black/25 bg-white px-4 py-3.5 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 rounded-[10px] border border-black/25 bg-white px-5 py-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-sm font-bold">Giao đến địa chỉ mới</p>
-                <p className="mt-1 text-xs text-black/60">
+                <p className="text-base font-bold">Giao đến địa chỉ mới</p>
+                <p className="mt-1 text-sm text-black/60">
                   Địa chỉ này sẽ được lưu vào sổ địa chỉ sau khi đặt hàng.
                 </p>
               </div>
@@ -539,7 +619,7 @@ export function CheckoutForm() {
           )}
 
           {isMember && !hasSavedAddress && (
-            <p className="rounded-[10px] border border-black/20 bg-white px-4 py-3.5 text-xs font-semibold text-black/70">
+            <p className="rounded-[10px] border border-black/20 bg-white px-5 py-4 text-sm font-semibold text-black/70">
               Bạn chưa có địa chỉ mặc định. Nhập địa chỉ giao hàng bên dưới để
               dùng cho đơn này.
             </p>
@@ -551,6 +631,8 @@ export function CheckoutForm() {
             placeholder="Nguyễn Văn A"
             autoComplete="name"
             error={fieldErrors.fullName}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
             required
           />
           <PillInput
@@ -559,18 +641,23 @@ export function CheckoutForm() {
             placeholder="0912345678"
             autoComplete="tel"
             error={fieldErrors.phone}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
             required
           />
           <PillInput
             label="Email"
             name="email"
             type="email"
-            placeholder="email@example.com"
+            placeholder="nguyenvana@gmail.com"
             autoComplete="email"
             error={fieldErrors.email}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+            required
           />
 
-          <div className="grid gap-2.5 md:grid-cols-2 md:gap-2.5">
+          <div className="grid gap-3 md:grid-cols-2 md:gap-[11px]">
             <PillSelect
               label="Tỉnh / Thành phố"
               name="province_id"
@@ -587,7 +674,7 @@ export function CheckoutForm() {
               label="Phường / Xã"
               name="ward"
               options={currentWards}
-              error={fieldErrors.district}
+              error={fieldErrors.ward}
               required
             />
           </div>
@@ -598,7 +685,21 @@ export function CheckoutForm() {
             placeholder="123 Đường Lê Lợi, Phường Bến Thành"
             autoComplete="street-address"
             error={fieldErrors.address}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
             required
+          />
+
+          <PillTextarea
+            label="Ghi chú đơn hàng (tuỳ chọn)"
+            name="note"
+            rows={2}
+            maxLength={200}
+            className="mt-2"
+            error={fieldErrors.note}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
+            placeholder="Ghi chú đơn hàng (tối đa 200 ký tự)"
           />
 
           {isMember && (
@@ -609,92 +710,91 @@ export function CheckoutForm() {
         </div>
       )}
 
-      <div className="mt-6">
+      <div className="mt-8">
         <input
           type="hidden"
           name="is_other_receiver"
           value={String(otherReceiver)}
         />
         <SquareCheckbox checked={otherReceiver} onChange={setOtherReceiver}>
-          <span className="text-sm font-semibold text-black">
+          <span className="text-base font-semibold text-black">
             Gọi người khác nhận hàng (nếu có)
           </span>
         </SquareCheckbox>
       </div>
 
       {otherReceiver && (
-        <div className="mt-5 grid gap-2.5 md:grid-cols-2 md:gap-2.5">
+        <div className="mt-6 grid gap-3 md:grid-cols-2 md:gap-[11px]">
           <PillInput
             label="Họ và tên"
             name="receiverName"
             placeholder="Nguyễn Văn B"
             error={fieldErrors.receiverName}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
           />
           <PillInput
             label="Số điện thoại"
             name="receiverPhone"
             placeholder="0987654321"
             error={fieldErrors.receiverPhone}
+            onChange={(e) => validateSingleField(e.target.name, e.target.value)}
+            onBlur={(e) => validateSingleField(e.target.name, e.target.value)}
           />
         </div>
       )}
 
-      <PillTextarea
-        label="Ghi chú đơn hàng (tuỳ chọn)"
-        name="note"
-        rows={5}
-        maxLength={200}
-        className="mt-4"
-        error={fieldErrors.note}
-        placeholder="Ghi chú đơn hàng (tối đa 200 ký tự), ví dụ: thời gian giao hàng mong muốn"
+      <input
+        type="hidden"
+        name="payment_method_id"
+        value={paymentMethodId}
       />
 
-      <div className="mt-8">
-        <button
-          type="button"
-          onClick={() => setPoliciesOpen((open) => !open)}
-          aria-expanded={policiesOpen}
-          className="flex items-center gap-2 text-sm font-semibold text-black"
-        >
-          <Image
-            src="/icons/chevron-down.svg"
-            alt=""
-            width={18}
-            height={18}
-            aria-hidden
-            className={
-              policiesOpen
-                ? "rotate-180 transition-transform"
-                : "transition-transform"
-            }
-          />
-          Các chính sách mua hàng
-        </button>
-        {policiesOpen && (
-          <ul className="mt-3 flex flex-col gap-1.5 pl-7 text-xs text-black/75">
-            {POLICIES.map((policy) => (
-              <li key={policy}>
-                <Link
-                  href={ROUTES.POLICIES}
-                  className="underline underline-offset-2 hover:text-black"
-                >
-                  {policy}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <fieldset className="mt-10 space-y-0">
+        <legend className="mb-4 text-lg font-bold uppercase">
+          Phương thức thanh toán
+        </legend>
+        {options.map((option) => {
+          const checked = paymentMethodId === option.method_id;
+          return (
+            <label
+              key={option.method_id}
+              className="flex cursor-pointer items-center gap-4 border-b border-black/50 py-4 first:border-t"
+            >
+              <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-full border-2 border-[#2E54FF] bg-white">
+                <input
+                  type="radio"
+                  name="paymentMethodPreview"
+                  value={option.method_id}
+                  checked={checked}
+                  onChange={() => setPaymentMethodId(option.method_id)}
+                  className="sr-only"
+                />
+                <span
+                  className={
+                    checked
+                      ? "h-[15px] w-[15px] rounded-full bg-[#2E54FF]"
+                      : "h-[15px] w-[15px] rounded-full bg-white"
+                  }
+                />
+              </span>
+              <span className="text-base font-medium">
+                {option.method_name}
+              </span>
+            </label>
+          );
+        })}
+      </fieldset>
 
       {(addressError || errorMessage) && (
-        <p className="mt-4 text-xs font-semibold text-red-600">
+        <p className="mt-5 text-sm font-semibold text-red-600">
           {addressError ?? errorMessage}
         </p>
       )}
 
-      {(isSubmitting || isSavingAddress) && (
-        <p className="mt-4 text-xs font-semibold text-black/70">
-          {isSavingAddress ? "Đang lưu địa chỉ..." : "Đang tạo đơn hàng..."}
+      {isSavingAddress && (
+        <p className="mt-5 text-sm font-semibold text-black/70">
+          Đang lưu địa chỉ...
         </p>
       )}
 
@@ -705,15 +805,15 @@ export function CheckoutForm() {
           message="Đơn hàng của bạn đã được tạo thành công. Xéo Xọ sẽ tiếp nhận, xử lý và cập nhật trạng thái sớm nhất để bạn tiện theo dõi."
           codeLabel="Mã đơn hàng"
           codeValue={createdOrder.order_code}
-          primaryLabel="Xem đơn hàng"
+          primaryLabel={isMember ? "Xem đơn hàng" : "Tiếp tục mua sắm"}
           primaryHref={
             isMember
-              ? ROUTES.ACCOUNT_ORDERS
-              : ROUTES.ORDER_LOOKUP
+              ? ROUTES.ACCOUNT_ORDER(String(createdOrder.order_id))
+              : ROUTES.PRODUCTS
           }
           primaryAction={() => setSuccessModalOpen(false)}
-          secondaryLabel="Tiếp tục mua sắm"
-          secondaryHref={ROUTES.HOME}
+          secondaryLabel={isMember ? "Tiếp tục mua sắm" : "Đóng"}
+          secondaryHref={isMember ? ROUTES.PRODUCTS : undefined}
           secondaryAction={() => setSuccessModalOpen(false)}
           onClose={() => setSuccessModalOpen(false)}
         />

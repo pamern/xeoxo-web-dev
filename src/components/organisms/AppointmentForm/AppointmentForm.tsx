@@ -97,6 +97,13 @@ export function AppointmentForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>();
   const [errors, setErrors] = useState<AppointmentErrors>({});
+  const timersRef = useRef<Record<string, NodeJS.Timeout>>({});
+
+  useEffect(() => {
+    return () => {
+      Object.values(timersRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const calendarDays = useMemo(
     () => buildCalendarDays(visibleMonth, TODAY),
@@ -167,27 +174,69 @@ export function AppointmentForm({
   }, [timeSlotsWithAvailability, values.timeSlot]);
 
   function update<K extends keyof AppointmentValues>(key: K, value: AppointmentValues[K]) {
-    setValues((current) => {
-      const nextValues = { ...current, [key]: value };
-
-      if (errors[key]) {
-        setErrors((existing) => ({
-          ...existing,
-          [key]: validateField(key, value, nextValues),
-        }));
-      }
-
-      return nextValues;
-    });
+    setValues((current) => ({ ...current, [key]: value }));
     setSubmitted(false);
     setSubmitError(undefined);
+
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
+
+    if (timersRef.current[key]) {
+      clearTimeout(timersRef.current[key]);
+    }
+
+    timersRef.current[key] = setTimeout(() => {
+      const error = validateField(key, value, {
+        ...values,
+        [key]: value,
+      });
+
+      setErrors((current) => {
+        if (error) {
+          return { ...current, [key]: error };
+        }
+
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+    }, 650);
   }
 
   function handleBlur<K extends keyof AppointmentValues>(key: K) {
-    setErrors((current) => ({
-      ...current,
-      [key]: validateField(key, values[key], values),
-    }));
+    if (timersRef.current[key]) {
+      clearTimeout(timersRef.current[key]);
+    }
+
+    let nextValue = values[key];
+    if (key === "fullName") {
+      nextValue = String(nextValue).trim().replace(/\s+/g, " ") as AppointmentValues[K];
+    } else if (key === "phone") {
+      nextValue = String(nextValue).trim() as AppointmentValues[K];
+    } else if (key === "email") {
+      nextValue = String(nextValue).trim().toLowerCase() as AppointmentValues[K];
+    }
+
+    if (nextValue !== values[key]) {
+      setValues((current) => ({ ...current, [key]: nextValue }));
+    }
+
+    setErrors((current) => {
+      const error = validateField(key, nextValue, {
+        ...values,
+        [key]: nextValue,
+      });
+      if (error) {
+        return { ...current, [key]: error };
+      }
+
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
   }
 
   function handleDateSelect(value: string) {
@@ -217,14 +266,27 @@ export function AppointmentForm({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const nextErrors = validateAppointment(values);
+
+    Object.values(timersRef.current).forEach(clearTimeout);
+
+    const normalizedValues = {
+      ...values,
+      fullName: values.fullName.trim().replace(/\s+/g, " "),
+      phone: values.phone.trim(),
+      email: values.email.trim().toLowerCase(),
+    };
+
+    setValues(normalizedValues);
+
+    const nextErrors = validateAppointment(normalizedValues);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
+
     setIsSubmitting(true);
     setSubmitError(undefined);
 
     try {
-      await onSubmit?.(values);
+      await onSubmit?.(normalizedValues);
       setSubmitted(true);
     } catch (error) {
       setSubmitError(
@@ -476,8 +538,8 @@ export function AppointmentForm({
               name="note"
               value={values.note}
               onChange={(event) => update("note", event.target.value)}
-              maxLength={500}
-              placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 500 ký tự)"
+              maxLength={200}
+              placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 200 ký tự)"
               rows={2}
               className="min-h-[3.125rem] w-full resize-none rounded-[18px] border border-black/40 bg-white px-3.5 py-2 text-sm font-light text-black outline-none transition-colors placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10"
             />
