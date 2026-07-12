@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   useMemo,
+  useRef,
   type FormEvent,
   type InputHTMLAttributes,
   type TextareaHTMLAttributes,
@@ -202,6 +203,7 @@ export function CheckoutForm() {
   const [policiesOpen, setPoliciesOpen] = useState(false);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const submitLockRef = useRef(false);
 
   const { paymentMethods } = usePaymentMethods();
   const options = useMemo(() => {
@@ -327,16 +329,29 @@ export function CheckoutForm() {
       .find((province) => province.province_id === selectedProvinceId)
       ?.ward?.map((ward) => ({ id: ward, name: ward })) ?? [];
 
+  function closeSuccessModal() {
+    setSuccessModalOpen(false);
+    submitLockRef.current = false;
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
+
+    if (submitLockRef.current) {
+      return;
+    }
+
+    submitLockRef.current = true;
     setSubmitted(false);
 
     if (!acceptedPolicy) {
       alert("Vui lòng xác nhận đồng ý với chính sách bảo mật.");
+      submitLockRef.current = false;
       return;
     }
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
 
     if (shouldShowAddressForm) {
       const errors = validateFields(
@@ -360,13 +375,14 @@ export function CheckoutForm() {
 
         // Auto scroll to first error
         const firstKey = Object.keys(errors)[0];
-        const inputEl = event.currentTarget.querySelector(
+        const inputEl = form.querySelector(
           `[name="${firstKey}"]`,
         );
         if (inputEl) {
           inputEl.scrollIntoView({ behavior: "smooth", block: "center" });
           (inputEl as HTMLElement).focus();
         }
+        submitLockRef.current = false;
         return;
       }
       setFieldErrors({});
@@ -381,6 +397,7 @@ export function CheckoutForm() {
     const customerNote = String(formData.get("note") ?? "").trim();
 
     if (!cartItemIds.length || !Number.isInteger(paymentMethodId)) {
+      submitLockRef.current = false;
       return;
     }
 
@@ -416,6 +433,7 @@ export function CheckoutForm() {
         });
 
         if (!saved.ok || !saved.address) {
+          submitLockRef.current = false;
           return;
         }
 
@@ -437,7 +455,7 @@ export function CheckoutForm() {
     });
 
     if (result.ok) {
-      event.currentTarget.reset();
+      form.reset();
       setFieldErrors({});
       setOtherReceiver(false);
       setPoliciesOpen(false);
@@ -448,7 +466,10 @@ export function CheckoutForm() {
       setSubmitted(true);
       setSuccessModalOpen(true);
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
+      return;
     }
+
+    submitLockRef.current = false;
   }
 
   return (
@@ -820,11 +841,11 @@ export function CheckoutForm() {
           codeValue={createdOrder.order_code}
           primaryLabel="Theo dõi đơn hàng"
           primaryHref={isMember ? ROUTES.ACCOUNT_ORDERS : ROUTES.ORDER_LOOKUP}
-          primaryAction={() => setSuccessModalOpen(false)}
+          primaryAction={closeSuccessModal}
           secondaryLabel="Tiếp tục mua sắm"
           secondaryHref={ROUTES.PRODUCTS}
-          secondaryAction={() => setSuccessModalOpen(false)}
-          onClose={() => setSuccessModalOpen(false)}
+          secondaryAction={closeSuccessModal}
+          onClose={closeSuccessModal}
         />
       ) : null}
     </form>

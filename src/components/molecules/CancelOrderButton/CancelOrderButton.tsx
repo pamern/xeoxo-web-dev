@@ -15,7 +15,7 @@ export type CancelOrderButtonProps = {
   orderCode: string;
 };
 
-const DEMO_PHONE_CANCEL_OTP = "482774";
+const DEMO_CANCEL_OTP = "482774";
 const OTP_LENGTH = 6;
 const DEMO_FILL_DELAY_MS = 5000;
 
@@ -52,19 +52,52 @@ export function CancelOrderButton({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [otpValue, setOtpValue] = useState("");
   const [countdown, setCountdown] = useState(5);
-  const [phoneOtpFlowKey, setPhoneOtpFlowKey] = useState(0);
+  const [demoOtpFlowKey, setDemoOtpFlowKey] = useState(0);
   const router = useRouter();
 
   const isLookupGuest = cancelContext?.source === "lookup";
-  const shouldUsePhoneDemoOtp =
-    isLookupGuest && cancelContext?.contactType === "phone";
-  const shouldUseEmailOtp =
-    isLookupGuest && cancelContext?.contactType === "email";
+  const shouldUseDemoOtp = isLookupGuest;
+
+  async function verifyEmailOtp(token: string) {
+    if (!cancelContext || cancelContext.contactType !== "email") {
+      return;
+    }
+
+    const response = await fetch("/api/v1/auth/email-otp/verify", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: cancelContext.contact,
+        order_code: orderCode,
+        order_id: orderId,
+        purpose: "cancel-order",
+        token,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message ?? "Không thể xác thực OTP email.");
+    }
+  }
 
   async function handleCancelOrder(otpToken?: string) {
     setIsLoading(true);
     setErrorMsg(null);
     try {
+      if (cancelContext?.source === "lookup" && cancelContext.contactType === "email") {
+        const token = String(otpToken ?? "").trim();
+
+        if (!/^\d{6}$/.test(token)) {
+          throw new Error("Mã OTP email không hợp lệ.");
+        }
+
+        await verifyEmailOtp(token);
+      }
+
       const response = await fetch(`/api/v1/orders/${orderId}/cancel`, {
         headers: {
           "Content-Type": "application/json",
@@ -102,98 +135,18 @@ export function CancelOrderButton({
     }
   }
 
-  async function sendEmailOtp() {
-    if (!cancelContext?.contact) {
-      return;
-    }
-
-    setIsSendingOtp(true);
-    setErrorMsg(null);
-
-    try {
-      const response = await fetch("/api/v1/auth/email-otp/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: cancelContext.contact,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message ?? "Không thể gửi OTP email.");
-      }
-
-      setOtpValue("");
-      setIsConfirmOpen(false);
-      setIsOtpOpen(true);
-    } catch (err) {
-      setErrorMsg(
-        err instanceof Error ? err.message : "Không thể gửi OTP email.",
-      );
-    } finally {
-      setIsSendingOtp(false);
-    }
-  }
-
-  function startPhoneOtpFlow() {
+  function startDemoOtpFlow() {
     setErrorMsg(null);
     setOtpValue("");
     setCountdown(5);
     setIsConfirmOpen(false);
     setIsOtpOpen(true);
-    setPhoneOtpFlowKey((current) => current + 1);
-  }
-
-  async function verifyEmailOtpAndCancel() {
-    if (!cancelContext?.contact) {
-      return;
-    }
-
-    setIsLoading(true);
-    setErrorMsg(null);
-
-    try {
-      const verifyResponse = await fetch("/api/v1/auth/email-otp/verify", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: cancelContext.contact,
-          order_code: orderCode,
-          order_id: orderId,
-          purpose: "cancel-order",
-          token: otpValue,
-        }),
-      });
-      const verifyData = await verifyResponse.json();
-
-      if (!verifyResponse.ok || !verifyData.success) {
-        throw new Error(
-          verifyData.message ?? "Không thể xác thực OTP email.",
-        );
-      }
-
-      await handleCancelOrder();
-    } catch (err) {
-      setErrorMsg(
-        err instanceof Error ? err.message : "Không thể xác thực OTP email.",
-      );
-      setIsLoading(false);
-    }
+    setDemoOtpFlowKey((current) => current + 1);
   }
 
   function handleConfirm() {
-    if (shouldUsePhoneDemoOtp) {
-      startPhoneOtpFlow();
-      return;
-    }
-
-    if (shouldUseEmailOtp) {
-      void sendEmailOtp();
+    if (shouldUseDemoOtp) {
+      startDemoOtpFlow();
       return;
     }
 
@@ -201,7 +154,7 @@ export function CancelOrderButton({
   }
 
   useEffect(() => {
-    if (!isOtpOpen || !shouldUsePhoneDemoOtp || phoneOtpFlowKey === 0) {
+    if (!isOtpOpen || !shouldUseDemoOtp || demoOtpFlowKey === 0) {
       return;
     }
 
@@ -210,9 +163,9 @@ export function CancelOrderButton({
     }, 1000);
 
     const autoFillTimeout = window.setTimeout(() => {
-      setOtpValue(DEMO_PHONE_CANCEL_OTP);
+      setOtpValue(DEMO_CANCEL_OTP);
       window.setTimeout(() => {
-        void handleCancelOrder(DEMO_PHONE_CANCEL_OTP);
+        void handleCancelOrder(DEMO_CANCEL_OTP);
       }, 400);
     }, DEMO_FILL_DELAY_MS);
 
@@ -220,7 +173,7 @@ export function CancelOrderButton({
       window.clearInterval(countdownInterval);
       window.clearTimeout(autoFillTimeout);
     };
-  }, [isOtpOpen, shouldUsePhoneDemoOtp, phoneOtpFlowKey]);
+  }, [isOtpOpen, shouldUseDemoOtp, demoOtpFlowKey]);
 
   const otpDigits = Array.from(
     { length: OTP_LENGTH },
@@ -308,7 +261,7 @@ export function CancelOrderButton({
                 Nhập OTP
               </h3>
               <p className="mt-3 text-[15px] font-light leading-6 text-black/75 md:text-[17px] md:leading-7">
-                {shouldUsePhoneDemoOtp
+                {cancelContext?.contactType === "phone"
                   ? "Nhập mã PIN đã được gửi tới "
                   : "Nhập mã OTP đã được gửi tới "}
                 <span className="font-normal text-black">
@@ -329,24 +282,7 @@ export function CancelOrderButton({
                 ))}
               </div>
 
-              {shouldUseEmailOtp ? (
-                <div className="mx-auto mt-7 max-w-[340px]">
-                  <label className="block text-left text-[13px] font-medium text-black/75 md:text-sm">
-                    Mã OTP email
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otpValue}
-                    onChange={(event) => {
-                      setOtpValue(event.target.value.replace(/\D/g, "").slice(0, 6));
-                    }}
-                    className="mt-2.5 h-12 w-full rounded-[12px] border border-black/20 px-4 text-center text-[22px] font-semibold tracking-[0.3em] text-black outline-none transition-colors focus:border-black md:h-[52px] md:text-[24px]"
-                    placeholder="000000"
-                  />
-                </div>
-              ) : (
+              {cancelContext?.contactType === "phone" ? (
                 <p className="mx-auto mt-7 max-w-[600px] text-center text-[13px] font-light leading-6 text-black/72 md:text-[15px] md:leading-7">
                   Quý khách lưu ý: Để bảo đảm an toàn bảo mật, các số trên bàn
                   phím{" "}
@@ -354,19 +290,12 @@ export function CancelOrderButton({
                     sẽ thay đổi vị trí
                   </strong>
                 </p>
-              )}
+              ) : null}
 
               <div className="mt-4 text-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (shouldUsePhoneDemoOtp) {
-                      startPhoneOtpFlow();
-                      return;
-                    }
-
-                    void sendEmailOtp();
-                  }}
+                  onClick={startDemoOtpFlow}
                   disabled={isLoading || isSendingOtp}
                   className="text-[14px] font-bold uppercase underline underline-offset-4 transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 md:text-[15px]"
                 >
@@ -375,13 +304,11 @@ export function CancelOrderButton({
               </div>
 
               <div className="mt-3 text-center text-[13px] font-medium text-black/60 md:text-sm">
-                {shouldUsePhoneDemoOtp
+                {shouldUseDemoOtp
                   ? isLoading
                     ? "Đang xác nhận OTP và hủy đơn hàng..."
-                    : `OTP demo sẽ tự điền sau ${countdown}s`
-                  : isSendingOtp
-                    ? "Đang gửi lại OTP email..."
-                    : "OTP email có hiệu lực ngắn hạn để xác nhận hủy đơn hàng."}
+                    : `Mã demo sẽ tự điền sau ${countdown}s`
+                  : "OTP email có hiệu lực ngắn hạn để xác nhận hủy đơn hàng."}
               </div>
 
               {errorMsg ? (
@@ -390,18 +317,6 @@ export function CancelOrderButton({
                 </p>
               ) : null}
 
-              {shouldUseEmailOtp ? (
-                <div className="mt-7 flex justify-center">
-                  <button
-                    type="button"
-                    onClick={() => void verifyEmailOtpAndCancel()}
-                    disabled={isLoading || otpValue.length !== 6}
-                    className="inline-flex min-h-[46px] min-w-[172px] items-center justify-center rounded-full bg-black px-7 text-sm font-bold uppercase tracking-[0.03em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isLoading ? "Đang xác nhận..." : "Xác nhận OTP"}
-                  </button>
-                </div>
-              ) : null}
             </div>
             <div className="h-4 bg-[url('/images/header-line-up.png')] bg-[length:auto_100%] bg-repeat-x" />
           </div>

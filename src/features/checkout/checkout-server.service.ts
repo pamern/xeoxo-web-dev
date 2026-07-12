@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import type { CartDto, CartItemDto } from "@/types/cart.types";
 import type {
   CheckoutPreviewDto,
@@ -322,17 +323,24 @@ export async function resolveCheckoutAddress(
 
 async function findOrCreateGuestCustomer(shippingAddress: ShippingAddressValues) {
   const admin = createAdminClient();
-  const phone = shippingAddress.recipient_phone?.trim();
+  const rawPhone = shippingAddress.recipient_phone?.trim();
   const email = shippingAddress.email?.trim().toLowerCase();
 
-  if (!phone || !email) {
+  if (!rawPhone || !email) {
     throw new Error("Khach vang lai can nhap so dien thoai va email.");
   }
+
+  const phoneIdentifier = parseAuthIdentifier(rawPhone);
+  if (!phoneIdentifier || phoneIdentifier.type !== "phone") {
+    throw new Error("So dien thoai khong hop le.");
+  }
+
+  const phone = phoneIdentifier.value;
 
   const { data: existing, error: existingError } = await admin
     .schema("iam")
     .from("customer")
-    .select("customer_id")
+    .select("customer_id, email, customer_name")
     .eq("phone", phone)
     .eq("customer_type", "GUEST")
     .limit(1)
@@ -343,6 +351,30 @@ async function findOrCreateGuestCustomer(shippingAddress: ShippingAddressValues)
   }
 
   if (existing?.customer_id) {
+    const nextName = shippingAddress.recipient_name?.trim() || null;
+    const nextEmail = email;
+    const currentEmail =
+      typeof existing.email === "string" ? existing.email.trim().toLowerCase() : null;
+    const currentName =
+      typeof existing.customer_name === "string" ? existing.customer_name.trim() : null;
+
+    if (currentEmail !== nextEmail || currentName !== nextName) {
+      const { error: updateGuestError } = await admin
+        .schema("iam")
+        .from("customer")
+        .update({
+          email: nextEmail,
+          customer_name: nextName,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("customer_id", Number(existing.customer_id))
+        .eq("customer_type", "GUEST");
+
+      if (updateGuestError) {
+        throw new Error(updateGuestError.message);
+      }
+    }
+
     return Number(existing.customer_id);
   }
 

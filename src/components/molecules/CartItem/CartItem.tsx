@@ -103,13 +103,12 @@ export function CartItem({
       continue;
     }
 
-    const statusLabel = variant.is_available ? "Còn hàng" : "Hết hàng";
     const existing = sizeMap.get(sizeName);
 
     if (!existing || (existing.disabled && variant.is_available)) {
       sizeMap.set(sizeName, {
         value: sizeName,
-        label: `${sizeName} - ${statusLabel}`,
+        label: sizeName,
         disabled: !variant.is_available,
       });
     }
@@ -118,7 +117,7 @@ export function CartItem({
   if (item.size && item.size !== "Customize" && !sizeMap.has(item.size)) {
     sizeMap.set(item.size, {
       value: item.size,
-      label: `${item.size} - Hết hàng`,
+      label: item.size,
       disabled: true,
     });
   }

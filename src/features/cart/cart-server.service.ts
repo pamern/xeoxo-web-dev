@@ -18,6 +18,8 @@ type CartRecord = {
   customer_id: number | null;
   session_id: string | null;
   cart_status: "ACTIVE" | "CHECKOUT" | "ABANDONED";
+  created_at: string | null;
+  updated_at: string | null;
 };
 
 type CartItemRecord = {
@@ -185,14 +187,6 @@ export async function getCurrentCustomerId() {
 
 export async function getCartOwner(): Promise<CartOwner> {
   const customerId = await getCurrentCustomerId();
-
-  if (customerId) {
-    return {
-      customerId,
-      sessionId: null,
-    };
-  }
-
   const cookieStore = await cookies();
   const existingSessionId = cookieStore.get(CART_SESSION_COOKIE)?.value;
   const sessionId = existingSessionId ?? randomUUID();
@@ -207,31 +201,114 @@ export async function getCartOwner(): Promise<CartOwner> {
   }
 
   return {
-    customerId: null,
+    customerId,
     sessionId,
   };
 }
 
-export async function findActiveCart(owner: CartOwner) {
+async function listActiveCartsByColumn(
+  column: "customer_id" | "session_id",
+  value: number | string | null,
+) {
+  if (value === null) {
+    return [] as CartRecord[];
+  }
+
   const admin = createAdminClient();
-  let query = admin
+  const { data, error } = await admin
     .schema("sales")
     .from("cart")
-    .select("cart_id, customer_id, session_id, cart_status")
+    .select("cart_id, customer_id, session_id, cart_status, created_at, updated_at")
     .eq("cart_status", "ACTIVE")
-    .limit(1);
-
-  query = owner.customerId
-    ? query.eq("customer_id", owner.customerId)
-    : query.eq("session_id", owner.sessionId);
-
-  const { data, error } = await query.maybeSingle();
+    .eq(column, value)
+    .order("updated_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false, nullsFirst: false })
+    .limit(10);
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return data as CartRecord | null;
+  return (data ?? []) as CartRecord[];
+}
+
+async function getCartItemCountMap(cartIds: number[]) {
+  if (!cartIds.length) {
+    return new Map<number, number>();
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .schema("sales")
+    .from("cart_item")
+    .select("cart_id")
+    .in("cart_id", cartIds);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const counts = new Map<number, number>();
+
+  for (const row of data ?? []) {
+    const cartId = Number(row.cart_id);
+    counts.set(cartId, (counts.get(cartId) ?? 0) + 1);
+  }
+
+  return counts;
+}
+
+function getCartTimestamp(cart: CartRecord) {
+  return Date.parse(cart.updated_at ?? cart.created_at ?? "") || 0;
+}
+
+export async function findActiveCart(owner: CartOwner) {
+  const customerCarts = owner.customerId
+    ? await listActiveCartsByColumn("customer_id", owner.customerId)
+    : [];
+  const sessionCarts = owner.sessionId
+    ? await listActiveCartsByColumn("session_id", owner.sessionId)
+    : [];
+
+  const candidates = Array.from(
+    new Map(
+      [...customerCarts, ...sessionCarts].map((cart) => [cart.cart_id, cart]),
+    ).values(),
+  );
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  if (candidates.length === 1) {
+    return candidates[0];
+  }
+
+  const itemCountMap = await getCartItemCountMap(
+    candidates.map((cart) => cart.cart_id),
+  );
+
+  candidates.sort((left, right) => {
+    const leftHasItems = (itemCountMap.get(left.cart_id) ?? 0) > 0 ? 1 : 0;
+    const rightHasItems = (itemCountMap.get(right.cart_id) ?? 0) > 0 ? 1 : 0;
+
+    if (leftHasItems !== rightHasItems) {
+      return rightHasItems - leftHasItems;
+    }
+
+    const leftMatchesCustomer =
+      owner.customerId !== null && left.customer_id === owner.customerId ? 1 : 0;
+    const rightMatchesCustomer =
+      owner.customerId !== null && right.customer_id === owner.customerId ? 1 : 0;
+
+    if (leftMatchesCustomer !== rightMatchesCustomer) {
+      return rightMatchesCustomer - leftMatchesCustomer;
+    }
+
+    return getCartTimestamp(right) - getCartTimestamp(left);
+  });
+
+  return candidates[0];
 }
 
 export async function getOrCreateActiveCart(owner: CartOwner) {
@@ -253,7 +330,7 @@ export async function getOrCreateActiveCart(owner: CartOwner) {
       created_at: now,
       updated_at: now,
     })
-    .select("cart_id, customer_id, session_id, cart_status")
+    .select("cart_id, customer_id, session_id, cart_status, created_at, updated_at")
     .single();
 
   if (error) {
