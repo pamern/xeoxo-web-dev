@@ -7,20 +7,8 @@ import type {
   RegisterValues,
 } from "@/types/auth.types";
 import { parseAuthIdentifier } from "@/lib/auth-identifier";
+import { getAuthErrorMessage } from "@/lib/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
-
-function getErrorCode(error: unknown) {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    typeof error.code === "string"
-  ) {
-    return error.code;
-  }
-
-  return null;
-}
 
 function getErrorText(error: unknown) {
   if (error instanceof Error && error.message) {
@@ -59,57 +47,6 @@ function normalizePath(path?: string) {
   }
 
   return path;
-}
-
-function getErrorMessage(error: unknown, fallback: string) {
-  const errorCode = getErrorCode(error);
-  const errorText = getErrorText(error).trim();
-  const normalizedText = errorText.toLowerCase();
-
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    error.status === 429
-  ) {
-    return "Hệ thống đang giới hạn tần suất đăng ký hoặc gửi email xác nhận. Vui lòng đợi vài phút rồi thử lại.";
-  }
-
-  if (
-    errorCode === "over_email_send_rate_limit"
-  ) {
-    return "Email xác nhận đang bị giới hạn tần suất gửi. Vui lòng đợi vài phút rồi thử lại.";
-  }
-
-  if (
-    normalizedText.includes("user already registered") ||
-    normalizedText.includes("user already exists")
-  ) {
-    return "Email đã tồn tại. Vui lòng sử dụng email khác.";
-  }
-
-  if (
-    normalizedText.includes("phone number already registered") ||
-    normalizedText.includes("phone already registered") ||
-    normalizedText.includes("phone number has already been registered")
-  ) {
-    return "Số điện thoại đã tồn tại. Vui lòng sử dụng số điện thoại khác.";
-  }
-
-  if (
-    normalizedText.includes("error sending confirmation email") ||
-    normalizedText.includes("error sending confirmation mail") ||
-    normalizedText.includes("error sending email") ||
-    normalizedText.includes("smtp")
-  ) {
-    return "Không gửi được email xác thực. Vui lòng thử lại sau.";
-  }
-
-  if (errorText) {
-    return errorText;
-  }
-
-  return fallback;
 }
 
 function getApiErrorMessage(
@@ -185,55 +122,37 @@ export const authService = {
     const { data, error } = await supabase.auth.signInWithPassword(credentials);
 
     if (error) {
-      throw new Error(getErrorMessage(error, "Đăng nhập thất bại."));
+      throw new Error(getAuthErrorMessage(error, "Đăng nhập thất bại."));
     }
 
     return data;
   },
 
   async register(values: RegisterValues, nextPath?: string) {
-    const supabase = createClient();
-    const identifier = parseAuthIdentifier(values.account);
+    const response = await fetch("/api/v1/auth/signup", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...values,
+        nextPath: normalizePath(nextPath),
+      }),
+    });
 
-    if (!identifier) {
-      throw new Error("Email hoặc số điện thoại không hợp lệ.");
+    const payload = (await response.json()) as {
+      success: boolean;
+      message?: string;
+      error?: unknown;
+      data?: { hasSession: boolean };
+    };
+
+    if (!response.ok || !payload.success || !payload.data) {
+      throw new Error(getApiErrorMessage(payload, "Đăng ký thất bại."));
     }
 
-    const redirectTo = `${getSiteUrl()}/api/v1/auth/callback?next=${encodeURIComponent(
-      normalizePath(nextPath),
-    )}`;
-
-    const authPayload =
-      identifier.type === "email"
-        ? {
-            email: identifier.value,
-            password: values.password,
-            options: {
-              emailRedirectTo: redirectTo,
-              data: {
-                full_name: values.fullName.trim(),
-              },
-            },
-          }
-        : {
-            phone: identifier.value,
-            password: values.password,
-            options: {
-              channel: "sms" as const,
-              data: {
-                full_name: values.fullName.trim(),
-                phone: identifier.value,
-              },
-            },
-          };
-
-    const { data, error } = await supabase.auth.signUp(authPayload);
-
-    if (error) {
-      throw new Error(getErrorMessage(error, "Đăng ký thất bại."));
-    }
-
-    return data;
+    return payload.data;
   },
 
   async logout() {
@@ -241,7 +160,7 @@ export const authService = {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      throw new Error(getErrorMessage(error, "Đăng xuất thất bại."));
+      throw new Error(getAuthErrorMessage(error, "Đăng xuất thất bại."));
     }
   },
 
@@ -260,7 +179,7 @@ export const authService = {
 
     if (error) {
       throw new Error(
-        getErrorMessage(error, "Không thể bắt đầu đăng nhập mạng xã hội."),
+        getAuthErrorMessage(error, "Không thể bắt đầu đăng nhập mạng xã hội."),
       );
     }
 

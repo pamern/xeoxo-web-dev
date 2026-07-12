@@ -165,19 +165,17 @@ export function useAuth() {
       const result = await authService.register(parsed.data, nextPath);
       const identifier = parseAuthIdentifier(parsed.data.account);
 
-      if (result.session) {
+      if (result.hasSession) {
         await authService.syncProfile();
         await refresh();
         return { ok: true };
       }
 
       try {
-        if (!result.session) {
-          await authService.login({
-            account: parsed.data.account,
-            password: parsed.data.password,
-          });
-        }
+        await authService.login({
+          account: parsed.data.account,
+          password: parsed.data.password,
+        });
         await authService.syncProfile();
         await refresh();
         return { ok: true };
@@ -190,7 +188,7 @@ export function useAuth() {
 
       setNoticeMessage(
         identifier?.type === "phone"
-          ? "Vui lòng kiểm tra tin nhắn SMS để xác nhận tài khoản trước khi đăng nhập."
+          ? "Không thể tự động đăng nhập sau khi đăng ký bằng số điện thoại. Vui lòng thử đăng nhập lại."
           : "Vui lòng kiểm tra email và bấm vào link xác nhận tài khoản trước khi đăng nhập.",
       );
       return { ok: true, requiresEmailConfirmation: true };

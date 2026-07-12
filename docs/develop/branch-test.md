@@ -186,17 +186,25 @@ Các thay đổi dưới đây đã được thực hiện trong code của nhá
 
 #### Files chính
 
+- `src/app/api/v1/auth/signup/route.ts`
+- `src/features/auth/register-phone.service.ts`
+- `src/services/auth.service.ts`
 - `src/hooks/useAuth.ts`
+- `docs/api/api_list.md`
 - `docs/report/test_case_auth.md`
 
 #### Thay đổi
 
+- thêm API `POST /api/v1/auth/signup` làm đầu mối đăng ký cho app
+- đăng ký bằng số điện thoại được xử lý qua server-side admin client
+- user phone mới được tạo với trạng thái `phone_confirm = true`
 - sau khi đăng ký thành công, app sẽ thử đăng nhập ngay bằng mật khẩu cho cả email và số điện thoại
-- không còn chặn mặc định số điện thoại ở bước "kiểm tra SMS xác nhận" nếu backend đã cho phép login password ngay
-- chỉ fallback về notice xác thực khi bước login sau đăng ký vẫn không tạo được session
+- không còn điều hướng người dùng sang bước xác minh SMS trước khi đăng nhập
+- chỉ fallback về notice thử đăng nhập lại nếu bước login sau đăng ký vẫn không tạo được session
 
 #### Lưu ý khi rebase
 
+- không khôi phục `supabase.auth.signUp()` trực tiếp cho phone với `channel: "sms"`
 - không khôi phục nhánh logic chỉ auto-login cho `email`
 
 ---
