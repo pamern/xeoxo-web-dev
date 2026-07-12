@@ -163,14 +163,19 @@ export function useAuth() {
 
     try {
       const result = await authService.register(parsed.data, nextPath);
+      const identifier = parseAuthIdentifier(parsed.data.account);
 
-      if (result.session) {
+      if (result.session || identifier?.type === "email") {
+        if (!result.session) {
+          await authService.login({
+            account: parsed.data.account,
+            password: parsed.data.password,
+          });
+        }
         await authService.syncProfile();
         await refresh();
         return { ok: true };
       }
-
-      const identifier = parseAuthIdentifier(parsed.data.account);
 
       setNoticeMessage(
         identifier?.type === "phone"

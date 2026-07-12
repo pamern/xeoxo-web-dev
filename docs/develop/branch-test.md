@@ -149,7 +149,7 @@ Các thay đổi dưới đây đã được thực hiện trong code của nhá
 
 - thêm dòng disclaimer chạy ở chân `SiteHeader`
 - nội dung:
-  - `Website được xây dựng phục vụ mục đích học tập trong khuôn khổ đồ án môn. Không phải website chính thức của thương hiệu XÉO XỌ.`
+  - `Website được xây dựng phục vụ mục đích học tập trong khuôn khổ đồ án môn học. Không phải website chính thức của thương hiệu XÉO XỌ.`
 - chỉ hiển thị từ breakpoint lớn (`xl`) để tránh chật header
 - tăng `--site-header-height` tương ứng trên màn hình lớn
 - typography của dòng chữ:
