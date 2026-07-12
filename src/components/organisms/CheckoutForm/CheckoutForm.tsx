@@ -24,16 +24,20 @@ import type { ShippingAddressValues } from "@/types/order.types";
 function PillInput({
   label,
   className = "",
+  labelClassName = "",
   error,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   className?: string;
+  labelClassName?: string;
   error?: string;
 }) {
   return (
     <label className={`flex w-full flex-col gap-1 ${className}`}>
-      <span className="text-[13px] font-semibold text-black">{label}</span>
+      <span className={`text-[13px] font-semibold text-black ${labelClassName}`.trim()}>
+        {label}
+      </span>
       <input
         className={`h-[36px] w-full rounded-pill border bg-white px-4 text-xs font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error

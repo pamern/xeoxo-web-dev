@@ -38,14 +38,14 @@ const CATALOG_CONTENT: Record<
 > = {
   nu: {
     heroLabel: "Đồ Nữ",
-    banner: "/images/catalog/nu/đồ nữ.png",
+    banner: "/images/catalog/nu/do-nu.png",
     department: "WOMEN",
     emptyTitle: "Chưa có sản phẩm nữ",
     emptyDescription: "Các thiết kế dành cho nữ sẽ được cập nhật trong thời gian tới.",
   },
   nam: {
     heroLabel: "Đồ Nam",
-    banner: "/images/catalog/nam/đồ nam.png",
+    banner: "/images/catalog/nam/do-nam.png",
     department: "MEN",
     emptyTitle: "Chưa có sản phẩm nam",
     emptyDescription: "Các thiết kế dành cho nam sẽ được cập nhật trong thời gian tới.",
@@ -156,25 +156,25 @@ function getCategoryBannerImage(catalogSlug: CatalogSlug, categorySlug: string):
   
   if (catalogSlug === "nu") {
     if (normSlug.includes("dam") || normSlug.includes("vay")) {
-      return "/images/catalog/nu/ÁO ĐẦM - VÁY.png";
+      return "/images/catalog/nu/ao-dam-vay.png";
     }
     if (normSlug === "ao-dai" || normSlug.includes("ao-dai-nu")) {
-      return "/images/catalog/nu/ÁO DÀI.png";
+      return "/images/catalog/nu/ao-dai.png";
     }
     if (normSlug.includes("cuoi") || normSlug.includes("doi")) {
-      return "/images/catalog/nu/_ÁO DÀI ĐÔI - ÁO DÀI CƯỚI.png";
+      return "/images/catalog/nu/ao-dai-doi-ao-dai-cuoi.png";
     }
-    return "/images/catalog/nu/đồ nữ.png";
+    return "/images/catalog/nu/do-nu.png";
   }
 
   if (catalogSlug === "nam") {
     if (normSlug.includes("ao-dai-nam")) {
-      return "/images/catalog/nam/Áo dài Nam.png";
+      return "/images/catalog/nam/ao-dai-nam.png";
     }
     if (normSlug.includes("cuoi") || normSlug.includes("doi")) {
-      return "/images/catalog/nam/_ÁO DÀI ĐÔI - ÁO DÀI CƯỚI.png";
+      return "/images/catalog/nam/ao-dai-doi-ao-dai-cuoi.png";
     }
-    return "/images/catalog/nam/đồ nam.png";
+    return "/images/catalog/nam/do-nam.png";
   }
 
   return "/images/cat-ao-dai.png";

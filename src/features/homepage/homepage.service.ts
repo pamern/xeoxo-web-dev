@@ -483,19 +483,19 @@ async function fetchHomepageCustomSections(limit: number): Promise<HomepageCusto
     {
       categorySlug: "ao-dam-chan-vay",
       categoryName: "Áo đầm - Váy",
-      bannerImage: "/images/home-page/ÁO ĐẦM - VÁY.png",
+      bannerImage: "/images/home-page/ao-dam-vay.png",
       categoryIds: damVayIds,
     },
     {
       categorySlug: "ao-dai",
       categoryName: "Áo dài",
-      bannerImage: "/images/home-page/ÁO DÀI.png",
+      bannerImage: "/images/home-page/ao-dai.png",
       categoryIds: aoDaiIds,
     },
     {
       categorySlug: "ao-dai-doi-cuoi",
       categoryName: "Áo dài đôi - Cưới",
-      bannerImage: "/images/home-page/ÁO DÀI ĐÔI - ÁO DÀI CƯỚI.png",
+      bannerImage: "/images/home-page/ao-dai-doi-ao-dai-cuoi.png",
       categoryIds: doiCuoiIds,
     },
   ];
