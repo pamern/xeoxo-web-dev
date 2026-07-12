@@ -640,9 +640,7 @@ export async function buildCartDto(cart: CartRecord | null): Promise<CartDto> {
 
     // Filter available variants for this specific product line
     const itemProductLineId = productLine?.product_line_id;
-    const siblingComponentIds = allComponentsData
-      .filter((c) => c.product_line_id === itemProductLineId)
-      .map((c) => c.component_id);
+    const siblingComponentIds = componentId ? [componentId] : [];
 
     const availableVariants = allVariants
       .filter((v) => siblingComponentIds.includes(v.component_id))

@@ -663,13 +663,7 @@ export function SiteHeader({
 
             <button
               type="button"
-              onClick={() => {
-                if (isProductDetailPage) {
-                  router.push(ROUTES.CART);
-                  return;
-                }
-                openCartDrawer();
-              }}
+              onClick={openCartDrawer}
               aria-label="Giỏ hàng"
               className="relative flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full transition-opacity hover:opacity-70 sm:h-11 sm:w-11"
             >

@@ -9,10 +9,15 @@ import { useAvailableLoyaltyRewards } from "@/hooks/useAvailableLoyaltyRewards";
 import { useCart } from "@/hooks/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
 import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
+import { useAuth } from "@/hooks/useAuth";
 import { ROUTES } from "@/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import { createCustomizationRequest } from "@/services/customization.service";
-import type { MeasurementValues } from "@/features/size-recommendation/size-recommendation";
+import {
+  getMeasurementFields,
+  type MeasurementComponentType,
+  type MeasurementValues,
+} from "@/features/size-recommendation/size-recommendation";
 import type { CartItemDto } from "@/types/cart.types";
 import type { AvailableLoyaltyReward } from "@/types/loyalty.types";
 
@@ -117,6 +122,72 @@ function formatExpiredAt(value: string | null) {
   }).format(new Date(value));
 }
 
+function hasMeasurementValues(
+  values?: Partial<MeasurementValues> | null,
+  productGender: string = "nu",
+  componentType?: MeasurementComponentType,
+) {
+  if (!values) return false;
+  return getMeasurementFields(productGender as any, componentType).every((field) => {
+    const value = values[field.key];
+    return Boolean(value && value.trim() !== "");
+  });
+}
+
+function mapSharedMeasurementValues(
+  values: Partial<MeasurementValues>,
+  productGender: string = "nu",
+  componentType?: MeasurementComponentType,
+): MeasurementValues {
+  const activeKeys = new Set(
+    getMeasurementFields(productGender as any, componentType).map((field) => field.key),
+  );
+  const mapped = {
+    bust: values.bust ?? "",
+    waist: values.waist ?? "",
+    hip: values.hip ?? "",
+    shoulder: values.shoulder ?? "",
+    sleeve: values.sleeve ?? "",
+    upperArm: values.upperArm ?? "",
+    neck: values.neck ?? "",
+    height: values.height ?? "",
+    weight: values.weight ?? "",
+  };
+
+  Object.keys(mapped).forEach((key) => {
+    if (!activeKeys.has(key as keyof MeasurementValues)) {
+      mapped[key as keyof MeasurementValues] = "";
+    }
+  });
+
+  return mapped;
+}
+
+function componentMeasurementStorageKey(
+  productGender: string,
+  componentType?: MeasurementComponentType,
+) {
+  return `xeoxo.component-measurements.v1.${productGender}.${componentType?.trim().toUpperCase() || "DEFAULT"}`;
+}
+
+function readComponentMeasurementValues(
+  productGender: string,
+  componentType?: MeasurementComponentType,
+) {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(
+      componentMeasurementStorageKey(productGender, componentType),
+    );
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<MeasurementValues>;
+    if (!hasMeasurementValues(parsed, productGender, componentType)) return null;
+    return mapSharedMeasurementValues(parsed, productGender, componentType);
+  } catch {
+    return null;
+  }
+}
+
 function parseMeasurementValues(values: MeasurementValues) {
   const parsed: Record<string, number> = {};
   for (const [key, value] of Object.entries(values)) {
@@ -133,6 +204,7 @@ function parseMeasurementValues(values: MeasurementValues) {
 export function CartSummary() {
   const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } =
     useCart();
+  const { isAuthenticated } = useAuth();
   const {
     rewards,
     isMember,
@@ -517,7 +589,17 @@ export function CartSummary() {
               : customizingItem.customization_snapshot)
           : null;
         const itemMeasurements = itemSnapshot?.measurements;
-        const initialValues = itemMeasurements || sharedMeasurementValues;
+
+        const savedValues =
+          readComponentMeasurementValues(
+            customizingItem.gender ?? "nu",
+            customizingItem.component_type ?? undefined
+          ) ??
+          (hasMeasurementValues(sharedMeasurementValues, customizingItem.gender ?? "nu", customizingItem.component_type ?? undefined)
+            ? mapSharedMeasurementValues(sharedMeasurementValues, customizingItem.gender ?? "nu", customizingItem.component_type ?? undefined)
+            : null);
+
+        const initialValues = itemMeasurements || savedValues || sharedMeasurementValues;
 
         return (
           <CustomizeModal
@@ -525,6 +607,7 @@ export function CartSummary() {
             componentType={customizingItem.component_type ?? undefined}
             basePrice={customizingItem.unit_price}
             initialValues={initialValues}
+            canPersistMeasurements={isAuthenticated}
             onValuesChange={updateSharedMeasurementValues}
             onClose={() => setCustomizingItem(null)}
             onSubmit={submitCartCustomize}

@@ -32,6 +32,7 @@ export function VariantSelector({
   onOpenSizeRecommendation,
   onOpenAppointment,
   onOpenCustomize,
+  isCustomizeConfirmed = false,
 }: {
   colors: ProductColor[];
   sizes: ProductSizeOptionDto[];
@@ -43,6 +44,7 @@ export function VariantSelector({
   onOpenSizeRecommendation: () => void;
   onOpenAppointment: () => void;
   onOpenCustomize: () => void;
+  isCustomizeConfirmed?: boolean;
 }) {
   const regularSizes = sizes.filter(
     (size) => getDisplaySizeName(size).toUpperCase() !== "CUSTOM",
