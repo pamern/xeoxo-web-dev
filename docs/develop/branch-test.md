@@ -182,6 +182,25 @@ Các thay đổi dưới đây đã được thực hiện trong code của nhá
 
 ---
 
+### 2.8 Auth register auto-login cho số điện thoại
+
+#### Files chính
+
+- `src/hooks/useAuth.ts`
+- `docs/report/test_case_auth.md`
+
+#### Thay đổi
+
+- sau khi đăng ký thành công, app sẽ thử đăng nhập ngay bằng mật khẩu cho cả email và số điện thoại
+- không còn chặn mặc định số điện thoại ở bước "kiểm tra SMS xác nhận" nếu backend đã cho phép login password ngay
+- chỉ fallback về notice xác thực khi bước login sau đăng ký vẫn không tạo được session
+
+#### Lưu ý khi rebase
+
+- không khôi phục nhánh logic chỉ auto-login cho `email`
+
+---
+
 ## 3. Docs đã cập nhật trong nhánh này
 
 ### API
@@ -206,4 +225,3 @@ Nếu có conflict, nên rà lại tối thiểu các nhóm sau:
 - auth modal viewport fit
 - site header disclaimer marquee
 - reviews pagination 5 item/page
-

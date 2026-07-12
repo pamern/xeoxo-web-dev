@@ -165,7 +165,13 @@ export function useAuth() {
       const result = await authService.register(parsed.data, nextPath);
       const identifier = parseAuthIdentifier(parsed.data.account);
 
-      if (result.session || identifier?.type === "email") {
+      if (result.session) {
+        await authService.syncProfile();
+        await refresh();
+        return { ok: true };
+      }
+
+      try {
         if (!result.session) {
           await authService.login({
             account: parsed.data.account,
@@ -175,6 +181,11 @@ export function useAuth() {
         await authService.syncProfile();
         await refresh();
         return { ok: true };
+      } catch (loginAfterRegisterError) {
+        logAuthError("register-login-fallback", loginAfterRegisterError, {
+          account: parsed.data.account,
+          identifierType: identifier?.type ?? null,
+        });
       }
 
       setNoticeMessage(
