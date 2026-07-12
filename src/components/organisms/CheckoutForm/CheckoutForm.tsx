@@ -433,6 +433,14 @@ export function CheckoutForm() {
     });
 
     if (result.ok) {
+      event.currentTarget.reset();
+      setFieldErrors({});
+      setOtherReceiver(false);
+      setPoliciesOpen(false);
+      setAddressBookOpen(false);
+      setUseNewAddress(false);
+      setSetAsDefault(true);
+      setAcceptedPolicy(true);
       setSubmitted(true);
       setSuccessModalOpen(true);
       window.dispatchEvent(new Event("xeoxo-cart-updated"));
@@ -806,15 +814,11 @@ export function CheckoutForm() {
           message="Đơn hàng của bạn đã được tạo thành công. Xéo Xọ sẽ tiếp nhận, xử lý và cập nhật trạng thái sớm nhất để bạn tiện theo dõi."
           codeLabel="Mã đơn hàng"
           codeValue={createdOrder.order_code}
-          primaryLabel={isMember ? "Xem đơn hàng" : "Tiếp tục mua sắm"}
-          primaryHref={
-            isMember
-              ? ROUTES.ACCOUNT_ORDER(String(createdOrder.order_id))
-              : ROUTES.PRODUCTS
-          }
+          primaryLabel="Theo dõi đơn hàng"
+          primaryHref={isMember ? ROUTES.ACCOUNT_ORDERS : ROUTES.ORDER_LOOKUP}
           primaryAction={() => setSuccessModalOpen(false)}
-          secondaryLabel={isMember ? "Tiếp tục mua sắm" : "Đóng"}
-          secondaryHref={isMember ? ROUTES.PRODUCTS : undefined}
+          secondaryLabel="Tiếp tục mua sắm"
+          secondaryHref={ROUTES.PRODUCTS}
           secondaryAction={() => setSuccessModalOpen(false)}
           onClose={() => setSuccessModalOpen(false)}
         />

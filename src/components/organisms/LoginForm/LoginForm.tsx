@@ -95,7 +95,7 @@ export function LoginForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-2.5">
       <div className="flex flex-col gap-1.5">
         <input
           name="account"

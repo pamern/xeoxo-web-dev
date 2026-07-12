@@ -28,12 +28,12 @@ type UtilityLink = {
 const UTILITY_LEFT: UtilityLink[] = [
   { label: "Về XÉO XỌ", href: ROUTES.ABOUT },
   { label: "NEW ARRIVALS", href: ROUTES.COLLECTIONS },
-  { label: "STARS in XÉO XỌ", href: ROUTES.COLLECTIONS },
+  { label: "STARS in XÉO XỌ", href: `${ROUTES.HOME}#stars-in-xeo-xo` },
 ];
 
 const UTILITY_RIGHT: UtilityLink[] = [
   { label: "Xéo Hội", icon: "/icons/star-club.svg", authMode: "register" },
-  { label: "Cửa hàng", href: ROUTES.COLLECTIONS },
+  { label: "Cửa hàng", href: `${ROUTES.HOME}#he-thong-cua-hang` },
   { label: "Blog", href: ROUTES.COLLECTIONS },
   { label: "CSKH", href: ROUTES.POLICIES },
   { label: "Đăng nhập", authMode: "login" },
@@ -46,6 +46,9 @@ const MAIN_NAV: UtilityLink[] = [
   { label: "ÁO DÀI", href: ROUTES.CATALOG_AO_DAI },
   { label: "BỘ SƯU TẬP", href: ROUTES.COLLECTIONS },
 ];
+
+const ACADEMIC_DISCLAIMER =
+  "Website được xây dựng phục vụ mục đích học tập trong khuôn khổ đồ án môn. Không phải website chính thức của thương hiệu XÉO XỌ.";
 
 function groupCategories(categories: CategoryNavItem[]) {
   const categoryIds = new Set(categories.map((category) => category.categoryId));
@@ -85,15 +88,16 @@ function groupCategories(categories: CategoryNavItem[]) {
 }
 
 export function SiteHeader({
+  fixedHeader = true,
   womenCategories = [],
   menCategories = [],
   aoDaiCategories = [],
 }: {
+  fixedHeader?: boolean;
   womenCategories?: CategoryNavItem[];
   menCategories?: CategoryNavItem[];
   aoDaiCategories?: CategoryNavItem[];
 }) {
-  const headerRef = useRef<HTMLElement | null>(null);
   const searchRef = useRef<HTMLDivElement | null>(null);
 
   const pathname = usePathname();
@@ -117,9 +121,15 @@ export function SiteHeader({
   const authMode = searchParams.get("auth");
   const activeAuthMode =
     authMode === "login" || authMode === "register" ? authMode : null;
+  const searchQueryFromParams = searchParams.get("q")?.trim() ?? "";
+  const normalizedSearchQuery = searchQuery.trim();
+  const canSearch = normalizedSearchQuery.length >= 2;
 
   const { suggestions, isLoading: searchSuggestionsLoading } =
-    useProductSearchSuggestions(searchQuery);
+    useProductSearchSuggestions(normalizedSearchQuery, {
+      enabled: searchOpen && canSearch,
+      limit: 4,
+    });
 
   const categoryMenuByHref: Record<string, CategoryNavItem[]> = {
     [ROUTES.CATALOG_WOMEN]: womenCategories,
@@ -133,44 +143,12 @@ export function SiteHeader({
   };
 
   useEffect(() => {
-    function syncHeaderHeight() {
-      const nextHeight = headerRef.current?.getBoundingClientRect().height ?? 0;
-      document.documentElement.style.setProperty(
-        "--site-header-height",
-        `${Math.round(nextHeight)}px`,
-      );
-    }
-
-    syncHeaderHeight();
-
-    const headerElement = headerRef.current;
-    const observer =
-      typeof ResizeObserver !== "undefined" && headerElement
-        ? new ResizeObserver(() => {
-            syncHeaderHeight();
-          })
-        : null;
-
-    if (headerElement && observer) {
-      observer.observe(headerElement);
-    }
-
-    window.addEventListener("resize", syncHeaderHeight);
-
-    return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", syncHeaderHeight);
-    };
-  }, []);
-
-  useEffect(() => {
     setModalMode(activeAuthMode);
   }, [activeAuthMode]);
 
   useEffect(() => {
-    const nextQuery = searchParams.get("q") ?? "";
-    setSearchQuery(nextQuery);
-  }, [searchParams]);
+    setSearchQuery(searchQueryFromParams);
+  }, [searchQueryFromParams]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -268,11 +246,23 @@ export function SiteHeader({
       return;
     }
 
+    if (
+      pathname === ROUTES.PRODUCTS &&
+      searchQueryFromParams.toLowerCase() === normalizedQuery.toLowerCase()
+    ) {
+      setSearchOpen(false);
+      return;
+    }
+
     const params = new URLSearchParams();
     params.set("q", normalizedQuery);
     setSearchOpen(false);
     router.push(`${ROUTES.PRODUCTS}?${params.toString()}`);
   }
+
+  const searchResultsHref = canSearch
+    ? `${ROUTES.PRODUCTS}?${new URLSearchParams({ q: normalizedSearchQuery }).toString()}`
+    : ROUTES.PRODUCTS;
 
   const utilityRightLinks: UtilityLink[] = auth.isAuthenticated
     ? [
@@ -316,10 +306,9 @@ export function SiteHeader({
   return (
     <>
       <header
-        ref={headerRef}
         className={cn(
           "z-[140] w-full bg-background",
-          isProductDetailPage ? "relative" : "fixed inset-x-0 top-0",
+          fixedHeader ? "fixed inset-x-0 top-0" : "relative",
         )}
       >
         <div
@@ -380,7 +369,7 @@ export function SiteHeader({
           </div>
         </div>
 
-        <div className="relative mx-auto flex w-full max-w-site items-center justify-between gap-2.5 bg-background px-4 py-1.5 sm:px-6 lg:gap-4 lg:px-8 xl:px-10 2xl:px-20">
+        <div className="relative mx-auto flex w-full max-w-site items-center justify-between gap-2.5 bg-background px-4 py-1.5 sm:px-6 lg:gap-3 lg:px-6 xl:px-7 2xl:px-10">
           <div className="flex items-center gap-3 justify-self-start">
             <button
               type="button"
@@ -409,7 +398,7 @@ export function SiteHeader({
 
           <nav
             aria-label="Danh mục chính"
-            className="absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-3 lg:flex xl:gap-4"
+            className="absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-2.5 lg:flex xl:gap-3"
           >
             {MAIN_NAV.map((item) => {
               const active = pathname === item.href;
@@ -540,95 +529,115 @@ export function SiteHeader({
             })}
           </nav>
 
-          <div className="flex items-center gap-4 justify-self-end">
-            <div ref={searchRef} className="relative">
-  <label className="flex h-10 w-[160px] items-center gap-2 rounded-full border border-black/15 bg-white px-3 shadow-[0_4px_14px_rgba(0,0,0,0.06)] transition-colors focus-within:border-black/30 sm:h-11 sm:w-[220px] sm:px-4 lg:w-[280px] xl:w-[340px]">
-    <span className="sr-only">Tìm kiếm sản phẩm</span>
-    <input
-      type="search"
-      value={searchQuery}
-      onChange={(event) => {
-        const nextValue = event.target.value;
-        setSearchQuery(nextValue);
-        setSearchOpen(nextValue.trim().length >= 2);
-      }}
-      onFocus={() => {
-        if (searchQuery.trim().length >= 2) {
-          setSearchOpen(true);
-        }
-      }}
-      onKeyDown={(event) => {
-        if (event.key === "Enter") {
-          event.preventDefault();
-          submitSearch(searchQuery);
-        }
-      }}
-      placeholder="Tìm kiếm..."
-      className="min-w-0 flex-1 bg-transparent text-xs font-light text-foreground outline-none placeholder:text-muted-foreground sm:text-sm"
-    />
-    <button
-      type="button"
-      onClick={() => submitSearch(searchQuery)}
-      aria-label="Tìm kiếm"
-      className="flex h-5 w-5 shrink-0 items-center justify-center text-foreground/65 transition-opacity hover:opacity-70"
-    >
-      <Image
-        src="/icons/search.svg"
-        alt=""
-        width={18}
-        height={18}
-        aria-hidden
-        className="h-[17px] w-[17px] object-contain"
-      />
-    </button>
-  </label>
+          <div className="flex items-center gap-2 justify-self-end sm:gap-2.5">
+            <div ref={searchRef} className="relative flex items-center self-center">
+              <label className="flex h-10 w-[160px] items-center gap-2 rounded-full border border-black/15 bg-white px-3 shadow-[0_4px_14px_rgba(0,0,0,0.06)] transition-colors focus-within:border-black/30 sm:h-11 sm:w-[220px] sm:px-4 lg:w-[220px] xl:w-[250px] 2xl:w-[270px]">
+                <span className="sr-only">Tìm kiếm sản phẩm</span>
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    const nextNormalizedValue = nextValue.trim();
+                    setSearchQuery(nextValue);
+                    setSearchOpen(nextNormalizedValue.length >= 2);
+                  }}
+                  onFocus={() => {
+                    if (canSearch) {
+                      setSearchOpen(true);
+                    }
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      submitSearch(searchQuery);
+                    }
 
-  {searchOpen && (
-    <div className="absolute right-0 top-[calc(100%+10px)] z-[120] w-[min(420px,calc(100vw-32px))] overflow-hidden rounded-[20px] border border-black/10 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
-      {searchSuggestionsLoading ? (
-        <div className="px-4 py-4 text-sm text-muted-foreground">
-          Đang tìm kiếm...
-        </div>
-      ) : suggestions.length > 0 ? (
-        <ul className="py-2">
-          {suggestions.map((suggestion) => (
-            <li key={suggestion.product_line_id}>
-              <Link
-                href={`/products/${suggestion.slug}`}
-                className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
-                onClick={() => {
-                  setSearchOpen(false);
-                  setSearchQuery(suggestion.name);
-                }}
-              >
-                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[12px] bg-muted">
+                    if (event.key === "Escape") {
+                      setSearchOpen(false);
+                    }
+                  }}
+                  placeholder="Tìm kiếm..."
+                  className="min-w-0 flex-1 bg-transparent text-xs font-light text-foreground outline-none placeholder:text-muted-foreground focus-visible:outline-none sm:text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => submitSearch(searchQuery)}
+                  aria-label="Tìm kiếm"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-foreground/65 outline-none transition-opacity hover:opacity-70 focus-visible:outline-none"
+                >
                   <Image
-                    src={suggestion.thumbnail}
-                    alt={suggestion.name}
-                    fill
-                    className="object-cover"
+                    src="/icons/search.svg"
+                    alt=""
+                    width={18}
+                    height={18}
+                    aria-hidden
+                    className="h-[17px] w-[17px] object-contain"
                   />
-                </div>
+                </button>
+              </label>
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {suggestion.name}
-                  </p>
-                  <p className="mt-1 text-xs font-semibold text-foreground/70">
-                    {formatPrice(suggestion.price)}
-                  </p>
+              {searchOpen && (
+                <div className="absolute right-0 top-[calc(100%+10px)] z-[120] w-[min(420px,calc(100vw-32px))] overflow-hidden rounded-[20px] border border-black/10 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
+                  {searchSuggestionsLoading ? (
+                    <div className="px-4 py-4 text-sm text-muted-foreground">
+                      Đang tìm kiếm...
+                    </div>
+                  ) : suggestions.length > 0 ? (
+                    <>
+                      <ul className="py-2">
+                        {suggestions.map((suggestion) => (
+                          <li key={suggestion.product_line_id}>
+                            <Link
+                              href={`/products/${suggestion.slug}`}
+                              className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50"
+                              onClick={() => {
+                                setSearchOpen(false);
+                                setSearchQuery(suggestion.name);
+                              }}
+                            >
+                              <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-[12px] bg-muted">
+                                <Image
+                                  src={suggestion.thumbnail}
+                                  alt={suggestion.name}
+                                  fill
+                                  className="object-cover"
+                                />
+                              </div>
+
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-foreground">
+                                  {suggestion.name}
+                                </p>
+                                <p className="mt-1 text-xs font-semibold text-foreground/70">
+                                  {formatPrice(suggestion.price)}
+                                </p>
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {suggestions.length >= 4 && (
+                        <div className="border-t border-black/10 px-4 py-3">
+                          <Link
+                            href={searchResultsHref}
+                            className="flex items-center justify-between text-sm font-semibold text-foreground transition-opacity hover:opacity-70"
+                            onClick={() => setSearchOpen(false)}
+                          >
+                            <span>Xem thêm kết quả</span>
+                            <span aria-hidden>→</span>
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  ) : canSearch ? (
+                    <div className="px-4 py-4 text-sm text-muted-foreground">
+                      Không tìm thấy sản phẩm phù hợp.
+                    </div>
+                  ) : null}
                 </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : searchQuery.trim().length >= 2 ? (
-        <div className="px-4 py-4 text-sm text-muted-foreground">
-          Không tìm thấy sản phẩm phù hợp.
-        </div>
-      ) : null}
-    </div>
-  )}
+              )}
             </div>
 
             <div className="relative">
@@ -640,7 +649,7 @@ export function SiteHeader({
                     ? openAccountSidebar()
                     : openAuthModal("login")
                 }
-                className="shrink-0 transition-opacity hover:opacity-70"
+                className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full transition-opacity hover:opacity-70 sm:h-11 sm:w-11"
               >
                 <Image
                   src="/icons/account.svg"
@@ -662,7 +671,7 @@ export function SiteHeader({
                 openCartDrawer();
               }}
               aria-label="Giỏ hàng"
-              className="relative shrink-0"
+              className="relative flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full transition-opacity hover:opacity-70 sm:h-11 sm:w-11"
             >
               <Image
                 src="/icons/cart.svg"
@@ -677,6 +686,13 @@ export function SiteHeader({
                 </span>
               )}
             </button>
+          </div>
+        </div>
+
+        <div className="site-header-marquee hidden xl:block">
+          <div className="site-header-marquee__track" aria-label={ACADEMIC_DISCLAIMER}>
+            <span>{ACADEMIC_DISCLAIMER}</span>
+            <span aria-hidden>{ACADEMIC_DISCLAIMER}</span>
           </div>
         </div>
 
@@ -838,7 +854,7 @@ function AccountSidebar({
     { label: "Quản lý lịch hẹn", href: ROUTES.ACCOUNT_APPOINTMENTS },
     { label: "Sổ địa chỉ", href: ROUTES.ACCOUNT_ADDRESSES },
     { label: "Đánh giá và phản hồi", href: ROUTES.ACCOUNT_REVIEWS },
-    { label: "Chính sách chúng tôi", href: ROUTES.POLICIES },
+    { label: "FAQ", href: ROUTES.FAQ_ACCOUNT },
   ];
 
   const latestCollectionHref = latestCollectionHighlight
@@ -972,10 +988,10 @@ function AccountSidebar({
           </nav>
         </div>
 
-        <div className="bg-black px-6 py-6 md:py-7">
+        <div className="bg-black px-6 py-4 md:py-5">
           <Link
             href={ROUTES.ACCOUNT_PROFILE}
-            className="flex items-center justify-center text-center text-[1.7rem] font-bold leading-none text-white md:text-[2rem]"
+            className="flex items-center justify-center text-center text-[1.2rem] font-bold leading-none text-white md:text-[1.4rem]"
             onClick={onClose}
           >
             Đến Hồ sơ

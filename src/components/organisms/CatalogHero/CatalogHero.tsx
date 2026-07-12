@@ -12,7 +12,10 @@ export function CatalogHero({
   ctaHref: string;
 }) {
   return (
-    <Link href={ctaHref} className="group catalog-hero-shell cursor-pointer">
+    <Link
+      href={ctaHref}
+      className="group relative flex min-h-[320px] items-end overflow-hidden cursor-pointer sm:min-h-[400px] lg:min-h-[520px]"
+    >
       <Image
         src={image}
         alt={label}
@@ -31,7 +34,7 @@ export function CatalogHero({
           <h1 className="text-shadow text-5xl font-extrabold uppercase leading-none text-white">
             {label}
           </h1>
-          <span className="catalog-hero-cta inline-flex items-center">
+          <span className="inline-flex min-h-control w-fit items-center justify-center rounded-pill border border-white px-8 text-button-lg text-white text-shadow transition-colors hover:bg-white hover:text-black hover:[text-shadow:none]">
             Khám phá
           </span>
         </div>

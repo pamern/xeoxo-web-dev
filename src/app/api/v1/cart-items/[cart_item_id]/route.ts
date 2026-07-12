@@ -4,9 +4,11 @@ import {
   getCustomizationForCheckout,
 } from "@/features/customization/customization-server.service";
 import {
+  MAX_CART_TOTAL_QUANTITY,
   assertCartItemOwnership,
   buildCartDto,
   findActiveCart,
+  getCartTotalQuantity,
   getCurrentCustomerId,
   getCartOwner,
   getVariantById,
@@ -34,6 +36,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<Para
     if (!cartItem) {
       return fail("Khong tim thay dong gio hang.", 404);
     }
+    const ownedCartItem = cartItem;
+    const currentCartTotalQuantity = await getCartTotalQuantity(ownedCartItem.cart_id);
+
+    function exceedsCartLimit(nextQuantity: number) {
+      return (
+        currentCartTotalQuantity - Number(ownedCartItem.quantity) + nextQuantity >
+        MAX_CART_TOTAL_QUANTITY
+      );
+    }
 
     const nextCustomizationId = body.customization_id !== undefined
       ? Number(body.customization_id)
@@ -51,6 +62,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<Para
       const nextQuantity = body.quantity !== undefined ? Number(body.quantity) : Number(cartItem.quantity);
       if (!Number.isInteger(nextQuantity) || nextQuantity < 0) {
         return fail("quantity phai la so nguyen khong am.", 422);
+      }
+
+      if (nextQuantity > 0 && exceedsCartLimit(nextQuantity)) {
+        return fail(
+          `Gio hang chi duoc toi da ${MAX_CART_TOTAL_QUANTITY} san pham.`,
+          409,
+        );
       }
 
       const admin = createAdminClient();
@@ -75,6 +93,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<Para
 
         if (!Number.isInteger(nextQuantity) || nextQuantity < 0) {
           return fail("quantity phai la so nguyen khong am.", 422);
+        }
+
+        if (nextQuantity > 0 && exceedsCartLimit(nextQuantity)) {
+          return fail(
+            `Gio hang chi duoc toi da ${MAX_CART_TOTAL_QUANTITY} san pham.`,
+            409,
+          );
         }
 
         const admin = createAdminClient();
@@ -177,6 +202,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<Para
 
         if (!Number.isInteger(nextQuantity) || nextQuantity < 0) {
           return fail("quantity phai la so nguyen khong am.", 422);
+        }
+
+        if (nextQuantity > 0 && exceedsCartLimit(nextQuantity)) {
+          return fail(
+            `Gio hang chi duoc toi da ${MAX_CART_TOTAL_QUANTITY} san pham.`,
+            409,
+          );
         }
 
         const admin = createAdminClient();

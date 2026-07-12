@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import type { Product } from "@/types/product.types";
 import type { ProductDetailDto, ProductReviewDto } from "@/types/product-api.types";
 
+const REVIEWS_PER_PAGE = 5;
+
 export function ReviewsSection({
   product,
   apiProduct,
@@ -41,13 +43,13 @@ export function ReviewsSection({
   const [activeTab, setActiveTab] = useState<"all" | "has_image" | "rating" | "component">("all");
 
   const [isPending, startTransition] = useTransition();
-  const listContainerRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
 
   const fetchFilteredReviews = (r: number | null, hi: boolean, cid: number | null, p: number = 1) => {
     setCurrentPage(p);
     startTransition(async () => {
       try {
-        const pageData = await productService.getReviews(product.slug, p, 10, {
+        const pageData = await productService.getReviews(product.slug, p, REVIEWS_PER_PAGE, {
           rating: r,
           has_image: hi,
           component_id: cid,
@@ -102,18 +104,15 @@ export function ReviewsSection({
 
   const handlePageChange = (p: number) => {
     fetchFilteredReviews(rating, hasImage, componentId, p);
-    
-    // Scroll list container back to top
-    if (listContainerRef.current) {
-      listContainerRef.current.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
-    }
+
+    sectionRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   };
 
   const renderPagination = () => {
-    const totalPages = Math.max(1, Math.ceil(filteredTotal / 10));
+    const totalPages = Math.max(1, Math.ceil(filteredTotal / REVIEWS_PER_PAGE));
 
     const pages: (number | string)[] = [];
     const maxVisible = 5;
@@ -194,7 +193,7 @@ export function ReviewsSection({
   };
 
   return (
-    <section className="site-container py-8 md:py-10">
+    <section ref={sectionRef} className="site-container py-8 md:py-10">
       <div className="flex flex-col gap-6">
         <div>
           <h2 className="text-display-section font-bold uppercase">Đánh giá sản phẩm</h2>
@@ -392,11 +391,7 @@ export function ReviewsSection({
         </div>
       </div>
 
-      {/* Scrollable box container for reviews */}
-      <div 
-        ref={listContainerRef}
-        className="mt-8 max-h-[600px] overflow-y-auto pr-2 scroll-smooth border border-black/5 rounded-[12px] p-4 bg-foreground/[0.01]"
-      >
+      <div className="mt-8 border border-black/5 rounded-[12px] p-4 bg-foreground/[0.01]">
         <ReviewList reviews={reviews} />
         {reviews.length === 0 && (
           <p className="py-10 text-center text-foreground/60">

@@ -136,7 +136,7 @@ export function ActionSuccessModal({
       aria-modal="true"
       aria-label={title}
       onMouseDown={handleBackdropClick}
-      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[1px]"
+      className="fixed inset-0 z-[220] flex items-start justify-center overflow-y-auto bg-black/45 px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)] backdrop-blur-[1px] sm:items-center sm:p-5"
     >
       <div className="relative w-full max-w-[760px] overflow-hidden rounded-[26px] bg-white shadow-[0_28px_80px_rgba(0,0,0,0.28)]">
         <div

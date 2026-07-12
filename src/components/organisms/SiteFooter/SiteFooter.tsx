@@ -154,7 +154,10 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div
+          id="he-thong-cua-hang"
+          className="scroll-mt-[calc(var(--site-header-height,0px)+12px)] flex flex-col gap-3"
+        >
           <h3 className="text-[13px] font-bold uppercase tracking-[0.06em]">Hệ thống cửa hàng</h3>
           {STORES.map((address) => (
             <p key={address} className="text-[13px] font-light leading-5 text-white/80">

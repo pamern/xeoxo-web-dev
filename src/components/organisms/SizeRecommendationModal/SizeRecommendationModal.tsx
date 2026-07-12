@@ -252,7 +252,7 @@ export function SizeRecommendationModal({
 
   return (
     <div
-      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 p-3 backdrop-blur-[1px] sm:p-5"
+      className="fixed inset-0 z-[220] flex items-center justify-center bg-black/50 p-3 backdrop-blur-[1px] sm:p-5"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

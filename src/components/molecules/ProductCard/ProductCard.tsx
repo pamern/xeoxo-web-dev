@@ -8,6 +8,11 @@ import { ROUTES } from "@/constants/routes";
 import { useQuickAddProduct } from "@/hooks/useQuickAddProduct";
 import type { Product } from "@/types/product.types";
 
+const quickAddButtonBaseClass =
+  "border border-white/85 bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)]";
+const quickAddButtonActiveClass =
+  "border-white/85 bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]";
+
 // Card san pham dung trong moi luoi/carousel. Anh ti le ~3:4 + ten + gia.
 export function ProductCard({
   product,
@@ -222,14 +227,15 @@ export function ProductCard({
                           void quickAdd.addSize(size);
                         }}
                         className={cn(
-                          "relative flex h-8 items-center justify-center overflow-hidden text-xs font-medium leading-none transition-colors duration-200",
+                          "relative flex h-8 items-center justify-center overflow-hidden rounded-[6px] border text-xs font-medium leading-none transition-colors duration-200",
                           isLocked
-                            ? "cursor-not-allowed rounded-[30px] border border-gray-300 bg-gray-300 text-gray-500 opacity-50"
+                            ? "cursor-not-allowed rounded-[6px] border border-gray-300 bg-gray-300 text-gray-500 opacity-50"
                             : cn(
-                                "rounded-[30px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
+                                quickAddButtonBaseClass,
+                                "hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
                                 isActiveSize &&
                                   quickAdd.status === "success" &&
-                                  "bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]",
+                                  quickAddButtonActiveClass,
                               ),
                         )}
                       >
@@ -301,12 +307,13 @@ function SingleSizeAddButton({
         onAdd();
       }}
       className={cn(
-        "flex h-9 w-full items-center justify-center gap-1.5 rounded-full text-xs font-medium leading-none transition-colors duration-200",
+        "flex h-9 w-full items-center justify-center gap-1.5 border text-xs font-medium leading-none transition-colors duration-200",
         isLocked
-          ? "cursor-not-allowed bg-gray-300 text-gray-500 opacity-50"
+          ? "cursor-not-allowed border-gray-300 bg-gray-300 text-gray-500 opacity-50"
           : cn(
-              "rounded-[6px] bg-white/95 text-black shadow-[0_1px_4px_rgba(0,0,0,0.12)] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
-              isSuccess && "bg-black/80 text-white shadow-[0_0_0_1px_rgba(255,255,255,0.75)]",
+              "rounded-[6px] hover:bg-black/80 hover:text-white hover:shadow-[0_0_0_1px_rgba(255,255,255,0.75)] disabled:cursor-wait disabled:opacity-70",
+              quickAddButtonBaseClass,
+              isSuccess && quickAddButtonActiveClass,
             ),
       )}
     >

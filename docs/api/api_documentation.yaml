@@ -2342,14 +2342,16 @@ endpoints:
   - 3. Query PRODUCT_VARIANT theo variant_id.
   - 4. Check variant ACTIVE và tồn kho INVENTORY.
   - 5. Nếu (cart_id, variant_id) đã tồn tại → cộng dồn quantity.
-  - 6. Nếu chưa có → insert CART_ITEM.
-  - 7. Lưu unit_price tại thời điểm thêm vào giỏ.
-  - 8. Trả về dòng giỏ hàng.
+  - 6. Validate tổng quantity của toàn bộ cart sau khi cộng không vượt quá 300.
+  - 7. Nếu chưa có → insert CART_ITEM.
+  - 8. Lưu unit_price tại thời điểm thêm vào giỏ.
+  - 9. Trả về dòng giỏ hàng.
   dev_notes:
   - Dựa vào UNIQUE (cart_id, variant_id) để upsert. Không cho FE truyền unit_price; BE lấy từ PRODUCT_VARIANT.price.
   validation_rules:
   - variant_id bắt buộc, tồn tại, ACTIVE.
   - quantity là số nguyên dương.
+  - Tổng quantity của toàn bộ cart không vượt quá 300.
   - Tổng quantity sau upsert không vượt tồn kho.
   security:
   - Không tin giá từ FE; validate tồn kho phía BE.
@@ -2412,15 +2414,17 @@ endpoints:
   - 3. Nếu đổi variant_id → query variant mới.
   - 4. Check variant mới ACTIVE, cùng product line nếu rule UI chỉ cho đổi màu/size trong cùng sản phẩm.
   - 5. Check tồn kho.
-  - 6. Update variant_id, quantity, unit_price nếu variant đổi.
-  - 7. Nếu variant mới đã tồn tại trong cart → merge quantity và xóa dòng cũ.
-  - 8. Trả item mới nhất.
+  - 6. Validate tổng quantity của toàn bộ cart sau update/merge không vượt quá 300.
+  - 7. Update variant_id, quantity, unit_price nếu variant đổi.
+  - 8. Nếu variant mới đã tồn tại trong cart → merge quantity và xóa dòng cũ.
+  - 9. Trả item mới nhất.
   dev_notes:
   - Một API dùng chung cho đổi màu, size, số lượng vì cùng resource cart-items.
   validation_rules:
   - cart_item_id là số nguyên dương.
   - Ít nhất một trong variant_id, quantity phải được truyền.
   - quantity > 0.
+  - Tổng quantity của toàn bộ cart sau cập nhật không vượt quá 300.
   - Không vượt tồn kho.
   - Item phải thuộc cart hiện tại.
   security:
@@ -2565,6 +2569,69 @@ endpoints:
   - Không có.
   security:
   - Chỉ đọc.
+- trigger: Thanh toán -> Chọn địa chỉ đã lưu
+  screen: Giỏ hàng / Thanh toán
+  type: STANDARD
+  name: Danh sách mã ưu đãi thành viên
+  description: Lấy các loyalty reward AVAILABLE của customer hiện tại để FE hiển thị danh sách voucher trong cart/checkout.
+  resource: loyalty-rewards
+  method: GET
+  endpoint: /api/v1/loyalty-rewards
+  http_request: GET /api/v1/loyalty-rewards
+  authentication: CUSTOMER
+  request:
+    path_parameters:
+    - Không có
+    query_parameters:
+    - Không có
+    body: null
+  response:
+    body_fields:
+    - code
+    - message
+    - data[].reward_id
+    - data[].reward_name
+    - data[].reward_type
+    - data[].reward_value
+    - data[].voucher_code
+    - data[].expired_at
+    - data[].tier_id
+    - data[].quantity
+    success_example:
+      code: 200
+      message: Thành công
+      data:
+      - reward_id: 5
+        reward_name: Voucher hạng Gold
+        reward_type: TIER_VOUCHER
+        reward_value: 100000
+        voucher_code: GOLD100
+        expired_at: '2026-12-31T23:59:59+07:00'
+        tier_id: GOLD
+        quantity: 1
+    error_examples:
+    - code: 401
+      message: Chưa đăng nhập hoặc token không hợp lệ
+    - code: 500
+      message: Lỗi hệ thống
+  ui_display:
+  - Danh sách voucher trong cart/checkout
+  - Mã voucher và hạn dùng
+  - Quyền lợi theo hạng thành viên
+  business_rules:
+  - 1. Lấy customer_id từ token.
+  - 2. Query LOYALTY_REWARD theo customer hiện tại.
+  - 3. Chỉ trả reward có status = AVAILABLE.
+  - 4. Chỉ trả reward có loyalty_tier_id khớp với customer.tier_id hiện tại.
+  - 5. Loại reward đã hết hạn.
+  - 6. Map loyalty_tier_id sang tier_id cho FE.
+  dev_notes:
+  - FE vẫn phải gọi checkout preview/order để validate lại voucher khi áp dụng; danh sách này chỉ phục vụ chọn mã.
+  validation_rules:
+  - Token hợp lệ.
+  - Chỉ trả reward của customer hiện tại.
+  security:
+  - Không nhận customer_id từ query/body/path.
 - trigger: Thanh toán -> Chọn địa chỉ đã lưu
   screen: Thanh toán
   type: STANDARD

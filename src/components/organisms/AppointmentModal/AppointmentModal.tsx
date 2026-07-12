@@ -140,13 +140,13 @@ export function AppointmentModal({
           message="Lịch hẹn của bạn đã được lưu thành công. Xéo Xọ đã sẵn sàng đón tiếp và tư vấn số đo cho bạn tại chi nhánh đã chọn."
           codeLabel="Mã lịch hẹn"
           codeValue={createdAppointment.appointment_code}
-          primaryLabel="Xem lịch hẹn"
+          primaryLabel="Theo dõi lịch hẹn"
           primaryHref={
             auth.isAuthenticated ? ROUTES.ACCOUNT_APPOINTMENTS : ROUTES.APPOINTMENT
           }
           primaryAction={handleSuccessClose}
-          secondaryLabel="Tiếp tục mua hàng"
-          secondaryHref={ROUTES.HOME}
+          secondaryLabel="Tiếp tục mua sắm"
+          secondaryHref={ROUTES.PRODUCTS}
           secondaryAction={handleSuccessClose}
           onClose={handleSuccessClose}
         />

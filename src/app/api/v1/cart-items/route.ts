@@ -1,7 +1,9 @@
 import { fail, ok } from "@/lib/api-response";
 import {
+  MAX_CART_TOTAL_QUANTITY,
   buildCartDto,
   getCartOwner,
+  getCartTotalQuantity,
   getOrCreateActiveCart,
   getVariantById,
   getVariantStock,
@@ -99,6 +101,14 @@ export async function POST(request: Request) {
     const owner = await getCartOwner();
     console.info("[cart-items/POST] owner", owner);
     const cart = await getOrCreateActiveCart(owner);
+    const currentCartTotalQuantity = await getCartTotalQuantity(cart.cart_id);
+
+    if (currentCartTotalQuantity + quantity > MAX_CART_TOTAL_QUANTITY) {
+      return fail(
+        `Gio hang chi duoc toi da ${MAX_CART_TOTAL_QUANTITY} san pham.`,
+        409,
+      );
+    }
 
     // Check if item already exists in cart
     let existingQuery = admin

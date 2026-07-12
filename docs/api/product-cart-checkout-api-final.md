@@ -131,6 +131,7 @@ Dieu kien backend truoc khi add:
 
 - `variant_id` la so nguyen duong va ton tai.
 - `quantity` la so nguyen duong; mac dinh 1 neu khong truyen.
+- Tong `quantity` cua toan bo gio hang khong duoc vuot qua `300` san pham.
 - `PRODUCT_VARIANT.status = ACTIVE`.
 - `PRODUCT_COMPONENT` ton tai va `PRODUCT_LINE.status = ACTIVE`.
 - Neu variant da co trong cart, validate tren tong quantity sau khi cong don.
@@ -147,6 +148,10 @@ Body optional:
 
 Dung chung cho doi size/mau/so luong. Neu variant moi da co trong cart thi backend merge quantity va xoa dong cu.
 
+Dieu kien backend khi cap nhat:
+
+- Tong `quantity` cua toan bo gio hang sau cap nhat/merge khong duoc vuot qua `300` san pham.
+
 ### DELETE `/api/v1/cart-items/{cart_item_id}`
 
 Xoa mot dong gio hang.
@@ -160,6 +165,23 @@ Xoa toan bo item cua cart hien tai, khong xoa row `CART`.
 ### GET `/api/v1/addresses`
 
 Member only. Lay address active cua customer hien tai.
+
+## Loyalty Rewards
+
+### GET `/api/v1/loyalty-rewards`
+
+Member only. Lay danh sach `iam.loyalty_reward` dang `AVAILABLE`, thuoc customer hien tai, chua het han va khop `loyalty_tier_id` voi `customer.tier_id` hien tai de cart/checkout hien thi voucher.
+
+Data:
+
+- `reward_id`
+- `reward_name`
+- `reward_type`
+- `reward_value`
+- `voucher_code`
+- `expired_at`
+- `tier_id`
+- `quantity`
 
 ### POST `/api/v1/addresses`
 

@@ -9,7 +9,7 @@ import { registerSchema } from "@/validations/auth/register.schema";
 const inputClassName =
   "h-10 w-full rounded-pill border border-input bg-background px-4 text-sm font-light text-foreground outline-none transition-colors placeholder:text-muted-foreground focus:border-primary";
 const passwordHintMessage =
-  "Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.";
+  "Tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và số.";
 
 export type RegisterValues = {
   fullName: string;
@@ -116,7 +116,7 @@ export function RegisterForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-2.5">
       <div className="grid gap-2.5 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <input
@@ -185,11 +185,9 @@ export function RegisterForm({
             onToggle={() => setShowPassword((current) => !current)}
           />
         </div>
-        {fieldErrors.password ? (
-          <p className="px-2 text-xs font-light text-foreground/58">
-            {passwordHintMessage}
-          </p>
-        ) : null}
+        <p className="px-2 text-xs font-light text-foreground/58">
+          {passwordHintMessage}
+        </p>
       </div>
 
       <div className="flex flex-col gap-1.5">

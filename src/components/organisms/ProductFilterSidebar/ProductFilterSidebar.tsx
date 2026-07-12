@@ -209,6 +209,54 @@ function PriceRangeSlider({ range }: { range: ProductPriceRange }) {
           aria-label="Giá tối đa"
         />
       </div>
+      <style jsx>{`
+        input[type="range"].price-range-input {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          appearance: none;
+          background: transparent;
+          pointer-events: none;
+        }
+
+        input[type="range"].price-range-input::-webkit-slider-runnable-track {
+          height: 100%;
+          background: transparent;
+        }
+
+        input[type="range"].price-range-input::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          margin-top: calc((28px - 16px) / 2);
+          border-radius: 9999px;
+          border: 2px solid rgb(0 0 0);
+          background: rgb(255 255 255);
+          box-shadow: 0 4px 2px rgba(0, 0, 0, 0.08);
+          cursor: grab;
+          pointer-events: auto;
+        }
+
+        input[type="range"].price-range-input:active::-webkit-slider-thumb {
+          cursor: grabbing;
+        }
+
+        input[type="range"].price-range-input::-moz-range-track {
+          height: 100%;
+          background: transparent;
+        }
+
+        input[type="range"].price-range-input::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          border-radius: 9999px;
+          border: 2px solid rgb(0 0 0);
+          background: rgb(255 255 255);
+          box-shadow: 0 4px 2px rgba(0, 0, 0, 0.08);
+          cursor: grab;
+          pointer-events: auto;
+        }
+      `}</style>
     </div>
   );
 }

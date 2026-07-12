@@ -107,11 +107,11 @@ export function AppointmentLookupExperience({
   const normalizedResult = result ? normalizeAppointmentResult(result) : null;
 
   const inputBaseClass =
-    "h-[62px] w-full rounded-[100px] border border-black bg-white px-[26px] py-5 text-[18px] font-light text-black outline-none transition-colors placeholder:text-black/50 focus:border-black md:px-[50px]";
+    "h-12 w-full rounded-pill border border-black bg-white px-4 text-[15px] font-light text-black outline-none transition-colors placeholder:text-black/45 focus:border-black md:h-[52px] md:px-5 md:text-base";
   const primaryActionClass =
-    "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-black px-[60px] py-5 text-[20px] font-bold text-white transition hover:bg-white hover:text-black md:min-w-[306px] md:px-[100px] md:text-[22px]";
+    "min-h-[46px] min-w-[156px] rounded-pill border border-black bg-black px-6 text-sm font-bold text-white transition-colors hover:bg-white hover:text-black md:min-h-[48px] md:min-w-[172px] md:px-7 md:text-[15px]";
   const secondaryActionClass =
-    "min-h-[59px] min-w-[250px] rounded-[100px] border border-black bg-white px-[60px] py-5 text-[20px] font-bold text-black transition hover:bg-black hover:text-white md:min-w-[306px] md:px-[100px] md:text-[22px]";
+    "min-h-[46px] min-w-[156px] rounded-pill border border-black bg-white px-6 text-sm font-bold text-black transition-colors hover:bg-black hover:text-white md:min-h-[48px] md:min-w-[172px] md:px-7 md:text-[15px]";
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -159,12 +159,12 @@ export function AppointmentLookupExperience({
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <section className="mx-auto max-w-[1529px]">
-        <div className="bg-white p-6 md:p-[40px]">
-          <div className="flex flex-col justify-between gap-4 pb-6 sm:flex-row sm:items-center">
+        <div className="bg-white p-5 md:p-8">
+          <div className="flex flex-col justify-between gap-4 pb-5 sm:flex-row sm:items-center">
             <div className="w-full space-y-3">
-              <h1 className="text-[34px] font-bold leading-[1.24] text-black md:text-[44px]">
+              <h1 className="text-[1.9rem] font-bold leading-[1.12] text-black md:text-[2.35rem]">
                 Tra cứu lịch hẹn
               </h1>
               <div
@@ -175,10 +175,10 @@ export function AppointmentLookupExperience({
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-0">
-            <div className="grid gap-5 pb-8 lg:grid-cols-2 xl:gap-[50px]">
-              <label className="space-y-[9px]">
-                <span className="px-[10px] text-[15px] font-medium text-black">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-0">
+            <div className="grid gap-4 pb-6 lg:grid-cols-2 xl:gap-8">
+              <label className="space-y-2">
+                <span className="px-1 text-[13px] font-medium text-black/80 md:text-sm">
                   Mã lịch hẹn:
                 </span>
                 <input
@@ -197,8 +197,8 @@ export function AppointmentLookupExperience({
                 />
               </label>
 
-              <label className="space-y-[9px]">
-                <span className="px-[10px] text-[15px] font-medium text-black">
+              <label className="space-y-2">
+                <span className="px-1 text-[13px] font-medium text-black/80 md:text-sm">
                   Số điện thoại/Email đặt lịch:
                 </span>
                 <input
@@ -218,7 +218,7 @@ export function AppointmentLookupExperience({
               </label>
             </div>
 
-            <div className="space-y-[30px] border-t border-black/10 pb-1 pt-[25px]">
+            <div className="border-t border-black/10 pt-5">
               <div className="flex flex-wrap items-center justify-end gap-4">
                 <button type="submit" className={primaryActionClass}>
                   {isLoading ? "Đang tra cứu..." : "Tra cứu"}
@@ -237,14 +237,14 @@ export function AppointmentLookupExperience({
       </section>
 
       {errorMessage ? (
-        <section className="mx-auto max-w-[1529px] border border-[#cf5c43] bg-[#fff4f0] px-6 py-5 text-[#a64e3b] md:px-[40px]">
-          <p className="text-[18px] font-medium">{errorMessage}</p>
+        <section className="mx-auto max-w-[1529px] border border-[#cf5c43] bg-[#fff4f0] px-5 py-4 text-[#a64e3b] md:px-8">
+          <p className="text-sm font-medium md:text-[15px]">{errorMessage}</p>
         </section>
       ) : null}
 
       {cancelSuccessMessage ? (
-        <section className="mx-auto max-w-[1529px] border border-[#cf5c43]/25 bg-[#fff2ee] px-6 py-5 text-[#b14f3d] md:px-[40px]">
-          <p className="text-[18px] font-medium">{cancelSuccessMessage}</p>
+        <section className="mx-auto max-w-[1529px] border border-[#cf5c43]/25 bg-[#fff2ee] px-5 py-4 text-[#b14f3d] md:px-8">
+          <p className="text-sm font-medium md:text-[15px]">{cancelSuccessMessage}</p>
         </section>
       ) : null}
 

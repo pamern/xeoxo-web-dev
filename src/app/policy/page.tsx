@@ -1,5 +1,5 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { Button } from "@/components/atoms/Button";
 import { SiteLayout } from "@/components/templates/SiteLayout";
 import { ROUTES } from "@/constants/routes";
 
@@ -22,18 +22,22 @@ export const metadata: Metadata = {
 export default function PolicyIndexPage() {
   return (
     <SiteLayout>
-      <div className="mx-auto w-full max-w-site px-6 py-10 xl:px-[100px]">
-        <h1 className="mb-8 text-5xl font-bold leading-none text-black">Chăm sóc khách hàng</h1>
+      <div className="mx-auto w-full max-w-site px-5 py-8 sm:px-6 sm:py-10 xl:px-[84px]">
+        <h1 className="mb-6 text-[2rem] font-bold leading-[1.05] text-black sm:mb-7 sm:text-[2.4rem]">
+          Chăm sóc khách hàng
+        </h1>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {POLICY_LINKS.map((policy) => (
-            <Link
+            <Button
               key={policy.href}
               href={policy.href}
-              className="rounded-md border border-border p-5 text-lg font-medium transition-colors hover:border-primary hover:text-primary"
+              variant="secondaryPill"
+              size="sm"
+              className="h-11 w-full justify-start !rounded-[6px] border-black px-5 text-sm font-semibold text-black transition-colors hover:bg-black hover:text-white sm:h-12 sm:px-6 sm:text-[15px]"
             >
               {policy.title}
-            </Link>
+            </Button>
           ))}
         </div>
       </div>

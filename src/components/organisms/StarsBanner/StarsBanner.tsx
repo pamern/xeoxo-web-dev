@@ -42,7 +42,8 @@ const STARS_DATA = [
 export function StarsBanner() {
   return (
     <section
-      className="relative overflow-hidden bg-cover bg-center py-8 md:py-10"
+      id="stars-in-xeo-xo"
+      className="relative scroll-mt-[calc(var(--site-header-height,0px)+12px)] overflow-hidden bg-cover bg-center py-8 md:py-10"
       style={{ backgroundImage: "url(/images/stars-background.png)" }}
     >
       <style

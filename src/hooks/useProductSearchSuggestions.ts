@@ -4,13 +4,21 @@ import { useDeferredValue, useEffect, useState } from "react";
 import { productService } from "@/services/product.service";
 import type { ProductSearchSuggestionDto } from "@/types/product-api.types";
 
-export function useProductSearchSuggestions(query: string, limit = 4) {
+export function useProductSearchSuggestions(
+  query: string,
+  options?: {
+    enabled?: boolean;
+    limit?: number;
+  },
+) {
+  const enabled = options?.enabled ?? true;
+  const limit = options?.limit ?? 4;
   const deferredQuery = useDeferredValue(query.trim());
   const [suggestions, setSuggestions] = useState<ProductSearchSuggestionDto[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (deferredQuery.length < 2) {
+    if (!enabled || deferredQuery.length < 2) {
       setSuggestions([]);
       setIsLoading(false);
       return;

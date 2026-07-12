@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { loyaltyRewardService } from "@/services/loyalty-reward.service";
 import type { AvailableLoyaltyReward } from "@/types/loyalty.types";
 
 type UseAvailableLoyaltyRewardsResult = {
@@ -18,15 +19,43 @@ export function useAvailableLoyaltyRewards(): UseAvailableLoyaltyRewardsResult {
   const isMember = customer?.customer_type === "MEMBER";
 
   useEffect(() => {
+    let isCancelled = false;
+
     if (isAuthLoading) {
       return;
     }
 
-    // Reward list endpoint is not implemented in this app yet.
-    // Keep the cart UI stable by exposing an empty list until the
-    // backend/member rewards flow is wired in.
-    setRewards([]);
-    setIsLoading(false);
+    if (!isMember) {
+      setRewards([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    void loyaltyRewardService
+      .getAvailableRewards()
+      .then((nextRewards) => {
+        if (!isCancelled) {
+          setRewards(nextRewards);
+        }
+      })
+      .catch((error) => {
+        console.warn("[useAvailableLoyaltyRewards]", error);
+
+        if (!isCancelled) {
+          setRewards([]);
+        }
+      })
+      .finally(() => {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [isAuthLoading, isMember]);
 
   return {

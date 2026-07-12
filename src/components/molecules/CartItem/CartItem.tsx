@@ -16,11 +16,18 @@ function VariantSelect({
   onChange,
 }: {
   value: string;
-  options: string[];
+  options: Array<{
+    value: string;
+    label: string;
+    disabled?: boolean;
+  }>;
   ariaLabel: string;
   onChange: (value: string) => void;
 }) {
-  const list = options.includes(value) ? options : [value, ...options];
+  const list = options.some((option) => option.value === value)
+    ? options
+    : [{ value, label: value }, ...options];
+
   return (
     <span className="relative inline-block min-w-[86px] w-full">
       <select
@@ -30,8 +37,12 @@ function VariantSelect({
         className="h-[28px] w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-6 text-xs font-semibold text-black outline-none transition focus:ring-2 focus:ring-black/15 text-center [text-align-last:center]"
       >
         {list.map((option) => (
-          <option key={option} value={option}>
-            {option}
+          <option
+            key={option.value}
+            value={option.value}
+            disabled={option.disabled}
+          >
+            {option.label}
           </option>
         ))}
       </select>
@@ -77,12 +88,47 @@ export function CartItem({
   const productHref = ROUTES.PRODUCT(item.slug);
   const av = item.available_variants || [];
 
-  const baseSizeOptions = av.length
-    ? Array.from(new Set(av.map((v) => v.size_name)))
-    : [item.size].filter(Boolean);
+  const sizeMap = new Map<
+    string,
+    {
+      value: string;
+      label: string;
+      disabled?: boolean;
+    }
+  >();
+
+  for (const variant of av) {
+    const sizeName = variant.size_name;
+    if (!sizeName || sizeName === "Customize") {
+      continue;
+    }
+
+    const statusLabel = variant.is_available ? "Còn hàng" : "Hết hàng";
+    const existing = sizeMap.get(sizeName);
+
+    if (!existing || (existing.disabled && variant.is_available)) {
+      sizeMap.set(sizeName, {
+        value: sizeName,
+        label: `${sizeName} - ${statusLabel}`,
+        disabled: !variant.is_available,
+      });
+    }
+  }
+
+  if (item.size && item.size !== "Customize" && !sizeMap.has(item.size)) {
+    sizeMap.set(item.size, {
+      value: item.size,
+      label: `${item.size} - Hết hàng`,
+      disabled: true,
+    });
+  }
+
   const sizeOptions = [
-    ...baseSizeOptions.filter((option) => option !== "Customize"),
-    "Customize",
+    ...Array.from(sizeMap.values()),
+    {
+      value: "Customize",
+      label: "Customize",
+    },
   ];
 
   const handleSizeChange = (newSize: string) => {
@@ -91,7 +137,12 @@ export function CartItem({
       return;
     }
 
-    const found = av.find((v) => v.size_name === newSize && v.color_name === item.color);
+    const found = av.find(
+      (v) =>
+        v.size_name === newSize &&
+        v.color_name === item.color &&
+        v.is_available,
+    );
     if (found) {
       onVariantChange({ variant_id: found.variant_id });
     }

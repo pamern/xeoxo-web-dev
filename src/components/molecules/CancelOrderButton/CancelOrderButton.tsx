@@ -242,7 +242,7 @@ export function CancelOrderButton({
       </button>
 
       {isConfirmOpen ? (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/45 px-4">
+        <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/45 px-4">
           <div
             className="absolute inset-0"
             onClick={() => !isLoading && !isSendingOtp && setIsConfirmOpen(false)}
@@ -296,18 +296,18 @@ export function CancelOrderButton({
       ) : null}
 
       {isOtpOpen ? (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center bg-black/45 px-4">
+        <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/45 px-4">
           <div
             className="absolute inset-0"
             onClick={() => !isLoading && !isSendingOtp && setIsOtpOpen(false)}
           />
           <div className="relative z-10 w-full max-w-[780px] overflow-hidden rounded-[28px] bg-white shadow-[0_26px_70px_rgba(0,0,0,0.24)]">
             <div className="h-4 bg-[url('/images/header-line-up.png')] bg-[length:auto_100%] bg-repeat-x" />
-            <div className="px-8 py-10 md:px-16 md:py-12">
-              <h3 className="text-[34px] font-extrabold leading-none text-black md:text-[48px]">
+            <div className="px-7 py-8 md:px-12 md:py-10">
+              <h3 className="text-[1.85rem] font-extrabold leading-none text-black md:text-[2.4rem]">
                 Nhập OTP
               </h3>
-              <p className="mt-3 text-[18px] font-light text-black/75 md:text-[22px]">
+              <p className="mt-3 text-[15px] font-light leading-6 text-black/75 md:text-[17px] md:leading-7">
                 {shouldUsePhoneDemoOtp
                   ? "Nhập mã PIN đã được gửi tới "
                   : "Nhập mã OTP đã được gửi tới "}
@@ -318,11 +318,11 @@ export function CancelOrderButton({
                 </span>
               </p>
 
-              <div className="mt-10 flex flex-wrap justify-center gap-3 md:gap-4">
+              <div className="mt-8 flex flex-wrap justify-center gap-2.5 md:gap-3">
                 {otpDigits.map((digit, index) => (
                   <div
                     key={index}
-                    className="flex h-[64px] w-[46px] items-center justify-center rounded-[8px] border border-black/30 text-[28px] font-semibold text-black md:h-[96px] md:w-[58px] md:text-[40px]"
+                    className="flex h-[56px] w-[42px] items-center justify-center rounded-[8px] border border-black/30 text-[24px] font-semibold text-black md:h-[72px] md:w-[50px] md:text-[31px]"
                   >
                     {digit}
                   </div>
@@ -330,8 +330,8 @@ export function CancelOrderButton({
               </div>
 
               {shouldUseEmailOtp ? (
-                <div className="mx-auto mt-8 max-w-[360px]">
-                  <label className="block text-left text-sm font-medium text-black/75">
+                <div className="mx-auto mt-7 max-w-[340px]">
+                  <label className="block text-left text-[13px] font-medium text-black/75 md:text-sm">
                     Mã OTP email
                   </label>
                   <input
@@ -342,12 +342,12 @@ export function CancelOrderButton({
                     onChange={(event) => {
                       setOtpValue(event.target.value.replace(/\D/g, "").slice(0, 6));
                     }}
-                    className="mt-3 h-14 w-full rounded-[14px] border border-black/20 px-4 text-center text-[28px] font-semibold tracking-[0.35em] text-black outline-none transition-colors focus:border-black"
+                    className="mt-2.5 h-12 w-full rounded-[12px] border border-black/20 px-4 text-center text-[22px] font-semibold tracking-[0.3em] text-black outline-none transition-colors focus:border-black md:h-[52px] md:text-[24px]"
                     placeholder="000000"
                   />
                 </div>
               ) : (
-                <p className="mx-auto mt-8 max-w-[640px] text-center text-[15px] font-light leading-7 text-black/72 md:text-[18px]">
+                <p className="mx-auto mt-7 max-w-[600px] text-center text-[13px] font-light leading-6 text-black/72 md:text-[15px] md:leading-7">
                   Quý khách lưu ý: Để bảo đảm an toàn bảo mật, các số trên bàn
                   phím{" "}
                   <strong className="font-semibold text-black">
@@ -368,13 +368,13 @@ export function CancelOrderButton({
                     void sendEmailOtp();
                   }}
                   disabled={isLoading || isSendingOtp}
-                  className="text-[18px] font-bold uppercase underline underline-offset-4 transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="text-[14px] font-bold uppercase underline underline-offset-4 transition-opacity hover:opacity-70 disabled:cursor-not-allowed disabled:opacity-50 md:text-[15px]"
                 >
                   Gửi lại mã
                 </button>
               </div>
 
-              <div className="mt-4 text-center text-sm font-medium text-black/60 md:text-base">
+              <div className="mt-3 text-center text-[13px] font-medium text-black/60 md:text-sm">
                 {shouldUsePhoneDemoOtp
                   ? isLoading
                     ? "Đang xác nhận OTP và hủy đơn hàng..."
@@ -385,18 +385,18 @@ export function CancelOrderButton({
               </div>
 
               {errorMsg ? (
-                <p className="mx-auto mt-6 max-w-[520px] rounded-[14px] border border-[#d76a54]/25 bg-[#fff2ee] px-4 py-3 text-center text-sm font-medium text-[#b14f3d]">
+                <p className="mx-auto mt-5 max-w-[520px] rounded-[12px] border border-[#d76a54]/25 bg-[#fff2ee] px-4 py-3 text-center text-[13px] font-medium text-[#b14f3d] md:text-sm">
                   {errorMsg}
                 </p>
               ) : null}
 
               {shouldUseEmailOtp ? (
-                <div className="mt-8 flex justify-center">
+                <div className="mt-7 flex justify-center">
                   <button
                     type="button"
                     onClick={() => void verifyEmailOtpAndCancel()}
                     disabled={isLoading || otpValue.length !== 6}
-                    className="inline-flex min-h-[50px] min-w-[220px] items-center justify-center rounded-full bg-black px-8 text-sm font-bold uppercase tracking-[0.03em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex min-h-[46px] min-w-[172px] items-center justify-center rounded-full bg-black px-7 text-sm font-bold uppercase tracking-[0.03em] text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isLoading ? "Đang xác nhận..." : "Xác nhận OTP"}
                   </button>

@@ -24,7 +24,7 @@ async function getHeaderCategoryMenus() {
 // Khung dùng chung cho mọi trang public của website (header + footer).
 export async function SiteLayout({
   children,
-  fixedHeader: _fixedHeader,
+  fixedHeader = true,
 }: {
   children: React.ReactNode;
   fixedHeader?: boolean;
@@ -34,11 +34,12 @@ export async function SiteLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <div className="site-layout-header">
+      <div className={fixedHeader ? "site-layout-header" : "min-h-0"}>
         <Suspense
           fallback={<div className="min-h-[120px] w-full bg-background" />}
         >
           <SiteHeader
+            fixedHeader={fixedHeader}
             womenCategories={womenCategories}
             menCategories={menCategories}
             aoDaiCategories={aoDaiCategories}

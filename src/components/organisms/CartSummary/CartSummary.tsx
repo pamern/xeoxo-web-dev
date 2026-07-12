@@ -49,15 +49,15 @@ function getRewardBenefit(
 
 function getRewardTitle(reward: AvailableLoyaltyReward) {
   if (reward.reward_type === "FREE_SHIPPING") {
-    return "Mien phi van chuyen";
+    return "Miễn phí vận chuyển";
   }
 
   if (reward.reward_type === "BIRTHDAY_VOUCHER") {
-    return "Qua sinh nhat thanh vien";
+    return "Quà sinh nhật thành viên";
   }
 
   if (reward.reward_type === "TIER_VOUCHER") {
-    return "Uu dai hang thanh vien";
+    return "Ưu đãi hạng thành viên";
   }
 
   return reward.reward_name;
@@ -65,22 +65,49 @@ function getRewardTitle(reward: AvailableLoyaltyReward) {
 
 function getRewardDescription(reward: AvailableLoyaltyReward) {
   if (reward.reward_type === "FREE_SHIPPING") {
-    return "Ap dung cho phi giao hang cua don nay.";
+    return "Áp dụng cho phí giao hàng của đơn này.";
   }
 
   if (
     reward.reward_type === "BIRTHDAY_VOUCHER" ||
     reward.reward_type === "TIER_VOUCHER"
   ) {
-    return `Giam toi da ${formatPrice(reward.reward_value)}.`;
+    return `Giảm tối đa ${formatPrice(reward.reward_value)}.`;
   }
 
-  return "Quyen loi nay chua ap dung tai gio hang.";
+  return "Quyền lợi này chưa áp dụng tại giỏ hàng.";
+}
+
+function getRewardConditionText(
+  reward: AvailableLoyaltyReward,
+  subtotal: number,
+  shippingFee: number,
+) {
+  if (reward.reward_type === "FREE_SHIPPING") {
+    return shippingFee > 0
+      ? `Giảm ${formatPrice(shippingFee)} phí giao hàng.`
+      : "Áp dụng khi đơn hàng phát sinh phí giao hàng.";
+  }
+
+  if (
+    reward.reward_type === "BIRTHDAY_VOUCHER" ||
+    reward.reward_type === "TIER_VOUCHER"
+  ) {
+    return subtotal > 0
+      ? `Giảm tối đa ${formatPrice(reward.reward_value)} cho đơn đã chọn.`
+      : "Áp dụng khi bạn chọn ít nhất 1 sản phẩm để thanh toán.";
+  }
+
+  if (reward.reward_type === "FREE_TAILOR") {
+    return "Áp dụng cho đơn có sản phẩm may đo hoặc chỉnh sửa.";
+  }
+
+  return "Xem chi tiết điều kiện tại chính sách thành viên.";
 }
 
 function formatExpiredAt(value: string | null) {
   if (!value) {
-    return "Khong gioi han";
+    return "Không giới hạn";
   }
 
   return new Intl.DateTimeFormat("vi-VN", {
@@ -165,8 +192,17 @@ export function CartSummary() {
   }, [baseShippingFee, rewards, selectedSubtotal]);
 
   useEffect(() => {
+    if (cartItemIds.length === 0) {
+      setSelectedIds([]);
+      setAppliedVoucher("");
+      setHasManualVoucherChoice(false);
+      setVoucherSearch("");
+      resetPreview();
+      return;
+    }
+
     setSelectedIds(cartItemIds);
-  }, [cartItemIds]);
+  }, [cartItemIds, resetPreview]);
 
   useEffect(() => {
     if (selectedIds.length) {
@@ -542,7 +578,7 @@ function VoucherModal({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4 py-8">
+    <div className="fixed inset-0 z-[220] flex items-center justify-center bg-black/45 px-4 py-8">
       <div className="max-h-[90vh] w-full max-w-[600px] overflow-hidden rounded-[8px] border border-black bg-white shadow-2xl">
         <div
           className="h-2.5 w-full bg-cover bg-center"
@@ -651,8 +687,8 @@ function VoucherModal({
                     </div>
 
                     <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                      <span className="text-sm font-bold">
-                        {benefit > 0 ? `-${formatPrice(benefit)}` : "Chưa đủ điều kiện"}
+                      <span className="text-xs font-normal leading-5 opacity-75 sm:max-w-[180px] sm:text-right">
+                        {getRewardConditionText(reward, subtotal, baseShippingFee)}
                       </span>
                       <button
                         type="button"

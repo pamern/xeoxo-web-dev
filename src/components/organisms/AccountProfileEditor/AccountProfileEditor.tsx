@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/atoms/Button";
 import { useCustomerProfile } from "@/hooks/useCustomerProfile";
+import { cn } from "@/lib/utils";
 import type { AuthCustomer, AuthUser } from "@/types/auth.types";
 import type {
   CustomerGender,
@@ -25,20 +26,11 @@ const MONTH_LABELS = [
   "Tháng 12",
 ];
 
-const MONTH_SHORT_LABELS = [
-  "T1",
-  "T2",
-  "T3",
-  "T4",
-  "T5",
-  "T6",
-  "T7",
-  "T8",
-  "T9",
-  "T10",
-  "T11",
-  "T12",
-];
+const BIRTHDAY_FORMATTER = new Intl.DateTimeFormat("vi-VN", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+});
 
 function getDisplayValue(value?: string | null) {
   const normalized = value?.trim();
@@ -86,7 +78,7 @@ function formatBirthdayLabel(value: string) {
     return "Chọn ngày sinh";
   }
 
-  return date.toLocaleDateString("vi-VN");
+  return BIRTHDAY_FORMATTER.format(date);
 }
 
 function clampDateToMonth(year: number, month: number, day: number) {
@@ -384,23 +376,17 @@ function BirthdayPicker({
 }) {
   const pickerRef = useRef<HTMLDivElement>(null);
   const selectedDate = parseDateValue(value);
-  const [inputValue, setInputValue] = useState(value);
   const [isOpen, setIsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"days" | "months" | "years">("days");
   const [visibleMonth, setVisibleMonth] = useState<Date>(
     selectedDate ?? new Date(2000, 0, 1),
   );
   const today = useMemo(() => new Date(), []);
-  const calendarDays = useMemo(
-    () => buildCalendarDays(visibleMonth),
-    [visibleMonth],
+  const calendarDays = useMemo(() => buildCalendarDays(visibleMonth), [visibleMonth]);
+  const currentYear = today.getFullYear();
+  const yearOptions = Array.from(
+    { length: currentYear - 1940 + 1 },
+    (_, index) => currentYear - index,
   );
-  const yearRangeStart = Math.floor(visibleMonth.getFullYear() / 12) * 12;
-  const yearOptions = Array.from({ length: 12 }, (_, index) => yearRangeStart + index);
-
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -431,54 +417,10 @@ function BirthdayPicker({
     };
   }, [isOpen]);
 
-  function moveMonth(offset: number) {
-    setVisibleMonth(
-      (current) => new Date(current.getFullYear(), current.getMonth() + offset, 1),
-    );
-  }
-
-  function moveYearRange(offset: number) {
-    setVisibleMonth(
-      (current) => new Date(current.getFullYear() + offset * 12, current.getMonth(), 1),
-    );
-  }
-
   function handleSelect(date: Date) {
     onChange(formatDateValue(date));
-    setInputValue(formatDateValue(date));
     setVisibleMonth(new Date(date.getFullYear(), date.getMonth(), 1));
-    setViewMode("days");
     setIsOpen(false);
-  }
-
-  function handleManualInput(nextValue: string) {
-    setInputValue(nextValue);
-  }
-
-  function commitManualInput() {
-    const normalizedValue = inputValue.trim();
-
-    if (!normalizedValue) {
-      onChange("");
-      setInputValue("");
-      return;
-    }
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(normalizedValue)) {
-      setInputValue(value);
-      return;
-    }
-
-    const parsedDate = parseDateValue(normalizedValue);
-
-    if (!parsedDate || Number.isNaN(parsedDate.getTime())) {
-      setInputValue(value);
-      return;
-    }
-
-    onChange(formatDateValue(parsedDate));
-    setInputValue(formatDateValue(parsedDate));
-    setVisibleMonth(new Date(parsedDate.getFullYear(), parsedDate.getMonth(), 1));
   }
 
   function handleToggle() {
@@ -486,184 +428,111 @@ function BirthdayPicker({
       selectedDate ??
         new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1),
     );
-    setViewMode("days");
     setIsOpen((current) => !current);
   }
 
   return (
     <div ref={pickerRef} className="relative">
-      <div className="flex gap-2.5">
-        <input
-          value={inputValue}
-          onChange={(event) => handleManualInput(event.target.value)}
-          onBlur={commitManualInput}
-          placeholder="YYYY-MM-DD"
-          inputMode="numeric"
-          className="form-control h-11 rounded-[12px] text-sm"
+      <button
+        type="button"
+        onClick={handleToggle}
+        className={cn(
+          "flex h-11 w-full items-center justify-between rounded-[14px] border border-black/40 bg-white px-4 text-left text-sm transition-colors",
+          isOpen && "border-black",
+        )}
+        aria-label="Mở lịch chọn ngày sinh"
+      >
+        <span className={cn(value ? "text-black" : "text-black/35")}>
+          {formatBirthdayLabel(value)}
+        </span>
+        <span
+          aria-hidden
+          className={cn(
+            "mb-[2px] mr-1 inline-block h-3 w-3 rotate-45 border-b-2 border-r-2 border-[#f15a42] transition-transform",
+            isOpen && "translate-y-[1px] rotate-[225deg]",
+          )}
         />
-        <button
-          type="button"
-          onClick={handleToggle}
-          className="form-control flex h-11 w-12 shrink-0 items-center justify-center rounded-[12px] px-0 text-left"
-          aria-label="Mở lịch chọn ngày sinh"
-        >
-          <span className="text-base text-foreground/60">{isOpen ? "−" : "+"}</span>
-        </button>
-      </div>
+      </button>
 
       {isOpen ? (
-        <div className="absolute left-0 top-[calc(100%+10px)] z-20 w-[300px] rounded-[20px] border border-black/8 bg-white p-4 shadow-[0_22px_60px_rgba(0,0,0,0.16)]">
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() =>
-                viewMode === "days" ? moveMonth(-1) : moveYearRange(-1)
+        <div className="absolute left-0 top-[calc(100%+8px)] z-20 w-full max-w-[380px] overflow-hidden rounded-[18px] border border-black/10 bg-white p-3.5 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+          <div className="mb-3 grid grid-cols-[1fr_1fr] gap-2">
+            <select
+              value={String(visibleMonth.getMonth())}
+              onChange={(event) =>
+                setVisibleMonth((current) =>
+                  clampDateToMonth(
+                    current.getFullYear(),
+                    Number(event.target.value),
+                    selectedDate?.getDate() ?? 1,
+                  ),
+                )
               }
-              className="flex h-8 w-8 items-center justify-center rounded-full border border-black/10 text-lg transition-colors hover:bg-secondary"
-              aria-label={viewMode === "days" ? "Tháng trước" : "Nhóm năm trước"}
+              className="h-9 rounded-[14px] border border-black/20 bg-white px-3 text-sm outline-none focus:border-black"
             >
-              ‹
-            </button>
-            <div className="text-center">
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-foreground/45">
-                Ngày sinh
-              </p>
-              <button
-                type="button"
-                onClick={() =>
-                  setViewMode((current) =>
-                    current === "days" ? "months" : "years",
-                  )
-                }
-                className="mt-1 text-sm font-extrabold transition-opacity hover:opacity-70"
-              >
-                {viewMode === "years"
-                  ? `${yearRangeStart} - ${yearRangeStart + 11}`
-                  : `${MONTH_LABELS[visibleMonth.getMonth()]} ${visibleMonth.getFullYear()}`}
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                viewMode === "days" ? moveMonth(1) : moveYearRange(1)
+              {MONTH_LABELS.map((label, index) => (
+                <option key={label} value={index}>
+                  {label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={String(visibleMonth.getFullYear())}
+              onChange={(event) =>
+                setVisibleMonth((current) =>
+                  clampDateToMonth(
+                    Number(event.target.value),
+                    current.getMonth(),
+                    selectedDate?.getDate() ?? 1,
+                  ),
+                )
               }
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 text-xl transition-colors hover:bg-secondary"
-              aria-label={viewMode === "days" ? "Tháng sau" : "Nhóm năm sau"}
+              className="h-9 rounded-[14px] border border-black/20 bg-white px-3 text-sm outline-none focus:border-black"
             >
-              ›
-            </button>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {viewMode === "days" ? (
-            <div className="mt-4 grid grid-cols-7 gap-1.5 text-center">
-              {WEEKDAY_LABELS.map((label) => (
-                <span
-                  key={label}
-                  className="text-[10px] font-bold uppercase tracking-[0.12em] text-foreground/45"
+          <div className="grid grid-cols-7 gap-y-2 text-center">
+            {WEEKDAY_LABELS.map((label) => (
+              <div
+                key={label}
+                className="text-xs font-bold uppercase tracking-[0.12em] text-foreground/45"
+              >
+                {label}
+              </div>
+            ))}
+            {calendarDays.map(({ date, isCurrentMonth }) => {
+              const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
+              const isToday = isSameDay(date, today);
+
+              return (
+                <button
+                  key={date.toISOString()}
+                  type="button"
+                  onClick={() => handleSelect(date)}
+                  className={cn(
+                    "mx-auto flex h-7 w-7 items-center justify-center rounded-full text-xs transition-colors",
+                    isCurrentMonth ? "text-black" : "text-black/28",
+                    isSelected && "bg-[#f15a42] font-bold text-white",
+                    isToday && !isSelected && "border border-black/20",
+                  )}
                 >
-                  {label}
-                </span>
-              ))}
-              {calendarDays.map(({ date, isCurrentMonth }) => {
-                const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
-                const isToday = isSameDay(date, today);
-
-                return (
-                  <button
-                    key={date.toISOString()}
-                    type="button"
-                    onClick={() => handleSelect(date)}
-                    className={[
-                      "flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium transition-colors",
-                      isSelected
-                        ? "bg-black text-white shadow-[0_10px_20px_rgba(0,0,0,0.2)]"
-                        : isCurrentMonth
-                          ? "text-foreground hover:bg-secondary"
-                          : "text-foreground/28 hover:bg-secondary/70",
-                      isToday && !isSelected ? "border border-black/20" : "",
-                    ].join(" ")}
-                  >
-                    {date.getDate()}
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-
-          {viewMode === "months" ? (
-            <div className="mt-4 grid grid-cols-3 gap-2.5">
-              {MONTH_SHORT_LABELS.map((label, monthIndex) => {
-                const isSelected =
-                  selectedDate &&
-                  selectedDate.getFullYear() === visibleMonth.getFullYear() &&
-                  selectedDate.getMonth() === monthIndex;
-
-                return (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => {
-                      const baseDay = selectedDate?.getDate() ?? 1;
-                      setVisibleMonth(
-                        clampDateToMonth(
-                          visibleMonth.getFullYear(),
-                          monthIndex,
-                          baseDay,
-                        ),
-                      );
-                      setViewMode("days");
-                    }}
-                    className={[
-                      "rounded-[12px] px-3 py-2.5 text-xs font-semibold transition-colors",
-                      isSelected
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white text-black hover:bg-secondary",
-                    ].join(" ")}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-
-          {viewMode === "years" ? (
-            <div className="mt-4 grid grid-cols-3 gap-2.5">
-              {yearOptions.map((year) => {
-                const isSelected = selectedDate?.getFullYear() === year;
-
-                return (
-                  <button
-                    key={year}
-                    type="button"
-                    onClick={() => {
-                      const baseDay = selectedDate?.getDate() ?? 1;
-                      setVisibleMonth(
-                        clampDateToMonth(year, visibleMonth.getMonth(), baseDay),
-                      );
-                      setViewMode("months");
-                    }}
-                    className={[
-                      "rounded-[12px] px-3 py-2.5 text-xs font-semibold transition-colors",
-                      isSelected
-                        ? "bg-black text-white"
-                        : "border border-black/10 bg-white text-black hover:bg-secondary",
-                    ].join(" ")}
-                  >
-                    {year}
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
+                  {date.getDate()}
+                </button>
+              );
+            })}
+          </div>
 
           <div className="mt-4 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={() => {
                 onChange("");
-                setInputValue("");
-                setViewMode("days");
                 setIsOpen(false);
               }}
               className="text-xs font-medium text-foreground/62 transition-colors hover:text-foreground"

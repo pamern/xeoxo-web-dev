@@ -84,6 +84,7 @@ export const API = {
   CART_ITEMS: "/api/v1/cart-items",
   CART_ITEM: (cartItemId: number) => `/api/v1/cart-items/${cartItemId}`,
   CHECKOUT_PREVIEW: "/api/v1/cart/checkout-preview",
+  LOYALTY_REWARDS: "/api/v1/loyalty-rewards",
 
   ADDRESSES: "/api/v1/addresses",
   ADDRESS: (addressId: number) => `/api/v1/addresses/${addressId}`,

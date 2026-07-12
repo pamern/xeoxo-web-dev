@@ -91,6 +91,8 @@ type InventoryAvailabilityRecord = {
   total_quantity: number | null;
 };
 
+export const MAX_CART_TOTAL_QUANTITY = 300;
+
 const NON_PURCHASABLE_VARIANT_STATUSES = new Set(["INACTIVE", "COMING_SOON"]);
 
 function toNumber(value: unknown) {
@@ -327,6 +329,24 @@ export async function getVariantStock(variantId: number) {
   const admin = createAdminClient();
   const availability = await fetchVariantAvailability(admin, [variantId]);
   return Math.max(0, Number(availability[0]?.total_quantity ?? 0));
+}
+
+export async function getCartTotalQuantity(cartId: number) {
+  const admin = createAdminClient();
+  const { data, error } = await admin
+    .schema("sales")
+    .from("cart_item")
+    .select("quantity")
+    .eq("cart_id", cartId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).reduce(
+    (sum, item) => sum + Math.max(0, Number(item.quantity ?? 0)),
+    0,
+  );
 }
 
 export async function assertCartItemOwnership(cartItemId: number, owner: CartOwner) {
