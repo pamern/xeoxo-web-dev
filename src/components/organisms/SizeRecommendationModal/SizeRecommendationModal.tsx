@@ -192,6 +192,31 @@ export function SizeRecommendationModal({
     }
   }
 
+  async function handleSaveToDb() {
+    setPersistError(undefined);
+    setIsPersisting(true);
+    try {
+      const normalizedVals = { ...values };
+      fields.forEach((field) => {
+        if (values[field.key]) {
+          normalizedVals[field.key] = values[field.key].trim().replace(",", ".");
+        }
+      });
+      setValues(normalizedVals);
+
+      if (onPersistMeasurements) {
+        await onPersistMeasurements(normalizedVals);
+        setSaveAsDefault(true);
+      }
+    } catch (error) {
+      setPersistError(
+        error instanceof Error ? error.message : "Không thể lưu số đo.",
+      );
+    } finally {
+      setIsPersisting(false);
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -341,14 +366,29 @@ export function SizeRecommendationModal({
               {canPersistMeasurements && (
                 <button
                   type="button"
-                  onClick={() => setSaveAsDefault((current) => !current)}
-                  title="Lưu lại để sử dụng lần sau"
+                  onClick={handleSaveToDb}
+                  disabled={isPersisting}
+                  title={saveAsDefault ? "Đã lưu số đo" : "Lưu số đo vào tài khoản"}
                   className={cn(
-                    "relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-white",
+                    "relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-black/20 bg-white text-black transition hover:border-black hover:bg-black hover:text-white focus:outline-none",
                     saveAsDefault && "border-black/40",
                   )}
                 >
-                  {saveAsDefault ? <SavedIcon /> : <SaveIcon />}
+                  {isPersisting ? (
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                  ) : saveAsDefault ? (
+                    <SavedIcon />
+                  ) : (
+                    <SaveIcon />
+                  )}
+                  {saveAsDefault && (
+                    <span
+                      role="status"
+                      className="absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-[6px] border bg-white px-2.5 py-1 text-xs font-semibold shadow-sm border-black/20 text-black animate-fade-in"
+                    >
+                      Đã lưu
+                    </span>
+                  )}
                 </button>
               )}
             </span>

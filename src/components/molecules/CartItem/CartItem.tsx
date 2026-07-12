@@ -136,12 +136,20 @@ export function CartItem({
       return;
     }
 
-    const found = av.find(
+    let found = av.find(
       (v) =>
         v.size_name === newSize &&
-        v.color_name === item.color &&
+        v.color_name?.trim().toLowerCase() === item.color?.trim().toLowerCase() &&
         v.is_available,
     );
+    if (!found) {
+      found = av.find(
+        (v) =>
+          v.size_name === newSize &&
+          v.is_available,
+      );
+    }
+
     if (found) {
       onVariantChange({ variant_id: found.variant_id });
     }
@@ -245,8 +253,7 @@ export function CartItem({
 
         {isCustomized && (
           <div className="mt-2 rounded-[8px] bg-black/[0.03] p-3 text-body-sm text-black/70">
-            <p className="font-bold text-black/80">Số đo Customize:</p>
-            <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+            <div className="flex flex-wrap gap-x-3 gap-y-1">
               {Object.entries(measurements)
                 .filter(([, val]) => val !== undefined && val !== null && String(val).trim() !== "")
                 .map(([key, val]) => {
@@ -261,7 +268,7 @@ export function CartItem({
             </div>
             {note && (
               <p className="mt-2 text-xs italic text-black/60">
-                <span className="font-semibold not-italic text-black/75">Ghi chú:</span> {note}
+                {note}
               </p>
             )}
           </div>

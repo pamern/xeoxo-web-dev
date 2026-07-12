@@ -226,12 +226,23 @@ export function ProductDetail({
         (component) => component.component_id === activeCustomizeComponentId,
       );
   const isCustomized = size === "CUSTOM";
+  const hasCustomSelected = Object.values(componentSelections).some(
+    (selection) => selection.sizeName === "CUSTOM"
+  );
   const hasUnconfirmedCustomize = isMultiComponent
-    ? Object.entries(componentSelections).some(
-      ([componentId, selection]) =>
-        selection.sizeName === "CUSTOM" && !tempComponentCustomizations[Number(componentId)]
-    )
-    : isCustomized && !tempCustomization;
+    ? (() => {
+        const customComponents = components.filter(
+          (comp) => componentSelections[comp.component_id]?.sizeName === "CUSTOM"
+        );
+        if (customComponents.length === 0) return false;
+        return customComponents.some((comp) => {
+          const hasSession = tempComponentCustomizations[comp.component_id];
+          const hasSaved = readComponentMeasurementValues(product.gender, comp.component_type);
+          return !hasSession && !hasSaved;
+        });
+      })()
+    : isCustomized && !tempCustomization && !readComponentMeasurementValues(product.gender, defaultComponent?.component_type);
+
   const customBasePrice =
     defaultComponent?.min_price ?? apiProduct.price ?? product.salePrice ?? product.price;
   const customPrice = customBasePrice * 1.2;
@@ -247,21 +258,62 @@ export function ProductDetail({
     );
   }, [maxQuantity, size]);
 
+  // Auto-activate customization if pre-confirmed (Member or Guest with saved values)
   useEffect(() => {
-    const savedValues =
-      readComponentMeasurementValues(product.gender, defaultComponent?.component_type) ??
-      (hasMeasurementValues(sharedMeasurementValues, product.gender, defaultComponent?.component_type)
-        ? mapSharedMeasurementValues(sharedMeasurementValues, product.gender, defaultComponent?.component_type)
-        : null);
-
-    if (size === "CUSTOM" && !tempCustomization && savedValues) {
-      setTempCustomization({
-        values: savedValues,
-        note: "",
-        saveAsDefault: false,
-      });
+    // 1. For Single Component
+    if (!isMultiComponent && size === "CUSTOM" && !tempCustomization) {
+      const savedValues =
+        readComponentMeasurementValues(product.gender, defaultComponent?.component_type) ??
+        (hasMeasurementValues(sharedMeasurementValues, product.gender, defaultComponent?.component_type)
+          ? mapSharedMeasurementValues(sharedMeasurementValues, product.gender, defaultComponent?.component_type)
+          : null);
+      if (savedValues) {
+        setTempCustomization({
+          values: savedValues,
+          note: "",
+          saveAsDefault: false,
+        });
+      }
     }
-  }, [defaultComponent?.component_type, product.gender, size, tempCustomization, sharedMeasurementValues]);
+
+    // 2. For Multi-Component
+    if (isMultiComponent) {
+      let updated = false;
+      const nextCustomizations = { ...tempComponentCustomizations };
+      Object.entries(componentSelections).forEach(([compIdStr, selection]) => {
+        const compId = Number(compIdStr);
+        if (selection.sizeName === "CUSTOM" && !nextCustomizations[compId]) {
+          const component = components.find((item) => item.component_id === compId);
+          const savedValues =
+            readComponentMeasurementValues(product.gender, component?.component_type) ??
+            (hasMeasurementValues(sharedMeasurementValues, product.gender, component?.component_type)
+              ? mapSharedMeasurementValues(sharedMeasurementValues, product.gender, component?.component_type)
+              : null);
+          if (savedValues) {
+            nextCustomizations[compId] = {
+              values: savedValues,
+              note: "",
+              saveAsDefault: false,
+            };
+            updated = true;
+          }
+        }
+      });
+      if (updated) {
+        setTempComponentCustomizations(nextCustomizations);
+      }
+    }
+  }, [
+    size,
+    isMultiComponent,
+    componentSelections,
+    tempCustomization,
+    tempComponentCustomizations,
+    sharedMeasurementValues,
+    components,
+    defaultComponent?.component_type,
+    product.gender
+  ]);
 
   useEffect(() => {
     if (!apiProduct.color) return;
@@ -570,33 +622,6 @@ export function ProductDetail({
   }
 
   function openComponentCustomize(componentId: number) {
-    const component = components.find((item) => item.component_id === componentId);
-    const savedValues =
-      readComponentMeasurementValues(product.gender, component?.component_type) ??
-      (hasMeasurementValues(sharedMeasurementValues, product.gender, component?.component_type)
-        ? mapSharedMeasurementValues(sharedMeasurementValues, product.gender, component?.component_type)
-        : null);
-
-    if (componentSelections[componentId]?.sizeName === "CUSTOM") {
-      setActiveCustomizeComponentId(componentId);
-      if (!tempComponentCustomizations[componentId] && savedValues) {
-        setTempComponentCustomizations((current) => ({
-          ...current,
-          [componentId]: {
-            values: savedValues,
-            note: "",
-            saveAsDefault: false,
-          },
-        }));
-        return;
-      }
-      setIsCustomizeOpen(true);
-      return;
-    }
-    const savedCustomization: TemporaryCustomization | null = savedValues
-      ? { values: savedValues, note: "", saveAsDefault: false }
-      : null;
-
     setComponentSelections((current) => ({
       ...current,
       [componentId]: {
@@ -607,16 +632,7 @@ export function ProductDetail({
       },
     }));
     setActiveCustomizeComponentId(componentId);
-    if (savedCustomization) {
-      setTempComponentCustomizations((current) => ({
-        ...current,
-        [componentId]: savedCustomization,
-      }));
-      return;
-    }
-    if (!tempComponentCustomizations[componentId]) {
-      setIsCustomizeOpen(true);
-    }
+    setIsCustomizeOpen(true);
   }
 
   function scrollToDescription() {
@@ -713,14 +729,8 @@ export function ProductDetail({
           isAdding={isAdding}
           onAdd={handleAdd}
           onOpenCustomize={() => {
-            if (size === "CUSTOM") {
-              setIsCustomizeOpen(true);
-              return;
-            }
             setSize("CUSTOM");
-            if (!tempCustomization) {
-              setIsCustomizeOpen(true);
-            }
+            setIsCustomizeOpen(true);
           }}
           onQuantityChange={setQuantity}
           onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
@@ -821,15 +831,10 @@ export function ProductDetail({
                 onOpenSizeRecommendation={() => setIsSizeRecommendationOpen(true)}
                 onOpenAppointment={() => setIsAppointmentOpen(true)}
                 onOpenCustomize={() => {
-                  if (size === "CUSTOM") {
-                    setIsCustomizeOpen(true);
-                    return;
-                  }
                   setSize("CUSTOM");
-                  if (!tempCustomization) {
-                    setIsCustomizeOpen(true);
-                  }
+                  setIsCustomizeOpen(true);
                 }}
+                isCustomizeConfirmed={Boolean(tempCustomization)}
               />
             </div>
 
@@ -1165,6 +1170,7 @@ function MultiComponentPurchaseCompact({
                 component={component}
                 selection={selections[component.component_id]}
                 onOpenCustomize={() => onOpenCustomize(component.component_id)}
+                isCustomizeConfirmed={Boolean(customizations[component.component_id])}
                 onQuantityChange={(quantity) =>
                   onQuantityChange(component.component_id, quantity)
                 }
@@ -1224,12 +1230,14 @@ function ComponentPurchaseCardCompact({
   component,
   selection,
   onOpenCustomize,
+  isCustomizeConfirmed = false,
   onQuantityChange,
   onSelectVariant,
 }: {
   component: ProductComponentDto;
   selection?: ComponentSelection;
   onOpenCustomize: () => void;
+  isCustomizeConfirmed?: boolean;
   onQuantityChange: (quantity: number) => void;
   onSelectVariant: (option: ProductSizeOptionDto) => void;
 }) {
