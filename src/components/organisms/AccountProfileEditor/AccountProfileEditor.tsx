@@ -298,7 +298,6 @@ export function AccountProfileEditor({
             <ProfileRow
               label="Họ và tên:"
               value={getDisplayValue(displayValues.customer_name)}
-              emphasizeValue
             />
             <ProfileRow
               label="Số điện thoại:"

@@ -92,12 +92,15 @@ export function ProductCard({
   return (
     <article
       ref={cardRef}
-      className={cn("group flex flex-col gap-2.5 sm:gap-3", className)}
+      className={cn(
+        "group flex flex-col gap-2.5 transition-transform duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:hover:-translate-y-1 sm:gap-3",
+        className,
+      )}
       {...prefetchHandlers}
     >
       <div
         className={cn(
-          "relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-secondary",
+          "relative aspect-[3/4] w-full overflow-hidden rounded-sm bg-secondary transition-shadow duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:group-hover:shadow-[0_18px_40px_rgba(0,0,0,0.16)]",
           imageClassName,
         )}
       >
@@ -109,10 +112,10 @@ export function ProductCard({
             sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
             quality={60}
             className={cn(
-              "object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
+              "object-cover transition-transform duration-[2200ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
               quickAddOnHover
-                ? "lg:group-hover:scale-[1.04]"
-                : "lg:group-hover:scale-[1.04]",
+                ? "lg:scale-[1.01] lg:group-hover:scale-[1.05]"
+                : "lg:scale-[1.01] lg:group-hover:scale-[1.05]",
             )}
           />
           {quickAddOnHover && hoverImage !== product.images[0] && (
@@ -123,7 +126,7 @@ export function ProductCard({
               sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
               quality={60}
               aria-hidden
-              className="object-cover opacity-0 transition-all duration-[1600ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:scale-[1.12] lg:group-hover:scale-[1.04] lg:group-hover:opacity-100"
+              className="object-cover opacity-0 transition-all duration-[2400ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:scale-[1.14] lg:group-hover:scale-[1.05] lg:group-hover:opacity-100"
             />
           )}
         </Link>
@@ -252,12 +255,15 @@ export function ProductCard({
         )}
       </div>
 
-      <Link href={productHref} className="transition-opacity hover:opacity-75">
+      <Link
+        href={productHref}
+        className="transition-opacity duration-500 ease-out hover:opacity-75"
+      >
         <h3 className="text-sm font-light leading-snug sm:text-base">{product.name}</h3>
       </Link>
       <Link
         href={productHref}
-        className="flex items-center gap-2.5 transition-opacity hover:opacity-75 sm:gap-3"
+        className="flex items-center gap-2.5 transition-opacity duration-500 ease-out hover:opacity-75 sm:gap-3"
       >
         <span className={cn("text-sm font-bold leading-[1.5] sm:text-base", onSale && "text-destructive")}>
           {formatPrice(onSale ? product.salePrice! : product.price)}

@@ -479,25 +479,27 @@ export function CheckoutForm() {
       noValidate
       className="w-full text-black"
     >
-      <div className="rounded-[10px] bg-[#D9D9D9]/30 p-3 sm:py-3.5 sm:px-4">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center">
-          <div
-            className="inline-flex h-[36px] w-full max-w-[230px] shrink-0 items-center justify-center rounded-pill border border-black bg-cover bg-center px-3 text-[11px] font-bold uppercase whitespace-nowrap text-white shadow-[0_2px_4px_rgba(0,0,0,0.15)] sm:max-w-[200px] sm:px-4 sm:text-xs"
-            style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
-          >
-            Gia nhập Xéo Hội ngay!
-          </div>
-          <div className="min-w-0 text-xs leading-5 text-black/75">
-            Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
-            <AuthModalLink
-              mode="register"
-              className="font-bold underline underline-offset-2"
+      {!isMember ? (
+        <div className="rounded-[10px] bg-[#D9D9D9]/30 p-3 sm:py-3.5 sm:px-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <div
+              className="inline-flex h-[36px] w-full max-w-[230px] shrink-0 items-center justify-center rounded-pill border border-black bg-cover bg-center px-3 text-[11px] font-bold uppercase whitespace-nowrap text-white shadow-[0_2px_4px_rgba(0,0,0,0.15)] sm:max-w-[200px] sm:px-4 sm:text-xs"
+              style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
             >
-              Tìm hiểu thêm
-            </AuthModalLink>
+              Gia nhập Xéo Hội ngay!
+            </div>
+            <div className="min-w-0 text-xs leading-5 text-black/75">
+              Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
+              <AuthModalLink
+                mode="register"
+                className="font-bold underline underline-offset-2"
+              >
+                Tìm hiểu thêm
+              </AuthModalLink>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <h2 className="mt-6 text-lg font-bold text-black md:text-xl">
         Thông tin vận chuyển
