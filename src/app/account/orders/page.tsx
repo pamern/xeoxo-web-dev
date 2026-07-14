@@ -116,7 +116,7 @@ export default async function AccountOrdersRoute({
 
               <section className="rounded-[26px] bg-white px-5 py-6 shadow-[0_14px_40px_rgba(0,0,0,0.12)] md:px-7 md:py-7 xl:px-8 xl:py-8">
                 <div className="flex flex-col gap-1.5 pb-1.5 md:gap-2 md:pb-2">
-                  <h1 className="text-[19px] font-extrabold leading-none md:text-[26px]">
+                  <h1 className="account-panel-heading">
                     Lịch sử đơn hàng
                   </h1>
 

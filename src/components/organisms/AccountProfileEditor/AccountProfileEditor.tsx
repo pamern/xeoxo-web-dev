@@ -298,6 +298,7 @@ export function AccountProfileEditor({
             <ProfileRow
               label="Họ và tên:"
               value={getDisplayValue(displayValues.customer_name)}
+              emphasizeValue
             />
             <ProfileRow
               label="Số điện thoại:"
@@ -558,11 +559,26 @@ function BirthdayPicker({
   );
 }
 
-function ProfileRow({ label, value }: { label: string; value: string }) {
+function ProfileRow({
+  label,
+  value,
+  emphasizeValue = false,
+}: {
+  label: string;
+  value: string;
+  emphasizeValue?: boolean;
+}) {
   return (
     <div className="contents">
-      <dt className="text-base font-extrabold">{label}</dt>
-      <dd className="text-base font-medium text-foreground/88">
+      <dt className="text-[15px] font-semibold text-foreground/88 md:text-base">
+        {label}
+      </dt>
+      <dd
+        className={cn(
+          "text-[15px] text-foreground/82 md:text-base",
+          emphasizeValue ? "font-semibold text-foreground" : "font-normal",
+        )}
+      >
         {value}
       </dd>
     </div>

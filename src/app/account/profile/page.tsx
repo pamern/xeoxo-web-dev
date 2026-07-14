@@ -82,9 +82,9 @@ export default async function AccountProfileRoute() {
                 />
               </aside>
 
-              <section className="rounded-[14px] bg-white px-5 py-6 shadow-[0_10px_34px_rgba(0,0,0,0.14)] md:px-7 md:py-7 xl:px-8 xl:py-8">
+              <section className="account-panel-soft">
                 <div className="flex flex-col gap-1.5">
-                  <h1 className="text-[19px] font-extrabold leading-none md:text-[26px]">
+                  <h1 className="account-panel-heading">
                     Hồ sơ thông tin
                   </h1>
                   <p className="text-xs font-medium text-foreground/72">

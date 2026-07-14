@@ -631,3 +631,55 @@ Sau khi hoàn thành plan này, project cần đạt được:
 - `src/app/globals.css`
 - `tailwind.config.ts`
 
+---
+
+## 12. Rollout Notes
+
+### Rollout 1. Panel account lặp nhiều
+
+Mục tiêu:
+
+- giảm copy-paste ở các màn account/faq
+- không thay đổi visual lớn của layout hiện có
+- chỉ đưa vào global pattern đã lặp đủ nhiều
+
+Đã chuẩn hóa:
+
+- `account-panel-soft`
+  - dùng cho panel nền trắng, radius vừa, shadow mềm
+  - áp dụng cho:
+    - account profile
+    - account addresses
+    - account reviews
+    - account appointments
+    - account FAQ
+
+- `account-panel-heading`
+  - dùng cho heading chính trong các panel account soft
+  - gom size heading `19px -> 26px` về một rule semantic
+
+Chưa đưa vào global:
+
+- panel đơn hàng có radius/shadow khác rõ ràng
+- modal shell
+- product detail panel
+- review modal
+- appointment modal
+
+Lý do chưa đưa vào global:
+
+- các block này đang có khác biệt thị giác có chủ đích
+- nếu ép gộp sớm dễ làm vỡ bố cục hoặc flatten visual hierarchy
+- cần audit thêm trước khi hợp nhất thành primitive chung
+
+Nguyên tắc áp dụng tiếp theo:
+
+- chỉ global hóa khi một pattern lặp ít nhất ở 3-4 nơi và có cùng:
+  - radius
+  - padding
+  - shadow
+  - heading rhythm
+
+- nếu chỉ giống 70-80% nhưng khác role thị giác:
+  - giữ local
+  - hoặc tạo variant riêng sau khi audit đủ

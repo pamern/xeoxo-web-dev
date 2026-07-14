@@ -147,22 +147,22 @@ function AddressCard({
         <div className="flex flex-col gap-2.5 border-b border-black/10 pb-3.5 md:flex-row md:items-start md:justify-between">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-              <h3 className="text-xl font-extrabold leading-none text-foreground">
+              <h3 className="text-lg font-extrabold leading-none text-foreground md:text-[1.375rem]">
                 {address.recipient_name}
               </h3>
               <span className="hidden text-[1.75rem] font-light leading-none text-foreground/35 md:inline">
                 |
               </span>
-              <p className="text-sm font-medium text-foreground/58 md:text-base">
+              <p className="text-[13px] font-normal text-foreground/62 md:text-sm">
                 {address.recipient_phone}
               </p>
             </div>
-            <p className="text-sm font-medium leading-relaxed text-foreground/82 md:text-base">
+            <p className="text-[13px] font-normal leading-relaxed text-foreground/78 md:text-sm">
               {formatAddress(address)}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 self-start text-xs font-semibold md:text-sm">
+          <div className="flex items-center gap-2 self-start text-[13px] font-medium md:text-sm">
             <button
               type="button"
               onClick={() => onEdit(address)}
@@ -184,11 +184,11 @@ function AddressCard({
 
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           {isDefault ? (
-            <span className="inline-flex min-h-9 items-center justify-center rounded-[8px] border border-[#f0644a] px-4 text-sm font-semibold text-[#f0644a]">
+            <span className="inline-flex min-h-9 items-center justify-center rounded-[8px] border border-[#f0644a] px-4 text-[13px] font-medium text-[#f0644a] md:text-sm">
               Mặc định
             </span>
           ) : (
-            <span className="inline-flex min-h-9 items-center justify-center rounded-[8px] border border-transparent px-4 text-sm font-semibold text-transparent">
+            <span className="inline-flex min-h-9 items-center justify-center rounded-[8px] border border-transparent px-4 text-[13px] font-medium text-transparent md:text-sm">
               Mặc định
             </span>
           )}
@@ -199,7 +199,7 @@ function AddressCard({
               onClick={() => onSetDefault(address)}
               disabled={isBusy}
               className={cn(
-                "inline-flex min-h-9 min-w-[176px] items-center justify-center rounded-[8px] border px-5 text-sm font-medium transition-colors",
+                "inline-flex min-h-9 min-w-[176px] items-center justify-center rounded-[8px] border px-5 text-[13px] font-medium transition-colors md:text-sm",
                 "border-black/55 bg-white text-foreground hover:bg-black hover:text-white",
                 "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-foreground",
               )}
