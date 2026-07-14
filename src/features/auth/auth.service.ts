@@ -31,6 +31,51 @@ export function isAuthUserMissing(error: unknown) {
   );
 }
 
+export function isTransientAuthNetworkError(error: unknown) {
+  if (error instanceof Error) {
+    const normalizedMessage = error.message.toLowerCase();
+
+    if (
+      normalizedMessage.includes("fetch failed") ||
+      normalizedMessage.includes("failed to fetch") ||
+      normalizedMessage.includes("network") ||
+      normalizedMessage.includes("econnreset") ||
+      normalizedMessage.includes("tls")
+    ) {
+      return true;
+    }
+
+    const cause = (error as Error & { cause?: unknown }).cause;
+
+    if (
+      typeof cause === "object" &&
+      cause !== null &&
+      "code" in cause &&
+      typeof cause.code === "string"
+    ) {
+      return ["ECONNRESET", "ETIMEDOUT", "ENOTFOUND", "UND_ERR_CONNECT_TIMEOUT"].includes(
+        cause.code,
+      );
+    }
+  }
+
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "message" in error &&
+    typeof error.message === "string"
+  ) {
+    const normalizedMessage = error.message.toLowerCase();
+    return (
+      normalizedMessage.includes("fetch failed") ||
+      normalizedMessage.includes("failed to fetch") ||
+      normalizedMessage.includes("network")
+    );
+  }
+
+  return false;
+}
+
 export async function getAuthenticatedUser(supabase: SupabaseClient) {
   const { data, error } = await supabase.auth.getUser();
 

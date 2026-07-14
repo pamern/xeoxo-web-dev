@@ -50,7 +50,7 @@ export function ProductListingPage({
         />
       </section>
       <section className="listing-shell pb-12 pt-0">
-        <h1 className="text-5xl font-bold uppercase leading-tight text-black">
+        <h1 className="mb-5 text-5xl font-bold uppercase leading-tight text-black md:mb-6 lg:mb-8">
           {title}
         </h1>
 

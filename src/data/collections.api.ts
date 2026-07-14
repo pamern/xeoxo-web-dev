@@ -157,6 +157,15 @@ export function mapApiCollectionToCollection(
   };
 }
 
+export function getCollectionHeroVideo(collectionSlug: string) {
+  const normalizedSlug = toStorageSlug(collectionSlug);
+  return normalizedSlug
+    ? getStoragePublicUrl(
+        `collections/${normalizedSlug}/video.mp4`,
+      )
+    : "";
+}
+
 function formatCollectionDate(value: string | null) {
   if (!value) return undefined;
   const date = new Date(value);

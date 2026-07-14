@@ -1,6 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
-import { isAuthSessionMissing, isAuthUserMissing, isRefreshTokenNotFound } from "@/features/auth/auth.service";
+import {
+  isAuthSessionMissing,
+  isAuthUserMissing,
+  isRefreshTokenNotFound,
+  isTransientAuthNetworkError,
+} from "@/features/auth/auth.service";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -57,6 +62,11 @@ export async function updateSession(request: NextRequest) {
       isAuthUserMissing(error) ||
       isRefreshTokenNotFound(error)
     ) {
+      return response;
+    }
+
+    if (isTransientAuthNetworkError(error)) {
+      console.warn("[supabase-middleware] transient auth network error", error);
       return response;
     }
 

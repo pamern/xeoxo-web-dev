@@ -310,9 +310,9 @@ export function ProductListingResults({
         defaultOpenGroupLabels={defaultOpenFilterLabels}
         className="lg:sticky lg:top-[calc(var(--site-header-height,0px)+16px)] lg:max-h-[calc(100vh-var(--site-header-height,0px)-24px)] lg:overflow-y-auto lg:pr-1"
       />
-      <div className="lg:-mt-6">
+      <div className="pt-1 lg:pt-0">
         {/* Active tags & Sort dropdown top bar */}
-        <div className="mb-2 flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mb-3 flex flex-col gap-2 pb-2 sm:flex-row sm:items-center sm:justify-between lg:mb-4">
           <div className="flex flex-wrap items-center gap-2">
             {Object.entries(selected).flatMap(([groupLabel, options]) =>
               options.map((option) => (

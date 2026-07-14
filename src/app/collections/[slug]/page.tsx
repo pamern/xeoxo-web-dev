@@ -3,6 +3,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { LazyRender } from "@/components/atoms/LazyRender";
 import { Breadcrumbs } from "@/components/molecules/Breadcrumbs";
+import { CollectionHeroMedia } from "@/components/organisms/CollectionHeroMedia/CollectionHeroMedia";
 import { CollectionProducts } from "@/components/organisms/CollectionProducts";
 import { StarsBanner } from "@/components/organisms/StarsBanner";
 import { ValueProposition } from "@/components/organisms/ValueProposition";
@@ -12,6 +13,7 @@ import { VALUE_PROPS } from "@/data/catalog";
 import {
   buildCollectionDetailImages,
   fetchCollectionBySlugFromApi,
+  getCollectionHeroVideo,
   mapApiCollectionToCollection,
   mapApiProductLinesToProducts,
   type ApiProductLine,
@@ -111,16 +113,14 @@ function CollectionHero({
   const subtitle = hero?.subtitle;
   const title = hero?.title ?? collection.name;
   const description = hero?.description ?? collection.description;
+  const heroVideo = getCollectionHeroVideo(collection.slug);
 
   return (
     <section className="relative isolate flex aspect-[1920/787] min-h-[320px] w-full items-center justify-center overflow-hidden bg-black text-white sm:min-h-[400px] lg:min-h-[520px]">
-      <Image
-        src={collection.coverImage}
-        alt={collection.name}
-        fill
-        priority
-        sizes="(max-width: 1024px) 100vw, 1728px"
-        className="object-cover object-top"
+      <CollectionHeroMedia
+        imageSrc={collection.coverImage}
+        imageAlt={collection.name}
+        videoSrc={heroVideo}
       />
       <div className="absolute inset-0 bg-black/10" />
 
