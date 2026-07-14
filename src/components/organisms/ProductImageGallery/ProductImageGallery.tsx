@@ -50,7 +50,7 @@ export function ProductImageGallery({
   return (
     <div className="grid gap-3 lg:grid-cols-[65px_minmax(0,650px)]">
       <div
-        className="no-scrollbar order-2 flex gap-3 overflow-x-auto pb-1 lg:order-1 lg:self-start lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0"
+        className="no-scrollbar order-2 flex gap-2.5 overflow-x-auto pb-1 sm:gap-3 lg:order-1 lg:self-start lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0"
         style={galleryHeight ? { maxHeight: `${galleryHeight}px` } : undefined}
       >
         {images.map((image, index) => (
@@ -60,18 +60,18 @@ export function ProductImageGallery({
             onClick={() => setActiveImage(index)}
             aria-label={`Anh san pham ${index + 1}`}
             className={cn(
-              "relative h-[98px] w-[65px] shrink-0 overflow-hidden border bg-secondary transition-colors",
+              "relative h-[88px] w-[60px] shrink-0 overflow-hidden border bg-secondary transition-colors sm:h-[98px] sm:w-[65px]",
               index === activeImage ? "border-primary" : "border-transparent hover:border-primary/60"
             )}
           >
-            <Image src={image} alt="" fill sizes="65px" className="object-cover" />
+            <Image src={image} alt="" fill sizes="(max-width: 640px) 60px, 65px" className="object-cover" />
           </button>
         ))}
       </div>
 
       <div
         ref={mainImageRef}
-        className="relative order-1 aspect-[2/3] w-full overflow-hidden bg-secondary lg:order-2 lg:max-w-[650px]"
+        className="relative order-1 mx-auto aspect-[5/7] w-full max-w-[360px] overflow-hidden bg-secondary sm:max-w-[430px] sm:aspect-[2/3] md:max-w-[520px] lg:order-2 lg:max-w-[650px]"
       >
         {current && (
           <Image
@@ -79,7 +79,7 @@ export function ProductImageGallery({
             alt={alt}
             fill
             priority
-            sizes="(max-width: 1024px) 100vw, 600px"
+            sizes="(max-width: 640px) 360px, (max-width: 768px) 430px, (max-width: 1024px) 520px, 600px"
             className="object-cover"
           />
         )}
@@ -91,7 +91,7 @@ export function ProductImageGallery({
           iconSize={16}
           iconClassName="rotate-180"
           variant="circleLight"
-          className="absolute bottom-[30px] right-[90px]"
+          className="absolute bottom-4 right-16 sm:bottom-[30px] sm:right-[90px]"
         />
         <IconButton
           type="button"
@@ -100,7 +100,7 @@ export function ProductImageGallery({
           iconSrc="/icons/arrow-right.svg"
           iconSize={16}
           variant="circleLight"
-          className="absolute bottom-[30px] right-[30px]"
+          className="absolute bottom-4 right-4 sm:bottom-[30px] sm:right-[30px]"
         />
       </div>
     </div>

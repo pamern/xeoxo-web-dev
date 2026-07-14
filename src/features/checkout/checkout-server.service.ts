@@ -11,8 +11,6 @@ import {
   findActiveCart,
   getCartOwner,
   getCurrentCustomerId,
-  getVariantById,
-  getVariantStock,
   isVariantPurchasableStatus,
 } from "@/features/cart/cart-server.service";
 import { assertCustomizationCheckoutReady } from "@/features/customization/customization-server.service";
@@ -33,6 +31,17 @@ type RewardRecord = {
   reward_id: number;
   reward_type: string;
   reward_value: number | string | null;
+};
+
+type VariantCheckoutRecord = {
+  variant_id: number;
+  price: number;
+  status: string;
+};
+
+type VariantStockRecord = {
+  variant_id: number;
+  total_quantity: number | null;
 };
 
 type CreatedOrderRecord = {
@@ -97,6 +106,62 @@ function buildPreview(
   } satisfies PreparedCheckout;
 }
 
+async function getVariantCheckoutSnapshot(variantIds: number[]) {
+  const normalizedVariantIds = Array.from(
+    new Set(
+      variantIds.filter((id) => Number.isInteger(id) && id > 0),
+    ),
+  );
+
+  if (!normalizedVariantIds.length) {
+    return new Map<
+      number,
+      { price: number; status: string | null; stockQuantity: number }
+    >();
+  }
+
+  const admin = createAdminClient();
+  const [{ data: variants, error: variantError }, { data: stocks, error: stockError }] =
+    await Promise.all([
+      admin
+        .schema("catalog")
+        .from("product_variant")
+        .select("variant_id, price, status")
+        .in("variant_id", normalizedVariantIds),
+      admin
+        .schema("catalog")
+        .from("v_inventory_availability")
+        .select("variant_id, total_quantity")
+        .in("variant_id", normalizedVariantIds),
+    ]);
+
+  if (variantError) {
+    throw new Error(variantError.message);
+  }
+
+  if (stockError) {
+    throw new Error(`Khong the kiem tra ton kho: ${stockError.message}`);
+  }
+
+  const stockMap = new Map(
+    ((stocks ?? []) as VariantStockRecord[]).map((item) => [
+      Number(item.variant_id),
+      Math.max(0, Number(item.total_quantity ?? 0)),
+    ]),
+  );
+
+  return new Map(
+    ((variants ?? []) as VariantCheckoutRecord[]).map((variant) => [
+      Number(variant.variant_id),
+      {
+        price: toNumber(variant.price),
+        status: variant.status ?? null,
+        stockQuantity: stockMap.get(Number(variant.variant_id)) ?? 0,
+      },
+    ]),
+  );
+}
+
 export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknown) {
   const selectedIds = normalizeIds(cartItemIds);
   if (!selectedIds.length) {
@@ -118,6 +183,12 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
   if (selectedItems.length !== selectedIds.length) {
     throw new Error("Mot so san pham khong con trong gio hang.");
   }
+
+  const standardVariantSnapshot = await getVariantCheckoutSnapshot(
+    selectedItems
+      .filter((item) => item.item_type === "STANDARD")
+      .map((item) => item.variant_id ?? 0),
+  );
 
   const validatedItems = await Promise.all(
     selectedItems.map(async (item) => {
@@ -141,20 +212,17 @@ export async function prepareCheckout(cartItemIds: unknown, voucherCode?: unknow
       }
 
       const variantId = item.variant_id ?? 0;
-      const [variant, stockQuantity] = await Promise.all([
-        getVariantById(variantId),
-        getVariantStock(variantId),
-      ]);
+      const variant = standardVariantSnapshot.get(variantId);
 
       if (!variant || !isVariantPurchasableStatus(variant.status)) {
         throw new Error(`${item.name} khong con kha dung.`);
       }
 
-      if (item.quantity > stockQuantity) {
+      if (item.quantity > variant.stockQuantity) {
         throw new Error(`${item.name} không đủ số lượng trong kho.`);
       }
 
-      const currentUnitPrice = toNumber(variant.price);
+      const currentUnitPrice = variant.price;
       return {
         ...item,
         unit_price: currentUnitPrice,
@@ -527,13 +595,16 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
 
   const admin = createAdminClient();
   const currentCustomerId = await getCurrentCustomerId();
-  const prepared = await prepareCheckout(values.cart_item_ids, values.voucher_code);
-  const paymentMethod = await getActivePaymentMethod(values.payment_method_id);
-  const { customerId, addressId } = await resolveCheckoutAddress(
-    currentCustomerId,
-    values.address_id,
-    values.shipping_address,
-  );
+  const [prepared, paymentMethod, checkoutAddress] = await Promise.all([
+    prepareCheckout(values.cart_item_ids, values.voucher_code),
+    getActivePaymentMethod(values.payment_method_id),
+    resolveCheckoutAddress(
+      currentCustomerId,
+      values.address_id,
+      values.shipping_address,
+    ),
+  ]);
+  const { customerId, addressId } = checkoutAddress;
 
   if (!prepared.cart.cart_id) {
     throw new Error("Gio hang khong ton tai.");

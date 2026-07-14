@@ -29,6 +29,7 @@ export const customerService = {
       },
       body: JSON.stringify({
         customer_name: values.customer_name,
+        email: values.email,
         phone: values.phone,
         gender: values.gender,
         birthday: values.birthday,

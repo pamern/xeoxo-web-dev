@@ -15,16 +15,16 @@ export function QuantityStepper({
         type="button"
         aria-label="Giam so luong"
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="h-full w-[28px] text-base font-medium text-black flex items-center justify-center hover:bg-black/5 rounded-l-pill transition"
+        className="h-full w-[28px] text-base font-normal text-black flex items-center justify-center hover:bg-black/5 rounded-l-pill transition"
       >
         -
       </button>
-      <span className="w-[24px] text-center text-body-sm font-medium text-black flex items-center justify-center h-full">{value}</span>
+      <span className="flex h-full w-[24px] items-center justify-center text-center text-body-sm font-normal text-black">{value}</span>
       <button
         type="button"
         aria-label="Tang so luong"
         onClick={() => onChange(value + 1)}
-        className="h-full w-[28px] text-base font-medium text-black flex items-center justify-center hover:bg-black/5 rounded-r-pill transition"
+        className="h-full w-[28px] text-base font-normal text-black flex items-center justify-center hover:bg-black/5 rounded-r-pill transition"
       >
         +
       </button>

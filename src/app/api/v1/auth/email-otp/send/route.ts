@@ -1,4 +1,5 @@
 import { fail, ok } from "@/lib/api-response";
+import { getAuthErrorMessage } from "@/lib/auth-error-message";
 import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { createClient } from "@/lib/supabase/server";
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     if (error) {
       console.error("[auth/email-otp/send/POST]", error);
       return fail(
-        error.message || "Không thể gửi OTP email.",
+        getAuthErrorMessage(error, "Không thể gửi OTP email."),
         400,
         error,
       );

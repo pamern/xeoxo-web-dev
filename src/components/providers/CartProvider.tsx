@@ -84,14 +84,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
   }, [refetch]);
 
-  const mutate = useCallback(
-    async (action: () => Promise<unknown>) => {
+  const runMutation = useCallback(
+    async <T,>(action: () => Promise<T>, onSuccess?: (result: T) => void) => {
       setIsMutating(true);
       setErrorMessage(undefined);
 
       try {
-        await action();
-        await refetch();
+        const result = await action();
+        onSuccess?.(result);
         return { ok: true };
       } catch (error) {
         setErrorMessage(
@@ -102,7 +102,51 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         setIsMutating(false);
       }
     },
-    [refetch],
+    [],
+  );
+
+  const addItem = useCallback(
+    async (values: AddCartItemValues) =>
+      runMutation(() => cartService.addItem(values), (nextCart) => {
+        setCart(nextCart);
+      }),
+    [runMutation],
+  );
+
+  const updateItem = useCallback(
+    async (cartItemId: number, values: UpdateCartItemValues) =>
+      runMutation(() => cartService.updateItem(cartItemId, values), (nextCart) => {
+        setCart(nextCart);
+      }),
+    [runMutation],
+  );
+
+  const removeItem = useCallback(
+    async (cartItemId: number) =>
+      runMutation(() => cartService.removeItem(cartItemId), () => {
+        setCart((currentCart) => {
+          const nextItems = currentCart.items.filter(
+            (item) => item.cart_item_id !== cartItemId,
+          );
+
+          return {
+            ...currentCart,
+            cart_id: nextItems.length ? currentCart.cart_id : null,
+            items: nextItems,
+            subtotal: nextItems.reduce((sum, item) => sum + item.line_total, 0),
+            total_quantity: nextItems.reduce((sum, item) => sum + item.quantity, 0),
+          };
+        });
+      }),
+    [runMutation],
+  );
+
+  const clearCart = useCallback(
+    async () =>
+      runMutation(() => cartService.clearCart(), () => {
+        setCart(EMPTY_CART);
+      }),
+    [runMutation],
   );
 
   const value = useMemo<CartContextValue>(
@@ -112,13 +156,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       isMutating,
       errorMessage,
       refetch,
-      addItem: (values) => mutate(() => cartService.addItem(values)),
-      updateItem: (cartItemId, values) =>
-        mutate(() => cartService.updateItem(cartItemId, values)),
-      removeItem: (cartItemId) => mutate(() => cartService.removeItem(cartItemId)),
-      clearCart: () => mutate(() => cartService.clearCart()),
+      addItem,
+      updateItem,
+      removeItem,
+      clearCart,
     }),
-    [cart, isLoading, isMutating, errorMessage, refetch, mutate],
+    [cart, isLoading, isMutating, errorMessage, refetch, addItem, updateItem, removeItem, clearCart],
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

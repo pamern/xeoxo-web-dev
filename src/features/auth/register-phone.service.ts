@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getPhoneAuthAliasEmail } from "@/lib/auth-phone-alias";
 
 type RegisterPhoneInput = {
   fullName: string;
@@ -13,12 +14,13 @@ export async function registerPhoneWithoutSms({
 }: RegisterPhoneInput) {
   const admin = createAdminClient();
   const { data, error } = await admin.auth.admin.createUser({
-    phone,
+    email: getPhoneAuthAliasEmail(phone),
     password,
-    phone_confirm: true,
+    email_confirm: true,
     user_metadata: {
       full_name: fullName,
       phone,
+      auth_identifier_type: "phone",
     },
   });
 

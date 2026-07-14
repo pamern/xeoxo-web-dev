@@ -84,7 +84,7 @@ function AuthExperienceInner({
     confirmPassword: string;
   }) {
     const result = await auth.register(values, nextPath);
-    if (result.ok && !result.requiresEmailConfirmation) {
+    if (result.ok) {
       handleSuccess?.();
     }
   }

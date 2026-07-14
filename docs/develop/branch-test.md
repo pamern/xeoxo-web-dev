@@ -187,24 +187,29 @@ Các thay đổi dưới đây đã được thực hiện trong code của nhá
 #### Files chính
 
 - `src/app/api/v1/auth/signup/route.ts`
+- `src/app/api/v1/auth/signin/route.ts`
 - `src/features/auth/register-phone.service.ts`
+- `src/lib/auth-phone-alias.ts`
 - `src/services/auth.service.ts`
 - `src/hooks/useAuth.ts`
+- `src/features/auth/auth.service.ts`
+- `src/features/auth/profile-sync.service.ts`
 - `docs/api/api_list.md`
 - `docs/report/test_case_auth.md`
 
 #### Thay đổi
 
 - thêm API `POST /api/v1/auth/signup` làm đầu mối đăng ký cho app
-- đăng ký bằng số điện thoại được xử lý qua server-side admin client
-- user phone mới được tạo với trạng thái `phone_confirm = true`
+- thêm API `POST /api/v1/auth/signin` làm đầu mối đăng nhập email/SĐT cho app
+- đăng ký bằng số điện thoại được xử lý qua server-side admin client bằng email alias nội bộ
+- đăng nhập bằng số điện thoại được resolve sang email alias trên server
 - sau khi đăng ký thành công, app sẽ thử đăng nhập ngay bằng mật khẩu cho cả email và số điện thoại
-- không còn điều hướng người dùng sang bước xác minh SMS trước khi đăng nhập
+- không còn phụ thuộc xác minh SMS hoặc phone auth provider của Supabase cho flow số điện thoại
 - chỉ fallback về notice thử đăng nhập lại nếu bước login sau đăng ký vẫn không tạo được session
 
 #### Lưu ý khi rebase
 
-- không khôi phục `supabase.auth.signUp()` trực tiếp cho phone với `channel: "sms"`
+- không khôi phục `supabase.auth.signUp()` hoặc `signInWithPassword({ phone })` trực tiếp cho flow phone
 - không khôi phục nhánh logic chỉ auto-login cho `email`
 
 ---

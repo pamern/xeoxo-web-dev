@@ -43,7 +43,7 @@ export function CollectionStoryCard({
             fill
             sizes="(max-width: 1024px) 100vw, 864px"
             className={cn(
-              "object-cover transition-transform duration-500 group-hover:scale-[1.02] lg:!top-[25px] lg:!h-[396px] lg:!w-[calc(100%-110px)]",
+              "object-cover object-top transition-transform duration-500 group-hover:scale-[1.02] lg:!top-[25px] lg:!h-[396px] lg:!w-[calc(100%-110px)]",
               imageFirst ? "lg:!left-[100px]" : "lg:!left-[10px]"
             )}
           />

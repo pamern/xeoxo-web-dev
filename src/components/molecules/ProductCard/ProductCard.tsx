@@ -109,8 +109,10 @@ export function ProductCard({
             sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
             quality={60}
             className={cn(
-              "object-cover transition duration-500",
-              quickAddOnHover ? "lg:group-hover:scale-110" : "lg:group-hover:scale-105",
+              "object-cover transition-transform duration-[1400ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
+              quickAddOnHover
+                ? "lg:group-hover:scale-[1.04]"
+                : "lg:group-hover:scale-[1.04]",
             )}
           />
           {quickAddOnHover && hoverImage !== product.images[0] && (
@@ -121,7 +123,7 @@ export function ProductCard({
               sizes="(max-width: 640px) 150px, (max-width: 1024px) 200px, 260px"
               quality={60}
               aria-hidden
-              className="object-cover opacity-0 transition duration-500 lg:group-hover:scale-110 lg:group-hover:opacity-100"
+              className="object-cover opacity-0 transition-all duration-[1600ms] ease-[cubic-bezier(0.22,1,0.36,1)] lg:scale-[1.12] lg:group-hover:scale-[1.04] lg:group-hover:opacity-100"
             />
           )}
         </Link>

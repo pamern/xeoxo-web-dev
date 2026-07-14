@@ -34,7 +34,7 @@ function VariantSelect({
         aria-label={ariaLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[28px] w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-6 text-xs font-semibold text-black outline-none transition focus:ring-2 focus:ring-black/15 text-center [text-align-last:center]"
+        className="h-[28px] w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-6 text-xs font-normal text-black outline-none transition focus:ring-2 focus:ring-black/15 text-center [text-align-last:center]"
       >
         {list.map((option) => (
           <option

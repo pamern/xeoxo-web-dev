@@ -120,7 +120,7 @@ function CollectionHero({
         fill
         priority
         sizes="(max-width: 1024px) 100vw, 1728px"
-        className="object-cover"
+        className="object-cover object-top"
       />
       <div className="absolute inset-0 bg-black/10" />
 
@@ -194,16 +194,16 @@ function ImageStoryGrid({
     <section className="mx-auto flex w-full max-w-site flex-col gap-[50px] px-6 pb-[50px] xl:px-[100px]">
       <div className="grid gap-[50px] xl:grid-cols-2">
         <div className="relative h-[450px] overflow-hidden">
-          <Image src={displayImages[0]} alt="" fill sizes="754px" className="object-cover" />
+          <Image src={displayImages[0]} alt="" fill sizes="754px" className="object-cover object-top" />
         </div>
 
         <div className="flex flex-col gap-[30px]">
           <div className="grid gap-[10px] md:grid-cols-2">
             <div className="relative h-[225px] overflow-hidden">
-              <Image src={displayImages[1]} alt="" fill sizes="377px" className="object-cover" />
+              <Image src={displayImages[1]} alt="" fill sizes="377px" className="object-cover object-top" />
             </div>
             <div className="relative h-[225px] overflow-hidden">
-              <Image src={displayImages[2]} alt="" fill sizes="377px" className="object-cover" />
+              <Image src={displayImages[2]} alt="" fill sizes="377px" className="object-cover object-top" />
             </div>
           </div>
 
@@ -218,10 +218,10 @@ function ImageStoryGrid({
           <div className="flex flex-col gap-[30px]">
             <div className="grid gap-[10px] md:grid-cols-2">
               <div className="relative h-[450px] overflow-hidden">
-                <Image src={displayImages[3]} alt="" fill sizes="377px" className="object-cover" />
+                <Image src={displayImages[3]} alt="" fill sizes="377px" className="object-cover object-top" />
               </div>
               <div className="relative h-[450px] overflow-hidden">
-                <Image src={displayImages[4]} alt="" fill sizes="377px" className="object-cover" />
+                <Image src={displayImages[4]} alt="" fill sizes="377px" className="object-cover object-top" />
               </div>
             </div>
 
@@ -239,7 +239,7 @@ function ImageStoryGrid({
           </div>
 
           <div className="relative h-[720px] overflow-hidden xl:h-[904px]">
-            <Image src={displayImages[5]} alt="" fill sizes="754px" className="object-cover" />
+            <Image src={displayImages[5]} alt="" fill sizes="754px" className="object-cover object-top" />
           </div>
         </div>
       </LazyRender>
@@ -247,10 +247,10 @@ function ImageStoryGrid({
       <LazyRender fallback={<StoryGridSkeleton variant="closing" />}>
         <div className="grid gap-[50px] xl:grid-cols-2">
           <div className="relative h-[904px] overflow-hidden">
-            <Image src={displayImages[6]} alt="" fill sizes="759px" className="object-cover" />
+            <Image src={displayImages[6]} alt="" fill sizes="759px" className="object-cover object-top" />
           </div>
           <div className="relative h-[902px] overflow-hidden">
-            <Image src={displayImages[7]} alt="" fill sizes="757px" className="object-cover" />
+            <Image src={displayImages[7]} alt="" fill sizes="757px" className="object-cover object-top" />
           </div>
         </div>
       </LazyRender>

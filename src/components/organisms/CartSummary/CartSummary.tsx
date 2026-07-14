@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import { Button } from "@/components/atoms/Button";
 import { CartItem } from "@/components/molecules/CartItem";
 import { AuthModal } from "@/components/organisms/AuthModal";
@@ -10,7 +16,6 @@ import { useCart } from "@/hooks/useCart";
 import { useCheckout } from "@/hooks/useCheckout";
 import { useSharedMeasurements } from "@/hooks/useSharedMeasurements";
 import { useAuth } from "@/hooks/useAuth";
-import { ROUTES } from "@/constants/routes";
 import { formatPrice } from "@/lib/utils";
 import { createCustomizationRequest } from "@/services/customization.service";
 import {
@@ -20,18 +25,6 @@ import {
 } from "@/features/size-recommendation/size-recommendation";
 import type { CartItemDto } from "@/types/cart.types";
 import type { AvailableLoyaltyReward } from "@/types/loyalty.types";
-
-function fallbackPaymentOptions() {
-  return [
-    {
-      method_id: 1,
-      method_name: "Chuyển khoản ngân hàng",
-      method_code: "BANK_TRANSFER",
-      provider: "BANK_TRANSFER",
-      is_online: true,
-    },
-  ];
-}
 
 function getRewardBenefit(
   reward: AvailableLoyaltyReward,
@@ -201,7 +194,7 @@ function parseMeasurementValues(values: MeasurementValues) {
   return parsed;
 }
 
-export function CartSummary() {
+function useCartSummaryState() {
   const { cart, isLoading, isMutating, updateItem, removeItem, clearCart } =
     useCart();
   const { isAuthenticated } = useAuth();
@@ -210,7 +203,7 @@ export function CartSummary() {
     isMember,
     isLoading: isLoadingRewards,
   } = useAvailableLoyaltyRewards();
-  const { preview, previewCheckout, resetPreview, errorMessage } =
+  const { preview, previewCheckout, resetPreview, errorMessage, isSubmitting } =
     useCheckout();
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [authModalMode, setAuthModalMode] = useState<"login" | "register" | null>(null);
@@ -226,10 +219,7 @@ export function CartSummary() {
     updateValues: updateSharedMeasurementValues,
   } = useSharedMeasurements(customizingItem?.gender ?? "nu");
 
-  const cartItemIds = useMemo(
-    () => cart.items.map((item) => item.cart_item_id),
-    [cart.items],
-  );
+  const cartItemIds = cart.items.map((item) => item.cart_item_id);
   const allSelected =
     cartItemIds.length > 0 &&
     cartItemIds.every((id) => selectedIds.includes(id));
@@ -252,16 +242,15 @@ export function CartSummary() {
     (reward) =>
       reward.voucher_code?.toUpperCase() === appliedVoucher.toUpperCase(),
   );
-  const bestReward = useMemo(() => {
-    return rewards
-      .filter((reward) => reward.voucher_code)
-      .map((reward) => ({
-        reward,
-        benefit: getRewardBenefit(reward, selectedSubtotal, baseShippingFee),
-      }))
-      .filter((item) => item.benefit > 0)
-      .sort((a, b) => b.benefit - a.benefit)[0]?.reward;
-  }, [baseShippingFee, rewards, selectedSubtotal]);
+
+  const bestReward = rewards
+    .filter((reward) => reward.voucher_code)
+    .map((reward) => ({
+      reward,
+      benefit: getRewardBenefit(reward, selectedSubtotal, baseShippingFee),
+    }))
+    .filter((item) => item.benefit > 0)
+    .sort((a, b) => b.benefit - a.benefit)[0]?.reward;
 
   useEffect(() => {
     if (cartItemIds.length === 0) {
@@ -274,7 +263,7 @@ export function CartSummary() {
     }
 
     setSelectedIds(cartItemIds);
-  }, [cartItemIds, resetPreview]);
+  }, [cartItemIds.join(","), resetPreview]);
 
   useEffect(() => {
     if (selectedIds.length) {
@@ -349,26 +338,104 @@ export function CartSummary() {
     }
   }
 
+  const shouldShowInitialLoading = isLoading && cart.items.length === 0;
+
+  return {
+    acceptedTerms,
+    allSelected,
+    appliedVoucher,
+    applyVoucher,
+    authModalMode,
+    baseShippingFee,
+    cart,
+    clearCart,
+    clearVoucher,
+    customizingItem,
+    discount,
+    errorMessage,
+    isAuthenticated,
+    isLoadingRewards,
+    isMember,
+    isMutating,
+    isSubmitting,
+    isVoucherModalOpen,
+    previewSubtotal: selectedSubtotal,
+    removeItem,
+    rewards,
+    searchValue: voucherSearch,
+    selectedIds,
+    selectedReward,
+    setAcceptedTerms,
+    setAuthModalMode,
+    setCustomizingItem,
+    setIsVoucherModalOpen,
+    setVoucherSearch,
+    shippingFee,
+    shouldShowInitialLoading,
+    sharedMeasurementValues,
+    submitCartCustomize,
+    subtotal,
+    toggleAll,
+    toggleLine,
+    total,
+    updateItem,
+    updateSharedMeasurementValues,
+  };
+}
+
+const CartSummaryContext = createContext<ReturnType<
+  typeof useCartSummaryState
+> | null>(null);
+
+function useCartSummaryContext() {
+  const context = useContext(CartSummaryContext);
+
+  if (!context) {
+    throw new Error(
+      "Cart summary components must be used within CartSummaryProvider.",
+    );
+  }
+
+  return context;
+}
+
+export function CartSummaryProvider({ children }: { children: ReactNode }) {
+  const value = useCartSummaryState();
+
+  return (
+    <CartSummaryContext.Provider value={value}>
+      {children}
+    </CartSummaryContext.Provider>
+  );
+}
+
+export function CartItemsSection() {
+  const {
+    allSelected,
+    cart,
+    clearCart,
+    customizingItem,
+    isAuthenticated,
+    isMutating,
+    removeItem,
+    selectedIds,
+    setCustomizingItem,
+    shouldShowInitialLoading,
+    sharedMeasurementValues,
+    submitCartCustomize,
+    toggleAll,
+    toggleLine,
+    updateItem,
+    updateSharedMeasurementValues,
+  } = useCartSummaryContext();
+
   return (
     <aside className="w-full text-black">
-      <h2 className="text-lg font-bold text-black md:text-xl md:leading-tight">
+      <h2 className="text-[1.0625rem] font-bold text-black sm:text-lg md:text-xl md:leading-tight">
         Giỏ hàng
       </h2>
 
-      <input
-        form="checkout-form"
-        type="hidden"
-        name="cart_item_ids"
-        value={selectedIds.join(",")}
-      />
-      <input
-        form="checkout-form"
-        type="hidden"
-        name="voucher_code"
-        value={appliedVoucher}
-      />
-
-      <div className="mt-4 flex items-center justify-between gap-4">
+      <div className="mt-3 flex items-center justify-between gap-4 sm:mt-4">
         <label className="inline-flex cursor-pointer items-center gap-4">
           <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
             <input
@@ -404,7 +471,7 @@ export function CartSummary() {
         aria-hidden
       />
 
-      {isLoading ? (
+      {shouldShowInitialLoading ? (
         <div className="border-y border-black/50 py-12 text-center">
           <p className="text-base font-medium">Đang tải giỏ hàng...</p>
         </div>
@@ -435,17 +502,112 @@ export function CartSummary() {
         </div>
       )}
 
+      {customizingItem && (() => {
+        const itemSnapshot = customizingItem.customization_snapshot
+          ? (typeof customizingItem.customization_snapshot === "string"
+              ? (() => {
+                  try {
+                    return JSON.parse(customizingItem.customization_snapshot);
+                  } catch {
+                    return null;
+                  }
+                })()
+              : customizingItem.customization_snapshot)
+          : null;
+        const itemMeasurements = itemSnapshot?.measurements;
+
+        const savedValues =
+          readComponentMeasurementValues(
+            customizingItem.gender ?? "nu",
+            customizingItem.component_type ?? undefined,
+          ) ??
+          (hasMeasurementValues(
+            sharedMeasurementValues,
+            customizingItem.gender ?? "nu",
+            customizingItem.component_type ?? undefined,
+          )
+            ? mapSharedMeasurementValues(
+                sharedMeasurementValues,
+                customizingItem.gender ?? "nu",
+                customizingItem.component_type ?? undefined,
+              )
+            : null);
+
+        const initialValues =
+          itemMeasurements || savedValues || sharedMeasurementValues;
+
+        return (
+          <CustomizeModal
+            gender={customizingItem.gender ?? "nu"}
+            componentType={customizingItem.component_type ?? undefined}
+            basePrice={customizingItem.unit_price}
+            initialValues={initialValues}
+            canPersistMeasurements={isAuthenticated}
+            onValuesChange={updateSharedMeasurementValues}
+            onClose={() => setCustomizingItem(null)}
+            onSubmit={submitCartCustomize}
+          />
+        );
+      })()}
+    </aside>
+  );
+}
+
+export function PaymentSummarySection() {
+  const {
+    acceptedTerms,
+    appliedVoucher,
+    applyVoucher,
+    authModalMode,
+    baseShippingFee,
+    clearVoucher,
+    discount,
+    errorMessage,
+    isLoadingRewards,
+    isMember,
+    isMutating,
+    isSubmitting,
+    isVoucherModalOpen,
+    previewSubtotal,
+    rewards,
+    searchValue,
+    selectedIds,
+    selectedReward,
+    setAcceptedTerms,
+    setAuthModalMode,
+    setIsVoucherModalOpen,
+    setVoucherSearch,
+    shippingFee,
+    subtotal,
+    total,
+  } = useCartSummaryContext();
+
+  return (
+    <aside className="w-full text-black">
+      <input
+        form="checkout-form"
+        type="hidden"
+        name="cart_item_ids"
+        value={selectedIds.join(",")}
+      />
+      <input
+        form="checkout-form"
+        type="hidden"
+        name="voucher_code"
+        value={appliedVoucher}
+      />
+
       <div
-        className="mt-5 h-2.5 w-full bg-cover bg-center"
+        className="h-2.5 w-full bg-cover bg-center"
         style={{ backgroundImage: "url('/images/strip-cart-section.png')" }}
         aria-hidden
       />
 
-      <h3 className="mt-6 text-lg font-bold text-black md:text-xl">
+      <h3 className="mt-5 text-[1.0625rem] font-bold text-black sm:mt-6 sm:text-lg md:text-xl">
         Chi tiết thanh toán
       </h3>
 
-      <div className="mt-6">
+      <div className="mt-4 sm:mt-6">
         <div className="mb-3 flex items-center justify-between gap-3">
           <h4 className="text-base font-bold">Mã ưu đãi</h4>
           {appliedVoucher && (
@@ -507,8 +669,8 @@ export function CartSummary() {
           baseShippingFee={baseShippingFee}
           isLoading={isLoadingRewards}
           rewards={rewards}
-          searchValue={voucherSearch}
-          subtotal={selectedSubtotal}
+          searchValue={searchValue}
+          subtotal={previewSubtotal}
           onApply={applyVoucher}
           onClose={() => setIsVoucherModalOpen(false)}
           onSearchChange={(value) => setVoucherSearch(value.toUpperCase())}
@@ -558,7 +720,7 @@ export function CartSummary() {
       </label>
 
       {errorMessage && (
-        <p className="mt-4 text-sm font-semibold text-red-600">
+        <p className="mt-4 text-sm font-normal text-red-600">
           {errorMessage}
         </p>
       )}
@@ -568,7 +730,13 @@ export function CartSummary() {
         form="checkout-form"
         variant="primaryPill"
         size="pill"
-        disabled={!acceptedTerms || selectedIds.length === 0 || isMutating}
+        disabled={
+          !acceptedTerms ||
+          selectedIds.length === 0 ||
+          isMutating ||
+          isSubmitting
+        }
+        isLoading={isSubmitting}
         className="mt-5 h-[46px] w-full min-w-0 text-sm font-bold uppercase"
       >
         Thanh toán ngay
@@ -581,40 +749,18 @@ export function CartSummary() {
           onModeChange={(mode) => setAuthModalMode(mode)}
         />
       )}
-
-      {customizingItem && (() => {
-        const itemSnapshot = customizingItem.customization_snapshot
-          ? (typeof customizingItem.customization_snapshot === "string"
-              ? (() => { try { return JSON.parse(customizingItem.customization_snapshot); } catch { return null; } })()
-              : customizingItem.customization_snapshot)
-          : null;
-        const itemMeasurements = itemSnapshot?.measurements;
-
-        const savedValues =
-          readComponentMeasurementValues(
-            customizingItem.gender ?? "nu",
-            customizingItem.component_type ?? undefined
-          ) ??
-          (hasMeasurementValues(sharedMeasurementValues, customizingItem.gender ?? "nu", customizingItem.component_type ?? undefined)
-            ? mapSharedMeasurementValues(sharedMeasurementValues, customizingItem.gender ?? "nu", customizingItem.component_type ?? undefined)
-            : null);
-
-        const initialValues = itemMeasurements || savedValues || sharedMeasurementValues;
-
-        return (
-          <CustomizeModal
-            gender={customizingItem.gender ?? "nu"}
-            componentType={customizingItem.component_type ?? undefined}
-            basePrice={customizingItem.unit_price}
-            initialValues={initialValues}
-            canPersistMeasurements={isAuthenticated}
-            onValuesChange={updateSharedMeasurementValues}
-            onClose={() => setCustomizingItem(null)}
-            onSubmit={submitCartCustomize}
-          />
-        );
-      })()}
     </aside>
+  );
+}
+
+export function CartSummary() {
+  return (
+    <CartSummaryProvider>
+      <CartItemsSection />
+      <div className="mt-5 sm:mt-6">
+        <PaymentSummarySection />
+      </div>
+    </CartSummaryProvider>
   );
 }
 
@@ -691,7 +837,7 @@ function VoucherModal({
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Nhập hoặc tìm mã ưu đãi"
-              className="h-12 min-w-0 flex-1 rounded-pill border border-black bg-white px-5 text-sm font-semibold uppercase outline-none transition placeholder:normal-case placeholder:text-black/40 focus:ring-2 focus:ring-black/15"
+              className="h-12 min-w-0 flex-1 rounded-pill border border-black bg-white px-5 text-sm font-normal uppercase outline-none transition placeholder:normal-case placeholder:text-black/40 focus:ring-2 focus:ring-black/15"
             />
           </div>
         </div>

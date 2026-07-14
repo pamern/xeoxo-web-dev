@@ -6,9 +6,18 @@ import type {
   MeResponse,
   RegisterValues,
 } from "@/types/auth.types";
-import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { getAuthErrorMessage } from "@/lib/auth-error-message";
 import { createClient } from "@/lib/supabase/client";
+
+class AuthRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+  ) {
+    super(message);
+    this.name = "AuthRequestError";
+  }
+}
 
 function getErrorText(error: unknown) {
   if (error instanceof Error && error.message) {
@@ -57,11 +66,15 @@ function getApiErrorMessage(
   },
   fallback: string,
 ) {
-  if (typeof payload.error === "string" && payload.error.trim()) {
-    return payload.error;
+  if (payload.error) {
+    return getAuthErrorMessage(payload.error, payload.message ?? fallback);
   }
 
-  return payload.message ?? fallback;
+  if (typeof payload.message === "string" && payload.message.trim()) {
+    return payload.message;
+  }
+
+  return fallback;
 }
 
 function isUnauthorizedResponse(
@@ -96,36 +109,46 @@ function logAuthServiceError(
 }
 
 export function isInvalidCredentialsError(error: unknown) {
+  if (error instanceof AuthRequestError) {
+    return error.status === 401;
+  }
+
   const normalizedText = getErrorText(error).trim().toLowerCase();
 
   return (
     normalizedText.includes("invalid login credentials") ||
     normalizedText.includes("invalid credentials") ||
-    normalizedText.includes("invalid password")
+    normalizedText.includes("invalid password") ||
+    normalizedText.includes("email, số điện thoại hoặc mật khẩu không đúng")
   );
 }
 
 export const authService = {
   async login(values: LoginValues) {
-    const supabase = createClient();
-    const identifier = parseAuthIdentifier(values.account);
+    const response = await fetch("/api/v1/auth/signin", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
 
-    if (!identifier) {
-      throw new Error("Email hoặc số điện thoại không hợp lệ.");
+    const payload = (await response.json()) as {
+      success: boolean;
+      message?: string;
+      error?: unknown;
+      data?: { authenticated: boolean };
+    };
+
+    if (!response.ok || !payload.success || !payload.data?.authenticated) {
+      throw new AuthRequestError(
+        getApiErrorMessage(payload, "Đăng nhập thất bại."),
+        response.status,
+      );
     }
 
-    const credentials =
-      identifier.type === "email"
-        ? { email: identifier.value, password: values.password }
-        : { phone: identifier.value, password: values.password };
-
-    const { data, error } = await supabase.auth.signInWithPassword(credentials);
-
-    if (error) {
-      throw new Error(getAuthErrorMessage(error, "Đăng nhập thất bại."));
-    }
-
-    return data;
+    return payload.data;
   },
 
   async register(values: RegisterValues, nextPath?: string) {
@@ -149,7 +172,10 @@ export const authService = {
     };
 
     if (!response.ok || !payload.success || !payload.data) {
-      throw new Error(getApiErrorMessage(payload, "Đăng ký thất bại."));
+      throw new AuthRequestError(
+        getApiErrorMessage(payload, "Đăng ký thất bại."),
+        response.status,
+      );
     }
 
     return payload.data;
@@ -202,8 +228,9 @@ export const authService = {
 
     if (!response.ok || !payload.success || !payload.data) {
       logAuthServiceError("getMe", { response, payload });
-      throw new Error(
+      throw new AuthRequestError(
         getApiErrorMessage(payload, "Không thể tải thông tin người dùng."),
+        response.status,
       );
     }
 
@@ -237,8 +264,9 @@ export const authService = {
 
     if (!response.ok || !payload.success) {
       logAuthServiceError("syncProfile", { response, payload });
-      throw new Error(
+      throw new AuthRequestError(
         getApiErrorMessage(payload, "Không thể đồng bộ hồ sơ khách hàng."),
+        response.status,
       );
     }
 

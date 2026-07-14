@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isPhoneAuthAliasEmail } from "@/lib/auth-phone-alias";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export function isIamSchemaUnavailable(error: unknown) {
@@ -62,7 +63,7 @@ export function mapAuthUser(user: User | null) {
 
   return {
     id: user.id,
-    email: user.email ?? null,
+    email: isPhoneAuthAliasEmail(user.email) ? null : user.email ?? null,
     fullName,
   };
 }

@@ -1,4 +1,5 @@
 import { fail, ok } from "@/lib/api-response";
+import { getAuthErrorMessage } from "@/lib/auth-error-message";
 import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { setGuestOrderCancelOtpCookie } from "@/lib/guest-order-cancel-otp";
 import { createClient } from "@/lib/supabase/server";
@@ -45,7 +46,7 @@ export async function POST(request: Request) {
         if (error) {
           console.error("[auth/email-otp/verify/POST]", error);
           return fail(
-            error.message || "Không thể xác thực OTP email.",
+            getAuthErrorMessage(error, "Không thể xác thực OTP email."),
             400,
             error,
           );
@@ -72,7 +73,7 @@ export async function POST(request: Request) {
     if (error) {
       console.error("[auth/email-otp/verify/POST]", error);
       return fail(
-        error.message || "Không thể xác thực OTP email.",
+        getAuthErrorMessage(error, "Không thể xác thực OTP email."),
         400,
         error,
       );

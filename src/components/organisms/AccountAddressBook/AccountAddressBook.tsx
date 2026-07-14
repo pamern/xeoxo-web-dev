@@ -115,12 +115,12 @@ function FormField({
         placeholder={placeholder}
         onChange={(event) => onChange(name, event.target.value)}
         className={cn(
-          "form-control min-h-10 rounded-[10px] border-black/15 bg-white px-4 py-2.5 text-sm font-medium placeholder:text-foreground/35",
+          "form-control min-h-10 rounded-[10px] border-black/15 bg-white px-4 py-2.5 text-sm font-normal placeholder:text-foreground/35",
           error && "border-destructive focus:border-destructive focus:ring-destructive",
         )}
       />
       {error ? (
-        <span className="text-xs font-medium text-destructive">{error}</span>
+        <span className="text-xs font-normal text-destructive">{error}</span>
       ) : null}
     </label>
   );
@@ -529,7 +529,7 @@ export function AccountAddressBook({
                   })),
                 ]}
                 error={fieldErrors.province_id ?? provinceError}
-                className="h-10 rounded-[10px] border-black/15 bg-white text-sm font-medium"
+                className="h-10 rounded-[10px] border-black/15 bg-white text-sm font-normal"
                 wrapperClassName="text-sm font-semibold"
               />
 
@@ -548,7 +548,7 @@ export function AccountAddressBook({
                 ]}
                 disabled={!currentProvince || wardOptions.length === 0}
                 error={fieldErrors.district_name}
-                className="h-10 rounded-[10px] border-black/15 bg-white text-sm font-medium disabled:cursor-not-allowed disabled:bg-secondary"
+                className="h-10 rounded-[10px] border-black/15 bg-white text-sm font-normal disabled:cursor-not-allowed disabled:bg-secondary"
                 wrapperClassName="text-sm font-semibold"
               />
             </div>

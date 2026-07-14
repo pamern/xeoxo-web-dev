@@ -40,7 +40,7 @@ function PillInput({
         {label}
       </span>
       <input
-        className={`h-[36px] w-full rounded-pill border bg-white px-4 text-xs font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`h-[36px] w-full rounded-pill border bg-white px-4 text-xs font-normal text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -48,7 +48,7 @@ function PillInput({
         {...props}
       />
       {error && (
-        <span className="text-xs font-semibold text-[#ff593d] px-2">
+        <span className="px-2 text-xs font-normal text-[#ff593d]">
           {error}
         </span>
       )}
@@ -70,7 +70,7 @@ function PillTextarea({
     <label className={`flex w-full flex-col gap-1 ${className}`}>
       <span className="text-[13px] font-semibold text-black">{label}</span>
       <textarea
-        className={`min-h-[70px] w-full resize-none rounded-[16px] border bg-white px-4 py-2.5 text-xs font-medium text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`min-h-[70px] w-full resize-none rounded-[16px] border bg-white px-4 py-2.5 text-xs font-normal text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -78,7 +78,7 @@ function PillTextarea({
         {...props}
       />
       {error && (
-        <span className="text-xs font-semibold text-[#ff593d] px-2">
+        <span className="px-2 text-xs font-normal text-[#ff593d]">
           {error}
         </span>
       )}
@@ -103,7 +103,7 @@ function PillSelect({
       <span className="text-[13px] font-semibold text-black">{label}</span>
       <div className="relative w-full">
         <select
-          className={`h-[36px] w-full appearance-none rounded-pill border bg-white pl-4 pr-10 text-xs font-medium text-black outline-none transition focus:ring-2 ${
+          className={`h-[36px] w-full appearance-none rounded-pill border bg-white pl-4 pr-10 text-xs font-normal text-black outline-none transition focus:ring-2 ${
             error
               ? "border-[#ff593d] focus:ring-red-500/15"
               : "border-black focus:ring-black/15"
@@ -122,7 +122,7 @@ function PillSelect({
         />
       </div>
       {error && (
-        <span className="text-xs font-semibold text-[#ff593d] px-2">
+        <span className="px-2 text-xs font-normal text-[#ff593d]">
           {error}
         </span>
       )}
@@ -479,27 +479,25 @@ export function CheckoutForm() {
       noValidate
       className="w-full text-black"
     >
-      {!isMember ? (
-        <div className="rounded-[10px] bg-[#D9D9D9]/30 p-3 sm:py-3.5 sm:px-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <div
-              className="inline-flex h-[36px] w-full max-w-[200px] shrink-0 items-center justify-center rounded-pill border border-black bg-cover bg-center px-4 text-xs font-bold uppercase text-white shadow-[0_2px_4px_rgba(0,0,0,0.15)]"
-              style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
+      <div className="rounded-[10px] bg-[#D9D9D9]/30 p-3 sm:py-3.5 sm:px-4">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center">
+          <div
+            className="inline-flex h-[36px] w-full max-w-[230px] shrink-0 items-center justify-center rounded-pill border border-black bg-cover bg-center px-3 text-[11px] font-bold uppercase whitespace-nowrap text-white shadow-[0_2px_4px_rgba(0,0,0,0.15)] sm:max-w-[200px] sm:px-4 sm:text-xs"
+            style={{ backgroundImage: "url('/images/bg-gia-nhap-btn.png')" }}
+          >
+            Gia nhập Xéo Hội ngay!
+          </div>
+          <div className="min-w-0 text-xs leading-5 text-black/75">
+            Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
+            <AuthModalLink
+              mode="register"
+              className="font-bold underline underline-offset-2"
             >
-              Gia nhập Xéo Hội ngay!
-            </div>
-            <div className="min-w-0 text-xs leading-5 text-black/75">
-              Tham gia Xéo hội để nhận nhiều đặc quyền vô cùng hấp dẫn.{" "}
-              <AuthModalLink
-                mode="register"
-                className="font-bold underline underline-offset-2"
-              >
-                Tìm hiểu thêm
-              </AuthModalLink>
-            </div>
+              Tìm hiểu thêm
+            </AuthModalLink>
           </div>
         </div>
-      ) : null}
+      </div>
 
       <h2 className="mt-6 text-lg font-bold text-black md:text-xl">
         Thông tin vận chuyển
@@ -821,13 +819,13 @@ export function CheckoutForm() {
       </fieldset>
 
       {(addressError || errorMessage) && (
-        <p className="mt-5 text-sm font-semibold text-red-600">
+        <p className="mt-5 text-sm font-normal text-red-600">
           {addressError ?? errorMessage}
         </p>
       )}
 
       {isSavingAddress && (
-        <p className="mt-5 text-sm font-semibold text-black/70">
+        <p className="mt-5 text-sm font-normal text-black/70">
           Đang lưu địa chỉ...
         </p>
       )}

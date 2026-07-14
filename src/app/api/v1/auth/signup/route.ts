@@ -2,22 +2,20 @@ import { fail, ok } from "@/lib/api-response";
 import { parseAuthIdentifier } from "@/lib/auth-identifier";
 import { getAuthErrorMessage } from "@/lib/auth-error-message";
 import { createClient } from "@/lib/supabase/server";
-import { registerPhoneWithoutSms } from "@/features/auth/register-phone.service";
+import {
+  deleteAuthUserById,
+  RegisterCredentialUserError,
+  registerCredentialUser,
+} from "@/features/auth/register-credential-user.service";
 import { registerSchema } from "@/validations/auth/register.schema";
 
-function normalizePath(path?: string) {
-  if (!path || !path.startsWith("/")) {
-    return "/";
-  }
-
-  return path;
-}
-
 export async function POST(request: Request) {
+  let identifierType: "email" | "phone" | undefined;
+  let createdUserId: string | undefined;
+
   try {
     const payload = (await request.json()) as Record<string, unknown>;
-    const { nextPath, ...rawValues } = payload;
-    const parsed = registerSchema.safeParse(rawValues);
+    const parsed = registerSchema.safeParse(payload);
 
     if (!parsed.success) {
       return fail(
@@ -33,53 +31,50 @@ export async function POST(request: Request) {
       return fail("Email hoặc số điện thoại không hợp lệ.", 422);
     }
 
-    if (identifier.type === "phone") {
-      await registerPhoneWithoutSms({
-        fullName: parsed.data.fullName.trim(),
-        phone: identifier.value,
-        password: parsed.data.password,
-      });
-
-      return ok(
-        {
-          hasSession: false,
-        },
-        "Đăng ký tài khoản bằng số điện thoại thành công.",
-        201,
-      );
-    }
+    identifierType = identifier.type;
 
     const supabase = await createClient();
-    const origin = new URL(request.url).origin;
-    const redirectTo = `${origin}/api/v1/auth/callback?next=${encodeURIComponent(
-      normalizePath(typeof nextPath === "string" ? nextPath : undefined),
-    )}`;
-
-    const { data, error } = await supabase.auth.signUp({
-      email: identifier.value,
+    const { signInEmail, user } = await registerCredentialUser({
+      fullName: parsed.data.fullName.trim(),
+      identifier,
       password: parsed.data.password,
-      options: {
-        emailRedirectTo: redirectTo,
-        data: {
-          full_name: parsed.data.fullName.trim(),
-        },
-      },
+    });
+    createdUserId = user.id;
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: signInEmail,
+      password: parsed.data.password,
     });
 
     if (error) {
-      throw new Error(getAuthErrorMessage(error, "Đăng ký thất bại."));
+      try {
+        await deleteAuthUserById(createdUserId);
+      } catch (rollbackError) {
+        console.error(
+          "[auth/signup] Failed to rollback auth user after sign-in failure.",
+          rollbackError,
+        );
+      }
+
+      throw error;
     }
 
     return ok(
       {
-        hasSession: Boolean(data.session),
+        hasSession: true,
       },
       "Đăng ký tài khoản thành công.",
       201,
     );
   } catch (error) {
+    if (error instanceof RegisterCredentialUserError) {
+      return fail(error.message, error.status);
+    }
+
     return fail(
-      getAuthErrorMessage(error, "Đăng ký thất bại."),
+      getAuthErrorMessage(error, "Đăng ký thất bại.", {
+        identifierType,
+      }),
       400,
       error instanceof Error ? error.message : error,
     );

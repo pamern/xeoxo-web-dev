@@ -55,7 +55,11 @@ export async function PUT(request: Request) {
     }
 
     await ensureCustomerProfile(user);
-    const customer = await updateCustomerProfileByAccountId(user.id, parsed.data);
+    const customer = await updateCustomerProfileByAccountId(
+      user.id,
+      parsed.data,
+      user,
+    );
 
     return ok(customer, "Cập nhật thông tin thành công.");
   } catch (error) {

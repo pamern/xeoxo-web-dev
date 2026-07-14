@@ -5,6 +5,7 @@ import {
   isIamSchemaUnavailable,
 } from "@/features/auth/auth.service";
 import { syncCustomerProfile } from "@/features/auth/profile-sync.service";
+import { getAuthErrorMessage } from "@/lib/auth-error-message";
 
 function normalizeNextPath(next: string | null) {
   if (!next || !next.startsWith("/")) {
@@ -69,7 +70,10 @@ export async function GET(request: NextRequest) {
           new URL(
             appendProfileSyncError(
               next,
-              error instanceof Error ? error.message : "Unknown profile sync error"
+              getAuthErrorMessage(
+                error,
+                "Không thể đồng bộ hồ sơ khách hàng sau khi đăng nhập.",
+              ),
             ),
             requestUrl.origin
           )

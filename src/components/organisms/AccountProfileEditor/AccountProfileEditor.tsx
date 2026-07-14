@@ -223,8 +223,13 @@ export function AccountProfileEditor({
             </Field>
 
             <Field label="Email">
-              <ReadOnlyFieldValue
-                value={getDisplayValue(displayValues.email)}
+              <input
+                value={values.email}
+                onChange={(event) => updateField("email", event.target.value)}
+                className="form-control rounded-[14px]"
+                placeholder="Nhập email"
+                autoComplete="email"
+                type="email"
               />
             </Field>
 

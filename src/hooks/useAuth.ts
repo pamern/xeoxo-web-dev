@@ -25,9 +25,16 @@ import { registerSchema } from "@/validations/auth/register.schema";
 
 type SubmitResult = {
   ok: boolean;
-  requiresEmailConfirmation?: boolean;
 };
 
+/**
+ * Hook trung tâm quản lý trạng thái xác thực phía client.
+ *
+ * Trách nhiệm chính:
+ * - Theo dõi session hiện tại và đồng bộ `user` / `customer` cho UI.
+ * - Bọc các flow đăng nhập, đăng ký, đăng xuất và OAuth thành API dễ dùng.
+ * - Chuẩn hóa loading, submitting, errorMessage và noticeMessage cho auth UI.
+ */
 export function useAuth() {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [customer, setCustomer] = useState<AuthCustomer | null>(null);
@@ -43,6 +50,18 @@ export function useAuth() {
     });
   }
 
+  /**
+   * Tải lại trạng thái đăng nhập hiện tại từ `/api/v1/auth/me`.
+   *
+   * Flow này được gọi khi:
+   * - hook mount lần đầu;
+   * - Supabase auth state thay đổi;
+   * - một phần khác của app phát event `xeoxo:profile-updated`;
+   * - login/register/logout hoàn tất và cần đồng bộ lại UI.
+   *
+   * Nếu request thất bại vì guest/session hết hạn thì hook chủ động reset về
+   * trạng thái chưa đăng nhập thay vì ném lỗi lên UI.
+   */
   async function refresh() {
     setIsLoading(true);
 
@@ -91,6 +110,18 @@ export function useAuth() {
     };
   }, []);
 
+  /**
+   * Xử lý đăng nhập bằng email hoặc số điện thoại.
+   *
+   * Trình tự:
+   * 1. Validate input bằng Zod.
+   * 2. Chuẩn hóa account qua `parseAuthIdentifier()`.
+   * 3. Kiểm tra chặn tạm thời nếu nhập sai password quá nhiều lần ở client.
+   * 4. Gọi API signin.
+   * 5. Nếu thành công thì reset số lần sai, đồng bộ customer profile và refresh UI.
+   *
+   * Nếu sai credential, hook tăng bộ đếm failed login để tạm chặn các lần thử tiếp theo.
+   */
   async function login(values: LoginValues): Promise<SubmitResult> {
     const parsed = loginSchema.safeParse(values);
     if (!parsed.success) {
@@ -123,7 +154,16 @@ export function useAuth() {
     try {
       await authService.login(parsed.data);
       resetFailedLoginAttempts(identifier.value);
-      await authService.syncProfile();
+      try {
+        await authService.syncProfile();
+      } catch (syncProfileError) {
+        logAuthError("login-sync-profile", syncProfileError, {
+          account: parsed.data.account,
+        });
+        setNoticeMessage(
+          "Đăng nhập thành công nhưng chưa đồng bộ được hồ sơ khách hàng.",
+        );
+      }
       await refresh();
       return { ok: true };
     } catch (error) {
@@ -144,6 +184,15 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Xử lý đăng ký bằng email hoặc số điện thoại.
+   *
+   * Trình tự:
+   * 1. Validate input đăng ký.
+   * 2. Gọi API signup.
+   * 3. Route signup sẽ tự tạo session ngay sau khi tạo tài khoản.
+   * 4. Hook đồng bộ customer profile và refresh lại auth state cho UI.
+   */
   async function register(
     values: RegisterValues,
     nextPath?: string,
@@ -163,35 +212,23 @@ export function useAuth() {
 
     try {
       const result = await authService.register(parsed.data, nextPath);
-      const identifier = parseAuthIdentifier(parsed.data.account);
 
-      if (result.hasSession) {
-        await authService.syncProfile();
-        await refresh();
-        return { ok: true };
+      if (!result.hasSession) {
+        throw new Error("Không thể tự động đăng nhập sau khi đăng ký.");
       }
 
       try {
-        await authService.login({
-          account: parsed.data.account,
-          password: parsed.data.password,
-        });
         await authService.syncProfile();
-        await refresh();
-        return { ok: true };
-      } catch (loginAfterRegisterError) {
-        logAuthError("register-login-fallback", loginAfterRegisterError, {
+      } catch (syncProfileError) {
+        logAuthError("register-sync-profile", syncProfileError, {
           account: parsed.data.account,
-          identifierType: identifier?.type ?? null,
         });
+        setNoticeMessage(
+          "Tài khoản đã được tạo và đăng nhập, nhưng chưa đồng bộ được hồ sơ khách hàng.",
+        );
       }
-
-      setNoticeMessage(
-        identifier?.type === "phone"
-          ? "Không thể tự động đăng nhập sau khi đăng ký bằng số điện thoại. Vui lòng thử đăng nhập lại."
-          : "Vui lòng kiểm tra email và bấm vào link xác nhận tài khoản trước khi đăng nhập.",
-      );
-      return { ok: true, requiresEmailConfirmation: true };
+      await refresh();
+      return { ok: true };
     } catch (error) {
       logAuthError("register", error, { account: parsed.data.account });
       setErrorMessage(
@@ -203,6 +240,9 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Đăng xuất session hiện tại rồi refresh lại auth state cho toàn bộ UI.
+   */
   async function logout() {
     setIsSubmitting(true);
     setErrorMessage(undefined);
@@ -221,6 +261,12 @@ export function useAuth() {
     }
   }
 
+  /**
+   * Khởi động flow đăng nhập OAuth như Google/Facebook.
+   *
+   * Hàm này chỉ bắt đầu redirect tới provider; phần tạo session và sync profile
+   * sẽ tiếp tục ở auth callback route sau khi provider trả người dùng về app.
+   */
   async function signInWithProvider(provider: AuthProvider, nextPath?: string) {
     setErrorMessage(undefined);
     setNoticeMessage(undefined);

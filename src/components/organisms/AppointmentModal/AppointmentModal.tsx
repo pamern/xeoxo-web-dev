@@ -88,7 +88,12 @@ export function AppointmentModal({
   return (
     <>
       <div className="fixed inset-0 z-[140] overflow-y-auto">
-        <div className="relative z-10 flex min-h-full items-center justify-center p-4">
+        <div
+          className={cn(
+            "relative z-10 flex min-h-full justify-center px-3 py-4 sm:px-4 sm:py-6",
+            shouldTopAlign ? "items-start" : "items-center",
+          )}
+        >
           <div
             className="fixed inset-0 bg-black/60 transition-opacity" onClick={onClose} />
 
@@ -98,7 +103,7 @@ export function AppointmentModal({
             aria-modal="true"
             aria-labelledby="appointment-modal-title"
             className={cn(
-              "relative w-[90%] sm:w-[40vw] max-w-[480px] min-w-[320px] rounded-[24px] bg-white px-4 pb-5 pt-5 sm:px-5 sm:pb-6 sm:pt-6 shadow-2xl overflow-visible",
+              "relative w-full max-w-[460px] overflow-visible rounded-[20px] bg-white px-4 pb-5 pt-5 shadow-2xl sm:max-w-[480px] sm:rounded-[24px] sm:px-5 sm:pb-6 sm:pt-6",
               className
             )}
           >

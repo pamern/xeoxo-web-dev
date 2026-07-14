@@ -1,4 +1,5 @@
 import type { User } from "@supabase/supabase-js";
+import { isPhoneAuthAliasEmail } from "@/lib/auth-phone-alias";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 function pickExistingText(value: string | null | undefined) {
@@ -37,9 +38,11 @@ function derivePhone(user: User) {
 }
 
 function deriveEmail(user: User) {
-  return typeof user.email === "string" && user.email.trim()
-    ? user.email.trim()
-    : null;
+  if (typeof user.email !== "string" || !user.email.trim()) {
+    return null;
+  }
+
+  return isPhoneAuthAliasEmail(user.email) ? null : user.email.trim();
 }
 
 export async function syncCustomerProfile(user: User) {

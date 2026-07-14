@@ -60,7 +60,7 @@ const DEFAULT_VALUES: AppointmentValues = {
 };
 
 const fieldClassName =
-  "h-9 w-full rounded-[10px] border border-black/30 bg-white px-3.5 text-xs font-semibold text-black outline-none transition placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10";
+  "h-9 w-full rounded-[10px] border border-black/30 bg-white px-3.5 text-xs font-normal text-black outline-none transition placeholder:text-black/35 focus:border-black focus:ring-2 focus:ring-black/10";
 
 type AppointmentErrors = Partial<Record<keyof AppointmentValues, string>>;
 
@@ -397,7 +397,7 @@ export function AppointmentForm({
                               isSelected && "border-[5px] border-black",
                             )}
                           />
-                          <span className={cn("leading-snug", isSelected && "font-semibold")}>
+                          <span className="leading-snug">
                             {branch.label}
                           </span>
                         </button>
@@ -469,7 +469,7 @@ export function AppointmentForm({
                             day.isCurrentMonth ? "text-black" : "text-black/28",
                             day.isDisabled &&
                               "cursor-not-allowed bg-black/[0.04] text-black/20",
-                            isSelected && "bg-black font-bold text-white",
+                            isSelected && "bg-black text-white",
                           )}
                         >
                           {day.dayNumber}
@@ -511,7 +511,7 @@ export function AppointmentForm({
                           className={cn(
                             "flex items-center gap-2 text-left text-xs text-black transition-colors",
                             slot.isDisabled && "cursor-not-allowed text-black/25",
-                            isSelected && "font-bold text-black",
+                            isSelected && "text-black",
                           )}
                         >
                           <span
@@ -541,7 +541,7 @@ export function AppointmentForm({
               maxLength={200}
               placeholder="Ghi chú thêm cho Xéo Xọ (tối đa 200 ký tự)"
               rows={2}
-              className="min-h-[56px] w-full resize-none rounded-[10px] border border-black/30 bg-white px-3.5 py-2 text-xs font-semibold text-black outline-none transition placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10"
+              className="min-h-[56px] w-full resize-none rounded-[10px] border border-black/30 bg-white px-3.5 py-2 text-xs font-normal text-black outline-none transition placeholder:text-black/40 focus:border-black focus:ring-2 focus:ring-black/10"
             />
           </FieldControl>
         </FieldRow>
@@ -574,7 +574,7 @@ export function AppointmentForm({
 function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="flex w-full flex-col gap-1">
-      <span className="text-xs font-semibold text-black">
+      <span className="text-xs font-normal text-black">
         {label}
       </span>
       {children}
@@ -586,7 +586,7 @@ function FieldControl({ error, children }: { error?: string; children: ReactNode
   return (
     <div className="flex min-w-0 flex-col gap-1">
       {children}
-      {error ? <span className="text-xs font-semibold text-[#ff593d] px-2">{error}</span> : null}
+      {error ? <span className="px-2 text-xs font-normal text-[#ff593d]">{error}</span> : null}
     </div>
   );
 }
@@ -614,7 +614,7 @@ function DropdownTrigger({
       type="button"
       onClick={onClick}
       className={cn(
-        "flex h-9 w-full items-center justify-between rounded-[10px] border border-black/30 bg-white px-3.5 text-left text-xs font-semibold transition-colors hover:border-black/50",
+        "flex h-9 w-full items-center justify-between rounded-[10px] border border-black/30 bg-white px-3.5 text-left text-xs font-normal transition-colors hover:border-black/50",
         isOpen && "border-black focus:ring-2 focus:ring-black/15",
       )}
     >
@@ -645,7 +645,7 @@ function SelectMini({
     <select
       value={value}
       onChange={onChange}
-      className="h-9 rounded-[10px] border border-black/20 bg-white px-2.5 text-xs font-semibold outline-none focus:border-black"
+      className="h-9 rounded-[10px] border border-black/20 bg-white px-2.5 text-xs font-normal outline-none focus:border-black"
     >
       {children}
     </select>
@@ -667,7 +667,7 @@ function GenderPill({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "h-9 rounded-[10px] border border-black/30 bg-white px-4 text-xs font-bold leading-none text-black transition-colors",
+        "h-9 rounded-[10px] border border-black/30 bg-white px-4 text-xs font-normal leading-none text-black transition-colors",
         active && "bg-black text-white",
       )}
     >
