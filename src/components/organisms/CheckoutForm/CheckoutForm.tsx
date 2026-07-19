@@ -501,7 +501,9 @@ export function CheckoutForm() {
         </div>
       ) : null}
 
-      <h2 className="mt-6 text-lg font-bold text-black md:text-xl">
+      <h2
+        className={`${isMember ? "" : "mt-6"} text-lg font-bold text-black md:text-xl md:leading-tight`}
+      >
         Thông tin vận chuyển
       </h2>
 
