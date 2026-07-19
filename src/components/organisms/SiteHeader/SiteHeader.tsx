@@ -51,14 +51,18 @@ const ACADEMIC_DISCLAIMER =
   "Website được xây dựng phục vụ mục đích học tập trong khuôn khổ đồ án môn. Không phải website chính thức của thương hiệu XÉO XỌ.";
 
 function groupCategories(categories: CategoryNavItem[]) {
-  const categoryIds = new Set(categories.map((category) => category.categoryId));
+  const categoryIds = new Set(
+    categories.map((category) => category.categoryId),
+  );
   const roots = categories.filter(
     (category) => !category.parentId || !categoryIds.has(category.parentId),
   );
   const mapped = roots.map((root) => {
     const children = categories
       .filter((category) => category.parentId === root.categoryId)
-      .sort((left, right) => left.categoryName.localeCompare(right.categoryName));
+      .sort((left, right) =>
+        left.categoryName.localeCompare(right.categoryName),
+      );
 
     return {
       children,
@@ -430,7 +434,7 @@ export function SiteHeader({
                     {item.label}
                   </Link>
 
-                  {hasDropdown && (
+                  {hasDropdown &&
                     (() => {
                       const grouped = groupCategories(categories);
                       const widthClass =
@@ -492,7 +496,9 @@ export function SiteHeader({
                                 >
                                   {group.parent.categorySlug ? (
                                     <Link
-                                      href={ROUTES.CATEGORY(group.parent.categorySlug)}
+                                      href={ROUTES.CATEGORY(
+                                        group.parent.categorySlug,
+                                      )}
                                       className="border-b border-gray-100 pb-1.5 text-[10px] font-semibold uppercase tracking-widest text-black transition-colors hover:text-[#FF5C39]"
                                       onClick={() => setHoveredNav(null)}
                                     >
@@ -508,7 +514,9 @@ export function SiteHeader({
                                     {group.children.map((child) => (
                                       <Link
                                         key={child.categoryId}
-                                        href={ROUTES.CATEGORY(child.categorySlug)}
+                                        href={ROUTES.CATEGORY(
+                                          child.categorySlug,
+                                        )}
                                         className="text-[11px] font-light text-muted-foreground transition-colors hover:text-black"
                                         onClick={() => setHoveredNav(null)}
                                       >
@@ -522,15 +530,17 @@ export function SiteHeader({
                           </div>
                         </div>
                       );
-                    })()
-                  )}
+                    })()}
                 </div>
               );
             })}
           </nav>
 
           <div className="flex items-center gap-2 justify-self-end sm:gap-2.5">
-            <div ref={searchRef} className="relative flex items-center self-center">
+            <div
+              ref={searchRef}
+              className="relative flex items-center self-center"
+            >
               <label className="flex h-10 w-[160px] items-center gap-2 rounded-full border border-black/15 bg-white px-3 shadow-[0_4px_14px_rgba(0,0,0,0.06)] transition-colors focus-within:border-black/30 sm:h-11 sm:w-[220px] sm:px-4 lg:w-[220px] xl:w-[250px] 2xl:w-[270px]">
                 <span className="sr-only">Tìm kiếm sản phẩm</span>
                 <input
@@ -645,9 +655,7 @@ export function SiteHeader({
                 type="button"
                 aria-label={hasAccountMenu ? "Tài khoản của bạn" : "Đăng nhập"}
                 onClick={() =>
-                  hasAccountMenu
-                    ? openAccountSidebar()
-                    : openAuthModal("login")
+                  hasAccountMenu ? openAccountSidebar() : openAuthModal("login")
                 }
                 className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full transition-opacity hover:opacity-70 sm:h-11 sm:w-11"
               >
@@ -684,7 +692,10 @@ export function SiteHeader({
         </div>
 
         <div className="site-header-marquee hidden xl:block">
-          <div className="site-header-marquee__track" aria-label={ACADEMIC_DISCLAIMER}>
+          <div
+            className="site-header-marquee__track"
+            aria-label={ACADEMIC_DISCLAIMER}
+          >
             <span>{ACADEMIC_DISCLAIMER}</span>
             <span aria-hidden>{ACADEMIC_DISCLAIMER}</span>
           </div>
@@ -874,13 +885,13 @@ function AccountSidebar({
         className="absolute inset-0 bg-black/18 backdrop-blur-sm"
       />
       <aside className="absolute right-0 top-0 flex h-full w-full max-w-[500px] flex-col bg-background shadow-[-18px_0_40px_rgba(0,0,0,0.16)]">
-        <div className="flex-1 overflow-y-auto px-6 pb-10 pt-14">
+        <div className="flex-1 overflow-y-auto px-4 pb-8 pt-8 sm:px-6 sm:pb-10 sm:pt-14">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
-              <p className="text-2xl font-medium leading-none text-foreground">
+              <p className="text-base font-medium leading-none text-foreground sm:text-lg">
                 xin chào,
               </p>
-              <h2 className="mt-1 text-[2.5rem] font-bold leading-[0.95] text-foreground [overflow-wrap:anywhere]">
+              <h2 className="mt-1 text-[clamp(1.5rem,7vw,2.125rem)] font-bold leading-[0.98] text-foreground [overflow-wrap:anywhere]">
                 {accountLabel}
               </h2>
             </div>
@@ -910,21 +921,21 @@ function AccountSidebar({
               imageSrc={latestCollectionImage}
               imageAlt={latestCollectionImageAlt}
               imageClassName="object-cover [object-position:center_25%]"
-              className="min-h-[136px]"
+              className="min-h-[160px] min-[400px]:min-h-[136px]"
               overlayClassName="bg-[linear-gradient(90deg,rgba(0,0,0,0.58)_0%,rgba(0,0,0,0.18)_46%,rgba(0,0,0,0.16)_100%)]"
-              contentClassName="px-4 pb-3 pt-5"
+              contentClassName="px-3 pb-3 pt-5 sm:px-4"
               title={
                 <>
-                  <span className="block text-sm font-light leading-none text-white">
+                  <span className="block text-xs font-light leading-none text-white sm:text-[13px]">
                     Bộ sưu tập
                   </span>
-                  <span className="mt-1.5 block text-2xl font-bold leading-none text-white">
+                  <span className="mt-1.5 block text-base font-bold leading-tight text-white sm:text-lg">
                     {latestCollectionHighlight?.name || "Thanh Xuân"}
                   </span>
                 </>
               }
               actionLabel="Khám phá"
-              actionClassName="min-h-[46px] min-w-[156px] border-white/90 bg-black/20 px-5 text-base font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-[10px] transition-colors hover:bg-black hover:text-white"
+              actionClassName="min-h-[42px] min-w-[112px] whitespace-nowrap border-white/90 bg-black/20 px-3 !text-[13px] font-bold text-white shadow-[0_10px_24px_rgba(0,0,0,0.22)] backdrop-blur-[10px] transition-colors hover:bg-black hover:text-white sm:min-h-[44px] sm:min-w-[128px]"
               onClick={onClose}
             />
 
@@ -934,30 +945,30 @@ function AccountSidebar({
               imageClassName="object-cover [object-position:center_28%]"
               className="mt-4 min-h-[270px] !rounded-none"
               overlayClassName="bg-[linear-gradient(180deg,rgba(0,0,0,0.06)_0%,rgba(0,0,0,0.12)_42%,rgba(0,0,0,0.64)_100%)]"
-              contentClassName="px-5 pb-8 pt-6"
+              contentClassName="px-3 pb-6 pt-6 sm:px-5 sm:pb-8"
               title={
                 <>
-                  <span className="block text-xs font-light leading-[1.2] text-white">
+                  <span className="block text-[10px] font-light leading-[1.2] text-white sm:text-xs">
                     Sống với tinh thần thanh lịch
                   </span>
-                  <span className="mt-1.5 block text-2xl font-light leading-none text-white">
+                  <span className="mt-1.5 block text-lg font-light leading-tight text-white sm:text-xl">
                     Tham gia <span className="font-bold">Xéo Hội</span>
                   </span>
                 </>
               }
               footer={
-                <div className="mt-6 grid grid-cols-2 gap-2.5">
+                <div className="mt-5 grid grid-cols-1 gap-2.5 min-[360px]:grid-cols-2 sm:mt-6">
                   <Link
                     href={ROUTES.MEMBERSHIP}
                     onClick={onClose}
-                    className="flex min-h-[46px] w-full items-center justify-center rounded-full border border-white/80 bg-[url('/images/bg-tham-gia-sidebar-account-btn.png')] bg-cover bg-center bg-no-repeat px-5 text-center text-base font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hover:scale-[0.99] hover:opacity-85"
+                    className="flex min-h-[44px] w-full min-w-0 items-center justify-center whitespace-nowrap rounded-full border border-white/80 bg-[url('/images/bg-tham-gia-sidebar-account-btn.png')] bg-cover bg-center bg-no-repeat px-2 text-center !text-[13px] font-bold leading-none text-white shadow-[0_8px_24px_rgba(0,0,0,0.15)] transition-all hover:scale-[0.99] hover:opacity-85 sm:px-3"
                   >
                     Tham gia
                   </Link>
                   <Link
                     href={ROUTES.BENEFITS}
                     onClick={onClose}
-                    className="flex min-h-[46px] w-full items-center justify-center whitespace-nowrap rounded-full border border-white/80 bg-transparent px-5 text-center text-base font-medium text-white transition-colors hover:bg-black hover:text-white"
+                    className="flex min-h-[44px] w-full min-w-0 items-center justify-center whitespace-nowrap rounded-full border border-white/80 bg-transparent px-2 text-center !text-[13px] font-medium leading-none text-white transition-colors hover:bg-black hover:text-white sm:px-3"
                   >
                     Tìm hiểu thêm
                   </Link>
@@ -982,10 +993,10 @@ function AccountSidebar({
           </nav>
         </div>
 
-        <div className="bg-black px-6 py-4 md:py-5">
+        <div className="bg-black px-4 py-4 sm:px-6 md:py-5">
           <Link
             href={ROUTES.ACCOUNT_PROFILE}
-            className="flex items-center justify-center text-center text-[1.2rem] font-bold leading-none text-white md:text-[1.4rem]"
+            className="flex items-center justify-center text-center text-sm font-bold leading-none text-white"
             onClick={onClose}
           >
             Đến Hồ sơ
@@ -1042,11 +1053,11 @@ function SidebarPromoCard({
         )}
       >
         {actionLabel ? (
-          <div className="flex items-end justify-between gap-4">
+          <div className="flex flex-col items-start gap-3 min-[400px]:flex-row min-[400px]:items-end min-[400px]:justify-between min-[400px]:gap-4">
             <div>{title}</div>
             <span
               className={cn(
-                "inline-flex min-h-[52px] items-center justify-center rounded-full border px-8 text-center",
+                "inline-flex min-h-[44px] max-w-full items-center justify-center rounded-full border px-4 text-center leading-tight sm:min-h-[52px] sm:px-6",
                 "bg-white/8 backdrop-blur-[10px]",
                 actionClassName,
               )}
@@ -1088,7 +1099,7 @@ function SidebarPillAction({
   onClick?: () => void;
 }) {
   const actionClassName =
-    "ml-10 flex min-h-[46px] w-[calc(100%-40px)] items-center justify-start rounded-full border border-black bg-white px-6 text-left text-[15px] font-medium text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white";
+    "ml-4 flex min-h-[44px] w-[calc(100%-16px)] min-w-0 items-center justify-start whitespace-nowrap rounded-full border border-black bg-white px-4 py-2 text-left text-[13px] font-medium leading-none text-foreground shadow-[0_12px_24px_rgba(0,0,0,0.14)] transition-all hover:scale-[0.995] hover:bg-black hover:text-white sm:ml-10 sm:min-h-[46px] sm:w-[calc(100%-40px)] sm:px-6 sm:text-sm";
 
   if (href) {
     return (

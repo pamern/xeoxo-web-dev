@@ -47,8 +47,8 @@ function AccountNavCard({
           "min-w-0 flex-1 whitespace-nowrap leading-tight",
           variant === "account"
             ? isActive
-              ? "text-[12px] font-bold md:text-[13px]"
-              : "text-[12px] font-normal md:text-[13px]"
+              ? "text-[clamp(11px,1.05vw,13px)] font-bold"
+              : "text-[clamp(11px,1.05vw,13px)] font-normal"
             : "text-[13px] font-medium md:text-[15px]",
         )}
       >
@@ -184,7 +184,10 @@ export function AccountNavigation({
   return (
     <>
       <nav
-        className={cn("flex flex-col", variant === "account" ? "gap-2 md:gap-2.5" : "gap-2 md:gap-4")}
+        className={cn(
+          "flex flex-col",
+          variant === "account" ? "gap-2 md:gap-2.5" : "gap-2 md:gap-4",
+        )}
         aria-label="Điều hướng tài khoản"
       >
         {items.map((item) => (

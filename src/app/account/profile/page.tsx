@@ -37,10 +37,7 @@ function FloralDivider({ className }: { className?: string }) {
   return (
     <div
       aria-hidden="true"
-      className={cn(
-        "floral-divider",
-        className,
-      )}
+      className={cn("floral-divider", className)}
       style={{ backgroundImage: "url(/images/header-line-up.png)" }}
     />
   );
@@ -84,9 +81,7 @@ export default async function AccountProfileRoute() {
 
               <section className="account-panel-soft">
                 <div className="flex flex-col gap-1.5">
-                  <h1 className="account-panel-heading">
-                    Hồ sơ thông tin
-                  </h1>
+                  <h1 className="account-panel-heading">Hồ sơ thông tin</h1>
                   <p className="text-xs font-medium text-foreground/72">
                     Quản lý thông tin hồ sơ để bảo mật tài khoản
                   </p>
@@ -108,7 +103,7 @@ export default async function AccountProfileRoute() {
                     <div className="mt-6">
                       <Link
                         href={`${ROUTES.HOME}?auth=login`}
-                        className="inline-flex h-12 items-center justify-center rounded-pill bg-black px-8 text-sm font-bold uppercase tracking-[0.03em] text-white"
+                        className="inline-flex min-h-12 max-w-full items-center justify-center rounded-pill bg-black px-5 py-2 text-center text-xs font-bold uppercase leading-tight tracking-[0.03em] text-white sm:px-8 sm:text-sm"
                       >
                         Đăng nhập ngay
                       </Link>

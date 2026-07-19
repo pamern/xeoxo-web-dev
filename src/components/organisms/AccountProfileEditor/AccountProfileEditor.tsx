@@ -276,7 +276,7 @@ export function AccountProfileEditor({
               variant="solid"
               size="lg"
               isLoading={isSubmitting}
-              className="h-11 w-full max-w-[300px] text-sm font-extrabold uppercase md:text-base"
+              className="h-11 w-full max-w-[300px] whitespace-nowrap px-3 text-center text-[clamp(12px,1.15vw,14px)] font-extrabold uppercase leading-none"
             >
               Lưu thông tin
             </Button>
@@ -285,7 +285,7 @@ export function AccountProfileEditor({
               variant="secondaryPill"
               size="lg"
               disabled={isSubmitting}
-              className="h-11 w-full max-w-[200px] text-sm font-bold md:text-base"
+              className="h-11 w-full max-w-[200px] whitespace-nowrap px-3 text-center text-[clamp(12px,1.15vw,14px)] font-bold leading-none"
               onClick={handleCancel}
             >
               Hủy
@@ -294,7 +294,7 @@ export function AccountProfileEditor({
         </form>
       ) : (
         <>
-          <dl className="grid gap-y-3 md:max-w-[680px] md:grid-cols-[160px_minmax(0,1fr)] md:gap-x-8">
+          <dl className="grid gap-y-3 md:max-w-[680px] md:grid-cols-[145px_minmax(0,1fr)] md:gap-x-6">
             <ProfileRow
               label="Họ và tên:"
               value={getDisplayValue(displayValues.customer_name)}
@@ -328,7 +328,7 @@ export function AccountProfileEditor({
               type="button"
               variant="solid"
               size="lg"
-              className="h-11 w-full max-w-[460px] text-sm font-extrabold uppercase md:text-base"
+              className="h-11 w-full max-w-[460px] whitespace-nowrap px-3 text-center text-[clamp(11px,1.05vw,13px)] font-extrabold uppercase leading-none"
               onClick={() => setIsEditing(true)}
             >
               Cập nhật thông tin cá nhân
@@ -349,7 +349,7 @@ function Field({
 }) {
   return (
     <label className="flex flex-col gap-1.5">
-      <span className="text-sm font-extrabold">{label}</span>
+      <span className="text-[13px] font-extrabold sm:text-sm">{label}</span>
       {children}
     </label>
   );
@@ -386,7 +386,10 @@ function BirthdayPicker({
     selectedDate ?? new Date(2000, 0, 1),
   );
   const today = useMemo(() => new Date(), []);
-  const calendarDays = useMemo(() => buildCalendarDays(visibleMonth), [visibleMonth]);
+  const calendarDays = useMemo(
+    () => buildCalendarDays(visibleMonth),
+    [visibleMonth],
+  );
   const currentYear = today.getFullYear();
   const yearOptions = Array.from(
     { length: currentYear - 1940 + 1 },
@@ -512,7 +515,9 @@ function BirthdayPicker({
               </div>
             ))}
             {calendarDays.map(({ date, isCurrentMonth }) => {
-              const isSelected = selectedDate ? isSameDay(date, selectedDate) : false;
+              const isSelected = selectedDate
+                ? isSameDay(date, selectedDate)
+                : false;
               const isToday = isSameDay(date, today);
 
               return (
@@ -569,12 +574,12 @@ function ProfileRow({
 }) {
   return (
     <div className="contents">
-      <dt className="text-[15px] font-semibold text-foreground/88 md:text-base">
+      <dt className="text-sm font-semibold text-foreground/88 md:text-[15px]">
         {label}
       </dt>
       <dd
         className={cn(
-          "text-[15px] text-foreground/82 md:text-base",
+          "min-w-0 break-words text-sm text-foreground/82 md:text-[15px]",
           emphasizeValue ? "font-semibold text-foreground" : "font-normal",
         )}
       >
