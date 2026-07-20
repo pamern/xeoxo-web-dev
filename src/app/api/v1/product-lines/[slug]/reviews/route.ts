@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type Params = {
   slug: string;
 };
@@ -534,6 +537,49 @@ export async function POST(request: Request, { params }: { params: Promise<Param
       return fail("Bạn cần đăng nhập để thực hiện đánh giá.", 401);
     }
 
+    const normalizedMediaIds = Array.isArray(media_ids)
+      ? Array.from(
+          new Set(
+            media_ids
+              .map((mediaId) => Number(mediaId))
+              .filter((mediaId) => Number.isInteger(mediaId) && mediaId > 0),
+          ),
+        )
+      : [];
+
+    if (normalizedMediaIds.length > 6) {
+      return fail("Mỗi đánh giá chỉ được tối đa 5 ảnh và 1 video.", 400);
+    }
+
+    if (normalizedMediaIds.length > 0) {
+      const { data: mediaRows, error: mediaErr } = await admin
+        .schema("catalog")
+        .from("media")
+        .select("media_id, storage_key, media_type")
+        .in("media_id", normalizedMediaIds);
+
+      if (mediaErr) throw new Error(mediaErr.message);
+
+      const ownedMedia = (mediaRows ?? []).filter((media) =>
+        String(media.storage_key ?? "").startsWith(`reviews/${customerId}/`),
+      );
+      const imageCount = ownedMedia.filter(
+        (media) => media.media_type === "IMAGE",
+      ).length;
+      const videoCount = ownedMedia.filter(
+        (media) => media.media_type === "VIDEO",
+      ).length;
+
+      if (
+        ownedMedia.length !== normalizedMediaIds.length ||
+        imageCount > 5 ||
+        videoCount > 1 ||
+        imageCount + videoCount !== ownedMedia.length
+      ) {
+        return fail("Ảnh hoặc video đánh giá không hợp lệ.", 400);
+      }
+    }
+
     // 2. Verify that this order_item belongs to the customer
     const { data: orderItem, error: itemErr } = await admin
       .schema("sales")
@@ -654,10 +700,10 @@ export async function POST(request: Request, { params }: { params: Promise<Param
 
     if (delMediaErr) throw new Error(delMediaErr.message);
 
-    if (media_ids && Array.isArray(media_ids) && media_ids.length > 0) {
-      const mediaInserts = media_ids.map((mediaId, idx) => ({
+    if (normalizedMediaIds.length > 0) {
+      const mediaInserts = normalizedMediaIds.map((mediaId, idx) => ({
         review_id: resultId,
-        media_id: Number(mediaId),
+        media_id: mediaId,
         display_order: idx,
         created_at: new Date().toISOString(),
       }));

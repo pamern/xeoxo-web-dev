@@ -436,13 +436,22 @@ function ReviewList({
               )}
               {review.media && review.media.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {review.media.map((imgObj, idx) => (
+                  {review.media.map((media, idx) => (
                     <div key={idx} className="relative h-20 w-20 overflow-hidden rounded-md border border-black/10">
-                      <img
-                        src={imgObj.url}
-                        alt={`Đánh giá hình ảnh ${idx}`}
-                        className="h-full w-full object-cover"
-                      />
+                      {media.media_type === "VIDEO" ? (
+                        <video
+                          src={media.url}
+                          controls
+                          preload="metadata"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={media.url}
+                          alt={`Đánh giá hình ảnh ${idx + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
                     </div>
                   ))}
                 </div>

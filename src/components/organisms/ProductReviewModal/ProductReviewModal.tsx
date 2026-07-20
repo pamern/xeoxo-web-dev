@@ -77,7 +77,7 @@ export function ProductReviewModal({
           const state = reviewStates[item.order_item_id];
           if (!state || !item.product_slug) continue;
           
-          await fetch(`/api/v1/product-lines/${item.product_slug}/reviews`, {
+          const response = await fetch(`/api/v1/product-lines/${item.product_slug}/reviews`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -87,9 +87,18 @@ export function ProductReviewModal({
               media_ids: state.media.map((m) => m.media_id),
             }),
           });
+
+          const payload = await response.json();
+          if (!response.ok || !payload.success) {
+            throw new Error(payload.message || "Không thể lưu đánh giá.");
+          }
         }
       } catch (err) {
         console.error("Lỗi khi tự động gửi đánh giá:", err);
+        setSubmitError(
+          err instanceof Error ? err.message : "Không thể lưu đánh giá.",
+        );
+        return;
       } finally {
         setIsSubmittingAll(false);
       }
@@ -112,7 +121,8 @@ export function ProductReviewModal({
 
     try {
       const res = await fetch(
-        `/api/v1/product-lines/${item.product_slug}/reviews?order_item_id=${item.order_item_id}`
+        `/api/v1/product-lines/${item.product_slug}/reviews?order_item_id=${item.order_item_id}`,
+        { cache: "no-store" },
       );
       const payload = await res.json();
       if (payload.success && payload.data) {
@@ -295,7 +305,7 @@ export function ProductReviewModal({
         const newMedia: ReviewMedia = {
           media_id: payload.data.media_id,
           public_url: payload.data.public_url,
-          media_type: type,
+          media_type: payload.data.media_type,
         };
 
         setReviewStates((prev) => ({

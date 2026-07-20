@@ -100,6 +100,7 @@ export const productService = {
       const params = new URLSearchParams(queryParams);
       const response = await fetch(`${API.PRODUCT_REVIEWS(slug)}?${params}`, {
         credentials: "include",
+        cache: "no-store",
       });
 
       return await readApi<ProductReviewsPageDto & { total_all?: number; total_images?: number; avg_rating?: number; components?: { component_id: number; component_name: string }[] }>(
