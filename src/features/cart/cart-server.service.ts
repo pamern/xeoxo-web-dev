@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getAuthenticatedUser } from "@/features/auth/auth.service";
+import { syncCustomerProfile } from "@/features/auth/profile-sync.service";
 import type { CartDto, CartItemDto, CartVariantOption } from "@/types/cart.types";
 
 const CART_SESSION_COOKIE = "xeoxo_cart_session_id";
@@ -171,7 +172,13 @@ export async function getCurrentCustomerId() {
     return null;
   }
 
-  const { data, error } = await supabase
+  // Authentication and the application customer profile are created in two
+  // separate operations. A session can therefore be valid even when the
+  // profile sync after sign-in was interrupted. Use the server client for the
+  // profile lookup and repair a missing profile instead of treating the user
+  // as a guest.
+  const admin = createAdminClient();
+  const { data, error } = await admin
     .schema("iam")
     .from("customer")
     .select("customer_id")
@@ -182,7 +189,12 @@ export async function getCurrentCustomerId() {
     throw new Error(error.message);
   }
 
-  return data?.customer_id ? Number(data.customer_id) : null;
+  if (data?.customer_id) {
+    return Number(data.customer_id);
+  }
+
+  const customer = await syncCustomerProfile(user);
+  return Number(customer.customer_id);
 }
 
 export async function getCartOwner(): Promise<CartOwner> {
