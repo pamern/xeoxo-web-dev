@@ -530,12 +530,7 @@ export async function getActivePaymentMethod(methodId: unknown) {
 async function attachGuestCartToCustomer(
   cartId: number,
   customerId: number,
-  currentCustomerId: number | null,
 ) {
-  if (currentCustomerId) {
-    return;
-  }
-
   const admin = createAdminClient();
   const { error } = await admin
     .schema("sales")
@@ -555,13 +550,8 @@ async function attachGuestCartToCustomer(
 
 async function backfillGuestCustomizationOwner(
   customerId: number,
-  currentCustomerId: number | null,
   prepared: PreparedCheckout,
 ) {
-  if (currentCustomerId) {
-    return;
-  }
-
   const customizationIds = prepared.items
     .filter((item) => item.item_type === "CUSTOMIZED" && item.customization_id)
     .map((item) => Number(item.customization_id))
@@ -613,9 +603,8 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
   await attachGuestCartToCustomer(
     prepared.cart.cart_id,
     customerId,
-    currentCustomerId,
   );
-  await backfillGuestCustomizationOwner(customerId, currentCustomerId, prepared);
+  await backfillGuestCustomizationOwner(customerId, prepared);
 
   await Promise.all(
     prepared.items
