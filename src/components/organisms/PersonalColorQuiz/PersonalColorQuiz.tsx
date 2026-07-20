@@ -24,6 +24,13 @@ type PersonalColorResultData = {
   description: string;
 };
 
+const SEASON_ASSET: Record<QuizResult["season"], string> = {
+  SPRING: "spring",
+  SUMMER: "summer",
+  AUTUMN: "autumn",
+  WINTER: "winter",
+};
+
 // Giao diện quiz "Find your Personal Color": logic chấm điểm + màn kết quả
 // nối API thật (/api/v1/personal-color/result), hiện bảng màu và sản phẩm gợi
 // ý khớp với season theo đúng dữ liệu màu thật trong DB.
@@ -422,12 +429,7 @@ function PersonalColorResult({
         {/* Back Image (Background) with animation */}
         <div className="absolute inset-0 w-full h-full overflow-hidden">
           <Image
-            src={`/images/personal-color/ket-qua/Back/Mùa ${{
-              SPRING: "Xuân",
-              SUMMER: "Hạ",
-              AUTUMN: "Thu",
-              WINTER: "Đông",
-            }[result.season]}.png`}
+            src={`/images/personal-color/ket-qua/Back/${SEASON_ASSET[result.season]}.png`}
             alt=""
             fill
             sizes="100vw"
@@ -441,12 +443,7 @@ function PersonalColorResult({
         {/* Front Image (Overlay) */}
         <div className="absolute inset-0 w-full h-full pointer-events-none z-10">
           <Image
-            src={`/images/personal-color/ket-qua/Front/Mùa ${{
-              SPRING: "Xuân",
-              SUMMER: "Hạ",
-              AUTUMN: "Thu",
-              WINTER: "Đông",
-            }[result.season]}.png`}
+            src={`/images/personal-color/ket-qua/Front/${SEASON_ASSET[result.season]}.png`}
             alt={SEASON_LABEL[result.season]}
             fill
             sizes="100vw"
