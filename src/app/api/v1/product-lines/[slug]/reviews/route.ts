@@ -704,7 +704,8 @@ export async function POST(request: Request, { params }: { params: Promise<Param
       const mediaInserts = normalizedMediaIds.map((mediaId, idx) => ({
         review_id: resultId,
         media_id: mediaId,
-        display_order: idx,
+        // Database constraint requires review media ordering to start at 1.
+        display_order: idx + 1,
         created_at: new Date().toISOString(),
       }));
 
