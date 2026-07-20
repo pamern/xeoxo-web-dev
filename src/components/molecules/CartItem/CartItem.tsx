@@ -29,12 +29,12 @@ function VariantSelect({
     : [{ value, label: value }, ...options];
 
   return (
-    <span className="relative inline-block min-w-[86px] w-full">
+    <span className="relative inline-block w-full min-w-0 sm:min-w-[86px]">
       <select
         aria-label={ariaLabel}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="h-[28px] w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-6 text-xs font-normal text-black outline-none transition focus:ring-2 focus:ring-black/15 text-center [text-align-last:center]"
+        className="h-10 w-full appearance-none rounded-pill border border-black bg-white pl-2.5 pr-7 text-center text-xs font-normal text-black outline-none transition focus:ring-2 focus:ring-black/15 [text-align-last:center] sm:h-[28px] sm:pr-6"
       >
         {list.map((option) => (
           <option
@@ -186,9 +186,9 @@ export function CartItem({
       aria-label={`Xem chi tiết ${item.name}`}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="grid cursor-pointer grid-cols-[32px_60px_minmax(0,1fr)] sm:grid-cols-[36px_72px_minmax(0,1fr)] items-center gap-4 border-b border-black/50 py-3 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:gap-6"
+      className="grid cursor-pointer grid-cols-[24px_68px_minmax(0,1fr)] items-start gap-2.5 border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:grid-cols-[36px_72px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:py-3"
     >
-      <label className="justify-self-center inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white cursor-pointer transition hover:border-black/70">
+      <label className="mt-1 inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center justify-self-center rounded-[2px] border-2 border-black bg-white transition hover:border-black/70 sm:mt-0 sm:h-[18px] sm:w-[18px]">
         <input
           type="checkbox"
           checked={selected}
@@ -203,7 +203,7 @@ export function CartItem({
         <Link
           href={productHref}
           aria-label={`Xem chi tiết ${item.name}`}
-          className="group relative h-[80px] w-full overflow-hidden bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[96px]"
+          className="group relative h-[88px] w-full overflow-hidden rounded-[4px] bg-secondary outline-none ring-black/20 transition focus-visible:ring-4 sm:h-[96px] sm:rounded-none"
         >
           <Image
             src={item.thumbnail || "/images/placeholder.png"}
@@ -223,7 +223,7 @@ export function CartItem({
         </button>
       </div>
 
-      <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex min-w-0 flex-col gap-2.5 sm:gap-2">
         <Link
           href={productHref}
           className="line-clamp-2 text-xs font-semibold uppercase leading-snug text-black/90 underline-offset-4 transition hover:underline focus-visible:underline"
@@ -231,7 +231,7 @@ export function CartItem({
           {item.name}
         </Link>
 
-        <div className="grid grid-cols-[100px_90px_1fr] items-center gap-2 w-full sm:grid-cols-[110px_100px_1fr] sm:gap-4">
+        <div className="grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:grid-cols-[110px_100px_1fr] sm:gap-4">
           <div className="flex justify-start">
             <VariantSelect
               value={item.size}
@@ -244,7 +244,7 @@ export function CartItem({
             <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
           </div>
 
-          <div className="flex justify-end pr-2 sm:pr-8">
+          <div className="col-span-2 flex justify-end border-t border-black/10 pt-2 sm:col-span-1 sm:border-t-0 sm:pt-0 sm:pr-8">
             <span className="shrink-0 text-right text-[13px] font-semibold text-black whitespace-nowrap">
               {formatPrice(item.line_total)}
             </span>

@@ -10,21 +10,21 @@ export function QuantityStepper({
   label?: string;
 }) {
   return (
-    <div className="inline-flex items-center rounded-pill border border-black h-[28px] bg-white" aria-label={label}>
+    <div className="inline-flex h-10 items-center rounded-pill border border-black bg-white sm:h-[28px]" aria-label={label}>
       <button
         type="button"
         aria-label="Giam so luong"
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="h-full w-[28px] text-base font-normal text-black flex items-center justify-center hover:bg-black/5 rounded-l-pill transition"
+        className="flex h-full w-8 items-center justify-center rounded-l-pill text-base font-normal text-black transition hover:bg-black/5 sm:w-[28px]"
       >
         -
       </button>
-      <span className="flex h-full w-[24px] items-center justify-center text-center text-body-sm font-normal text-black">{value}</span>
+      <span className="flex h-full w-6 items-center justify-center text-center text-body-sm font-normal text-black">{value}</span>
       <button
         type="button"
         aria-label="Tang so luong"
         onClick={() => onChange(value + 1)}
-        className="h-full w-[28px] text-base font-normal text-black flex items-center justify-center hover:bg-black/5 rounded-r-pill transition"
+        className="flex h-full w-8 items-center justify-center rounded-r-pill text-base font-normal text-black transition hover:bg-black/5 sm:w-[28px]"
       >
         +
       </button>

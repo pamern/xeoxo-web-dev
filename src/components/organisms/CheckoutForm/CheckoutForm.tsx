@@ -40,7 +40,7 @@ function PillInput({
         {label}
       </span>
       <input
-        className={`h-[36px] w-full rounded-pill border bg-white px-4 text-xs font-normal text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`h-11 w-full rounded-pill border bg-white px-4 text-sm font-normal text-black outline-none transition placeholder:text-black/40 focus:ring-2 sm:h-[36px] sm:text-xs ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -70,7 +70,7 @@ function PillTextarea({
     <label className={`flex w-full flex-col gap-1 ${className}`}>
       <span className="text-[13px] font-semibold text-black">{label}</span>
       <textarea
-        className={`min-h-[70px] w-full resize-none rounded-[16px] border bg-white px-4 py-2.5 text-xs font-normal text-black outline-none transition placeholder:text-black/40 focus:ring-2 ${
+        className={`min-h-[88px] w-full resize-none rounded-[16px] border bg-white px-4 py-3 text-sm font-normal text-black outline-none transition placeholder:text-black/40 focus:ring-2 sm:min-h-[70px] sm:py-2.5 sm:text-xs ${
           error
             ? "border-[#ff593d] focus:ring-red-500/15"
             : "border-black focus:ring-black/15"
@@ -103,7 +103,7 @@ function PillSelect({
       <span className="text-[13px] font-semibold text-black">{label}</span>
       <div className="relative w-full">
         <select
-          className={`h-[36px] w-full appearance-none rounded-pill border bg-white pl-4 pr-10 text-xs font-normal text-black outline-none transition focus:ring-2 ${
+          className={`h-11 w-full appearance-none rounded-pill border bg-white pl-4 pr-10 text-sm font-normal text-black outline-none transition focus:ring-2 sm:h-[36px] sm:text-xs ${
             error
               ? "border-[#ff593d] focus:ring-red-500/15"
               : "border-black focus:ring-black/15"
@@ -140,7 +140,7 @@ function SquareCheckbox({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-4">
+    <label className="flex cursor-pointer items-start gap-3 sm:gap-4">
       <span className="mt-0.5 inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
         <input
           type="checkbox"

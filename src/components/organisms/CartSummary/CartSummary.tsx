@@ -435,8 +435,8 @@ export function CartItemsSection() {
         Giỏ hàng
       </h2>
 
-      <div className="mt-3 flex items-center justify-between gap-4 sm:mt-4">
-        <label className="inline-flex cursor-pointer items-center gap-4">
+      <div className="mt-3 flex items-center justify-between gap-3 sm:mt-4 sm:gap-4">
+        <label className="inline-flex cursor-pointer items-center gap-3 sm:gap-4">
           <span className="inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
             <input
               type="checkbox"
@@ -646,7 +646,7 @@ export function PaymentSummarySection() {
           <button
             type="button"
             onClick={() => setAuthModalMode("register")}
-            className="flex min-h-[58px] w-full items-center justify-between gap-4 rounded-[8px] border border-[#f15a42] bg-[#fff4ee] px-4 py-3 text-left text-[#111111] transition hover:border-[#d9442d] hover:bg-[#ffe8dc]"
+            className="flex min-h-[58px] w-full flex-col items-stretch justify-between gap-3 rounded-[8px] border border-[#f15a42] bg-[#fff4ee] px-4 py-3 text-left text-[#111111] transition hover:border-[#d9442d] hover:bg-[#ffe8dc] sm:flex-row sm:items-center sm:gap-4"
           >
             <span className="flex min-w-0 flex-col gap-1">
               <span className="text-sm font-bold uppercase">
@@ -656,7 +656,7 @@ export function PaymentSummarySection() {
                 Đăng ký thành viên để nâng hạng nhận mã
               </span>
             </span>
-            <span className="shrink-0 rounded-pill border border-current px-4 py-2 text-sm font-bold transition hover:bg-black hover:text-white">
+            <span className="shrink-0 self-start rounded-pill border border-current px-4 py-2 text-sm font-bold transition hover:bg-black hover:text-white sm:self-auto">
               Đăng ký
             </span>
           </button>
@@ -698,7 +698,7 @@ export function PaymentSummarySection() {
         </div>
       </div>
 
-      <label className="mt-4 flex cursor-pointer items-start gap-4">
+      <label className="mt-4 flex cursor-pointer items-start gap-3 sm:gap-4">
         <span className="mt-0.5 inline-flex h-[23px] w-[23px] shrink-0 items-center justify-center rounded-[2px] border-2 border-black bg-white">
           <input
             type="checkbox"
@@ -737,7 +737,7 @@ export function PaymentSummarySection() {
           isSubmitting
         }
         isLoading={isSubmitting}
-        className="mt-5 h-[46px] w-full min-w-0 text-sm font-bold uppercase"
+        className="sticky bottom-3 z-20 mt-5 h-12 w-full min-w-0 text-sm font-bold uppercase shadow-[0_8px_24px_rgba(0,0,0,0.22)] sm:static sm:h-[46px] sm:shadow-none"
       >
         Thanh toán ngay
       </Button>
