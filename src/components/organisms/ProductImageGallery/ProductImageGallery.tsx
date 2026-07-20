@@ -52,9 +52,9 @@ export function ProductImageGallery({
   }, []);
 
   return (
-    <div className="grid gap-3 lg:grid-cols-[65px_minmax(0,650px)]">
+    <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)] gap-3 overflow-hidden sm:overflow-visible lg:grid-cols-[65px_minmax(0,650px)]">
       <div
-        className="no-scrollbar order-2 flex gap-2.5 overflow-x-auto pb-1 sm:gap-3 lg:order-1 lg:self-start lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0"
+        className="no-scrollbar order-2 flex min-w-0 max-w-full gap-2.5 overflow-x-auto pb-1 sm:gap-3 lg:order-1 lg:self-start lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0"
         style={galleryHeight ? { maxHeight: `${galleryHeight}px` } : undefined}
       >
         {images.map((image, index) => (
@@ -75,7 +75,7 @@ export function ProductImageGallery({
 
       <div
         ref={mainImageRef}
-        className="relative order-1 mx-auto aspect-[5/7] w-full max-w-[360px] overflow-hidden bg-secondary sm:max-w-[430px] sm:aspect-[2/3] md:max-w-[520px] lg:order-2 lg:max-w-[650px]"
+        className="relative order-1 mx-auto aspect-[5/7] w-full min-w-0 max-w-[360px] overflow-hidden bg-secondary sm:aspect-[2/3] sm:max-w-[430px] md:max-w-[520px] lg:order-2 lg:max-w-[650px]"
       >
         <Link
           href={VIRTUAL_FITTING_HREF}

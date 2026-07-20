@@ -116,7 +116,7 @@ export function VariantSelector({
                 aria-pressed={sizeName === selectedSize}
                 aria-label={`${sizeName}${option.is_available ? "" : " - het hang"}`}
                 className={cn(
-                  "relative h-[28px] min-w-[42px] rounded-[4px] border border-black px-3 text-sm font-bold leading-none transition-colors",
+                "relative h-10 min-w-[44px] rounded-[4px] border border-black px-3 text-sm font-bold leading-none transition-colors sm:h-[28px] sm:min-w-[42px]",
                   !option.is_available &&
                     "cursor-not-allowed border-black bg-[#ededed] text-[#a3a3a3]",
                   sizeName === selectedSize && option.is_available
@@ -142,7 +142,7 @@ export function VariantSelector({
             aria-label="Customize size"
             aria-pressed={customSelected}
             className={cn(
-              "relative h-[28px] min-w-[92px] rounded-[4px] border border-black px-3 text-sm font-bold leading-none transition-colors",
+              "relative h-10 min-w-[104px] rounded-[4px] border border-black px-3 text-sm font-bold leading-none transition-colors sm:h-[28px] sm:min-w-[92px]",
               customSelected &&
                 "bg-black text-white",
               !hasAvailableVariant &&
@@ -155,7 +155,7 @@ export function VariantSelector({
           </button>
         </div>
 
-        <div className="mt-2 flex items-center gap-4">
+        <div className="mt-2 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
           <button
             type="button"
             onClick={onOpenAppointment}

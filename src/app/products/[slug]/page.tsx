@@ -235,7 +235,7 @@ export default async function ProductPage({
           ]}
         />
       </section>
-      <div className="mx-auto w-full max-w-site px-6 pb-12 pt-0 xl:px-[100px]">
+      <div className="mx-auto w-full min-w-0 max-w-site px-3 pb-10 pt-0 sm:px-6 sm:pb-12 xl:px-[100px]">
         <ProductDetail
           product={product}
           apiProduct={apiProduct}

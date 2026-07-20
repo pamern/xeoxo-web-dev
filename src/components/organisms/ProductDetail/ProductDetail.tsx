@@ -642,7 +642,7 @@ export function ProductDetail({
   }
 
   return (
-    <div className="relative grid gap-8 lg:grid-cols-[minmax(0,728px)_minmax(0,714px)] lg:items-start lg:justify-between xl:gap-20">
+    <div className="relative grid w-full min-w-0 grid-cols-[minmax(0,1fr)] gap-6 sm:gap-8 lg:grid-cols-[minmax(0,728px)_minmax(0,714px)] lg:items-start lg:justify-between xl:gap-20">
       {isSizeGuideOpen && (
         <SizeGuideModal
           gender={product.gender}
@@ -758,9 +758,9 @@ export function ProductDetail({
 
       <ProductImageGallery images={product.images} alt={product.name} />
 
-      <aside className="flex flex-col lg:min-h-[650px] lg:justify-between">
+      <aside className="flex min-w-0 flex-col lg:min-h-[650px] lg:justify-between">
         <section className="border-b border-black pb-5">
-          <h1 className="text-[28px] font-bold leading-tight md:text-[36px]">
+          <h1 className="break-words text-[24px] font-bold leading-tight sm:text-[28px] md:text-[36px]">
             {product.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
@@ -849,7 +849,7 @@ export function ProductDetail({
                 variant="cart"
                 size="cart"
                 disabled={isAdding || (!isCustomized && !selectedVariant?.is_available) || hasUnconfirmedCustomize}
-                className="min-w-0"
+                className="w-full !min-w-0"
               >
                 <Image
                   src="/icons/cart.svg"
@@ -885,7 +885,7 @@ export function ProductDetail({
         </div>
 
         <div className="mt-4 border-t-2 border-[#d9d9d9] pt-4">
-          <div className="grid gap-x-10 gap-y-3 rounded-[10px] bg-[#ededed] px-7 py-4 sm:grid-cols-2">
+          <div className="grid gap-x-6 gap-y-4 rounded-[10px] bg-[#ededed] px-4 py-4 sm:grid-cols-2 sm:gap-x-10 sm:gap-y-3 sm:px-7">
             <ProductService
               icon="/icons/freeship.svg"
               title="Freeship"
@@ -914,7 +914,7 @@ export function ProductDetail({
             <h2 className="mb-3 text-lg font-bold uppercase">
               Có thể phù hợp với bạn
             </h2>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
               {relatedProducts.slice(0, 3).map((item) => (
                 <CompactProduct key={item.id} product={item} />
               ))}
@@ -1181,7 +1181,7 @@ function MultiComponentPurchaseCompact({
           <DecorativeComponentDivider />
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           <button
             type="button"
             onClick={onOpenAppointment}
@@ -1210,7 +1210,7 @@ function MultiComponentPurchaseCompact({
         variant="cart"
         size="cart"
         disabled={isAdding || addableCount === 0}
-        className="min-w-0"
+        className="w-full !min-w-0"
       >
         <Image
           src="/icons/cart.svg"
@@ -1438,7 +1438,7 @@ function MultiComponentPurchase({
           ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-4">
+        <div className="mt-4 flex flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           <button
             type="button"
             onClick={onOpenAppointment}
@@ -1482,7 +1482,7 @@ function MultiComponentPurchase({
           variant="cart"
           size="cart"
           disabled={isAdding || addableCount === 0}
-          className="min-w-0"
+          className="w-full !min-w-0"
         >
           <Image
             src="/icons/cart.svg"
@@ -1609,17 +1609,17 @@ function ProductNotice({ icon, title }: { icon: string; title: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="flex flex-col rounded-[10px] border border-border bg-[#fffdfd] overflow-hidden transition-all duration-300">
+    <div className="flex min-w-0 flex-col overflow-hidden rounded-[10px] border border-border bg-[#fffdfd] transition-all duration-300">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="flex h-[60px] w-full items-center justify-between gap-4 px-5 text-left focus:outline-none bg-transparent"
       >
-        <span className="flex items-center gap-4">
+        <span className="flex min-w-0 items-center gap-3 sm:gap-4">
           <span className="flex h-[29px] w-[37px] items-center justify-center rounded-[3px] border border-[#ff593d] shrink-0">
             <Image src={icon} alt="" width={22} height={22} aria-hidden />
           </span>
-          <span className="text-body-sm font-medium">
+          <span className="min-w-0 text-body-sm font-medium leading-snug">
             Tận hưởng đặc quyền hấp dẫn khi tham gia <span className="font-bold">Xéo Hội</span>
           </span>
         </span>
