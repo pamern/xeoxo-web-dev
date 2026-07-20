@@ -120,6 +120,10 @@ export function SiteHeader({
   const [hoveredNav, setHoveredNav] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [mobileSearchPanel, setMobileSearchPanel] = useState<{
+    top: number;
+    maxHeight: string;
+  } | null>(null);
   const [utilityBarVisible, setUtilityBarVisible] = useState(true);
 
   const authMode = searchParams.get("auth");
@@ -167,6 +171,35 @@ export function SiteHeader({
       window.removeEventListener("mousedown", handlePointerDown);
     };
   }, []);
+
+  useEffect(() => {
+    if (!searchOpen) {
+      setMobileSearchPanel(null);
+      return;
+    }
+
+    function updateMobileSearchPanel() {
+      if (window.innerWidth >= 640 || !searchRef.current) {
+        setMobileSearchPanel(null);
+        return;
+      }
+
+      const top = Math.round(searchRef.current.getBoundingClientRect().bottom + 10);
+      setMobileSearchPanel({
+        top,
+        maxHeight: `calc(100dvh - ${top + 12}px)`,
+      });
+    }
+
+    updateMobileSearchPanel();
+    window.addEventListener("resize", updateMobileSearchPanel);
+    window.addEventListener("scroll", updateMobileSearchPanel, { passive: true });
+
+    return () => {
+      window.removeEventListener("resize", updateMobileSearchPanel);
+      window.removeEventListener("scroll", updateMobileSearchPanel);
+    };
+  }, [searchOpen, utilityBarVisible]);
 
   useEffect(() => {
     if (!accountSidebarOpen) {
@@ -588,7 +621,17 @@ export function SiteHeader({
               </label>
 
               {searchOpen && (
-                <div className="absolute right-0 top-[calc(100%+10px)] z-[120] w-[min(420px,calc(100vw-32px))] overflow-hidden rounded-[20px] border border-black/10 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.14)]">
+                <div
+                  style={
+                    mobileSearchPanel
+                      ? {
+                          top: mobileSearchPanel.top,
+                          maxHeight: mobileSearchPanel.maxHeight,
+                        }
+                      : undefined
+                  }
+                  className="fixed inset-x-3 z-[120] w-auto overflow-x-hidden overflow-y-auto rounded-[20px] border border-black/10 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.14)] sm:absolute sm:inset-x-auto sm:right-0 sm:top-[calc(100%+10px)] sm:max-h-none sm:w-[min(420px,calc(100vw-32px))] sm:overflow-hidden"
+                >
                   {searchSuggestionsLoading ? (
                     <div className="px-4 py-4 text-sm text-muted-foreground">
                       Đang tìm kiếm...
