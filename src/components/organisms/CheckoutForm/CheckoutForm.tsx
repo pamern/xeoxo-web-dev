@@ -672,7 +672,7 @@ export function CheckoutForm() {
             <PillInput
               label="Số điện thoại"
               name="phone"
-              placeholder="0383389276"
+              placeholder="09xxxxxxxx"
               autoComplete="tel"
               error={fieldErrors.phone}
               labelClassName="text-[13px] text-black/60"
@@ -772,7 +772,7 @@ export function CheckoutForm() {
           <PillInput
             label="Số điện thoại"
             name="receiverPhone"
-            placeholder="0987654321"
+            placeholder="09xxxxxxxx"
             error={fieldErrors.receiverPhone}
             onChange={(e) => validateSingleField(e.target.name, e.target.value)}
             onBlur={(e) => validateSingleField(e.target.name, e.target.value)}

@@ -9,14 +9,14 @@ export async function GET() {
     const { data: branches, error } = await admin
       .schema("iam")
       .from("branch")
-      .select("branch_id, branch_name");
+      .select("branch_id, branch_name, address");
 
     if (error) {
       return fail(error.message, 500);
     }
 
     const formattedBranches = (branches || []).map((b) => ({
-      label: b.branch_name,
+      label: b.address?.trim() || b.branch_name,
       value: String(b.branch_id),
     }));
 

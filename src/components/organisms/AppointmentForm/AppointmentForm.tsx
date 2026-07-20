@@ -323,7 +323,7 @@ export function AppointmentForm({
               value={values.phone}
               onChange={(event) => update("phone", event.target.value)}
               onBlur={() => handleBlur("phone")}
-              placeholder="0383389276"
+              placeholder="09xxxxxxxx"
               aria-invalid={Boolean(errors.phone)}
               className={fieldInputClass(fieldClassName, errors.phone)}
             />
