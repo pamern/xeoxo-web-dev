@@ -532,7 +532,48 @@ async function attachGuestCartToCustomer(
   customerId: number,
 ) {
   const admin = createAdminClient();
-  const { error } = await admin
+  const { data: cart, error: cartError } = await admin
+    .schema("sales")
+    .from("cart")
+    .select("cart_id, customer_id")
+    .eq("cart_id", cartId)
+    .eq("cart_status", "ACTIVE")
+    .maybeSingle();
+
+  if (cartError) {
+    throw new Error(cartError.message);
+  }
+
+  if (!cart) {
+    throw new Error("Gio hang khong ton tai hoac da checkout.");
+  }
+
+  const existingCustomerId = cart.customer_id
+    ? Number(cart.customer_id)
+    : null;
+
+  if (existingCustomerId === customerId) {
+    return null;
+  }
+
+  if (existingCustomerId !== null) {
+    const { data: existingOwner, error: ownerError } = await admin
+      .schema("iam")
+      .from("customer")
+      .select("customer_type")
+      .eq("customer_id", existingCustomerId)
+      .maybeSingle();
+
+    if (ownerError) {
+      throw new Error(ownerError.message);
+    }
+
+    if (existingOwner?.customer_type !== "GUEST") {
+      throw new Error("Gio hang khong thuoc tai khoan hien tai.");
+    }
+  }
+
+  let updateQuery = admin
     .schema("sales")
     .from("cart")
     .update({
@@ -540,17 +581,31 @@ async function attachGuestCartToCustomer(
       updated_at: new Date().toISOString(),
     })
     .eq("cart_id", cartId)
-    .is("customer_id", null)
     .eq("cart_status", "ACTIVE");
+
+  updateQuery = existingCustomerId === null
+    ? updateQuery.is("customer_id", null)
+    : updateQuery.eq("customer_id", existingCustomerId);
+
+  const { data: claimedCart, error } = await updateQuery
+    .select("cart_id")
+    .maybeSingle();
 
   if (error) {
     throw new Error(error.message);
   }
+
+  if (!claimedCart) {
+    throw new Error("Gio hang da thay doi, vui long tai lai trang va thu lai.");
+  }
+
+  return existingCustomerId;
 }
 
 async function backfillGuestCustomizationOwner(
   customerId: number,
   prepared: PreparedCheckout,
+  previousGuestCustomerId: number | null,
 ) {
   const customizationIds = prepared.items
     .filter((item) => item.item_type === "CUSTOMIZED" && item.customization_id)
@@ -562,15 +617,22 @@ async function backfillGuestCustomizationOwner(
   }
 
   const admin = createAdminClient();
-  const { error } = await admin
+  let updateQuery = admin
     .schema("customization")
     .from("customization_request")
     .update({
       customer_id: customerId,
       updated_at: new Date().toISOString(),
     })
-    .in("customization_id", customizationIds)
-    .is("customer_id", null);
+    .in("customization_id", customizationIds);
+
+  updateQuery = previousGuestCustomerId === null
+    ? updateQuery.is("customer_id", null)
+    : updateQuery.or(
+        `customer_id.is.null,customer_id.eq.${previousGuestCustomerId}`,
+      );
+
+  const { error } = await updateQuery;
 
   if (error) {
     throw new Error(error.message);
@@ -600,11 +662,15 @@ export async function createCheckoutOrder(values: CreateOrderValues) {
     throw new Error("Gio hang khong ton tai.");
   }
 
-  await attachGuestCartToCustomer(
+  const previousGuestCustomerId = await attachGuestCartToCustomer(
     prepared.cart.cart_id,
     customerId,
   );
-  await backfillGuestCustomizationOwner(customerId, prepared);
+  await backfillGuestCustomizationOwner(
+    customerId,
+    prepared,
+    previousGuestCustomerId,
+  );
 
   await Promise.all(
     prepared.items
