@@ -430,7 +430,7 @@ export function CartItemsSection() {
   } = useCartSummaryContext();
 
   return (
-    <aside className="w-full text-black">
+    <aside className="w-full min-w-0 text-black">
       <h2 className="text-[1.0625rem] font-bold text-black sm:text-lg md:text-xl md:leading-tight">
         Giỏ hàng
       </h2>
@@ -583,7 +583,7 @@ export function PaymentSummarySection() {
   } = useCartSummaryContext();
 
   return (
-    <aside className="w-full text-black">
+    <aside className="w-full min-w-0 text-black">
       <input
         form="checkout-form"
         type="hidden"

@@ -186,7 +186,7 @@ export function CartItem({
       aria-label={`Xem chi tiết ${item.name}`}
       onClick={handleRowClick}
       onKeyDown={handleRowKeyDown}
-      className="grid cursor-pointer grid-cols-[24px_68px_minmax(0,1fr)] items-start gap-2.5 border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:grid-cols-[36px_72px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:py-3"
+      className="grid w-full min-w-0 cursor-pointer grid-cols-[24px_68px_minmax(0,1fr)] items-start gap-2.5 overflow-hidden border-b border-black/50 py-4 outline-none transition hover:bg-black/[0.025] focus-visible:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-black/30 last:border-b-0 sm:grid-cols-[36px_72px_minmax(0,1fr)] sm:items-center sm:gap-6 sm:overflow-visible sm:py-3"
     >
       <label className="mt-1 inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center justify-self-center rounded-[2px] border-2 border-black bg-white transition hover:border-black/70 sm:mt-0 sm:h-[18px] sm:w-[18px]">
         <input
@@ -244,8 +244,8 @@ export function CartItem({
             <QuantityStepper value={item.quantity} min={1} onChange={onQuantityChange} />
           </div>
 
-          <div className="col-span-2 flex justify-end border-t border-black/10 pt-2 sm:col-span-1 sm:border-t-0 sm:pt-0 sm:pr-8">
-            <span className="shrink-0 text-right text-[13px] font-semibold text-black whitespace-nowrap">
+          <div className="col-span-2 flex min-w-0 justify-end border-t border-black/10 pt-2 sm:col-span-1 sm:border-t-0 sm:pt-0 sm:pr-8">
+            <span className="max-w-full truncate text-right text-[13px] font-semibold text-black sm:shrink-0 sm:whitespace-nowrap">
               {formatPrice(item.line_total)}
             </span>
           </div>

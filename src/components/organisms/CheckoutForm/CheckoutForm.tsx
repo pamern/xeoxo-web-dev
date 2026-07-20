@@ -477,7 +477,7 @@ export function CheckoutForm() {
       id="checkout-form"
       onSubmit={handleSubmit}
       noValidate
-      className="w-full text-black"
+      className="w-full min-w-0 overflow-hidden text-black sm:overflow-visible"
     >
       {!isMember ? (
         <div className="rounded-[10px] bg-[#D9D9D9]/30 p-3 sm:py-3.5 sm:px-4">
