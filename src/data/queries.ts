@@ -2,7 +2,7 @@ import { CATEGORIES, COLLECTIONS, PRODUCTS } from "@/data/catalog";
 import type { Gender, Product } from "@/types/product.types";
 
 // Selector trung gian — UI gọi qua đây thay vì truy cập mảng trực tiếp.
-// Khi thay bằng Prisma/API chỉ cần đổi phần thân hàm.
+// Khi thay bằng Supabase/API chỉ cần đổi phần thân hàm.
 
 export function getProductsByGender(gender: Gender): Product[] {
   return PRODUCTS.filter((p) => p.gender === gender);

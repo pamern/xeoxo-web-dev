@@ -1,6 +1,6 @@
 # XEOXO Web
 
-Website thương mại điện tử thời trang XEOXO được xây dựng với `Next.js`, `React`, `TypeScript`, `Tailwind CSS`, `Supabase` và `Prisma`.
+Website thương mại điện tử thời trang XEOXO được xây dựng với `Next.js`, `React`, `TypeScript`, `Tailwind CSS` và `Supabase`.
 
 Dự án này tập trung vào các luồng chính:
 
@@ -17,7 +17,6 @@ Dự án này tập trung vào các luồng chính:
 - `TypeScript`
 - `Tailwind CSS`
 - `Supabase`
-- `Prisma`
 - `Zod`
 - `TanStack React Query`
 - `Zustand`
@@ -106,15 +105,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
-Các biến Figma trong `.env.example` chỉ phục vụ một số workflow nội bộ liên quan đến thiết kế:
-
-```env
-FIGMA_ACCESS_TOKEN=your_figma_access_token
-FIGMA_FILE_KEY=your_figma_file_key
-FIGMA_NODE_IDS=1:92
-FIGMA_OUTPUT_PATH=figma-node.json
-```
-
 ### Chạy môi trường development
 
 ```bash
@@ -142,12 +132,4 @@ npm run build         # build production
 npm run start         # chạy bản build
 npm run lint          # lint code
 npm run format        # format code trong src/
-
-npm run db:generate   # prisma generate
-npm run db:migrate    # prisma migrate dev
-npm run db:push       # prisma db push
-npm run db:seed       # seed dữ liệu
-npm run db:studio     # mở Prisma Studio
-
-npm run order:status  # script cập nhật trạng thái đơn hàng
 ```

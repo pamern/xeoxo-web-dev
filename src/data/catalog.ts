@@ -1,6 +1,6 @@
 import type { Collection, Material, Product, ProductCategory } from "@/types/product.types";
 
-// Lớp dữ liệu mock có cấu trúc rõ ràng, dễ thay bằng nguồn thật (Prisma/API).
+// Lớp dữ liệu tĩnh có cấu trúc rõ ràng, dễ thay bằng nguồn thật (Supabase/API).
 // Không hardcode rải rác trong UI — mọi trang đọc từ đây qua các selector ở dưới.
 
 export const PRODUCT_IMAGE = "/images/placeholder.png";
