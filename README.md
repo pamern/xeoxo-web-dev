@@ -123,10 +123,12 @@ Page
 - Không để khóa bí mật hoặc `SUPABASE_SERVICE_ROLE_KEY` xuất hiện trong mã phía trình duyệt.
 - Chạy kiểm tra định dạng, lint và build trước khi đưa thay đổi lên môi trường chung.
 
-## Bản quyền
+## Bản quyền, nguồn tài nguyên và tuyên bố miễn trừ
 
 Copyright © 2026 **Nhóm phát triển XEOXO Web Redesign**. Bảo lưu mọi quyền đối với phần mã nguồn và thiết kế do nhóm thực hiện.
 
-Mã nguồn và các hạng mục redesign do nhóm phát triển tạo ra không được sao chép, chỉnh sửa, phân phối, công bố hoặc sử dụng cho mục đích thương mại nếu chưa có sự cho phép trước bằng văn bản của nhóm.
+Mã nguồn, thiết kế giao diện và các hạng mục redesign do nhóm phát triển thực hiện thuộc quyền sở hữu của nhóm, trừ những thành phần có ghi chú khác. Không được sao chép, chỉnh sửa, phân phối, công bố hoặc sử dụng các nội dung này cho mục đích thương mại nếu chưa có sự cho phép trước bằng văn bản của nhóm.
 
-Tên gọi, nhãn hiệu, logo, hình ảnh sản phẩm, nội dung và các tài sản thương hiệu Xéo Xọ được sử dụng trong dự án chỉ nhằm mục đích minh họa và vẫn thuộc quyền sở hữu của chủ sở hữu tương ứng. Dự án không có quan hệ liên kết, tài trợ, ủy quyền hoặc đại diện chính thức cho thương hiệu Xéo Xọ.
+Tên gọi, nhãn hiệu, logo, hình ảnh sản phẩm và nội dung liên quan đến Xéo Xọ **không thuộc quyền sở hữu của nhóm phát triển**. Các tài nguyên này thuộc quyền sở hữu của Xéo Xọ hoặc chủ sở hữu quyền tương ứng và chỉ được sử dụng trong phạm vi đồ án học tập, phi thương mại nhằm minh họa cho bản redesign.
+
+Dự án không phải website chính thức, không được Xéo Xọ tài trợ, chứng thực hoặc ủy quyền, và không đại diện cho thương hiệu Xéo Xọ. Không sử dụng dự án để bán hàng, nhận thanh toán, quảng cáo hoặc thực hiện bất kỳ hoạt động thương mại nào.
