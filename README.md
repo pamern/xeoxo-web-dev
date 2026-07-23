@@ -1,135 +1,132 @@
-# XEOXO Web
+# XEOXO Web Redesign
 
-Website thương mại điện tử thời trang XEOXO được xây dựng với `Next.js`, `React`, `TypeScript`, `Tailwind CSS` và `Supabase`.
+Dự án redesign website thương mại điện tử thời trang Xéo Xọ do nhóm phát triển độc lập thực hiện, sử dụng Next.js, React, TypeScript, Tailwind CSS và Supabase.
 
-Dự án này tập trung vào các luồng chính:
+Đây là sản phẩm thiết kế và phát triển lại giao diện, trải nghiệm người dùng cùng các luồng chức năng phục vụ mục đích học tập, nghiên cứu và trình bày năng lực của nhóm. Dự án không phải website chính thức và không đại diện cho Xéo Xọ.
 
-- duyệt sản phẩm, bộ sưu tập, danh mục
-- chi tiết sản phẩm, chọn biến thể, thêm giỏ hàng
-- đăng ký, đăng nhập, quản lý hồ sơ khách hàng
-- checkout, đơn hàng, lịch sử đơn hàng
-- đặt lịch hẹn và các trải nghiệm liên quan
+Ứng dụng mô phỏng toàn bộ hành trình mua sắm trực tuyến: khám phá sản phẩm và bộ sưu tập, lựa chọn biến thể, quản lý giỏ hàng, thanh toán, theo dõi đơn hàng, quản lý tài khoản và đặt lịch hẹn.
 
-## 1. Công nghệ sử dụng
+## Tính năng chính
 
-- `Next.js 15`
-- `React 19`
-- `TypeScript`
-- `Tailwind CSS`
-- `Supabase`
-- `Zod`
-- `TanStack React Query`
-- `Zustand`
+- Duyệt, tìm kiếm, lọc và sắp xếp sản phẩm theo danh mục hoặc bộ sưu tập.
+- Xem chi tiết sản phẩm, lựa chọn biến thể, kích thước và tùy chỉnh sản phẩm.
+- Quản lý giỏ hàng và xem trước thông tin thanh toán.
+- Đăng ký, đăng nhập và xác thực tài khoản bằng Supabase Auth.
+- Quản lý hồ sơ khách hàng, địa chỉ nhận hàng và số đo cá nhân.
+- Tạo, tra cứu, theo dõi và hủy đơn hàng.
+- Đặt lịch hẹn, quản lý đánh giá và chương trình khách hàng thân thiết.
+- Trải nghiệm Personal Color và các nội dung giới thiệu thương hiệu.
 
-## 2. Cấu trúc dự án
+## Công nghệ sử dụng
 
-```txt
+- [Next.js 15](https://nextjs.org/) với App Router
+- [React 19](https://react.dev/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Supabase](https://supabase.com/)
+- [TanStack Query](https://tanstack.com/query/latest)
+- [Zustand](https://zustand.docs.pmnd.rs/)
+- [Zod](https://zod.dev/)
+
+## Yêu cầu hệ thống
+
+- Node.js 20 trở lên
+- npm 10 trở lên
+- Một dự án Supabase và các khóa truy cập tương ứng
+
+## Cài đặt
+
+1. Cài đặt các gói phụ thuộc:
+
+   ```bash
+   npm install
+   ```
+
+2. Sao chép tệp cấu hình môi trường mẫu:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+3. Cập nhật các biến môi trường trong `.env.local`:
+
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+   ```
+
+   Không đưa `.env.local` hoặc các khóa bí mật lên hệ thống quản lý phiên bản.
+
+4. Khởi chạy môi trường phát triển:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Truy cập ứng dụng tại [http://localhost:3000](http://localhost:3000).
+
+## Các lệnh hữu ích
+
+| Lệnh | Mô tả |
+| --- | --- |
+| `npm run dev` | Khởi chạy máy chủ phát triển |
+| `npm run build` | Tạo bản dựng production |
+| `npm run start` | Chạy bản dựng production |
+| `npm run lint` | Kiểm tra mã nguồn bằng ESLint |
+| `npm run format` | Định dạng mã nguồn trong thư mục `src` bằng Prettier |
+
+## Cấu trúc thư mục
+
+```text
 src/
-├── app/            # App Router pages, layouts, API routes
-├── components/     # UI components theo atomic design
-│   ├── atoms/
-│   ├── molecules/
-│   ├── organisms/
-│   └── templates/
-├── constants/      # hằng số dùng chung
-├── data/           # dữ liệu tĩnh, mapping, helper data
-├── features/       # business logic phía server / domain services
-├── hooks/          # custom hooks phía client
-├── lib/            # helper, utils, supabase clients
-├── services/       # frontend services gọi API
-├── stores/         # state management
-├── types/          # type definitions
-└── validations/    # schema validate bằng Zod
+├── app/          # Trang, layout và API routes theo App Router
+├── components/   # Thành phần giao diện theo Atomic Design
+├── constants/    # Hằng số và cấu hình dùng chung
+├── data/         # Dữ liệu tĩnh và các bảng ánh xạ
+├── features/     # Nghiệp vụ và dịch vụ phía máy chủ
+├── hooks/        # React hooks dùng phía trình duyệt
+├── lib/          # Tiện ích và Supabase clients
+├── services/     # Dịch vụ gọi API từ phía trình duyệt
+├── stores/       # Quản lý trạng thái toàn cục
+├── types/        # Kiểu dữ liệu TypeScript
+└── validations/  # Schema kiểm tra dữ liệu bằng Zod
 ```
 
-## 3. Kiến trúc luồng code
+## Kiến trúc ứng dụng
 
-Project đi theo hướng tách lớp rõ ràng:
+Luồng xử lý chính được tổ chức theo các lớp sau:
 
-```txt
+```text
 Page
--> Component
--> Hook (nếu cần state/fetch/submit phía client)
--> Frontend Service
--> API Route
--> Validation
--> Feature Service
--> Supabase / Database
+└── Component
+    └── Hook
+        └── Frontend Service
+            └── API Route
+                └── Validation
+                    └── Feature Service
+                        └── Supabase / Database
 ```
 
-Nguyên tắc chính:
+- **Page** định nghĩa trang và phối hợp các thành phần giao diện.
+- **Component** đảm nhiệm hiển thị và tương tác trực tiếp với người dùng.
+- **Hook** quản lý trạng thái, tải dữ liệu và gửi biểu mẫu phía trình duyệt.
+- **Frontend Service** đóng gói việc giao tiếp với API nội bộ.
+- **API Route** tiếp nhận yêu cầu, xác thực dữ liệu và chuẩn hóa phản hồi.
+- **Feature Service** xử lý nghiệp vụ và làm việc với cơ sở dữ liệu.
 
-- `Page` không chứa business logic dài.
-- `Component` chỉ tập trung render UI và callback.
-- `Hook` quản lý loading, error, submit, refetch phía client.
-- `Service` chỉ gọi API nội bộ.
-- `API Route` nhận request, validate, gọi feature service, trả response chuẩn.
-- `Feature` xử lý nghiệp vụ và làm việc với database.
+## Quy ước phát triển
 
-## 4. Các module chính
+- Viết mã mới bằng TypeScript và giữ các kiểu dữ liệu rõ ràng.
+- Không đặt nghiệp vụ phức tạp trực tiếp trong page hoặc component.
+- Kiểm tra dữ liệu đầu vào bằng Zod trước khi xử lý.
+- Không để khóa bí mật hoặc `SUPABASE_SERVICE_ROLE_KEY` xuất hiện trong mã phía trình duyệt.
+- Chạy kiểm tra định dạng, lint và build trước khi đưa thay đổi lên môi trường chung.
 
-- `auth`: đăng ký, đăng nhập, đồng bộ hồ sơ khách hàng
-- `cart`: giỏ hàng, cập nhật số lượng, chọn biến thể
-- `checkout`: thông tin giao hàng, tạo đơn hàng, thanh toán
-- `order`: lịch sử đơn hàng, chi tiết đơn hàng
-- `appointment`: đặt lịch hẹn và tra cứu lịch hẹn
-- `collections`: trang bộ sưu tập, hero media, story blocks
-- `catalog` / `category` / `product`: listing, filter, sort, product detail
-- `customers`: hồ sơ cá nhân, sổ địa chỉ
-- `review`: đánh giá sản phẩm
+## Bản quyền
 
-## 5. Yêu cầu môi trường
+Copyright © 2026 **Nhóm phát triển XEOXO Web Redesign**. Bảo lưu mọi quyền đối với phần mã nguồn và thiết kế do nhóm thực hiện.
 
-Khuyến nghị:
+Mã nguồn và các hạng mục redesign do nhóm phát triển tạo ra không được sao chép, chỉnh sửa, phân phối, công bố hoặc sử dụng cho mục đích thương mại nếu chưa có sự cho phép trước bằng văn bản của nhóm.
 
-- `Node.js >= 20`
-- `npm >= 10`
-
-## 6. Cài đặt và chạy dự án
-
-### Cài dependency
-
-```bash
-npm install
-```
-
-### Tạo file môi trường
-
-Tạo file `.env.local` từ `.env.example` và điền các giá trị cần thiết.
-
-Biến môi trường tối thiểu:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
-```
-
-### Chạy môi trường development
-
-```bash
-npm run dev
-```
-
-Mặc định ứng dụng chạy tại:
-
-```txt
-http://localhost:3000
-```
-
-### Build production
-
-```bash
-npm run build
-npm run start
-```
-
-## 7. Các script đang có
-
-```bash
-npm run dev           # chạy local
-npm run build         # build production
-npm run start         # chạy bản build
-npm run lint          # lint code
-npm run format        # format code trong src/
-```
+Tên gọi, nhãn hiệu, logo, hình ảnh sản phẩm, nội dung và các tài sản thương hiệu Xéo Xọ được sử dụng trong dự án chỉ nhằm mục đích minh họa và vẫn thuộc quyền sở hữu của chủ sở hữu tương ứng. Dự án không có quan hệ liên kết, tài trợ, ủy quyền hoặc đại diện chính thức cho thương hiệu Xéo Xọ.
